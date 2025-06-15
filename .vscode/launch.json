@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Run main module",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",  // 当前打开的文件
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}" , // ⭐ 关键：设置工作目录为项目根目录
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+
+    }
+  ]
+}
+
+  

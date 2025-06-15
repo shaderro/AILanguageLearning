@@ -1,0 +1,17 @@
+{
+  "1": {
+    "text_id": 1,
+    "text_title": "Test Text 1",
+    "text_by_sentence": [
+      {
+        "text_id": 1,
+        "sentence_id": 1,
+        "sentence_body": "This is the first sentence.",
+        "grammar_annotations": [
+          1
+        ],
+        "vocab_annotations": []
+      }
+    ]
+  }
+}
