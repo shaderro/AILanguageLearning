@@ -10,7 +10,7 @@ class SubAssistant:
         self.parse_json = parse_json
         self.model = "deepseek-chat"
 
-    def run(self, *args, verbose=False, **kwargs) -> dict | str:
+    def run(self, *args, verbose=False, **kwargs) -> dict |list[dict] | str:
         user_prompt = self.build_prompt(*args, **kwargs)
         if verbose:
             print("🧾 Prompt:\n", user_prompt)

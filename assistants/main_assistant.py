@@ -12,6 +12,7 @@ from assistants.sub_assistants.check_if_relevant import CheckIfRelevant
 from assistants.sub_assistants.answer_question import AnswerQuestionAssistant
 from assistants.sub_assistants.summarize_vocab import SummarizeVocabAssistant
 from data_managers.data_classes import Sentence
+from data_managers import grammar_rule_manager, data_controller
 
 class MainAssistant:
     
@@ -75,36 +76,25 @@ class MainAssistant:
                 verbose=True
                 #dialogue_context=self.dialogue_history.get_dialogue_context()
             )
-            print("grammar_summary type:", type(grammar_summary))
-            rule_name=grammar_summary.get("grammar_rule_name", "Unknown")
-            print("Grammar Rule Name:", rule_name)
-            rule_summary=grammar_summary.get("grammar_rule_summary", "No summary provided")
-            print("Grammar Rule Summary:", rule_summary)
-            for grammar in grammar_summary:
-                if isinstance(grammar, dict):
-                    for key, value in grammar.items():
-                        print(f"{key}: {value}")
-            for grammar in grammar_summary:
-                  # 确保 grammar 是合法的 JSON 格式
-                print("Grammar type:", type(grammar))
-                #print("loaded_grammar type:", type(loaded_grammar))
-                #print("Grammar content:", loaded_grammar)
-                print("Grammar content:", grammar)
-                #loaded_grammar = json.loads(grammar)
-            #for grammar in grammar_summary:
+            if type(grammar_summary) is dict:
                 # add grammar to session state
-                #假设是新的语法规则
-
-            """    
-                self.session_state.grammar_to_add.append(
-                    GrammarToAdd(
-                        rule_name=grammar.get("grammar_rule_name", "Unknown"),
-                        rule_explanation=grammar.get("grammar_rule_summary", "No explanation provided")
-                    )
+                self.session_state.add_grammar_summary(
+                    grammar_summary.get("grammar_rule_name", "Unknown"),
+                    grammar_summary.get("grammar_rule_summary", "No explanation provided")
+                    
                 )
-            """
-            #self.session_state.add_grammar_summary(
-            print("Grammar Summary:", grammar_summary)
+            elif type(grammar_summary) is list and len(grammar_summary) > 0:
+                # add grammar to session state
+                for grammar in grammar_summary:
+                    #假设是新的语法规则
+                    self.session_state.add_grammar_summary(
+                        name=grammar.get("grammar_rule_name", "Unknown"),
+                        summary=grammar.get("grammar_rule_summary", "No explanation provided")
+                    )
+            #print("Grammar to add:", self.session_state.grammar_to_add)
+            #print("Summarized Result" + self.session_state.summarized_results)
+
+
         if self.session_state.check_relevant_decision.vocab:
             # get vocab summary result
             print("Vocab is relevant, processing vocab summary...")
@@ -114,17 +104,23 @@ class MainAssistant:
                 ai_response,
                 #dialogue_context=self.dialogue_history.get_dialogue_context()
             )
-            """""
-            for vocab in vocab_summary:
-                # add vocab to session state
-                #假设是新的词汇
-                self.session_state.vocab_to_add.append(
-                    VocabToAdd(
+            if type(vocab_summary) is dict:
+                self.session_state.add_vocab_summary(vocab_summary.get("vocab", "Unknown"))
+            if type(vocab_summary) is list and len(vocab_summary) > 0:
+                for vocab in vocab_summary:
+                    self.session_state.add_vocab_summary(
                         vocab=vocab.get("vocab", "Unknown")
                     )
-                )
-            print("Vocab Summary:", vocab_summary)
-            """
+            print("Summary results", self.session_state.summarized_results)
+            
+            for summary in self.session_state.summarized_results:
+                if isinstance(summary, GrammarSummary):
+                    print(f"Grammar Rule: {summary.grammar_rule_name} - {summary.grammar_rule_summary}")
+                elif isinstance(summary, VocabSummary):
+                    print(f"Vocab: {summary.vocab}")
+                else:
+                    print("Unknown summary type:", summary)
+            
         return
 
 '''
@@ -151,7 +147,7 @@ if __name__ == "__main__":
     )
     
     main_assistant = MainAssistant()
-    user_input = "in which是什么意思"
+    user_input = "in which是什么语法知识点？为什么用are而不是is？请总结出两个知识点" 
     main_assistant.run(test_sentence, user_input)
     """"
     while True:

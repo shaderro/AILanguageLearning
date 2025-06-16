@@ -8,7 +8,7 @@ class SummarizeGrammarRuleAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
             sys_prompt=summarize_grammar_rule_sys_prompt,
-            max_tokens=100,
+            max_tokens=300,
             parse_json=True
         )
 
