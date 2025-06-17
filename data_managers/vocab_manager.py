@@ -1,9 +1,9 @@
 import json
 from typing import List, Dict
 from dataclasses import asdict
-from data_classes import VocabExpression, VocabExpressionExample, VocabExpressionBundle
+from data_managers.data_classes import VocabExpression, VocabExpressionExample, VocabExpressionBundle
 import os
-from original_text_manager import OriginalTextManager
+from data_managers.original_text_manager import OriginalTextManager
 
 class VocabManager:
     def __init__(self):

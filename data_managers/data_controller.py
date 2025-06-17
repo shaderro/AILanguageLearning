@@ -1,10 +1,10 @@
 import json
 from typing import List, Dict
 from dataclasses import asdict, dataclass
-from data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
-from grammar_rule_manager import GrammarRuleManager
-from vocab_manager import VocabManager
-from original_text_manager import OriginalTextManager
+from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
+from data_managers.grammar_rule_manager import GrammarRuleManager
+from data_managers.vocab_manager import VocabManager
+from data_managers.original_text_manager import OriginalTextManager
 
 class DataController:
     """

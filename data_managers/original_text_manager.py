@@ -1,7 +1,7 @@
 import json
 from typing import List, Dict
 from dataclasses import asdict, dataclass
-from data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
+from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 
 
 class OriginalTextManager:
