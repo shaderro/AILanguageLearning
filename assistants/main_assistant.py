@@ -2,6 +2,7 @@ import os
 import json
 print("✅ 当前运行文件：", __file__)
 print("✅ 当前工作目录：", os.getcwd())
+import re
 from assistants.chat_info.dialogue_history import DialogueHistory
 from assistants.chat_info.session_state import SessionState, CheckRelevantDecision, GrammarSummary, VocabSummary, GrammarToAdd, VocabToAdd
 from assistants.sub_assistants.sub_assistant import SubAssistant
@@ -42,7 +43,7 @@ class MainAssistant:
         #回答问题
         ai_response = self.answer_question_function(quoted_sentence, user_question)
         #检查是否加入新语法和词汇
-        #self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response)
+        self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response)
         return
 
 
@@ -70,6 +71,29 @@ class MainAssistant:
         self.dialogue_history.add_message(user_input=user_question, ai_response=ai_response, quoted_sentence=quoted_sentence)
 
         return ai_response
+
+    def fuzzy_match_expressions(self, expr1: str, expr2: str) -> bool:
+        """
+        忽略大小写，支持'...'通配匹配，即表达之间允许省略部分内容
+        """
+        e1 = expr1.strip().lower()
+        e2 = expr2.strip().lower()
+
+        # 如果两个表达完全一致
+        if e1 == e2:
+            return True
+
+        # 如果 e1 包含省略号
+        if '...' in e1:
+            pattern = re.escape(e1).replace(r'\.\.\.', '.*')
+            return re.fullmatch(pattern, e2) is not None
+
+        # 如果 e2 包含省略号
+        if '...' in e2:
+            pattern = re.escape(e2).replace(r'\.\.\.', '.*')
+            return re.fullmatch(pattern, e1) is not None
+
+        return False
 
     def handle_grammar_vocab_function(self, quoted_sentence: Sentence, user_question: str, ai_response: str):
         """
@@ -117,16 +141,8 @@ class MainAssistant:
                         vocab=vocab.get("vocab", "Unknown")
                     )
         test_grammar_rule_list = [
-            "被动语态",
-            "关系从句",
-            "条件句",
-            "间接引语",
-            "动名词和不定式",
             "主谓一致",
-            "时态概述",
-            "情态动词",
-            "冠词用法",
-            "时间和地点介词"
+
         ]
         new_grammar_summaries = []
         for result in self.session_state.summarized_results:
@@ -142,13 +158,38 @@ class MainAssistant:
                         print(f"✅ 语法规则 '{rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
                         has_similar = True
                         break  # 跳出内层循环
-            if not has_similar:
+            if not has_similar and isinstance(result, GrammarSummary):
                 print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加到已有规则中")
                 new_grammar_summaries.append(result)
-        print("新语法知识点列表：", new_grammar_summaries)
-        #和现有列表对比，是否要新加入
-        
 
+        for grammar in new_grammar_summaries:
+            self.session_state.add_grammar_to_add(
+                GrammarToAdd(
+                    rule_name=grammar.grammar_rule_name,
+                    rule_explanation=grammar.grammar_rule_summary
+                )
+            )
+        print("grammar to add：", self.session_state.grammar_to_add)
+        #add to data
+        for grammar in self.session_state.grammar_to_add:
+            self.data_controller.add_new_grammar_rule(rule_name=grammar.grammar_rule_name, rule_summary=grammar.grammar_rule_summary)
+        
+        
+        test_vocab_list = []
+        new_vocab = []
+        for result in self.session_state.summarized_results:
+            has_similar = False
+            for vocab in test_vocab_list:
+                if isinstance(result, VocabSummary):
+                    compare_result = self.fuzzy_match_expressions(vocab,result.vocab)
+                if compare_result:
+                    print(f"✅ 词汇 '{vocab}' 与现有词汇 '{result.vocab}' 相似")
+                    has_similar = True
+                    break
+            if not has_similar and isinstance(result, VocabSummary):
+                print(f"🆕 新语法知识点：'{result.vocab}'，将添加到已有规则中")
+                new_vocab.append(result)
+        print("新单词列表：", new_vocab)
 
 if __name__ == "__main__":
     print("✅ 启动语言学习助手。默认引用句如下：")
