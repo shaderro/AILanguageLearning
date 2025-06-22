@@ -23,10 +23,19 @@ class GrammarRuleManager:
     def add_grammar_example(self, text_manager: OriginalTextManager, rule_id: int, text_id: int, sentence_id: int, explanation_context: str):
         if rule_id not in self.grammar_bundles:
             raise ValueError(f"Rule ID {rule_id} does not exist.")
+        for example in self.grammar_bundles[rule_id].examples:
+            if example.text_id == text_id and example.sentence_id == sentence_id:
+                raise ValueError(f"Example with text_id {text_id} and sentence_id {sentence_id} already exists for rule_id {rule_id}.")
         new_example = GrammarExample(rule_id=rule_id, text_id=text_id, sentence_id=sentence_id, explanation_context=explanation_context)
         self.grammar_bundles[rule_id].examples.append(new_example)
         text_manager.add_grammar_example_to_sentence(text_id, sentence_id,rule_id)
     
+    def get_id_by_rule_name(self, rule_name: str) -> int:
+        for rule_id, bundle in self.grammar_bundles.items():
+            if bundle.rule.name == rule_name:
+                return rule_id
+        raise ValueError(f"Rule name '{rule_name}' does not exist.")
+
     def get_rule_by_id(self, rule_id: int) -> GrammarRule:
         if rule_id not in self.grammar_bundles:
             raise ValueError(f"Rule ID {rule_id} does not exist.")
@@ -43,6 +52,9 @@ class GrammarRuleManager:
                 if example.text_id == text_id and example.sentence_id == sentence_id:
                     return example
         return None
+    
+    def get_all_rules_name(self) -> List[str]:
+        return [bundle.rule.name for bundle in self.grammar_bundles.values()]
     
     def save_to_file(self, path: str):
         with open(path, 'w') as f:

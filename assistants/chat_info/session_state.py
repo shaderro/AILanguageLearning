@@ -28,7 +28,7 @@ class CheckRelevantDecision:
     vocab: bool
 
 class SessionState:
-    def __init__(self, max_turns=5):
+    def __init__(self):
         #self.dialogue_history = DialogueHistory(max_turns=max_turns)
         self.current_sentence: Optional[Sentence] = None
         self.current_input: Optional[str] = None

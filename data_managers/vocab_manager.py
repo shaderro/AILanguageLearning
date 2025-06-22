@@ -23,6 +23,9 @@ class VocabManager:
     def add_vocab_example(self, text_manager: OriginalTextManager, vocab_id: int, text_id: int, sentence_id: int, context_explanation: str):
         if vocab_id not in self.vocab_bundles:
             raise ValueError(f"Vocab ID {vocab_id} does not exist.")
+        for example in self.vocab_bundles[vocab_id].example:
+            if example.text_id == text_id and example.sentence_id == sentence_id and example.vocab_id == vocab_id:
+                raise ValueError(f"Example for vocab_id {vocab_id}, text_id {text_id}, sentence_id {sentence_id} already exists.")
         new_example = VocabExpressionExample(
             vocab_id=vocab_id,
             text_id=text_id,
@@ -48,6 +51,15 @@ class VocabManager:
                 if example.text_id == text_id and example.sentence_id == sentence_id:
                     return example
         return None
+    
+    def get_id_by_vocab_body(self, vocab_body: str) -> int:
+        for vocab_id, bundle in self.vocab_bundles.items():
+            if bundle.vocab.vocab_body == vocab_body:
+                return vocab_id
+        raise ValueError(f"Vocab body '{vocab_body}' does not exist.")
+    
+    def get_all_vocab_body(self) -> List[str]:
+        return [bundle.vocab.vocab_body for bundle in self.vocab_bundles.values()]
 
     def save_to_file(self, path: str):
         with open(path, 'w') as f:

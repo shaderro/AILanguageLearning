@@ -103,3 +103,9 @@ class DataController:
         """
         return self.text_manager.list_titles()
     
+    def get_all_grammar_rules(self) -> List[GrammarRule]:
+        """
+        Get all grammar rules.
+        """
+        return self.grammar_manager.get_all_rules()
+    

@@ -28,7 +28,7 @@ class SubAssistant:
         if verbose:
             print("📬 Raw Response:\n", content)
         if self.parse_json:
-            print("📬 Parsing JSON from response...")
+            #print("📬 Parsing JSON from response...")
             return parse_json_from_text(content)
         return content
 

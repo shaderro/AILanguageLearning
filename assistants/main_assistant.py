@@ -19,8 +19,8 @@ from data_managers import data_controller
 class MainAssistant:
     
     def __init__(self, data_controller_instance=None):
-        self.session_state = SessionState(max_turns=1)
-        self.dialogue_history = DialogueHistory(max_turns=1)
+        self.session_state = SessionState()
+        self.dialogue_history = DialogueHistory(max_turns=3)
         self.check_if_relevant = CheckIfRelevant()
         self.check_if_grammar_relavent_assistant = CheckIfGrammarRelevantAssistant()
         self.check_if_vocab_relevant_assistant = CheckIfVocabRelevantAssistant()
@@ -34,19 +34,29 @@ class MainAssistant:
         """
         主处理函数，接收引用的句子、用户问题和AI响应，并进行相关处理。
         """
+        self.session_state.reset()  # 重置会话状态
         #是否和主题相关
         if(self.check_if_topic_relevant_function(quoted_sentence, user_question) is False):
             print("The question is not relevant to language learning, skipping processing.")
             return
         print("The question is relevant to language learning, proceeding with processing...")
-
+        
         #回答问题
         ai_response = self.answer_question_function(quoted_sentence, user_question)
         #检查是否加入新语法和词汇
         self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response)
+        self.add_new_to_data()
+        print("✅ 处理完成，已更新会话状态和对话历史。")
+        self.print_data_controller_data()
         return
 
-
+    def print_data_controller_data(self):
+        """
+        打印数据管理器中的数据，便于调试和验证。
+        """
+        print("Grammar Rules:", self.data_controller.grammar_manager.get_all_rules_name())
+        print("Vocab List:", self.data_controller.vocab_manager.get_all_vocab_body())
+        #print("Session State:", self.session_state)
 
     def check_if_topic_relevant_function(self, quoted_sentence: Sentence, user_question: str) -> bool:
         result = self.check_if_relevant.run(
@@ -109,6 +119,7 @@ class MainAssistant:
         )
 
         if self.session_state.check_relevant_decision.grammar:
+            print("✅ 语法相关，开始总结语法规则。")
             grammar_summary = self.summarize_grammar_rule_assistant.run(
                 self.session_state.current_sentence.sentence_body,
                 self.session_state.current_input,
@@ -128,6 +139,7 @@ class MainAssistant:
 
         # 检查是否与词汇相关
         if self.session_state.check_relevant_decision.vocab:
+            print("✅ 词汇相关，开始总结词汇。")
             vocab_summary = self.summarize_vocab_rule_assistant.run(
                 self.session_state.current_sentence.sentence_body,
                 self.session_state.current_input,
@@ -140,23 +152,28 @@ class MainAssistant:
                     self.session_state.add_vocab_summary(
                         vocab=vocab.get("vocab", "Unknown")
                     )
-        test_grammar_rule_list = [
-            "主谓一致",
 
-        ]
+        current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
         new_grammar_summaries = []
         for result in self.session_state.summarized_results:
             has_similar = False
-            for rule in test_grammar_rule_list:
+            for existing_rule in current_grammar_rule_names:
                 if isinstance(result, GrammarSummary):
                     compare_result = self.compare_grammar_rule_assistant.run(
-                        rule,
+                        existing_rule,
                         result.grammar_rule_name,
                         verbose=True
                     )
                     if compare_result.get("is_similar", False):
-                        print(f"✅ 语法规则 '{rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
+                        print(f"✅ 语法规则 '{existing_rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
                         has_similar = True
+                        existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
+                        self.data_controller.add_grammar_example(
+                            rule_id=existing_rule_id,
+                            text_id=self.session_state.current_sentence.text_id,
+                            sentence_id=self.session_state.current_sentence.sentence_id,
+                            explanation_context=result.grammar_rule_summary
+                        )
                         break  # 跳出内层循环
             if not has_similar and isinstance(result, GrammarSummary):
                 print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加到已有规则中")
@@ -164,32 +181,70 @@ class MainAssistant:
 
         for grammar in new_grammar_summaries:
             self.session_state.add_grammar_to_add(
-                GrammarToAdd(
+                #GrammarToAdd(
                     rule_name=grammar.grammar_rule_name,
                     rule_explanation=grammar.grammar_rule_summary
-                )
+                #)
             )
+
         print("grammar to add：", self.session_state.grammar_to_add)
         #add to data
-        for grammar in self.session_state.grammar_to_add:
-            self.data_controller.add_new_grammar_rule(rule_name=grammar.grammar_rule_name, rule_summary=grammar.grammar_rule_summary)
         
-        
-        test_vocab_list = []
+        current_vocab_list = self.data_controller.vocab_manager.get_all_vocab_body()
         new_vocab = []
         for result in self.session_state.summarized_results:
             has_similar = False
-            for vocab in test_vocab_list:
+            for vocab in current_vocab_list:
                 if isinstance(result, VocabSummary):
                     compare_result = self.fuzzy_match_expressions(vocab,result.vocab)
-                if compare_result:
-                    print(f"✅ 词汇 '{vocab}' 与现有词汇 '{result.vocab}' 相似")
-                    has_similar = True
-                    break
+                    if compare_result:
+                        print(f"✅ 词汇 '{vocab}' 与现有词汇 '{result.vocab}' 相似")
+                        has_similar = True
+                        existing_vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab)
+                        self.data_controller.add_vocab_example(
+                            vocab_id=existing_vocab_id,
+                            text_id=self.session_state.current_sentence.text_id,
+                            sentence_id=self.session_state.current_sentence.sentence_id,
+                            context_explanation=result.vocab
+                        )
+                        break
             if not has_similar and isinstance(result, VocabSummary):
-                print(f"🆕 新语法知识点：'{result.vocab}'，将添加到已有规则中")
+                print(f"🆕 新词汇知识点：'{result.vocab}'，将添加到已有规则中")
                 new_vocab.append(result)
-        print("新单词列表：", new_vocab)
+        print("新单词列表：", new_vocab) 
+        for vocab in new_vocab:
+            self.session_state.add_vocab_to_add(
+                #VocabToAdd(
+                    vocab=vocab.vocab
+                #)
+            )
+
+    def add_new_to_data(self):
+        """
+        将新语法和词汇添加到数据管理器中。
+        """
+        if self.session_state.grammar_to_add:
+            for grammar in self.session_state.grammar_to_add:
+                self.data_controller.add_new_grammar_rule(
+                    rule_name=grammar.rule_name,
+                    rule_explanation=grammar.rule_explanation
+                )
+            self.data_controller.add_grammar_example(
+                rule_id=self.data_controller.grammar_manager.get_id_by_rule_name(grammar.rule_name),
+                text_id=self.session_state.current_sentence.text_id,
+                sentence_id=self.session_state.current_sentence.sentence_id,
+                explanation_context="test explanation"
+            )
+
+        if self.session_state.vocab_to_add:
+            for vocab in self.session_state.vocab_to_add:
+                self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation="test explanation")  
+            self.data_controller.add_vocab_example(
+                vocab_id=self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab),
+                text_id=self.session_state.current_sentence.text_id,
+                sentence_id=self.session_state.current_sentence.sentence_id,
+                context_explanation="test explanation"
+            )
 
 if __name__ == "__main__":
     print("✅ 启动语言学习助手。默认引用句如下：")
@@ -210,14 +265,5 @@ if __name__ == "__main__":
     user_input = "in which是什么语法知识点？为什么用are而不是is？请总结出两个知识点" 
     main_assistant.run(test_sentence, user_input)
 
-    """"
-    while True:
-        user_input = input("\n🗨️ 请输入你的问题（或输入 q 退出）: ").strip()
-        if user_input.lower() in ["q", "quit", "exit"]:
-            print("👋 已退出语言学习助手。")
-            break
-        if not user_input:
-            print("⚠️ 输入为空，请重新输入。")
-            continue
-        main_assistant.run(test_sentence, user_input)
-"""""
+    #add sentence to example logic
+    

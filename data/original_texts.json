@@ -1,0 +1,20 @@
+{
+  "1": {
+    "text_id": 1,
+    "text_title": "Test Text",
+    "text_by_sentence": [
+      {
+        "text_id": 1,
+        "sentence_id": 1,
+        "sentence_body": "Wikipedia is a free content online encyclopedia website in 344 languages of the world in which 342 languages are currently active and 14 are closed. ",
+        "grammar_annotations": [
+          1
+        ],
+        "vocab_annotations": [
+          1,
+          2
+        ]
+      }
+    ]
+  }
+}

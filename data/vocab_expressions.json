@@ -1,0 +1,32 @@
+{
+    "1": {
+        "vocab": {
+            "vocab_id": 1,
+            "vocab_body": "in which",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 1,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "test explanation"
+            }
+        ]
+    },
+    "2": {
+        "vocab": {
+            "vocab_id": 2,
+            "vocab_body": "encyclopedia",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 2,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "test explanation"
+            }
+        ]
+    }
+}
