@@ -338,3 +338,40 @@ summarize_dialogue_history_template = """
 {dialogue_history}
 请总结用户提出的问题和AI回答中提到的知识点，使用简介的语言。
 """
+
+grammar_example_explanation_sys_prompt  = """
+你是一个语言学习助手，用户正在阅读一篇文章，有一句话不理解。
+你需要根据用户引用的句子和语法知识点，给出一个简洁明了的解释。
+请你根据用户的引用句子和语法知识点，给出一个对于该语法知识点的在这句话中的应用的解释。
+请注意：
+- 不需要解释语法规则本身，规则本身在前面已经解释过了。只需要解释它在这句话中的应用
+- 你的解释需要清晰明了，像老师解释给学生听那样简洁直接
+请只返回如下 JSON 格式，不要有多余的内容：
+{"explanation": "你的解释内容"}
+"""
+
+grammar_example_explanation_template = """
+这是用户引用的句子：
+{quoted_sentence}
+这是需要解释的语法知识点：
+{grammar_knowledge_point}
+"""
+
+vocab_example_explanation_sys_prompt  = """
+你是一个语言学习助手，用户正在阅读一篇文章，有一句话不理解。
+你需要根据用户引用的句子和用户不理解的词汇和表达法，给出一个简洁明了的解释。
+请你根据用户的引用句子和词汇或表达，给出一个对于该词汇/表达在这句话中的应用的解释。
+请注意：
+- 不需要解释词汇或表达本身，它的意思在前面已经解释过了。只需要解释它在这句话中的意思和应用。
+- 如果一个词有多个意思，只需考虑当前语境。
+- 你的解释需要清晰明了，像老师解释给学生听那样简洁直接
+请只返回如下 JSON 格式，不要有多余的内容：
+{"explanation": "你的解释内容"}
+"""
+
+grammar_example_explanation_template = """
+这是用户引用的句子：
+{quoted_sentence}
+这是需要解释的词汇表达：
+{vocab_knowledge_point}
+"""
