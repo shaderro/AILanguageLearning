@@ -3,6 +3,7 @@ from typing import List, Dict
 from dataclasses import asdict
 from data_managers.data_classes import VocabExpression, VocabExpressionExample, VocabExpressionBundle
 import os
+import chardet
 from data_managers.original_text_manager import OriginalTextManager
 
 class VocabManager:
@@ -66,15 +67,31 @@ class VocabManager:
     def save_to_file(self, path: str):
         with open(path, 'w') as f:
             json.dump({vocab_id: asdict(bundle) for vocab_id, bundle in self.vocab_bundles.items()}, f, indent=4, ensure_ascii=False)
-
+    
     def load_from_file(self, path: str):
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file at path {path} does not exist.")
         if not os.path.isfile(path):
             raise ValueError(f"The path {path} is not a file.")
-        with open(path, 'r') as f:
-            data = json.load(f)
-            for vocab_id, bundle_data in data.items():
-                vocab = VocabExpression(**bundle_data['vocab'])
-                examples = [VocabExpressionExample(**ex) for ex in bundle_data['example']]
-                self.vocab_bundles[int(vocab_id)] = VocabExpressionBundle(vocab=vocab, example=examples)
+        # 检测编码
+        with open(path, 'rb') as f:
+            raw = f.read()
+            result = chardet.detect(raw)
+            encoding = result['encoding']
+            confidence = result['confidence']
+            print(f"[DEBUG] Detected encoding for {path}: {encoding} (confidence: {confidence})")
+
+        if encoding is None:
+            raise UnicodeDecodeError("Failed to detect encoding with chardet.")
+
+        # 解码为文本
+        text = raw.decode(encoding)
+
+        # 加载 JSON 数据
+        data = json.loads(text)
+
+        # 解析为 VocabExpressionBundle 对象结构
+        for vocab_id, bundle_data in data.items():
+            vocab = VocabExpression(**bundle_data['vocab'])
+            examples = [VocabExpressionExample(**ex) for ex in bundle_data['example']]
+            self.vocab_bundles[int(vocab_id)] = VocabExpressionBundle(vocab=vocab, example=examples)

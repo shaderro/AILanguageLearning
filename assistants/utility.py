@@ -26,7 +26,8 @@ def parse_json_from_text(text):
         print("🪵 原始模型输出：", text)
         return None
     
-test_string = '''[
+    """
+    test_string = '''[
     {
         "grammar_rule_name": "定语从句in which",
         "grammar_rule_summary": "in which相当于where，用于引导定语从句，表示‘在其中’，which指代前面提到的名词"
@@ -39,3 +40,4 @@ test_string = '''[
 result = parse_json_from_text(test_string)
 print(result)
 print(type(result))
+    """

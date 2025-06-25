@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 from data_managers.original_text_manager import OriginalTextManager
 import os
+import chardet
 
 class GrammarRuleManager:
     def __init__(self):
@@ -67,9 +68,24 @@ class GrammarRuleManager:
             raise FileNotFoundError(f"The file at path {path} does not exist.")
         if not os.path.isfile(path):
             raise ValueError(f"The path {path} is not a file.")
-        with open(path, 'r') as f:
-            data = json.load(f)
-            for rule_id, bundle_data in data.items():
-                rule = GrammarRule(**bundle_data['rule'])
-                examples = [GrammarExample(**ex) for ex in bundle_data['examples']]
-                self.grammar_bundles[int(rule_id)] = GrammarBundle(rule=rule, examples=examples)    
+
+        # 自动检测编码
+        with open(path, 'rb') as f:
+            raw = f.read()
+            result = chardet.detect(raw)
+            encoding = result['encoding']
+            confidence = result['confidence']
+            print(f"[DEBUG] Detected encoding for {path}: {encoding} (confidence: {confidence})")
+
+        if encoding is None:
+            raise UnicodeDecodeError("Failed to detect encoding with chardet.")
+
+        # 解码并加载 JSON
+        text = raw.decode(encoding)
+        data = json.loads(text)
+
+        # 解析为 GrammarBundle 对象结构
+        for rule_id, bundle_data in data.items():
+            rule = GrammarRule(**bundle_data['rule'])
+            examples = [GrammarExample(**ex) for ex in bundle_data['examples']]
+            self.grammar_bundles[int(rule_id)] = GrammarBundle(rule=rule, examples=examples)
