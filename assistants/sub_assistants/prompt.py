@@ -369,7 +369,7 @@ vocab_example_explanation_sys_prompt  = """
 {"explanation": "你的解释内容"}
 """
 
-grammar_example_explanation_template = """
+vocab_example_explanation_template = """
 这是用户引用的句子：
 {quoted_sentence}
 这是需要解释的词汇表达：

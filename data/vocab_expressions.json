@@ -28,5 +28,35 @@
                 "context_explanation": "test explanation"
             }
         ]
+    },
+    "3": {
+        "vocab": {
+            "vocab_id": 3,
+            "vocab_body": "free content",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 3,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "test explanation"
+            }
+        ]
+    },
+    "4": {
+        "vocab": {
+            "vocab_id": 4,
+            "vocab_body": "website",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 4,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'website'指的是维基百科这个在线百科全书所在的网络平台，也就是用户可以通过互联网访问的网页集合。\"}\n```"
+            }
+        ]
     }
 }

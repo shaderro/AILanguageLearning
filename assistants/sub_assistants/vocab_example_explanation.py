@@ -1,29 +1,29 @@
 from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import grammar_example_explanation_sys_prompt,grammar_example_explanation_template
+from assistants.sub_assistants.prompt import vocab_example_explanation_sys_prompt,vocab_example_explanation_template
 from typing import Optional
 from data_managers.data_classes import Sentence
 
-class GrammarExampleExplanationAssistant(SubAssistant):
+class VocabExampleExplanationAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
-            sys_prompt=grammar_example_explanation_sys_prompt,
+            sys_prompt=vocab_example_explanation_sys_prompt,
             max_tokens=100,
             parse_json=False
         )
 
     def build_prompt(
         self,
-        grammar: str,
+        vocab: str,
         sentence: Sentence
     ) -> str:
-        return grammar_example_explanation_template.format(
+        return vocab_example_explanation_template.format(
             quoted_sentence=sentence.sentence_body,
-            grammar_knowledge_point=grammar,
+            vocab_knowledge_point=vocab,
         )
     
     def run(
         self,
-        grammar: str,
+        vocab: str,
         sentence: Sentence
     ) -> str:
         """
@@ -31,5 +31,5 @@ class GrammarExampleExplanationAssistant(SubAssistant):
         
         :param dialogue_history: 对话历史字符串
         """
-        return super().run(grammar, sentence)
+        return super().run(vocab, sentence)
     

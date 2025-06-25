@@ -25,7 +25,9 @@ class GrammarRuleManager:
             raise ValueError(f"Rule ID {rule_id} does not exist.")
         for example in self.grammar_bundles[rule_id].examples:
             if example.text_id == text_id and example.sentence_id == sentence_id:
-                raise ValueError(f"Example with text_id {text_id} and sentence_id {sentence_id} already exists for rule_id {rule_id}.")
+                print(f"Example with text_id {text_id} and sentence_id {sentence_id} already exists for rule_id {rule_id}.")
+                return
+                # raise ValueError(f"Example with text_id {text_id} and sentence_id {sentence_id} already exists for rule_id {rule_id}.")
         new_example = GrammarExample(rule_id=rule_id, text_id=text_id, sentence_id=sentence_id, explanation_context=explanation_context)
         self.grammar_bundles[rule_id].examples.append(new_example)
         text_manager.add_grammar_example_to_sentence(text_id, sentence_id,rule_id)

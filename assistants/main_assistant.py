@@ -13,6 +13,8 @@ from assistants.sub_assistants.check_if_relevant import CheckIfRelevant
 from assistants.sub_assistants.answer_question import AnswerQuestionAssistant
 from assistants.sub_assistants.summarize_vocab import SummarizeVocabAssistant
 from assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
+from assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
+from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
 from data_managers.data_classes import Sentence
 from data_managers import data_controller
 
@@ -28,6 +30,8 @@ class MainAssistant:
         self.summarize_grammar_rule_assistant = SummarizeGrammarRuleAssistant()
         self.summarize_vocab_rule_assistant = SummarizeVocabAssistant()
         self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
+        self.grammar_example_explanation_assistant = GrammarExampleExplanationAssistant()
+        self.vocab_example_explanation_assistant = VocabExampleExplanationAssistant()
         self.data_controller = data_controller_instance if data_controller_instance else data_controller.DataController()
 
     def run(self, quoted_sentence: Sentence, user_question: str):
@@ -168,11 +172,14 @@ class MainAssistant:
                         print(f"✅ 语法规则 '{existing_rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
                         has_similar = True
                         existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
+                        example_explanation = self.grammar_example_explanation_assistant.run(
+                            sentence=self.session_state.current_sentence,
+                            grammar=self.data_controller.grammar_manager.get_rule_by_id(existing_rule_id).name)
                         self.data_controller.add_grammar_example(
                             rule_id=existing_rule_id,
                             text_id=self.session_state.current_sentence.text_id,
                             sentence_id=self.session_state.current_sentence.sentence_id,
-                            explanation_context=result.grammar_rule_summary
+                            explanation_context=example_explanation
                         )
                         break  # 跳出内层循环
             if not has_similar and isinstance(result, GrammarSummary):
@@ -201,11 +208,15 @@ class MainAssistant:
                         print(f"✅ 词汇 '{vocab}' 与现有词汇 '{result.vocab}' 相似")
                         has_similar = True
                         existing_vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab)
+                        example_explanation = self.vocab_example_explanation_assistant.run(
+                            sentence=self.session_state.current_sentence,
+                            vocab=vocab
+                        )
                         self.data_controller.add_vocab_example(
                             vocab_id=existing_vocab_id,
                             text_id=self.session_state.current_sentence.text_id,
                             sentence_id=self.session_state.current_sentence.sentence_id,
-                            context_explanation=result.vocab
+                            context_explanation=example_explanation
                         )
                         break
             if not has_similar and isinstance(result, VocabSummary):
@@ -229,21 +240,29 @@ class MainAssistant:
                     rule_name=grammar.rule_name,
                     rule_explanation=grammar.rule_explanation
                 )
+            example_explanation = self.grammar_example_explanation_assistant.run(
+                            sentence=self.session_state.current_sentence,
+                            grammar=grammar.rule_name)
+                        
             self.data_controller.add_grammar_example(
                 rule_id=self.data_controller.grammar_manager.get_id_by_rule_name(grammar.rule_name),
                 text_id=self.session_state.current_sentence.text_id,
                 sentence_id=self.session_state.current_sentence.sentence_id,
-                explanation_context="test explanation"
+                explanation_context=example_explanation
             )
 
         if self.session_state.vocab_to_add:
             for vocab in self.session_state.vocab_to_add:
                 self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation="test explanation")  
+            
+            example_explanation = self.vocab_example_explanation_assistant.run(
+                            sentence=self.session_state.current_sentence,
+                            vocab=vocab.vocab)
             self.data_controller.add_vocab_example(
                 vocab_id=self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab),
                 text_id=self.session_state.current_sentence.text_id,
                 sentence_id=self.session_state.current_sentence.sentence_id,
-                context_explanation="test explanation"
+                context_explanation=example_explanation
             )
 
 if __name__ == "__main__":

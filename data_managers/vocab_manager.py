@@ -25,7 +25,9 @@ class VocabManager:
             raise ValueError(f"Vocab ID {vocab_id} does not exist.")
         for example in self.vocab_bundles[vocab_id].example:
             if example.text_id == text_id and example.sentence_id == sentence_id and example.vocab_id == vocab_id:
-                raise ValueError(f"Example for vocab_id {vocab_id}, text_id {text_id}, sentence_id {sentence_id} already exists.")
+                #raise ValueError(f"Example for vocab_id {vocab_id}, text_id {text_id}, sentence_id {sentence_id} already exists.")
+                print(f"Example for vocab_id {vocab_id}, text_id {text_id}, sentence_id {sentence_id} already exists.")
+                return  # Example already exists, no need to add again
         new_example = VocabExpressionExample(
             vocab_id=vocab_id,
             text_id=text_id,
