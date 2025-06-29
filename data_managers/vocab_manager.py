@@ -73,7 +73,11 @@ class VocabManager:
         if not os.path.isfile(path):
             raise ValueError(f"The path {path} is not a file.")
         with open(path, 'r') as f:
-            data = json.load(f)
+            content = f.read().strip()
+            if not content:
+                    print(f"[Warning] File {path} is empty. Starting with empty record.")
+                    return
+            data = json.loads(content)
             for vocab_id, bundle_data in data.items():
                 vocab = VocabExpression(**bundle_data['vocab'])
                 examples = [VocabExpressionExample(**ex) for ex in bundle_data['example']]

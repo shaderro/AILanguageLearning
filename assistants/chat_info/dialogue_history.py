@@ -1,5 +1,6 @@
 from data_managers.data_classes import Sentence
 from assistants.sub_assistants.summarize_dialogue_history import SummarizeDialogueHistoryAssistant
+import json
 
 class DialogueHistory:
     def __init__(self, max_turns):
@@ -46,4 +47,48 @@ class DialogueHistory:
 
     def keep_in_max_turns(self):
         self._summarize_and_clear() if len(self.messages_history) > self.max_turns else None
+
+    def save_to_file(self, path: str):
+        data = {
+            "summary": self.summary,
+            "messages": [
+                {
+                    "user": msg["user"],
+                    "ai": msg["ai"],
+                    "quote": {
+                        "text_id": msg["quote"].text_id,
+                        "sentence_id": msg["quote"].sentence_id,
+                        "sentence_body": msg["quote"].sentence_body,
+                        "grammar_annotations": msg["quote"].grammar_annotations,
+                        "vocab_annotations": msg["quote"].vocab_annotations,
+                    }
+                }
+                for msg in self.messages_history
+            ]
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def load_from_file(self, path: str):
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            if not content:
+                    print(f"[Warning] File {path} is empty. Starting with empty record.")
+                    return
+            data = json.loads(content)
+        self.summary = data.get("summary", "")
+        self.messages_history = [
+            {
+                "user": item["user"],
+                "ai": item["ai"],
+                "quote": Sentence(
+                    text_id=item["quote"]["text_id"],
+                    sentence_id=item["quote"]["sentence_id"],
+                    sentence_body=item["quote"]["sentence_body"],
+                    grammar_annotations=item["quote"]["grammar_annotations"],
+                    vocab_annotations=item["quote"]["vocab_annotations"]
+                )
+            }
+            for item in data.get("messages", [])
+        ]
 

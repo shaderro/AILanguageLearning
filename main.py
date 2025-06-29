@@ -2,18 +2,20 @@ from data_managers.data_controller import DataController
 from assistants.main_assistant import MainAssistant
 from data_managers.data_classes import Sentence
 
-data_controller = DataController()
-main_assistant = MainAssistant(data_controller)
+data_controller = DataController(3)
+main_assistant = MainAssistant(data_controller, 3)
 
 if __name__ == "__main__":
     data_controller.load_data(
         "data/grammar_rules.json",
         "data/vocab_expressions.json",
-        "data/original_texts.json"
+        "data/original_texts.json",
+        "data/dialogue_record.json",
+        "data/dialogue_history.json"
     )
     print("✅ 启动语言学习助手。默认引用句如下：")
     test_sentence_str = (
-        "Wikipedia is a free content online encyclopedia website in 344 languages of the world in which 342 languages are currently active and 14 are closed. "
+        "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei."
 )
     print("引用句（Quoted Sentence）:")
     print(test_sentence_str)
@@ -32,7 +34,9 @@ if __name__ == "__main__":
             data_controller.save_data(
                 "data/grammar_rules.json",
                 "data/vocab_expressions.json",
-                "data/original_texts.json"
+                "data/original_texts.json",
+                "data/dialogue_record.json",
+                "data/dialogue_history.json"
             )
             print("👋 已退出语言学习助手。")
             break

@@ -17,12 +17,13 @@ from assistants.sub_assistants.grammar_example_explanation import GrammarExample
 from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
 from data_managers.data_classes import Sentence
 from data_managers import data_controller
+from data_managers.dialogue_record import DialogueRecordBySentence
 
 class MainAssistant:
     
-    def __init__(self, data_controller_instance=None):
+    def __init__(self, data_controller_instance=None, max_turns = None):
         self.session_state = SessionState()
-        self.dialogue_history = DialogueHistory(max_turns=3)
+        self.dialogue_history = DialogueHistory(max_turns)
         self.check_if_relevant = CheckIfRelevant()
         self.check_if_grammar_relavent_assistant = CheckIfGrammarRelevantAssistant()
         self.check_if_vocab_relevant_assistant = CheckIfVocabRelevantAssistant()
@@ -33,20 +34,24 @@ class MainAssistant:
         self.grammar_example_explanation_assistant = GrammarExampleExplanationAssistant()
         self.vocab_example_explanation_assistant = VocabExampleExplanationAssistant()
         self.data_controller = data_controller_instance if data_controller_instance else data_controller.DataController()
+        self.dialogue_record = DialogueRecordBySentence()
 
     def run(self, quoted_sentence: Sentence, user_question: str):
         """
         主处理函数，接收引用的句子、用户问题和AI响应，并进行相关处理。
         """
         self.session_state.reset()  # 重置会话状态
+        self.dialogue_history.add_message(user_input=user_question, ai_response="", quoted_sentence=quoted_sentence)
+        self.dialogue_record.add_user_message(quoted_sentence, user_question)
         #是否和主题相关
         if(self.check_if_topic_relevant_function(quoted_sentence, user_question) is False):
             print("The question is not relevant to language learning, skipping processing.")
+            self.dialogue_record.add_ai_response(quoted_sentence, "The question is not relevant to language learning, skipping processing.")
             return
         print("The question is relevant to language learning, proceeding with processing...")
-        
         #回答问题
         ai_response = self.answer_question_function(quoted_sentence, user_question)
+        self.dialogue_record.add_ai_response(quoted_sentence, ai_response)
         #检查是否加入新语法和词汇
         self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response)
         self.add_new_to_data()

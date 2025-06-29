@@ -5,31 +5,40 @@ from data_managers.data_classes import OriginalText, Sentence, GrammarRule, Gram
 from data_managers.grammar_rule_manager import GrammarRuleManager
 from data_managers.vocab_manager import VocabManager
 from data_managers.original_text_manager import OriginalTextManager
+from data_managers.dialogue_record import DialogueRecordBySentence
+from assistants.chat_info.dialogue_history import DialogueHistory
+from data_managers.data_classes import VocabExpressionBundle
 
 class DataController:
     """
     A controller class for managing data operations related to grammar rules, vocabulary expressions, and original texts.
     """
-    def __init__(self):
+    def __init__(self, max_turns:int):
         self.grammar_manager = GrammarRuleManager()
         self.vocab_manager = VocabManager()
         self.text_manager = OriginalTextManager()
+        self.dialogue_record = DialogueRecordBySentence()
+        self.dialogue_history = DialogueHistory(max_turns)
 
-    def load_data(self, grammar_path: str, vocab_path: str, text_path: str):
+    def load_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """
         Load data from specified JSON files.
         """
         self.grammar_manager.load_from_file(grammar_path)
         self.vocab_manager.load_from_file(vocab_path)
         self.text_manager.load_from_file(text_path)
-
-    def save_data(self, grammar_path: str, vocab_path: str, text_path: str):
+        self.dialogue_record.load_from_file(dialogue_record_path)
+        self.dialogue_history.load_from_file(dialogue_record_path)
+        
+    def save_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """
         Save data to specified JSON files.
         """
         self.grammar_manager.save_to_file(grammar_path)
         self.vocab_manager.save_to_file(vocab_path)
         self.text_manager.save_to_file(text_path)
+        self.dialogue_record.save_all_to_file(dialogue_record_path)
+        self.dialogue_history.save_to_file(dialogue_history_path)
 
     def add_new_text(self, text_title: str):
         """

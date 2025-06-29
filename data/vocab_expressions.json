@@ -58,5 +58,16 @@
                 "context_explanation": "```json\n{\"explanation\": \"在这句话中，'website'指的是维基百科这个在线百科全书所在的网络平台，也就是用户可以通过互联网访问的网页集合。\"}\n```"
             }
         ]
-    }
-}
+    },
+    "5": {
+        "vocab": {
+            "vocab_id": 5,
+            "vocab_body": "sowie",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 5,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": 

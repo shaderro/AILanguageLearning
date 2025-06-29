@@ -116,7 +116,11 @@ class OriginalTextManager:
     def load_from_file(self, path: str):
         try:
             with open(path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                content = f.read().strip()
+                if not content:
+                    print(f"[Warning] File {path} is empty. Starting with empty record.")
+                    return
+                data = json.loads(content)
                 self.original_texts = {}  # 清空当前状态
                 for tid, text_data in data.items():
                     text = OriginalText(

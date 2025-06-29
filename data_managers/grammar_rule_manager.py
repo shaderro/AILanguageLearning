@@ -63,12 +63,18 @@ class GrammarRuleManager:
             json.dump({rule_id: asdict(bundle) for rule_id, bundle in self.grammar_bundles.items()}, f, indent=4)
     
     def load_from_file(self, path: str):
+        print(f"🧪 尝试加载文件：{path}")
         if not os.path.exists(path):
             raise FileNotFoundError(f"The file at path {path} does not exist.")
         if not os.path.isfile(path):
             raise ValueError(f"The path {path} is not a file.")
         with open(path, 'r') as f:
-            data = json.load(f)
+            content = f.read().strip()
+            print(f"🧪 文件内容预览：{content[:100]}...")  # 只打印前100字符
+            if not content:
+                    print(f"[Warning] File {path} is empty. Starting with empty record.")
+                    return
+            data = json.loads(content)
             for rule_id, bundle_data in data.items():
                 rule = GrammarRule(**bundle_data['rule'])
                 examples = [GrammarExample(**ex) for ex in bundle_data['examples']]
