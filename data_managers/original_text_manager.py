@@ -1,4 +1,6 @@
 import json
+import os
+import chardet  
 from typing import List, Dict
 from dataclasses import asdict, dataclass
 from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
@@ -114,32 +116,48 @@ class OriginalTextManager:
         return "\n".join([s.sentence_body for s in text.text_by_sentence])
 
     def load_from_file(self, path: str):
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                content = f.read().strip()
+                if not os.path.exists(path):
+                    raise FileNotFoundError(f"The file at path {path} does not exist.")
+                if not os.path.isfile(path):
+                    raise ValueError(f"The path {path} is not a file.")
+
+                with open(path, 'rb') as f:
+                    raw_data = f.read()
+
+                detected = chardet.detect(raw_data)
+                encoding = detected['encoding'] or 'utf-8'
+
+                try:
+                    content = raw_data.decode(encoding).strip()
+                except UnicodeDecodeError as e:
+                    print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
+                    raise e
+
                 if not content:
                     print(f"[Warning] File {path} is empty. Starting with empty record.")
                     return
+
                 data = json.loads(content)
                 self.original_texts = {}  # 清空当前状态
-                for tid, text_data in data.items():
-                    text = OriginalText(
-                    text_id=text_data['text_id'],
-                    text_title=text_data['text_title'],
-                    text_by_sentence=[
-                        Sentence(
-                        text_id=sentence['text_id'],
-                        sentence_id=sentence['sentence_id'],
-                        sentence_body=sentence['sentence_body'],
-                        grammar_annotations=sentence['grammar_annotations'],
-                        vocab_annotations=sentence['vocab_annotations']
-                        ) for sentence in text_data['text_by_sentence']
-                    ]
-                    )
-                    self.original_texts[int(tid)] = text
-        except FileNotFoundError:
-            print(f"[Warning] File '{path}' not found. No texts loaded.")
-        except json.JSONDecodeError:
-            print(f"[Error] Failed to parse JSON from '{path}'.")
+                try:
+                    for tid, text_data in data.items():
+                        text = OriginalText(
+                            text_id=text_data['text_id'],
+                            text_title=text_data['text_title'],
+                            text_by_sentence=[
+                                Sentence(
+                                    text_id=sentence['text_id'],
+                                    sentence_id=sentence['sentence_id'],
+                                    sentence_body=sentence['sentence_body'],
+                                    grammar_annotations=sentence['grammar_annotations'],
+                                    vocab_annotations=sentence['vocab_annotations']
+                                ) for sentence in text_data['text_by_sentence']
+                            ]
+                        )
+                        self.original_texts[int(tid)] = text
+                except FileNotFoundError:
+                    print(f"[Warning] File '{path}' not found. No texts loaded.")
+                except json.JSONDecodeError:
+                    print(f"[Error] Failed to parse JSON from '{path}'.")
     
     #优化：save and load，不需要每次都重写全部，而是查找有没有修改

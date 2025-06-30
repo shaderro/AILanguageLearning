@@ -3,6 +3,7 @@ from typing import List, Dict
 from dataclasses import asdict
 from data_managers.data_classes import VocabExpression, VocabExpressionExample, VocabExpressionBundle
 import os
+import chardet
 from data_managers.original_text_manager import OriginalTextManager
 
 class VocabManager:
@@ -64,19 +65,31 @@ class VocabManager:
         return [bundle.vocab.vocab_body for bundle in self.vocab_bundles.values()]
 
     def save_to_file(self, path: str):
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             json.dump({vocab_id: asdict(bundle) for vocab_id, bundle in self.vocab_bundles.items()}, f, indent=4, ensure_ascii=False)
-
+    
     def load_from_file(self, path: str):
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"The file at path {path} does not exist.")
-        if not os.path.isfile(path):
-            raise ValueError(f"The path {path} is not a file.")
-        with open(path, 'r') as f:
-            content = f.read().strip()
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"The file at path {path} does not exist.")
+            if not os.path.isfile(path):
+                raise ValueError(f"The path {path} is not a file.")
+
+            with open(path, 'rb') as f:
+                raw_data = f.read()
+
+            detected = chardet.detect(raw_data)
+            encoding = detected['encoding'] or 'utf-8'
+
+            try:
+                content = raw_data.decode(encoding).strip()
+            except UnicodeDecodeError as e:
+                print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
+                raise e
+
             if not content:
-                    print(f"[Warning] File {path} is empty. Starting with empty record.")
-                    return
+                print(f"[Warning] File {path} is empty. Starting with empty record.")
+                return
+
             data = json.loads(content)
             for vocab_id, bundle_data in data.items():
                 vocab = VocabExpression(**bundle_data['vocab'])

@@ -1,6 +1,7 @@
 from data_managers.data_classes import Sentence
 from assistants.sub_assistants.summarize_dialogue_history import SummarizeDialogueHistoryAssistant
 import json
+import chardet
 
 class DialogueHistory:
     def __init__(self, max_turns):
@@ -70,12 +71,29 @@ class DialogueHistory:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     def load_from_file(self, path: str):
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-            if not content:
-                    print(f"[Warning] File {path} is empty. Starting with empty record.")
-                    return
-            data = json.loads(content)
+        import os
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The file at path {path} does not exist.")
+        if not os.path.isfile(path):
+            raise ValueError(f"The path {path} is not a file.")
+
+        with open(path, 'rb') as f:
+            raw_data = f.read()
+
+        detected = chardet.detect(raw_data)
+        encoding = detected['encoding'] or 'utf-8'
+
+        try:
+            content = raw_data.decode(encoding).strip()
+        except UnicodeDecodeError as e:
+            print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
+            raise e
+
+        if not content:
+            print(f"[Warning] File {path} is empty. Starting with empty record.")
+            return
+
+        data = json.loads(content)
         self.summary = data.get("summary", "")
         self.messages_history = [
             {

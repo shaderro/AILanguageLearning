@@ -1,6 +1,8 @@
 from typing import Dict, List, Tuple, Optional
 from data_managers.data_classes import Sentence
 import json
+import chardet
+import os
 
 class DialogueRecordBySentence:
     def __init__(self):
@@ -26,6 +28,20 @@ class DialogueRecordBySentence:
     def get_records_by_sentence(self, sentence: Sentence) -> List[Dict[str, Optional[str]]]:
         return self.records.get((sentence.text_id, sentence.sentence_id), [])
     
+    def to_dict_list(self) -> List[Dict]:
+        result = []
+        for (text_id, sentence_id), turns in self.records.items():
+            for turn in turns:
+                result.append({
+                    "text_id": text_id,
+                    "sentence_id": sentence_id,
+                    "user": turn["user"],
+                    "ai": turn["ai"],
+                    # 默认标记，可由外部流程修改
+                    "is_learning_related": True
+                })
+        return result
+    
     def save_all_to_file(self, path: str):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(self.to_dict_list(), f, ensure_ascii=False, indent=2)
@@ -36,36 +52,52 @@ class DialogueRecordBySentence:
             json.dump(filtered, f, ensure_ascii=False, indent=2)
 
     def load_from_file(self, path: str):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if not content:
-                    print(f"[Warning] File {path} is empty. Starting with empty record.")
-                    return
-                data = json.loads(content)
-            self.summary = data.get("summary", "")
-            loaded_messages = []
-            for item in data.get("messages", []):
-                quote_data = item.get("quote", {})
-                quote = Sentence(
-                    text_id=quote_data.get("text_id"),
-                    sentence_id=quote_data.get("sentence_id"),
-                    sentence_body=quote_data.get("sentence_body"),
-                    grammar_annotations=quote_data.get("grammar_annotations", []),
-                    vocab_annotations=quote_data.get("vocab_annotations", [])
-                )
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"The file at path {path} does not exist.")
+            if not os.path.isfile(path):
+                raise ValueError(f"The path {path} is not a file.")
 
-                loaded_messages.append({
-                    "user": item.get("user", ""),
-                    "ai": item.get("ai", ""),
-                    "quote": quote
-                })
-            # 只保留最近 max_turns 条消息
-            self.messages_history = loaded_messages[-self.max_turns:]
-        except FileNotFoundError:
-            print(f"[Warning] File not found: {path}. Starting with empty dialogue history.")
-            self.messages_history = []
-            self.summary = ""
+            with open(path, 'rb') as f:
+                raw_data = f.read()
+
+            detected = chardet.detect(raw_data)
+            encoding = detected['encoding'] or 'utf-8'
+
+            try:
+                content = raw_data.decode(encoding).strip()
+            except UnicodeDecodeError as e:
+                print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
+                raise e
+
+            if not content:
+                print(f"[Warning] File {path} is empty. Starting with empty record.")
+                return
+
+            try:
+                data = json.loads(content)
+                self.summary = data.get("summary", "")
+                loaded_messages = []
+                for item in data.get("messages", []):
+                    quote_data = item.get("quote", {})
+                    quote = Sentence(
+                        text_id=quote_data.get("text_id"),
+                        sentence_id=quote_data.get("sentence_id"),
+                        sentence_body=quote_data.get("sentence_body"),
+                        grammar_annotations=quote_data.get("grammar_annotations", []),
+                        vocab_annotations=quote_data.get("vocab_annotations", [])
+                    )
+
+                    loaded_messages.append({
+                        "user": item.get("user", ""),
+                        "ai": item.get("ai", ""),
+                        "quote": quote
+                    })
+                # 只保留最近 max_turns 条消息
+                self.messages_history = loaded_messages[-self.max_turns:]
+            except FileNotFoundError:
+                print(f"[Warning] File not found: {path}. Starting with empty dialogue history.")
+                self.messages_history = []
+                self.summary = ""
 
     def print_records_by_sentence(self, sentence: Sentence):
         print(f"\n📚 对话记录 - 第 {sentence.text_id} 篇 第 {sentence.sentence_id} 句：{sentence.sentence_body}")

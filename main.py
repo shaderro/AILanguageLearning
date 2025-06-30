@@ -1,11 +1,13 @@
 from data_managers.data_controller import DataController
 from assistants.main_assistant import MainAssistant
 from data_managers.data_classes import Sentence
+import json
 
 data_controller = DataController(3)
 main_assistant = MainAssistant(data_controller, 3)
 
 if __name__ == "__main__":
+    
     data_controller.load_data(
         "data/grammar_rules.json",
         "data/vocab_expressions.json",

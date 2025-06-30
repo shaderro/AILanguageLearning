@@ -47,7 +47,7 @@
     "4": {
         "vocab": {
             "vocab_id": 4,
-            "vocab_body": "website",
+            "vocab_body": "sowie",
             "explanation": "test explanation"
         },
         "example": [
@@ -55,19 +55,8 @@
                 "vocab_id": 4,
                 "text_id": 1,
                 "sentence_id": 1,
-                "context_explanation": "```json\n{\"explanation\": \"ÔÚÕâ¾ä»°ÖĞ£¬'website'Ö¸µÄÊÇÎ¬»ù°Ù¿ÆÕâ¸öÔÚÏß°Ù¿ÆÈ«ÊéËùÔÚµÄÍøÂçÆ½Ì¨£¬Ò²¾ÍÊÇÓÃ»§¿ÉÒÔÍ¨¹ı»¥ÁªÍø·ÃÎÊµÄÍøÒ³¼¯ºÏ¡£\"}\n```"
+                "context_explanation": "```json\n{\"explanation\": \"åœ¨è¿™ä¸ªå¥å­ä¸­ï¼Œ'sowie' ç”¨æ¥è¿æ¥ä¸¤ä¸ªå¹¶åˆ—çš„ä¿¡æ¯ï¼Œè¡¨ç¤º'ä»¥åŠ'æˆ–'è¿˜æœ‰'ã€‚å®ƒåœ¨è¿™é‡Œå¼•å‡ºäº†ç¬¬äºŒä¸ªè¢«é€‰ä¸¾çš„èŒä½ï¼Œå³Tim KlÃ¼ssendorfä½œä¸ºå…šçš„ç§˜ä¹¦é•¿ã€‚\"}\n```"
             }
         ]
-    },
-    "5": {
-        "vocab": {
-            "vocab_id": 5,
-            "vocab_body": "sowie",
-            "explanation": "test explanation"
-        },
-        "example": [
-            {
-                "vocab_id": 5,
-                "text_id": 1,
-                "sentence_id": 1,
-                "context_explanation": 
+    }
+}

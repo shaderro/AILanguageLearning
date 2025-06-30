@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 from data_managers.original_text_manager import OriginalTextManager
 import os
+import chardet
 
 class GrammarRuleManager:
     def __init__(self):
@@ -59,21 +60,31 @@ class GrammarRuleManager:
         return [bundle.rule.name for bundle in self.grammar_bundles.values()]
     
     def save_to_file(self, path: str):
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             json.dump({rule_id: asdict(bundle) for rule_id, bundle in self.grammar_bundles.items()}, f, indent=4)
     
     def load_from_file(self, path: str):
-        print(f"🧪 尝试加载文件：{path}")
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"The file at path {path} does not exist.")
-        if not os.path.isfile(path):
-            raise ValueError(f"The path {path} is not a file.")
-        with open(path, 'r') as f:
-            content = f.read().strip()
-            print(f"🧪 文件内容预览：{content[:100]}...")  # 只打印前100字符
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"The file at path {path} does not exist.")
+            if not os.path.isfile(path):
+                raise ValueError(f"The path {path} is not a file.")
+
+            with open(path, 'rb') as f:
+                raw_data = f.read()
+
+            detected = chardet.detect(raw_data)
+            encoding = detected['encoding'] or 'utf-8'
+
+            try:
+                content = raw_data.decode(encoding).strip()
+            except UnicodeDecodeError as e:
+                print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
+                raise e
+
             if not content:
-                    print(f"[Warning] File {path} is empty. Starting with empty record.")
-                    return
+                print(f"[Warning] File {path} is empty. Starting with empty record.")
+                return
+
             data = json.loads(content)
             for rule_id, bundle_data in data.items():
                 rule = GrammarRule(**bundle_data['rule'])
