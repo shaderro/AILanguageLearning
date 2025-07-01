@@ -7,23 +7,27 @@ import os
 class DialogueRecordBySentence:
     def __init__(self):
         self.records: Dict[Tuple[int, int], List[Dict[str, Optional[str]]]] = {}
+        #Tuple[text_id, sentence_id], List[Dict[user question, Optional[ai response ]]]
+        self.messages_history: List[Dict] = []
+        self.max_turns: int = 100  # 默认保留最近100条消息
 
     def add_user_message(self, sentence: Sentence, user_input: str):
         key = (sentence.text_id, sentence.sentence_id)
         if key not in self.records:
             self.records[key] = []
-        self.records[key].append({"user": user_input, "ai": None})
+        self.records[key].append({user_input: None})
 
     def add_ai_response(self, sentence: Sentence, ai_response: str):
         key = (sentence.text_id, sentence.sentence_id)
         if key in self.records and self.records[key]:
             # 补充到最近一条没有 AI 回复的记录中
             for turn in reversed(self.records[key]):
-                if turn["ai"] is None:
-                    turn["ai"] = ai_response
-                    return
+                for user_question, ai_response_old in turn.items():
+                    if ai_response_old is None:
+                        turn[user_question] = ai_response
+                        return
         # 如果没有找到，就直接加一个完整条目
-        self.records.setdefault(key, []).append({"user": "[Missing user input]", "ai": ai_response})
+        self.records.setdefault(key, []).append({"[Missing user input]": ai_response})
 
     def get_records_by_sentence(self, sentence: Sentence) -> List[Dict[str, Optional[str]]]:
         return self.records.get((sentence.text_id, sentence.sentence_id), [])
@@ -32,14 +36,14 @@ class DialogueRecordBySentence:
         result = []
         for (text_id, sentence_id), turns in self.records.items():
             for turn in turns:
-                result.append({
-                    "text_id": text_id,
-                    "sentence_id": sentence_id,
-                    "user": turn["user"],
-                    "ai": turn["ai"],
-                    # 默认标记，可由外部流程修改
-                    "is_learning_related": True
-                })
+                for user_question, ai_response in turn.items():
+                    result.append({
+                        "text_id": text_id,
+                        "sentence_id": sentence_id,
+                        "user_question": user_question,
+                        "ai_response": ai_response,
+                        "is_learning_related": True
+                    })
         return result
     
     def save_all_to_file(self, path: str):
@@ -52,56 +56,54 @@ class DialogueRecordBySentence:
             json.dump(filtered, f, ensure_ascii=False, indent=2)
 
     def load_from_file(self, path: str):
-            if not os.path.exists(path):
-                raise FileNotFoundError(f"The file at path {path} does not exist.")
-            if not os.path.isfile(path):
-                raise ValueError(f"The path {path} is not a file.")
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The file at path {path} does not exist.")
+        if not os.path.isfile(path):
+            raise ValueError(f"The path {path} is not a file.")
 
-            with open(path, 'rb') as f:
-                raw_data = f.read()
+        with open(path, 'rb') as f:
+            raw_data = f.read()
 
-            detected = chardet.detect(raw_data)
-            encoding = detected['encoding'] or 'utf-8'
+        detected = chardet.detect(raw_data)
+        encoding = detected['encoding'] or 'utf-8'
 
-            try:
-                content = raw_data.decode(encoding).strip()
-            except UnicodeDecodeError as e:
-                print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
-                raise e
+        try:
+            content = raw_data.decode(encoding).strip()
+        except UnicodeDecodeError as e:
+            print(f"❗️无法用 {encoding} 解码文件 {path}：{e}")
+            raise e
 
-            if not content:
-                print(f"[Warning] File {path} is empty. Starting with empty record.")
-                return
+        if not content:
+            print(f"[Warning] File {path} is empty. Starting with empty record.")
+            return
 
-            try:
-                data = json.loads(content)
-                self.summary = data.get("summary", "")
-                loaded_messages = []
-                for item in data.get("messages", []):
-                    quote_data = item.get("quote", {})
-                    quote = Sentence(
-                        text_id=quote_data.get("text_id"),
-                        sentence_id=quote_data.get("sentence_id"),
-                        sentence_body=quote_data.get("sentence_body"),
-                        grammar_annotations=quote_data.get("grammar_annotations", []),
-                        vocab_annotations=quote_data.get("vocab_annotations", [])
-                    )
-
-                    loaded_messages.append({
-                        "user": item.get("user", ""),
-                        "ai": item.get("ai", ""),
-                        "quote": quote
-                    })
-                # 只保留最近 max_turns 条消息
-                self.messages_history = loaded_messages[-self.max_turns:]
-            except FileNotFoundError:
-                print(f"[Warning] File not found: {path}. Starting with empty dialogue history.")
-                self.messages_history = []
-                self.summary = ""
+        try:
+            data = json.loads(content)
+            if isinstance(data, list):
+                self.records = {}
+                for item in data:
+                    text_id = item.get("text_id")
+                    sentence_id = item.get("sentence_id")
+                    if text_id is not None and sentence_id is not None:
+                        key = (text_id, sentence_id)
+                        if key not in self.records:
+                            self.records[key] = []
+                        self.records[key].append({
+                            item.get("user_question", ""): item.get("ai_response", "")
+                        })
+            else:
+                # 兼容其他格式，暂不处理
+                pass
+        except FileNotFoundError:
+            print(f"[Warning] File not found: {path}. Starting with empty dialogue history.")
+            self.records = {}
+        except json.JSONDecodeError:
+            print(f"[Error] Failed to parse JSON from '{path}'.")
 
     def print_records_by_sentence(self, sentence: Sentence):
         print(f"\n📚 对话记录 - 第 {sentence.text_id} 篇 第 {sentence.sentence_id} 句：{sentence.sentence_body}")
         for turn in self.get_records_by_sentence(sentence):
-            print(f"👤 User: {turn['user']}")
-            print(f"🤖 AI: {turn['ai'] or '(waiting...)'}\n")
+            for user_question, ai_response in turn.items():
+                print(f"👤 User: {user_question}")
+                print(f"🤖 AI: {ai_response or '(waiting...)'}\n")
 

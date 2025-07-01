@@ -28,7 +28,7 @@ class DataController:
         self.vocab_manager.load_from_file(vocab_path)
         self.text_manager.load_from_file(text_path)
         self.dialogue_record.load_from_file(dialogue_record_path)
-        self.dialogue_history.load_from_file(dialogue_record_path)
+        self.dialogue_history.load_from_file(dialogue_history_path)
         
     def save_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """

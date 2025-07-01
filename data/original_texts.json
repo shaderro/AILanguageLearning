@@ -55,6 +55,13 @@
         "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
         "grammar_annotations": [],
         "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 7,
+        "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
       }
     ]
   },
@@ -80,6 +87,11 @@
   },
   "6": {
     "text_id": 6,
+    "text_title": "Test Text",
+    "text_by_sentence": []
+  },
+  "7": {
+    "text_id": 7,
     "text_title": "Test Text",
     "text_by_sentence": []
   }
