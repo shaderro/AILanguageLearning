@@ -1,4 +1,37 @@
 {
-  "summary": "",
-  "messages": []
+  "texts": {
+    "1": {
+      "text_title": "Text 1",
+      "current_summary": "1. 用户询问句子语法结构，AI未回答\n2. 用户问\"sowie\"意思，AI解释为连词\"以及/还有\"，相当于英语\"as well as\"\n3. 用户问\"Einwohnern\"意思，AI解释为\"居民/人口\"，是Einwohner的复数形式\n4. 用户问\"Teilfunktionen\"意思，AI解释为复合词\"部分功能\"，指城市具有部分大区域中心功能",
+      "messages": [
+        {
+          "user": "我在学习语言，这句话中的ausgewiesen是什么意思？",
+          "ai": "{'answer': 'ausgewiesen在这里的意思是‘被指定’或‘被划定为’。它是一个动词的过去分词形式，表示被动语态。整句意思是：这座拥有约31,100居民的城市在区域规划中被指定为具有部分高级中心功能的中级中心。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 1,
+            "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "我在学习语言，Oberzentrums是Obe高级） + zentrums中心）的意思吗？",
+          "ai": "{'answer': '是的，你的理解基本正确。Oberzentrum是由Ober（高级）和Zentrum（中心）组成的复合词，意思是‘高级中心’或‘主要中心’。德语中常用这种复合词构成新词。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 1,
+            "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        }
+      ],
+      "max_turns": 3
+    }
+  }
 }

@@ -58,5 +58,80 @@
                 "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'sowie' 用来连接两个并列的信息，表示'以及'或'还有'。它在这里引出了第二个被选举的职位，即Tim Klüssendorf作为党的秘书长。\"}\n```"
             }
         ]
+    },
+    "5": {
+        "vocab": {
+            "vocab_id": 5,
+            "vocab_body": "recording",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 5,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'recording' 指的是录制对话的过程或行为，即把对话的声音保存下来。\"}\n```"
+            }
+        ]
+    },
+    "6": {
+        "vocab": {
+            "vocab_id": 6,
+            "vocab_body": "einwohner",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 6,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'Einwohner'指的是居住在这座城市的人口数量，具体大约是31,100人。这个词用来描述城市的人口规模。\"}\n```"
+            }
+        ]
+    },
+    "7": {
+        "vocab": {
+            "vocab_id": 7,
+            "vocab_body": "teilfunktionen",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 7,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这里，'Teilfunktionen' 指的是这座城市在区域规划中承担了部分高级中心（Oberzentrum）的功能，但并非全部。也就是说，它有一些类似高级中心的功能，但不是所有功能都具备。\"}\n```"
+            }
+        ]
+    },
+    "8": {
+        "vocab": {
+            "vocab_id": 8,
+            "vocab_body": "ausgewiesen",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 8,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'ausgewiesen' 的意思是 '被指定' 或 '被规划为'。整个句子的意思是，这座城市在区域规划中被指定为具有部分高级中心功能的中级中心。\"}\n```"
+            }
+        ]
+    },
+    "9": {
+        "vocab": {
+            "vocab_id": 9,
+            "vocab_body": "oberzentrum",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 9,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'Oberzentrum' 指的是一个具有重要区域功能的中心城市，提供广泛的服务和设施，如高等教育、专科医疗和大型购物中心。句子中提到的城市被规划为具有部分 'Oberzentrum' 功能的 'Mittelzentrum'，意味着它虽然是一个中等规模的中心城市，但也承担了一些更高级别中心城市的职责。\"}\n```"
+            }
+        ]
     }
 }

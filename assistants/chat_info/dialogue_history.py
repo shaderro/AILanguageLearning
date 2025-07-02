@@ -50,25 +50,46 @@ class DialogueHistory:
         self._summarize_and_clear() if len(self.messages_history) > self.max_turns else None
 
     def save_to_file(self, path: str):
-        data = {
-            "summary": self.summary,
-            "messages": [
-                {
-                    "user": msg["user"],
-                    "ai": msg["ai"],
-                    "quote": {
-                        "text_id": msg["quote"].text_id,
-                        "sentence_id": msg["quote"].sentence_id,
-                        "sentence_body": msg["quote"].sentence_body,
-                        "grammar_annotations": msg["quote"].grammar_annotations,
-                        "vocab_annotations": msg["quote"].vocab_annotations,
-                    }
+        # 按text_id组织数据
+        organized_data = {"texts": {}}
+        
+        for msg in self.messages_history:
+            text_id = str(msg["quote"].text_id)
+            sentence_id = msg["quote"].sentence_id
+            
+            # 初始化text结构
+            if text_id not in organized_data["texts"]:
+                organized_data["texts"][text_id] = {
+                    "text_title": f"Text {text_id}",  # 可以从text_manager获取真实标题
+                    "current_summary": self.summary,
+                    "messages": [],
+                    "max_turns": self.max_turns
                 }
-                for msg in self.messages_history
-            ]
-        }
+            
+            # 添加消息
+            organized_data["texts"][text_id]["messages"].append({
+                "user": msg["user"],
+                "ai": msg["ai"],
+                "sentence_id": sentence_id,
+                "quote": {
+                    "text_id": msg["quote"].text_id,
+                    "sentence_id": msg["quote"].sentence_id,
+                    "sentence_body": msg["quote"].sentence_body,
+                    "grammar_annotations": msg["quote"].grammar_annotations,
+                    "vocab_annotations": msg["quote"].vocab_annotations,
+                },
+                "timestamp": "2024-01-01T10:00:00Z"  # 可以添加真实时间戳
+            })
+        
+        # 如果没有消息，保存空结构
+        if not organized_data["texts"]:
+            organized_data = {
+                "summary": self.summary,
+                "messages": []
+            }
+        
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump(organized_data, f, ensure_ascii=False, indent=2)
 
     def load_from_file(self, path: str):
         import os
@@ -94,19 +115,44 @@ class DialogueHistory:
             return
 
         data = json.loads(content)
-        self.summary = data.get("summary", "")
-        self.messages_history = [
-            {
-                "user": item["user"],
-                "ai": item["ai"],
-                "quote": Sentence(
-                    text_id=item["quote"]["text_id"],
-                    sentence_id=item["quote"]["sentence_id"],
-                    sentence_body=item["quote"]["sentence_body"],
-                    grammar_annotations=item["quote"]["grammar_annotations"],
-                    vocab_annotations=item["quote"]["vocab_annotations"]
-                )
-            }
-            for item in data.get("messages", [])
-        ]
+        self.messages_history = []
+        
+        # 处理新的组织格式
+        if isinstance(data, dict) and "texts" in data:
+            for text_id_str, text_data in data["texts"].items():
+                self.summary = text_data.get("current_summary", "")
+                for msg in text_data.get("messages", []):
+                    self.messages_history.append({
+                        "user": msg["user"],
+                        "ai": msg["ai"],
+                        "quote": Sentence(
+                            text_id=msg["quote"]["text_id"],
+                            sentence_id=msg["quote"]["sentence_id"],
+                            sentence_body=msg["quote"]["sentence_body"],
+                            grammar_annotations=msg["quote"]["grammar_annotations"],
+                            vocab_annotations=msg["quote"]["vocab_annotations"]
+                        )
+                    })
+        
+        # 兼容旧的格式
+        elif isinstance(data, dict) and "messages" in data:
+            self.summary = data.get("summary", "")
+            self.messages_history = [
+                {
+                    "user": item["user"],
+                    "ai": item["ai"],
+                    "quote": Sentence(
+                        text_id=item["quote"]["text_id"],
+                        sentence_id=item["quote"]["sentence_id"],
+                        sentence_body=item["quote"]["sentence_body"],
+                        grammar_annotations=item["quote"]["grammar_annotations"],
+                        vocab_annotations=item["quote"]["vocab_annotations"]
+                    )
+                }
+                for item in data.get("messages", [])
+            ]
+        else:
+            print(f"[Warning] Unknown data format in {path}. Starting with empty history.")
+            self.summary = ""
+            self.messages_history = []
 

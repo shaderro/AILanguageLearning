@@ -1,65 +1,35 @@
 {
   "1": {
     "text_id": 1,
-    "text_title": "Test Text",
+    "text_title": "First Test Text",
     "text_by_sentence": [
       {
         "text_id": 1,
         "sentence_id": 1,
-        "sentence_body": "Wikipedia is a free content online encyclopedia website in 344 languages of the world in which 342 languages are currently active and 14 are closed. ",
+        "sentence_body": "This is the first test sentence.",
         "grammar_annotations": [
-          1,
-          5,
-          6
+          12,
+          13,
+          14
         ],
         "vocab_annotations": [
-          1,
-          2,
-          3,
-          4,
-          4,
-          4
+          6,
+          7,
+          8,
+          9
         ]
       },
       {
         "text_id": 1,
         "sentence_id": 2,
-        "sentence_body": "Wikipedia is a free content online encyclopedia website in 344 languages of the world in which 342 languages are currently active and 14 are closed. ",
+        "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
         "grammar_annotations": [],
         "vocab_annotations": []
       },
       {
         "text_id": 1,
         "sentence_id": 3,
-        "sentence_body": "Wikipedia is a free content online encyclopedia website in 344 languages of the world in which 342 languages are currently active and 14 are closed. ",
-        "grammar_annotations": [],
-        "vocab_annotations": []
-      },
-      {
-        "text_id": 1,
-        "sentence_id": 4,
-        "sentence_body": "Wikipedia is a free content online encyclopedia website in 344 languages of the world in which 342 languages are currently active and 14 are closed. ",
-        "grammar_annotations": [],
-        "vocab_annotations": []
-      },
-      {
-        "text_id": 1,
-        "sentence_id": 5,
-        "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
-        "grammar_annotations": [],
-        "vocab_annotations": []
-      },
-      {
-        "text_id": 1,
-        "sentence_id": 6,
-        "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
-        "grammar_annotations": [],
-        "vocab_annotations": []
-      },
-      {
-        "text_id": 1,
-        "sentence_id": 7,
-        "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
+        "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
         "grammar_annotations": [],
         "vocab_annotations": []
       }
@@ -67,8 +37,16 @@
   },
   "2": {
     "text_id": 2,
-    "text_title": "Test Text",
-    "text_by_sentence": []
+    "text_title": "Second Test Text",
+    "text_by_sentence": [
+      {
+        "text_id": 2,
+        "sentence_id": 1,
+        "sentence_body": "This is the second test sentence.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      }
+    ]
   },
   "3": {
     "text_id": 3,
@@ -77,21 +55,6 @@
   },
   "4": {
     "text_id": 4,
-    "text_title": "Test Text",
-    "text_by_sentence": []
-  },
-  "5": {
-    "text_id": 5,
-    "text_title": "Test Text",
-    "text_by_sentence": []
-  },
-  "6": {
-    "text_id": 6,
-    "text_title": "Test Text",
-    "text_by_sentence": []
-  },
-  "7": {
-    "text_id": 7,
     "text_title": "Test Text",
     "text_by_sentence": []
   }

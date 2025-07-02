@@ -100,7 +100,7 @@ class DataController:
         """
         return self.vocab_manager.get_example_by_text_sentence_id(text_id, sentence_id)
     
-    def get_text_by_id(self, text_id: int) -> OriginalText:
+    def get_text_by_id(self, text_id: int) -> OriginalText | None:
         """
         Get the original text by its ID.
         """

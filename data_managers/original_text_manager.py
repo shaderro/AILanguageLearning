@@ -47,22 +47,26 @@ class OriginalTextManager:
         text = self.original_texts[text_id]
         return len(text.text_by_sentence)+1
 
-    def add_sentence_to_text(self, text_id: int, input_sentence: str):
+    def add_sentence_to_text(self, text_id: int, sentence_text: str):
         if text_id not in self.original_texts:
             raise ValueError(f"text_id {text_id} does not exist.")
         current_text = self.original_texts[text_id]
         current_sentence_id = self.get_next_sentence_id(text_id)
         # Create a new Sentence object
-        input_sentence = Sentence(text_id=text_id, sentence_id=current_sentence_id,
-                      sentence_body=input_sentence, grammar_annotations=[], vocab_annotations=[])
+        new_sentence = Sentence(text_id=text_id, sentence_id=current_sentence_id,
+                      sentence_body=sentence_text, grammar_annotations=[], vocab_annotations=[])
         
-        current_text.text_by_sentence.append(input_sentence)
+        current_text.text_by_sentence.append(new_sentence)
 
 
-    def get_text_by_id(self, text_id: int) -> OriginalText:
+    def get_text_by_id(self, text_id: int) -> OriginalText | None:
         return self.original_texts.get(text_id)
     
-    def get_text_by_title(self, text_title: str) -> OriginalText:
+    def get_text(self, text_id: int) -> OriginalText | None:
+        """兼容性方法，与get_text_by_id相同"""
+        return self.original_texts.get(text_id)
+    
+    def get_text_by_title(self, text_title: str) -> OriginalText | None:
         for text in self.original_texts.values():
             if text.text_title == text_title:
                 return text

@@ -46,9 +46,40 @@ class DialogueRecordBySentence:
                     })
         return result
     
+    def to_organized_dict(self) -> Dict:
+        """转换为按text_id和sentence_id组织的字典格式"""
+        organized = {"texts": {}}
+        
+        for (text_id, sentence_id), turns in self.records.items():
+            text_id_str = str(text_id)
+            sentence_id_str = str(sentence_id)
+            
+            # 初始化text结构
+            if text_id_str not in organized["texts"]:
+                organized["texts"][text_id_str] = {
+                    "text_title": f"Text {text_id}",  # 可以从text_manager获取真实标题
+                    "sentences": {}
+                }
+            
+            # 初始化sentence结构
+            if sentence_id_str not in organized["texts"][text_id_str]["sentences"]:
+                organized["texts"][text_id_str]["sentences"][sentence_id_str] = []
+            
+            # 添加对话记录
+            for turn in turns:
+                for user_question, ai_response in turn.items():
+                    organized["texts"][text_id_str]["sentences"][sentence_id_str].append({
+                        "user_question": user_question,
+                        "ai_response": ai_response,
+                        "timestamp": "2024-01-01T10:00:00Z",  # 可以添加真实时间戳
+                        "is_learning_related": True
+                    })
+        
+        return organized
+    
     def save_all_to_file(self, path: str):
         with open(path, 'w', encoding='utf-8') as f:
-            json.dump(self.to_dict_list(), f, ensure_ascii=False, indent=2)
+            json.dump(self.to_organized_dict(), f, ensure_ascii=False, indent=2)
 
     def save_filtered_to_file(self, path: str, only_learning_related: bool = True):
         filtered = [m for m in self.to_dict_list() if m["is_learning_related"] == only_learning_related]
@@ -79,8 +110,25 @@ class DialogueRecordBySentence:
 
         try:
             data = json.loads(content)
-            if isinstance(data, list):
-                self.records = {}
+            self.records = {}
+            
+            # 处理新的组织格式
+            if isinstance(data, dict) and "texts" in data:
+                for text_id_str, text_data in data["texts"].items():
+                    text_id = int(text_id_str)
+                    for sentence_id_str, sentence_dialogues in text_data.get("sentences", {}).items():
+                        sentence_id = int(sentence_id_str)
+                        key = (text_id, sentence_id)
+                        if key not in self.records:
+                            self.records[key] = []
+                        
+                        for dialogue in sentence_dialogues:
+                            self.records[key].append({
+                                dialogue.get("user_question", ""): dialogue.get("ai_response", "")
+                            })
+            
+            # 兼容旧的列表格式
+            elif isinstance(data, list):
                 for item in data:
                     text_id = item.get("text_id")
                     sentence_id = item.get("sentence_id")
@@ -92,8 +140,8 @@ class DialogueRecordBySentence:
                             item.get("user_question", ""): item.get("ai_response", "")
                         })
             else:
-                # 兼容其他格式，暂不处理
-                pass
+                print(f"[Warning] Unknown data format in {path}. Starting with empty record.")
+                
         except FileNotFoundError:
             print(f"[Warning] File not found: {path}. Starting with empty dialogue history.")
             self.records = {}

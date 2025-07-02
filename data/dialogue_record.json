@@ -1,1 +1,162 @@
-[]
+{
+  "texts": {
+    "1": {
+      "text_title": "Text 1",
+      "sentences": {
+        "1": [
+          {
+            "user_question": "What does this sentence mean?",
+            "ai_response": "{'answer': '这句话的意思是：这是一个用于对话录音的测试句子。你是对某个单词的意思不清楚，还是对整句话的用途有疑问呢？'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Can you explain the grammar?",
+            "ai_response": "{'answer': '这是一个简单的陈述句，结构是：主语(This) + 系动词(is) + 表语(a test sentence for dialogue recording)。句子没有复杂的语法点，只是说明某物是什么。你是想了解某个特定部分的语法吗？比如介词for的用法？'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What vocabulary should I learn?",
+            "ai_response": "{'answer': '这句话中值得学习的词汇是：recording（录音/录制）。这是一个常用名词，指录制声音或影像的过程或结果。例如：I made a voice recording.（我录了一段声音。）'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does this sentence mean?",
+            "ai_response": "{'answer': 'This is a test sentence for dialogue history. 这句话的意思是：这是一个用于对话历史记录的测试句子。你是想问某个特定单词的意思，还是整个句子的用途？'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Can you explain the grammar?",
+            "ai_response": "{'answer': \"这是一个简单的陈述句，结构是'This is + 名词短语'。'This'是主语，'is'是系动词，'a test sentence for dialogue history'是表语。你想了解具体的哪部分语法呢？比如冠词'a'的用法，还是介词短语'for dialogue history'的修饰关系？\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What vocabulary should I learn?",
+            "ai_response": "{'answer': '这句话中的主要词汇是：test（测试）、sentence（句子）、dialogue（对话）、history（历史）。你可以先记住这些基础词汇。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does this sentence mean?",
+            "ai_response": "{'answer': '这句话的意思是：这是第一个测试句子。你是想问具体的单词意思，还是整个句子的结构呢？'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Can you explain the grammar?",
+            "ai_response": "{'answer': '这是一个简单的主系表结构：This（主语） is（系动词） the first test sentence（表语）。系动词is连接主语和表语，说明主语的性质或状态。the first test sentence是名词短语作表语。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "sowie是什么意思？",
+            "ai_response": "{'answer': 'sowie是德语中的连词，意思是‘以及’或‘还有’。它用来连接两个并列的成分，类似于英语中的‘as well as’或‘and’。在这里连接的是两位当选的职位：Vorsitzenden（主席）和Generalsekretär（秘书长）。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does this sentence mean?",
+            "ai_response": "{'answer': \"This sentence means: '这是第一个测试句子。' It is simply stating that this is the first example sentence being presented. Do you need help understanding any specific words or the structure of the sentence?\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Can you explain the grammar?",
+            "ai_response": "{'answer': \"这是一个简单的陈述句，结构是：主语(This) + 系动词(is) + 表语(the first test sentence)。英语中'This is...'是最基础的介绍句型，表示'这是...'。你想了解哪个具体语法点呢？\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "这句话的语法结构是什么？",
+            "ai_response": null,
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "sowie是什么意思？",
+            "ai_response": "{'answer': 'sowie是德语中的连词，意思是‘以及’或‘还有’，相当于英语的‘as well as’。这里用来连接两个并列的人名：Bärbel Bas和Tim Klüssendorf。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Einwohnern是什么意思？",
+            "ai_response": "The question is not relevant to language learning, skipping processing.",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Einwohnern这个词是什么意思？我在试图学习语言",
+            "ai_response": "{'answer': 'Einwohnern 是德语名词，意思是‘居民’或‘人口’。它是Einwohner（单数）的复数形式，指居住在某地的人。比如：Die Stadt hat viele Einwohner（这座城市有很多居民）。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Teilfunktionen这个单词是什么意思？",
+            "ai_response": "The question is not relevant to language learning, skipping processing.",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "Teilfunktionen 这个单词是什么意思？我在学习语言",
+            "ai_response": "{'answer': 'Teilfunktionen 是德语复合词，由 Teil（部分）和 Funktionen（功能）组成，意思是‘部分功能’。这里指该城市具有一些（但不是全部）大区域中心（Oberzentrum）的功能。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "我在学习德语，这句话中的ausgewiesen是什么意思？",
+            "ai_response": "The question is not relevant to language learning, skipping processing.",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "我在学习语言，这句话中的ausgewiesen是什么意思？",
+            "ai_response": "{'answer': 'ausgewiesen在这里的意思是‘被指定’或‘被划定为’。它是一个动词的过去分词形式，表示被动语态。整句意思是：这座拥有约31,100居民的城市在区域规划中被指定为具有部分高级中心功能的中级中心。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "我在学习语言，Oberzentrums是Obe高级） + zentrums中心）的意思吗？",
+            "ai_response": "{'answer': '是的，你的理解基本正确。Oberzentrum是由Ober（高级）和Zentrum（中心）组成的复合词，意思是‘高级中心’或‘主要中心’。德语中常用这种复合词构成新词。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          }
+        ]
+      }
+    },
+    "2": {
+      "text_title": "Text 2",
+      "sentences": {
+        "1": [
+          {
+            "user_question": "What vocabulary should I learn?",
+            "ai_response": "{'answer': \"这句话中可学习的词汇是'sentence'(句子)和'test'(测试)。建议重点记忆这两个名词的用法。英语中'sentence'指完整的表达单位，'test'指测验或检验。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "How do you pronounce this?",
+            "ai_response": "{'answer': '这句话的发音是：/ðɪs ɪz ðə ˈsɛkənd tɛst ˈsɛntəns/。可以分解为：This（ðɪs） is（ɪz） the（ðə） second（ˈsɛkənd） test（tɛst） sentence（ˈsɛntəns）。注意重音在second和sentence的第一个音节。'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What vocabulary should I learn?",
+            "ai_response": "{'answer': \"在这句话中，你可以学习以下词汇：'second'（第二）、'test'（测试）、'sentence'（句子）。这些是基础但重要的英语单词。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "How do you pronounce this?",
+            "ai_response": "{'answer': \"这句话的发音是 /ðɪs ɪz ðə ˈsɛkənd tɛst ˈsɛntəns/。英语中，'second' 读作 /ˈsɛkənd/，'test' 读作 /tɛst/，'sentence' 读作 /ˈsɛntəns/。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          }
+        ]
+      }
+    }
+  }
+}

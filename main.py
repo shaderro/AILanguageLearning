@@ -17,7 +17,7 @@ if __name__ == "__main__":
     )
     print("✅ 启动语言学习助手。默认引用句如下：")
     test_sentence_str = (
-        "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei."
+        " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen."
 )
     print("引用句（Quoted Sentence）:")
     print(test_sentence_str)
