@@ -112,4 +112,23 @@ class DataController:
         """
         return self.text_manager.list_titles()
     
- 
+    def get_all_vocab_data(self) -> List[tuple]:
+        """
+        Get all vocabulary data as a list of tuples (vocab_body, explanation, example_text, difficulty)
+        """
+        vocab_data = []
+        for vocab_id, bundle in self.vocab_manager.vocab_bundles.items():
+            vocab = bundle.vocab
+            # 获取第一个例子作为示例
+            example_text = ""
+            if bundle.example:
+                example = bundle.example[0]
+                # 这里可以进一步获取句子的实际内容，暂时使用context_explanation
+                example_text = example.context_explanation
+            
+            # 根据词汇长度或复杂度判断难度
+            difficulty = "简单" if len(vocab.vocab_body) <= 6 else "中等" if len(vocab.vocab_body) <= 10 else "困难"
+            
+            vocab_data.append((vocab.vocab_body, vocab.explanation, example_text, difficulty))
+        
+        return vocab_data

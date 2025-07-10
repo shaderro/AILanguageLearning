@@ -258,27 +258,19 @@ class ArticleScreen(Screen):
     def set_article(self, title, content):
         """设置文章内容"""
         self.title_label.text = f"[b][color=000000]{title}[/color][/b]"
-        
         # 清空旧句子
         self.sentence_vbox.clear_widgets()
-        
-        # 测试内容
-        content = (
-            "This is a test article. This is the test content. Here is another sentence. "
-            "And another one. Kivy is fun! Try clicking these sentences. Each one is a button. "
-            "You can add as many as you like. The layout should scroll horizontally if needed. "
-            "This is a very long sentence to test the horizontal scrolling behavior of the layout. "
-            "Another test sentence. Yet another one. Keep going!"
-        )
-        
-        sentences = [s.strip() for s in content.split('.') if s.strip()]
+        # 优先按\n分割，否则按.分割
+        if '\n' in content:
+            sentences = [s.strip() for s in content.split('\n') if s.strip()]
+        else:
+            sentences = [s.strip() for s in content.split('.') if s.strip()]
         max_chars = 40
         line = []
         line_len = 0
-        
         for s in sentences:
             btn = Button(
-                text=s + '.',
+                text=s,
                 size_hint_x=None,
                 background_normal='',
                 background_color=(1, 1, 1, 1),
@@ -292,7 +284,6 @@ class ArticleScreen(Screen):
             btn.bind(on_release=partial(self.on_sentence_click, btn))
             line.append(btn)
             line_len += len(s)
-            
             if line_len >= max_chars:
                 hbox = BoxLayout(
                     orientation='horizontal', 
@@ -303,7 +294,6 @@ class ArticleScreen(Screen):
                 self.sentence_vbox.add_widget(hbox)
                 line = []
                 line_len = 0
-        
         if line:
             hbox = BoxLayout(
                 orientation='horizontal', 
@@ -312,7 +302,6 @@ class ArticleScreen(Screen):
             for b in line:
                 hbox.add_widget(b)
             self.sentence_vbox.add_widget(hbox)
-        
         self.clicked_sentence = None
     
     def on_sentence_click(self, btn, *args):
