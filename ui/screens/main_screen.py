@@ -18,44 +18,44 @@ try:
     from components.cards import ClickableCard, VocabCard
     from components.buttons import TabButton, SubTabButton
     from utils.swipe_handler import SwipeHandler
-    from data_managers.data_controller import DataController
 except ImportError:
     # 如果直接运行此文件，使用相对导入
     import sys
     import os
-    # 添加项目根目录到Python路径
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    sys.path.append(project_root)
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from components.cards import ClickableCard, VocabCard
     from components.buttons import TabButton, SubTabButton
     from utils.swipe_handler import SwipeHandler
-    from data_managers.data_controller import DataController
+
 
 class MainScreen(Screen):
     """主屏幕"""
     
-    def __init__(self, screen_manager, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.screen_manager = screen_manager
         self.swipe_handler = SwipeHandler()
         
         # 初始化数据控制器
-        self.data_controller = DataController(max_turns=10)
-        self._load_data()
+        try:
+            from data_managers.data_controller import DataController
+            self.data_controller = DataController()
+        except ImportError:
+            print("无法导入DataController，使用模拟数据")
+            self.data_controller = None
         
-        # 初始化卡片列表
+        # 存储卡片引用
         self.article_cards = []
         self.vocab_cards = []
         
         self._setup_background()
+        self._load_data()
         self._setup_layout()
         #self._setup_topbar()
-        self._setup_card_list()
-        self._setup_vocab_content()
-        #self._setup_blank_content()
+        self._setup_reading_page()
+        self._setup_learn_page()
         self._setup_tab_bar()
         
-        # 初始显示文章tab
+        # 初始显示阅读卡片
         self.show_tab1()
     
     def _setup_background(self):
@@ -67,35 +67,21 @@ class MainScreen(Screen):
     
     def _load_data(self):
         """加载数据"""
-        try:
-            # 获取数据文件路径
-            import os
-            data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-            grammar_path = os.path.join(data_dir, 'grammar_rules.json')
-            vocab_path = os.path.join(data_dir, 'vocab_expressions.json')
-            text_path = os.path.join(data_dir, 'original_texts.json')
-            dialogue_record_path = os.path.join(data_dir, 'dialogue_record.json')
-            dialogue_history_path = os.path.join(data_dir, 'dialogue_history.json')
-            
-            # 加载数据
-            self.data_controller.load_data(
-                grammar_path, vocab_path, text_path, 
-                dialogue_record_path, dialogue_history_path
-            )
-        except Exception as e:
-            print(f"加载数据时出错: {e}")
+        if self.data_controller:
+            try:
+                self.data_controller.load_all_data()
+                print("数据加载成功")
+            except Exception as e:
+                print(f"数据加载失败: {e}")
     
     def _setup_layout(self):
         """设置主布局"""
         # 主容器：垂直布局包含内容区域和tab栏
         self.layout = BoxLayout(orientation='vertical')
         
-        # 内容容器：使用单个ScrollView，动态切换内容
-        self.content_scroll = ScrollView(size_hint_y=1)
-        self.content_container = BoxLayout(orientation='vertical', size_hint_y=None, spacing=20, padding=20)
-        self.content_container.bind(minimum_height=lambda instance, value: setattr(self.content_container, 'height', value))
-        self.content_scroll.add_widget(self.content_container)
-        self.layout.add_widget(self.content_scroll)
+        # 内容区域：使用单个容器，动态切换内容
+        self.content_container = BoxLayout(orientation='vertical', size_hint_y=1)
+        self.layout.add_widget(self.content_container)
         
         self.add_widget(self.layout)
     
@@ -106,7 +92,7 @@ class MainScreen(Screen):
         topbar.add_widget(Widget())
         self.layout.add_widget(topbar)
     
-    def _setup_card_list(self):
+    def _setup_reading_page(self):
         """设置卡片列表"""
         # 从数据控制器获取原始文本标题
         try:
@@ -114,6 +100,16 @@ class MainScreen(Screen):
         except Exception as e:
             print(f"获取文本标题时出错: {e}")
             text_titles = []
+        
+        # 如果没有数据，使用测试数据
+        if not text_titles:
+            text_titles = [
+                "The Internet and Language",
+                "Modern Communication", 
+                "Cultural Linguistics",
+                "Global Dialects"
+            ]
+            print("使用测试文章数据")
         
         # 为每个标题创建卡片
         for title in text_titles:
@@ -126,164 +122,196 @@ class MainScreen(Screen):
             print(f"创建卡片: {title}")  # 调试信息
             # 不直接添加到容器，由tab切换方法添加
     
-    def _setup_vocab_content(self):
-        """设置词汇内容区域"""
-        # 从数据控制器获取词汇数据
-        try:
-            vocab_data = self.data_controller.get_all_vocab_data()
-            print(f"获取到词汇数据数量: {len(vocab_data)}")  # 调试信息
-        except Exception as e:
-            print(f"获取词汇数据时出错: {e}")
-            # 使用测试数据作为备用
-            vocab_data = [
-                ("apple", "苹果", "I eat an apple every day.", "简单"),
-                ("beautiful", "美丽的", "She is a beautiful girl.", "简单"),
-                ("computer", "电脑", "I use my computer to work.", "简单"),
-                ("determine", "决定", "You must determine your own path.", "中等"),
-                ("efficient", "高效的", "This is an efficient method.", "中等"),
-                ("fascinating", "迷人的", "The story is fascinating.", "困难"),
-                ("generous", "慷慨的", "He is a generous person.", "中等"),
-                ("happiness", "幸福", "Happiness comes from within.", "中等"),
-                ("imagination", "想象力", "Children have vivid imagination.", "困难"),
-                ("journey", "旅程", "Life is a journey.", "简单"),
-                ("knowledge", "知识", "Knowledge is power.", "中等"),
-                ("language", "语言", "English is a global language.", "简单"),
-                ("magnificent", "壮丽的", "The view is magnificent.", "困难"),
-                ("necessary", "必要的", "It is necessary to study hard.", "中等"),
-                ("opportunity", "机会", "This is a great opportunity.", "困难"),
-            ]
-            print(f"使用备用词汇数据数量: {len(vocab_data)}")  # 调试信息
+    def _setup_learn_page(self):
+        """设置学习页面内容区域 - 包含子tab bar和内容区域"""
+        # 创建学习页面的主容器 - 占据所有可用空间
+        self.learn_content_container = BoxLayout(orientation='vertical', size_hint_y=1, spacing=10, padding=20)
         
-        # 创建词汇内容容器
-        self.vocab_content_container = BoxLayout(orientation='vertical')
+        # 添加边框用于调试
+        with self.learn_content_container.canvas.before:
+            Color(1, 0, 0, 1)  # 红色边框
+            self.learn_border = Rectangle(pos=self.learn_content_container.pos, size=self.learn_content_container.size)
+        self.learn_content_container.bind(pos=self._update_learn_border, size=self._update_learn_border)
         
-        # 顶部切换bar
+        # 1. 添加子tab bar - 固定在顶部，不参与滚动
+        self._setup_learn_sub_tab_bar()
+        
+        # 2. 添加内容滚动区域 - 只有这部分会滚动
+        self._setup_learn_content_area()
+        
+        # 移除高度绑定，因为现在使用size_hint_y=1
+        # self.learn_content_container.bind(minimum_height=lambda instance, value: setattr(self.learn_content_container, 'height', value))
+
+    def _setup_learn_sub_tab_bar(self):
+        """设置学习页面的子tab bar - 固定在顶部"""
+        # 子tab bar容器 - 固定高度，不参与滚动
         sub_tab_row = BoxLayout(
             orientation='horizontal', 
             size_hint_y=None, height=50, 
-            spacing=10, padding=(20, 0, 20, 0)
+            spacing=10, padding=(10, 5, 10, 5)
         )
         
-        self.vocab_sub_btn = SubTabButton('vocab', is_active=True)
-        self.grammar_sub_btn = SubTabButton('grammar', is_active=False)
+        # 添加蓝色边框用于调试子tab bar
+        with sub_tab_row.canvas.before:
+            Color(0, 0, 1, 1)  # 蓝色边框
+            self.sub_tab_border = Rectangle(pos=sub_tab_row.pos, size=sub_tab_row.size)
+        sub_tab_row.bind(pos=self._update_sub_tab_border, size=self._update_sub_tab_border)
         
-        self.vocab_sub_btn.bind(on_release=self.show_vocab_sub)
-        self.grammar_sub_btn.bind(on_release=self.show_grammar_sub)
+        # 创建子tab按钮
+        self.sub_tab1_btn = TabButton('Grammar语法', is_active=True)
+        self.sub_tab2_btn = TabButton('Vocabulary词汇', is_active=False)
+        self.sub_tab3_btn = TabButton('Practice练习', is_active=False)
         
-        sub_tab_row.add_widget(self.vocab_sub_btn)
-        sub_tab_row.add_widget(self.grammar_sub_btn)
-        self.vocab_content_container.add_widget(sub_tab_row)
+        # 绑定事件
+        self.sub_tab1_btn.bind(on_release=self.show_grammar_content)
+        self.sub_tab2_btn.bind(on_release=self.show_vocab_content)
+        self.sub_tab3_btn.bind(on_release=self.show_practice_content)
         
-        # 内容区域
-        content_container = RelativeLayout(size_hint_y=1)
+        # 添加到子tab bar
+        sub_tab_row.add_widget(self.sub_tab1_btn)
+        sub_tab_row.add_widget(self.sub_tab2_btn)
+        sub_tab_row.add_widget(self.sub_tab3_btn)
         
-        # Vocab内容
-        vocab_scroll = ScrollView(size_hint=(1, 1), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        vocab_list = GridLayout(cols=1, spacing=15, size_hint_y=None, padding=20)
-        vocab_list.bind(minimum_height=lambda instance, value: setattr(vocab_list, 'height', value))
+        # 添加到学习内容容器 - 子tab bar固定在顶部
+        self.learn_content_container.add_widget(sub_tab_row)
+
+    def _setup_learn_content_area(self):
+        """设置学习内容滚动区域 - 只有这部分会滚动"""
+        # 创建滚动视图 - 占据剩余空间
+        self.learn_scroll = ScrollView(size_hint_y=1)
         
-        # 存储词汇卡片引用
-        self.vocab_cards = []
-        for word, meaning, example, difficulty in vocab_data:
-            vocab_card = VocabCard(word, meaning, example, difficulty)
-            self.vocab_cards.append(vocab_card)
-            vocab_list.add_widget(vocab_card)
-            print(f"创建词汇卡片: {word}")  # 调试信息
+        # 添加绿色边框用于调试滚动区域
+        with self.learn_scroll.canvas.before:
+            Color(0, 1, 0, 1)  # 绿色边框
+            self.scroll_border = Rectangle(pos=self.learn_scroll.pos, size=self.learn_scroll.size)
+        self.learn_scroll.bind(pos=self._update_scroll_border, size=self._update_scroll_border)
         
-        print(f"总共创建了 {len(self.vocab_cards)} 个词汇卡片")  # 调试信息
+        # 创建内容容器 - 只有这个容器内的内容会滚动
+        self.learn_sub_content_container = BoxLayout(orientation='vertical', size_hint_y=None, spacing=15, padding=10)
+        # 重要：绑定高度，让内容容器高度根据内容自动调整
+        self.learn_sub_content_container.bind(minimum_height=lambda instance, value: setattr(self.learn_sub_content_container, 'height', value))
         
-        vocab_scroll.add_widget(vocab_list)
+        # 将内容容器添加到滚动视图
+        self.learn_scroll.add_widget(self.learn_sub_content_container)
         
-        # 确保vocab_scroll可见
-        vocab_scroll.opacity = 1
+        # 将滚动视图添加到学习内容容器 - 滚动区域在子tab bar下方
+        self.learn_content_container.add_widget(self.learn_scroll)
         
-        # Grammar内容
-        self.grammar_content = Label(
-            text='[color=000000]这是grammar内容[/color]', 
-            markup=True, font_size=36, halign='center', valign='middle', 
-            size_hint=(1, 1), pos_hint={'center_x': 0.5, 'center_y': 0.5}
+        # 初始显示语法内容
+        self.show_grammar_content()
+
+    def show_grammar_content(self, *args):
+        """显示语法内容"""
+        print("切换到grammar子tab")
+        self.sub_tab1_btn.set_active(True)
+        self.sub_tab2_btn.set_active(False)
+        self.sub_tab3_btn.set_active(False)
+        
+        # 清空内容容器
+        self.learn_sub_content_container.clear_widgets()
+        
+        # 添加语法相关内容
+        grammar_label = Label(
+            text='[color=333333]Grammar Learning\n语法学习内容[/color]', 
+            markup=True, 
+            font_size=24, 
+            halign='center',
+            size_hint_y=None,
+            height=100
         )
-        self.grammar_content.opacity = 0
+        self.learn_sub_content_container.add_widget(grammar_label)
         
-        content_container.add_widget(vocab_scroll)
-        content_container.add_widget(self.grammar_content)
-        self.vocab_content_container.add_widget(content_container)
-        
-        # 不直接添加到容器，由tab切换方法添加
-    
-    def _setup_blank_content(self):
-        """设置空白页内容"""
-        blank_layout = BoxLayout(orientation='vertical')
-        
-        # 子标签栏
-        sub_tab_row = BoxLayout(
-            orientation='horizontal', 
-            size_hint_y=None, height=50, 
-            spacing=10, padding=(20, 0, 20, 0)
-        )
-        
-        self.vocab_btn = SubTabButton('vocab', is_active=True)
-        self.grammar_btn = SubTabButton('grammar', is_active=False)
-        
-        self.vocab_btn.bind(on_release=self.show_vocab)
-        self.grammar_btn.bind(on_release=self.show_grammar)
-        
-        sub_tab_row.add_widget(self.vocab_btn)
-        sub_tab_row.add_widget(self.grammar_btn)
-        blank_layout.add_widget(sub_tab_row)
-        
-        # 内容区域
-        content_container = RelativeLayout(size_hint_y=1)
-        
-        # Vocab内容
-        vocab_scroll = ScrollView(size_hint=(1, 1), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        vocab_list = GridLayout(cols=1, spacing=15, size_hint_y=None, padding=20)
-        vocab_list.bind(minimum_height=lambda instance, value: setattr(vocab_list, 'height', value))
-        
-        # 词汇数据
-        vocab_data = [
-            ("apple", "苹果", "I eat an apple every day.", "简单"),
-            ("beautiful", "美丽的", "She is a beautiful girl.", "简单"),
-            ("computer", "电脑", "I use my computer to work.", "简单"),
-            ("determine", "决定", "You must determine your own path.", "中等"),
-            ("efficient", "高效的", "This is an efficient method.", "中等"),
-            ("fascinating", "迷人的", "The story is fascinating.", "困难"),
-            ("generous", "慷慨的", "He is a generous person.", "中等"),
-            ("happiness", "幸福", "Happiness comes from within.", "中等"),
-            ("imagination", "想象力", "Children have vivid imagination.", "困难"),
-            ("journey", "旅程", "Life is a journey.", "简单"),
-            ("knowledge", "知识", "Knowledge is power.", "中等"),
-            ("language", "语言", "English is a global language.", "简单"),
-            ("magnificent", "壮丽的", "The view is magnificent.", "困难"),
-            ("necessary", "必要的", "It is necessary to study hard.", "中等"),
-            ("opportunity", "机会", "This is a great opportunity.", "困难"),
+        # 添加一些语法规则卡片示例
+        grammar_rules = [
+            "Present Simple Tense - 一般现在时",
+            "Past Simple Tense - 一般过去时", 
+            "Present Perfect Tense - 现在完成时",
+            "Future Simple Tense - 一般将来时"
         ]
         
-        for word, meaning, example, difficulty in vocab_data:
-            vocab_list.add_widget(VocabCard(word, meaning, example, difficulty))
+        for rule in grammar_rules:
+            rule_card = ClickableCard(
+                rule, 0, "Grammar Rule", 0,
+                on_press_callback=lambda r=rule: print(f"点击了语法规则: {r}")
+            )
+            self.learn_sub_content_container.add_widget(rule_card)
         
-        vocab_scroll.add_widget(vocab_list)
+        # 调试信息：打印容器高度
+        print(f"内容容器高度: {self.learn_sub_content_container.height}")
+        print(f"滚动视图高度: {self.learn_scroll.height}")
+        print(f"学习容器高度: {self.learn_content_container.height}")
+
+    def show_vocab_content(self, *args):
+        """显示词汇内容"""
+        print("切换到vocab子tab")
+        self.sub_tab1_btn.set_active(False)
+        self.sub_tab2_btn.set_active(True)
+        self.sub_tab3_btn.set_active(False)
         
-        self.vocab_content = vocab_scroll
-        self.grammar_content = Label(
-            text='[color=000000]这是grammar内容[/color]', 
-            markup=True, font_size=36, halign='center', valign='middle', 
-            size_hint=(1, 1), pos_hint={'center_x': 0.5, 'center_y': 0.5}
+        # 清空内容容器
+        self.learn_sub_content_container.clear_widgets()
+        
+        # 添加词汇相关内容
+        vocab_label = Label(
+            text='[color=333333]Vocabulary Learning\n词汇学习内容[/color]', 
+            markup=True, 
+            font_size=24, 
+            halign='center',
+            size_hint_y=None,
+            height=100
         )
-        self.grammar_content.opacity = 0
+        self.learn_sub_content_container.add_widget(vocab_label)
         
-        content_container.add_widget(self.vocab_content)
-        content_container.add_widget(self.grammar_content)
-        blank_layout.add_widget(content_container)
+        # 添加一些词汇卡片示例
+        vocab_words = [
+            "Beautiful - 美丽的",
+            "Intelligent - 聪明的",
+            "Courageous - 勇敢的",
+            "Generous - 慷慨的"
+        ]
         
-        # 绑定滑动手势
-        self.swipe_handler.bind_to_widget(blank_layout, self._on_swipe)
+        for word in vocab_words:
+            vocab_card = ClickableCard(
+                word, 0, "Vocabulary", 0,
+                on_press_callback=lambda w=word: print(f"点击了词汇: {w}")
+            )
+            self.learn_sub_content_container.add_widget(vocab_card)
+
+    def show_practice_content(self, *args):
+        """显示练习内容"""
+        print("切换到practice子tab")
+        self.sub_tab1_btn.set_active(False)
+        self.sub_tab2_btn.set_active(False)
+        self.sub_tab3_btn.set_active(True)
         
-        self.blank_content = blank_layout
-        self.blank_content.opacity = 0
-        self.blank_content.size_hint_y = 1
-        self.blank_content.height = 0
-        self.layout.add_widget(self.blank_content)
+        # 清空内容容器
+        self.learn_sub_content_container.clear_widgets()
+        
+        # 添加练习相关内容
+        practice_label = Label(
+            text='[color=333333]Practice Exercises\n练习题目内容[/color]', 
+            markup=True, 
+            font_size=24, 
+            halign='center',
+            size_hint_y=None,
+            height=100
+        )
+        self.learn_sub_content_container.add_widget(practice_label)
+        
+        # 添加一些练习题目示例
+        practice_questions = [
+            "Question 1: Choose the correct tense",
+            "Question 2: Fill in the blank with proper vocabulary",
+            "Question 3: Translate the sentence",
+            "Question 4: Grammar correction"
+        ]
+        
+        for i, question in enumerate(practice_questions, 1):
+            question_card = ClickableCard(
+                question, 0, f"Practice {i}", 0,
+                on_press_callback=lambda q=question: print(f"点击了练习题目: {q}")
+            )
+            self.learn_sub_content_container.add_widget(question_card)
     
     def _setup_tab_bar(self):
         """设置标签栏"""
@@ -293,8 +321,8 @@ class MainScreen(Screen):
             spacing=10, padding=(20, 0, 20, 0)
         )
         
-        self.tab1_btn = TabButton('文章', is_active=True)
-        self.tab2_btn = TabButton('词汇', is_active=False)
+        self.tab1_btn = TabButton('Read文章', is_active=True)
+        self.tab2_btn = TabButton('Learn词汇', is_active=False)
         
         self.tab1_btn.bind(on_release=self.show_tab1)
         self.tab2_btn.bind(on_release=self.show_tab2)
@@ -308,101 +336,65 @@ class MainScreen(Screen):
         self.bg_rect.pos = self.pos
         self.bg_rect.size = self.size
     
-    def open_article(self, title):
-        """打开文章"""
-        print(f"点击了文章: {title}")  # 调试信息
-        article_title = title or "Test article name"
-        # 用data_controller查找对应OriginalText
-        original_text = None
-        for text_id in range(1, 100):  # 假设id不超过100
-            text = self.data_controller.get_text_by_id(text_id)
-            if text and text.text_title == article_title:
-                original_text = text
-                break
-        if original_text and original_text.text_by_sentence:
-            # 拼接所有句子
-            article_content = '\n'.join([s.sentence_body for s in original_text.text_by_sentence])
-        else:
-            article_content = "未找到对应内容。"
-        
-        if not self.screen_manager.has_screen("article"):
-            try:
-                from screens.article_screen import ArticleScreen
-            except ImportError:
-                import sys
-                import os
-                sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                from screens.article_screen import ArticleScreen
-            
-            article_screen = ArticleScreen(name="article")
-            self.screen_manager.add_widget(article_screen)
-        else:
-            article_screen = self.screen_manager.get_screen("article")
-        
-        article_screen.set_article(article_title, article_content)
-        self.screen_manager.current = "article"
+    def open_article(self, text_id):
+        print(f"点击了文章: {text_id}")
+        # 用模拟内容
+        title = text_id
+        content = f"这里是《{text_id}》的内容。\n\n（可替换为真实内容）"
+        if self.manager:
+            read_screen = self.manager.get_screen("read")
+            read_screen.load_article(title, content)
+            self.manager.current = "read"
     
     def show_tab1(self, *args):
         """显示标签1 - 文章列表"""
         self.tab1_btn.set_active(True)
         self.tab2_btn.set_active(False)
         
-        # 清空容器，只添加文章卡片
+        # 清空容器
         self.content_container.clear_widgets()
+        
+        # 创建文章列表的滚动视图
+        article_scroll = ScrollView(size_hint_y=1)
+        article_container = BoxLayout(orientation='vertical', size_hint_y=None, spacing=20, padding=20)
+        article_container.bind(minimum_height=lambda instance, value: setattr(article_container, 'height', value))
+        
+        # 添加文章卡片 - 先移除卡片，再重新添加
         for card in self.article_cards:
-            self.content_container.add_widget(card)
+            # 如果卡片已经有父容器，先移除
+            if card.parent:
+                card.parent.remove_widget(card)
+            article_container.add_widget(card)
+        
+        article_scroll.add_widget(article_container)
+        self.content_container.add_widget(article_scroll)
     
     def show_tab2(self, *args):
-        """显示标签2 - 词汇列表"""
+        """显示标签2 - 学习页面"""
         self.tab1_btn.set_active(False)
         self.tab2_btn.set_active(True)
         
-        # 清空容器，添加词汇内容容器
+        # 清空容器，直接添加学习内容容器（不使用主滚动视图）
         self.content_container.clear_widgets()
-        self.content_container.add_widget(self.vocab_content_container)
+        self.content_container.add_widget(self.learn_content_container)
     
-    def show_vocab(self, *args):
-        """显示词汇"""
-        self.vocab_btn.set_active(True)
-        self.grammar_btn.set_active(False)
-        
-        self.vocab_content.opacity = 1
-        self.grammar_content.opacity = 0
-    
-    def show_grammar(self, *args):
-        """显示语法"""
-        self.vocab_btn.set_active(False)
-        self.grammar_btn.set_active(True)
-        
-        self.vocab_content.opacity = 0
-        self.grammar_content.opacity = 1
-    
-    def show_vocab_sub(self, *args):
-        """显示词汇子tab"""
-        self.vocab_sub_btn.set_active(True)
-        self.grammar_sub_btn.set_active(False)
-        
-        # 显示词汇内容，隐藏语法内容
-        for card in self.vocab_cards:
-            card.opacity = 1
-        self.grammar_content.opacity = 0
-    
-    def show_grammar_sub(self, *args):
-        """显示语法子tab"""
-        self.vocab_sub_btn.set_active(False)
-        self.grammar_sub_btn.set_active(True)
-        
-        # 隐藏词汇内容，显示语法内容
-        for card in self.vocab_cards:
-            card.opacity = 0
-        self.grammar_content.opacity = 1
-    
-    def _on_swipe(self, direction):
-        """处理滑动手势"""
-        if direction == 'right':
-            self.show_vocab()
-        elif direction == 'left':
-            self.show_grammar()
+    def _update_learn_border(self, *args):
+        """更新学习页面边框"""
+        self.learn_border.pos = self.learn_content_container.pos
+        self.learn_border.size = self.learn_content_container.size
+
+    def _update_sub_tab_border(self, *args):
+        """更新子tab bar边框"""
+        if hasattr(self, 'sub_tab_border'):
+            self.sub_tab_border.pos = self.sub_tab1_btn.parent.pos
+            self.sub_tab_border.size = self.sub_tab1_btn.parent.size
+
+    def _update_scroll_border(self, *args):
+        """更新滚动区域边框"""
+        if hasattr(self, 'scroll_border'):
+            self.scroll_border.pos = self.learn_scroll.pos
+            self.scroll_border.size = self.learn_scroll.size
+
 
 
 # 测试代码 - 如果直接运行此文件

@@ -1,6 +1,6 @@
 # UI 重构说明
 
-## 📁 新的文件结构
+## 📁 清理后的文件结构
 
 ```
 ui/
@@ -16,9 +16,37 @@ ui/
 ├── utils/               # 工具类
 │   ├── __init__.py
 │   └── swipe_handler.py # 滑动手势处理
-├── app.py               # 主应用文件
-├── main_refactored.py   # 重构后的主文件
-└── main_test.py         # 原始文件 (保留)
+├── run_app.py           # 🚀 主启动文件（唯一入口）
+├── main_test.py         # 原始文件（保留用于对比）
+├── README_REFACTOR.md   # 本说明文档
+└── 其他原始文件...      # ui_main.py, ui_0.py 等
+```
+
+## 🧹 文件清理说明
+
+### 已删除的重复文件：
+- ❌ `main_refactored.py` - 重复的主文件
+- ❌ `app.py` - 重复的应用文件
+
+### 保留的文件：
+- ✅ `run_app.py` - **唯一的应用启动入口**
+- ✅ `main_test.py` - 原始文件（用于对比和参考）
+- ✅ `screens/` - 重构后的屏幕模块
+- ✅ `components/` - 重构后的组件模块
+- ✅ `utils/` - 重构后的工具模块
+
+## 🚀 使用方法
+
+### 1. 运行重构后的应用
+```bash
+cd ui
+python run_app.py
+```
+
+### 2. 对比原始版本
+```bash
+# 运行原始版本（如果需要对比）
+python main_test.py
 ```
 
 ## 🔧 重构优势
@@ -40,7 +68,7 @@ ui/
 
 ## 📋 组件说明
 
-### Cards (cards.py)
+### Cards (components/cards.py)
 ```python
 # 基础卡片类
 class BaseCard(ButtonBehavior, BoxLayout):
@@ -55,7 +83,7 @@ class VocabCard(BaseCard):
     # 显示单词、含义、例句、难度
 ```
 
-### Buttons (buttons.py)
+### Buttons (components/buttons.py)
 ```python
 # 带边框的按钮基类
 class BorderedButton(Button):
@@ -79,36 +107,6 @@ class MainScreen(Screen):
 # 文章屏幕
 class ArticleScreen(Screen):
     # 包含文章内容、AI聊天、词汇/语法切换
-```
-
-## 🚀 使用方法
-
-### 1. 运行重构后的应用
-```bash
-cd ui
-python main_refactored.py
-```
-
-### 2. 创建新组件
-```python
-# 在 components/ 目录下创建新文件
-from .cards import BaseCard
-
-class MyCustomCard(BaseCard):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # 添加自定义内容
-```
-
-### 3. 创建新屏幕
-```python
-# 在 screens/ 目录下创建新文件
-from kivy.uix.screenmanager import Screen
-
-class MyCustomScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # 设置屏幕内容
 ```
 
 ## 🔄 迁移指南

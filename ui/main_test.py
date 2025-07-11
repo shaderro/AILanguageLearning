@@ -392,13 +392,13 @@ class MainScreen(Screen):
         sub_tab_row.add_widget(self.grammar_btn)
         blank_layout.add_widget(sub_tab_row)
         # 子tab内容区域
-        content_container = RelativeLayout(size_hint_y=1)
-        
+        content_container = BoxLayout(orientation='vertical', size_hint_y=1)
+
         # Vocab内容 - 可滚动的单词卡片列表
-        vocab_scroll = ScrollView(size_hint=(1, 1), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        vocab_scroll = ScrollView(size_hint_y=1)
         vocab_list = GridLayout(cols=1, spacing=15, size_hint_y=None, padding=20)
         vocab_list.bind(minimum_height=lambda instance, value: setattr(vocab_list, 'height', value))
-        
+
         # 添加单词卡片数据
         vocab_data = [
             ("apple", "苹果", "I eat an apple every day.", "简单"),
@@ -417,14 +417,14 @@ class MainScreen(Screen):
             ("necessary", "必要的", "It is necessary to study hard.", "中等"),
             ("opportunity", "机会", "This is a great opportunity.", "困难"),
         ]
-        
+
         for word, meaning, example, difficulty in vocab_data:
             vocab_list.add_widget(VocabCard(word, meaning, example, difficulty))
-        
+
         vocab_scroll.add_widget(vocab_list)
-        
+
         self.vocab_content = vocab_scroll
-        self.grammar_content = Label(text='[color=000000]这是grammar内容[/color]', markup=True, font_size=36, halign='center', valign='middle', size_hint=(1, 1), pos_hint={'center_x': 0.5, 'center_y': 0.5})
+        self.grammar_content = Label(text='[color=000000]这是grammar内容[/color]', markup=True, font_size=36, halign='center', valign='middle', size_hint=(1, 1))
         self.grammar_content.opacity = 0
         content_container.add_widget(self.vocab_content)
         content_container.add_widget(self.grammar_content)
