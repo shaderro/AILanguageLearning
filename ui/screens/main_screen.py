@@ -264,17 +264,14 @@ class MainScreen(Screen):
         
         # 添加一些词汇卡片示例
         vocab_words = [
-            "Beautiful - 美丽的",
-            "Intelligent - 聪明的",
-            "Courageous - 勇敢的",
-            "Generous - 慷慨的"
+            ("Beautiful", "美丽的", "She is a beautiful girl.", "简单"),
+            ("Intelligent", "聪明的", "He is an intelligent student.", "中等"),
+            ("Courageous", "勇敢的", "The courageous firefighter saved the child.", "困难"),
+            ("Generous", "慷慨的", "She is generous to everyone.", "中等")
         ]
-        
-        for word in vocab_words:
-            vocab_card = ClickableCard(
-                word, 0, "Vocabulary", 0,
-                on_press_callback=lambda w=word: print(f"点击了词汇: {w}")
-            )
+        for word, meaning, example, difficulty in vocab_words:
+            vocab_card = VocabCard(word, meaning, example, difficulty)
+            vocab_card.bind(on_press=lambda instance, w=word, m=meaning, e=example, d=difficulty: self.open_vocab_detail(w, m, e, d))
             self.learn_sub_content_container.add_widget(vocab_card)
 
     def show_practice_content(self, *args):
@@ -340,10 +337,22 @@ class MainScreen(Screen):
         print(f"点击了文章: {text_id}")
         # 用模拟内容
         title = text_id
-        content = f"这里是《{text_id}》的内容。\n\n（可替换为真实内容）"
+        content = f"""The Internet and Language Learning
+
+The internet has revolutionized the way we learn languages. With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.
+
+Online language learning platforms offer a variety of features that traditional classroom settings cannot provide. These include interactive exercises, real-time feedback, personalized learning paths, and access to native speakers from around the world. Students can now practice their language skills at any time and from anywhere, making learning more flexible and convenient.
+
+One of the most significant advantages of internet-based language learning is the availability of authentic materials. Learners can access real news articles, videos, podcasts, and social media content in their target language. This exposure to authentic language use helps develop natural communication skills and cultural understanding.
+
+Furthermore, the internet facilitates collaborative learning through online communities and language exchange programs. Students can connect with peers from different countries, practice conversation skills, and share cultural insights. This global connectivity creates a rich learning environment that goes beyond traditional textbook exercises.
+
+However, it's important to note that while the internet provides excellent resources for language learning, it should be used as a supplement to, rather than a replacement for, structured learning programs. The most effective approach combines online resources with traditional learning methods to create a comprehensive language learning experience.
+
+In conclusion, the internet has transformed language learning by making it more accessible, interactive, and engaging. As technology continues to evolve, we can expect even more innovative tools and platforms to emerge, further enhancing the language learning experience for students worldwide."""
         if self.manager:
             read_screen = self.manager.get_screen("read")
-            read_screen.load_article(title, content)
+            read_screen.load_article(text_id, title, content)
             self.manager.current = "read"
     
     def show_tab1(self, *args):
@@ -395,6 +404,13 @@ class MainScreen(Screen):
             self.scroll_border.pos = self.learn_scroll.pos
             self.scroll_border.size = self.learn_scroll.size
 
+    def open_vocab_detail(self, word, meaning, example, difficulty):
+        """跳转到词汇详情页"""
+        if self.manager:
+            vocab_screen = self.manager.get_screen("vocab_detail")
+            # 这里可以传递数据，后续可扩展
+            # vocab_screen.set_vocab(word, meaning, example, difficulty)
+            self.manager.current = "vocab_detail"
 
 
 # 测试代码 - 如果直接运行此文件
