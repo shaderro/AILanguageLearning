@@ -57,7 +57,7 @@ class ReadingContentScreen(Screen):
         
         # 返回按钮
         back_btn = Button(
-            text='← 返回',
+            text='← Back',
             size_hint_x=None,
             width=100,
             background_color=(0.2, 0.6, 1, 1),
@@ -68,7 +68,7 @@ class ReadingContentScreen(Screen):
         
         # 标题
         self.title_label = Label(
-            text='文章标题',
+            text='Article Title',
             size_hint_x=1,
             color=(0.2, 0.2, 0.2, 1),
             font_size=18,
@@ -97,7 +97,7 @@ class ReadingContentScreen(Screen):
         
         # 文章内容标签 - 使用Label显示内容
         self.content_label = Label(
-            text='文章内容将在这里显示...',
+            text='Article content will be displayed here...',
             size_hint_y=1,  # 占据所有可用空间
             color=(0, 0, 0, 1),  # 黑色文字
             font_size=16,
@@ -134,7 +134,7 @@ class ReadingContentScreen(Screen):
         
         # 学习按钮
         learn_btn = Button(
-            text='开始学习',
+            text='Learn',
             size_hint_x=0.5,
             background_color=(0.2, 0.8, 0.2, 1),
             color=(1, 1, 1, 1),
@@ -162,9 +162,19 @@ class ReadingContentScreen(Screen):
         )
         test_modal_btn.bind(on_press=self.show_ai_chat_modal)
         
+        # 引用选中文本按钮
+        quote_selected_btn = Button(
+            text='Quote',
+            size_hint_x=0.25,
+            background_color=(0.2, 0.8, 0.6, 1),
+            color=(1, 1, 1, 1),
+            font_size=14
+        )
+        quote_selected_btn.bind(on_press=self.quote_selected_text)
+        
         # 发送选中文本按钮
         send_selected_btn = Button(
-            text='发送选中',
+            text='Send',
             size_hint_x=0.25,
             background_color=(0.8, 0.6, 0.2, 1),
             color=(1, 1, 1, 1),
@@ -174,7 +184,7 @@ class ReadingContentScreen(Screen):
         
         bottom_bar.add_widget(learn_btn)
         bottom_bar.add_widget(ask_ai_btn)
-        bottom_bar.add_widget(test_modal_btn)
+        bottom_bar.add_widget(quote_selected_btn)
         bottom_bar.add_widget(send_selected_btn)
         parent.add_widget(bottom_bar)
     
@@ -189,35 +199,32 @@ class ReadingContentScreen(Screen):
         self.content_label.text = content
         
         # 添加调试信息
-        print(f"加载文章: {title}")
-        print(f"文章内容长度: {len(content)}")
-        print(f"TextInput内容: {self.content_label.text[:100]}...")  # 显示前100个字符
-        print(f"TextInput尺寸: {self.content_label.size}")
-        print(f"TextInput位置: {self.content_label.pos}")
-        print(f"TextInput是否可见: {self.content_label.opacity}")
+        print(f"Loading article: {title}")
+        print(f"Article content length: {len(content)}")
+        print(f"Label content: {self.content_label.text[:100]}...")
     
     def go_back(self, instance):
         """返回上一页"""
-        print(f"返回主页面")
+        print(f"Going back to main page")
         # 返回到主屏幕
         if hasattr(self, 'manager') and self.manager:
             self.manager.current = 'main'
         else:
-            print("无法获取屏幕管理器")
+            print("Cannot get screen manager")
     
     def start_learning(self, instance):
         """开始学习这篇文章"""
-        print(f"开始学习文章: {self.article_title}")
+        print(f"Starting to learn article: {self.article_title}")
         # 这里可以跳转到学习页面或显示学习选项
     
     def favorite_article(self, instance):
         """收藏文章"""
-        print(f"收藏文章: {self.article_title}")
+        print(f"Favoriting article: {self.article_title}")
         # 这里可以添加收藏逻辑
     
     def show_ai_chat_relative(self, instance):
         """显示RelativeLayout版本的AI聊天窗口"""
-        print("显示RelativeLayout版本的AI聊天窗口")
+        print("Showing RelativeLayout version of AI chat window")
         if not hasattr(self, 'ai_chat_relative'):
             self.ai_chat_relative = AIChatRelativeLayout()
             self.add_widget(self.ai_chat_relative)
@@ -231,24 +238,32 @@ class ReadingContentScreen(Screen):
     
     def show_ai_chat_modal(self, instance):
         """显示ModalView版本的AI聊天窗口 - 备用方法"""
-        print("显示ModalView版本的AI聊天窗口")
+        print("Showing ModalView version of AI chat window")
         if not hasattr(self, 'ai_chat_modal'):
             self.ai_chat_modal = AIChatModalView()
         self.ai_chat_modal.open()
     
     def on_enter(self):
         """屏幕进入时的回调"""
-        print(f"进入文章阅读页面: {self.article_title}")
+        print(f"Entering article reading page: {self.article_title}")
     
     def on_leave(self):
         """屏幕离开时的回调"""
-        print("离开文章阅读页面")
+        print("Leaving article reading page")
     
     def _update_content_bg(self, *args):
         """更新文章内容背景"""
         if hasattr(self, 'content_bg_rect'):
             self.content_bg_rect.pos = self.content_label.pos
             self.content_bg_rect.size = self.content_label.size
+
+    def _update_text_size(self, instance, value):
+        """更新Label的text_size，实现自动换行"""
+        # 设置text_size为Label的实际尺寸（减去padding）
+        padding_x = instance.padding[0] + instance.padding[2]  # 左右padding
+        padding_y = instance.padding[1] + instance.padding[3]  # 上下padding
+        instance.text_size = (instance.width - padding_x, None)
+
     
     def _update_page_bg(self, *args):
         """更新页面背景"""
@@ -256,16 +271,7 @@ class ReadingContentScreen(Screen):
             self.page_bg_rect.pos = self.children[0].pos
             self.page_bg_rect.size = self.children[0].size
     
-    def _update_text_size(self, instance, value):
-        """更新Label的text_size，实现自动换行"""
-        # 设置text_size为Label的实际尺寸（减去padding）
-        padding_x = instance.padding[0] + instance.padding[2]  # 左右padding
-        padding_y = instance.padding[1] + instance.padding[3]  # 上下padding
-        instance.text_size = (instance.width - padding_x, None)
-    
-    def on_text_selected(self, instance):
-        """处理文本选择事件 - 暂时禁用，因为Label不支持文本选择"""
-        print("文本选择功能暂时禁用")
+
     
     def send_selected_text_to_chat(self, selected_text):
         """将选中的文本发送到聊天窗口"""
@@ -278,18 +284,42 @@ class ReadingContentScreen(Screen):
             # 延迟一点时间确保聊天窗口已创建
             from kivy.clock import Clock
             Clock.schedule_once(lambda dt: self.ai_chat_relative.add_selected_text(selected_text), 0.1)
+
+    def add_quote_to_chat_input(self, selected_text):
+        """将选中的文本添加到聊天输入框"""
+        if hasattr(self, 'ai_chat_relative') and self.ai_chat_relative.is_visible:
+            # 如果聊天窗口已显示，直接添加到输入框
+            self.ai_chat_relative.add_quote_to_input(selected_text)
+        else:
+            # 如果聊天窗口未显示，先显示聊天窗口，然后添加文本
+            self.show_ai_chat_relative(None)
+            # 延迟一点时间确保聊天窗口已创建
+            from kivy.clock import Clock
+            Clock.schedule_once(lambda dt: self.ai_chat_relative.add_quote_to_input(selected_text), 0.1)
     
-    def send_current_selection(self, instance):
-        """发送当前选中的文本到聊天"""
-        print("点击了发送选中按钮")
+    def quote_selected_text(self, instance):
+        """引用选中的文本到聊天输入框"""
+        print("Clicked quote selected button")
         # 由于Label不支持文本选择，暂时显示提示信息
         if hasattr(self, 'ai_chat_relative') and self.ai_chat_relative.is_visible:
-            self.ai_chat_relative.add_message("当前使用Label显示文章内容，不支持文本选择。如需选择文本，请使用TextInput版本。", is_user=False)
+            self.ai_chat_relative.add_message("Current using Label to display article content, text selection is not supported. Please use TextInput version for text selection.", is_user=False)
         else:
             # 如果聊天窗口未显示，先显示聊天窗口
             self.show_ai_chat_relative(None)
             from kivy.clock import Clock
-            Clock.schedule_once(lambda dt: self.ai_chat_relative.add_message("当前使用Label显示文章内容，不支持文本选择。如需选择文本，请使用TextInput版本。", is_user=False), 0.1)
+            Clock.schedule_once(lambda dt: self.ai_chat_relative.add_message("Current using Label to display article content, text selection is not supported. Please use TextInput version for text selection.", is_user=False), 0.1)
+
+    def send_current_selection(self, instance):
+        """发送当前选中的文本到聊天"""
+        print("Clicked send selected button")
+        # 由于Label不支持文本选择，暂时显示提示信息
+        if hasattr(self, 'ai_chat_relative') and self.ai_chat_relative.is_visible:
+            self.ai_chat_relative.add_message("Current using Label to display article content, text selection is not supported. Please use TextInput version for text selection.", is_user=False)
+        else:
+            # 如果聊天窗口未显示，先显示聊天窗口
+            self.show_ai_chat_relative(None)
+            from kivy.clock import Clock
+            Clock.schedule_once(lambda dt: self.ai_chat_relative.add_message("Current using Label to display article content, text selection is not supported. Please use TextInput version for text selection.", is_user=False), 0.1)
 
 
 class AIChatRelativeLayout(RelativeLayout):
@@ -340,7 +370,7 @@ class AIChatRelativeLayout(RelativeLayout):
         
         # 标题
         title_label = Label(
-            text='AI 助手',
+            text='AI Assistant',
             size_hint_x=1,
             color=(0.2, 0.2, 0.2, 1),
             font_size=18,
@@ -383,7 +413,7 @@ class AIChatRelativeLayout(RelativeLayout):
         
         # 添加欢迎消息
         welcome_msg = Label(
-            text='你好！我是AI助手，有什么可以帮助你的吗？',
+            text='Hello! I am an AI assistant. How can I help you?',
             size_hint_y=None,
             height=60,
             color=(0.3, 0.3, 0.3, 1),
@@ -413,7 +443,7 @@ class AIChatRelativeLayout(RelativeLayout):
             size_hint_x=1,
             multiline=False,
             font_size=14,
-            hint_text='输入你的问题...',
+            hint_text='Enter your question...',
             background_color=(1, 1, 1, 1),
             foreground_color=(0.2, 0.2, 0.2, 1),
             cursor_color=(0.2, 0.6, 1, 1)
@@ -422,7 +452,7 @@ class AIChatRelativeLayout(RelativeLayout):
         
         # 发送按钮
         send_btn = Button(
-            text='发送',
+            text='Send',
             size_hint_x=None,
             width=80,
             background_color=(0.2, 0.6, 1, 1),
@@ -442,13 +472,13 @@ class AIChatRelativeLayout(RelativeLayout):
             return
         
         # 添加用户消息
-        self.add_message(f"用户: {message}", is_user=True)
+        self.add_message(f"User: {message}", is_user=True)
         
         # 清空输入框
         self.text_input.text = ''
         
         # 模拟AI回复
-        self.add_message("AI: 我收到了你的消息，正在处理中...", is_user=False)
+        self.add_message("AI: I received your message and am processing it...", is_user=False)
     
     def add_message(self, text, is_user=False):
         """添加消息到聊天区域"""
@@ -475,19 +505,39 @@ class AIChatRelativeLayout(RelativeLayout):
     
     def add_selected_text(self, selected_text):
         """添加从文章中选择的文本到聊天"""
-        # 添加用户选择的文本
-        self.add_message(f"用户选择了文本: {selected_text}", is_user=True)
+        # 添加用户选择的文本，使用引用格式
+        quoted_text = f"> {selected_text}\n\nUser: Please help me analyze this text"
+        self.add_message(quoted_text, is_user=True)
         
         # 模拟AI回复
-        ai_response = f"我看到您选择了这段文本：\n\"{selected_text}\"\n\n请问您想了解这段文本的什么内容？比如语法、词汇、翻译等。"
+        ai_response = f"I see you selected this text:\n\n> {selected_text}\n\nWhat would you like to know about this text? For example:\n• Grammar analysis\n• Vocabulary explanation\n• Translation\n• Writing tips"
         self.add_message(f"AI: {ai_response}", is_user=False)
+
+    def add_quote_to_input(self, selected_text):
+        """将选中的文本添加到聊天输入框"""
+        # 格式化引用文本
+        quote_text = f"> {selected_text}\n\n"
+        
+        # 如果输入框已有内容，在前面添加引用
+        if self.text_input.text.strip():
+            current_text = self.text_input.text
+            self.text_input.text = quote_text + current_text
+        else:
+            # 如果输入框为空，直接设置引用文本
+            self.text_input.text = quote_text
+        
+        # 将光标移动到文本末尾
+        self.text_input.cursor = (len(self.text_input.text), 0)
+        
+        # 显示提示信息
+        self.add_message("Selected text has been added to the input box. You can continue editing or send directly.", is_user=False)
     
     def show(self):
         """显示聊天窗口"""
         self.is_visible = True
         self.opacity = 1
         self.disabled = False
-        print("AI聊天窗口已显示")
+        print("AI chat window displayed")
     
     def hide(self, *args):
         """隐藏聊天窗口"""
@@ -497,7 +547,7 @@ class AIChatRelativeLayout(RelativeLayout):
         # 隐藏时移除自身，避免拦截触摸事件
         if self.parent:
             self.parent.remove_widget(self)
-        print("AI聊天窗口已隐藏")
+        print("AI chat window hidden")
     
     def _update_bg(self, *args):
         """更新背景"""
@@ -530,7 +580,7 @@ class AIChatModalView(ModalView):
         )
         
         title_label = Label(
-            text='AI 助手 (ModalView版本)',
+            text='AI Assistant (ModalView version)',
             size_hint_x=1,
             color=(0.2, 0.2, 0.2, 1),
             font_size=18,
@@ -563,7 +613,7 @@ class AIChatModalView(ModalView):
         )
         
         welcome_msg = Label(
-            text='你好！我是AI助手，有什么可以帮助你的吗？',
+            text='Hello! I am an AI assistant. How can I help you?',
             size_hint_y=None,
             height=60,
             color=(0.3, 0.3, 0.3, 1),
@@ -587,11 +637,11 @@ class AIChatModalView(ModalView):
             size_hint_x=1,
             multiline=False,
             font_size=14,
-            hint_text='输入你的问题...'
+            hint_text='Enter your question...'
         )
         
         send_btn = Button(
-            text='发送',
+            text='Send',
             size_hint_x=None,
             width=80,
             background_color=(0.2, 0.6, 1, 1),

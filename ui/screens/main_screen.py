@@ -127,9 +127,9 @@ class MainScreen(Screen):
         # 创建学习页面的主容器 - 占据所有可用空间
         self.learn_content_container = BoxLayout(orientation='vertical', size_hint_y=1, spacing=10, padding=20)
         
-        # 添加边框用于调试
+        # 添加白色背景
         with self.learn_content_container.canvas.before:
-            Color(1, 0, 0, 1)  # 红色边框
+            Color(1, 1, 1, 1)  # 白色背景
             self.learn_border = Rectangle(pos=self.learn_content_container.pos, size=self.learn_content_container.size)
         self.learn_content_container.bind(pos=self._update_learn_border, size=self._update_learn_border)
         
@@ -151,26 +151,23 @@ class MainScreen(Screen):
             spacing=10, padding=(10, 5, 10, 5)
         )
         
-        # 添加蓝色边框用于调试子tab bar
+        # 添加白色背景
         with sub_tab_row.canvas.before:
-            Color(0, 0, 1, 1)  # 蓝色边框
+            Color(1, 1, 1, 1)  # 白色背景
             self.sub_tab_border = Rectangle(pos=sub_tab_row.pos, size=sub_tab_row.size)
         sub_tab_row.bind(pos=self._update_sub_tab_border, size=self._update_sub_tab_border)
         
         # 创建子tab按钮
         self.sub_tab1_btn = TabButton('Grammar语法', is_active=True)
         self.sub_tab2_btn = TabButton('Vocabulary词汇', is_active=False)
-        self.sub_tab3_btn = TabButton('Practice练习', is_active=False)
         
         # 绑定事件
         self.sub_tab1_btn.bind(on_release=self.show_grammar_content)
         self.sub_tab2_btn.bind(on_release=self.show_vocab_content)
-        self.sub_tab3_btn.bind(on_release=self.show_practice_content)
         
         # 添加到子tab bar
         sub_tab_row.add_widget(self.sub_tab1_btn)
         sub_tab_row.add_widget(self.sub_tab2_btn)
-        sub_tab_row.add_widget(self.sub_tab3_btn)
         
         # 添加到学习内容容器 - 子tab bar固定在顶部
         self.learn_content_container.add_widget(sub_tab_row)
@@ -180,9 +177,9 @@ class MainScreen(Screen):
         # 创建滚动视图 - 占据剩余空间
         self.learn_scroll = ScrollView(size_hint_y=1)
         
-        # 添加绿色边框用于调试滚动区域
+        # 添加白色背景
         with self.learn_scroll.canvas.before:
-            Color(0, 1, 0, 1)  # 绿色边框
+            Color(1, 1, 1, 1)  # 白色背景
             self.scroll_border = Rectangle(pos=self.learn_scroll.pos, size=self.learn_scroll.size)
         self.learn_scroll.bind(pos=self._update_scroll_border, size=self._update_scroll_border)
         
@@ -205,7 +202,6 @@ class MainScreen(Screen):
         print("切换到grammar子tab")
         self.sub_tab1_btn.set_active(True)
         self.sub_tab2_btn.set_active(False)
-        self.sub_tab3_btn.set_active(False)
         
         # 清空内容容器
         self.learn_sub_content_container.clear_widgets()
@@ -230,9 +226,14 @@ class MainScreen(Screen):
         ]
         
         for rule in grammar_rules:
+            # 为每个语法规则创建示例数据
+            explanation = f"这是关于 {rule} 的详细解释"
+            example = f"Example: This is an example sentence for {rule}"
+            difficulty = "中等"  # 可以根据实际情况调整
+            
             rule_card = ClickableCard(
                 rule, 0, "Grammar Rule", 0,
-                on_press_callback=lambda r=rule: print(f"点击了语法规则: {r}")
+                on_press_callback=lambda r=rule, e=explanation, ex=example, d=difficulty: self.open_grammar_detail(r, e, ex, d)
             )
             self.learn_sub_content_container.add_widget(rule_card)
         
@@ -246,7 +247,6 @@ class MainScreen(Screen):
         print("切换到vocab子tab")
         self.sub_tab1_btn.set_active(False)
         self.sub_tab2_btn.set_active(True)
-        self.sub_tab3_btn.set_active(False)
         
         # 清空内容容器
         self.learn_sub_content_container.clear_widgets()
@@ -274,41 +274,7 @@ class MainScreen(Screen):
             vocab_card.bind(on_press=lambda instance, w=word, m=meaning, e=example, d=difficulty: self.open_vocab_detail(w, m, e, d))
             self.learn_sub_content_container.add_widget(vocab_card)
 
-    def show_practice_content(self, *args):
-        """显示练习内容"""
-        print("切换到practice子tab")
-        self.sub_tab1_btn.set_active(False)
-        self.sub_tab2_btn.set_active(False)
-        self.sub_tab3_btn.set_active(True)
-        
-        # 清空内容容器
-        self.learn_sub_content_container.clear_widgets()
-        
-        # 添加练习相关内容
-        practice_label = Label(
-            text='[color=333333]Practice Exercises\n练习题目内容[/color]', 
-            markup=True, 
-            font_size=24, 
-            halign='center',
-            size_hint_y=None,
-            height=100
-        )
-        self.learn_sub_content_container.add_widget(practice_label)
-        
-        # 添加一些练习题目示例
-        practice_questions = [
-            "Question 1: Choose the correct tense",
-            "Question 2: Fill in the blank with proper vocabulary",
-            "Question 3: Translate the sentence",
-            "Question 4: Grammar correction"
-        ]
-        
-        for i, question in enumerate(practice_questions, 1):
-            question_card = ClickableCard(
-                question, 0, f"Practice {i}", 0,
-                on_press_callback=lambda q=question: print(f"点击了练习题目: {q}")
-            )
-            self.learn_sub_content_container.add_widget(question_card)
+
     
     def _setup_tab_bar(self):
         """设置标签栏"""
@@ -411,6 +377,14 @@ In conclusion, the internet has transformed language learning by making it more 
             # 这里可以传递数据，后续可扩展
             # vocab_screen.set_vocab(word, meaning, example, difficulty)
             self.manager.current = "vocab_detail"
+
+    def open_grammar_detail(self, rule_name, explanation, example, difficulty):
+        """跳转到语法详情页"""
+        if self.manager:
+            grammar_screen = self.manager.get_screen("grammar_detail")
+            # 这里可以传递数据，后续可扩展
+            # grammar_screen.set_grammar(rule_name, explanation, example, difficulty)
+            self.manager.current = "grammar_detail"
 
 
 # 测试代码 - 如果直接运行此文件

@@ -5,7 +5,7 @@
 """
 
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager
+from kivy.uix.screenmanager import ScreenManager, NoTransition
 
 # 导入重构后的组件
 from screens.main_screen import MainScreen
@@ -19,7 +19,7 @@ class LangUIApp(App):
     
     def build(self):
         """构建应用界面"""
-        sm = ScreenManager()
+        sm = ScreenManager(transition=NoTransition())
         main_screen = MainScreen(name="main")
         sm.add_widget(main_screen)
         read_screen = ReadingContentScreen(name="read")

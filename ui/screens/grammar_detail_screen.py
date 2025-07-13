@@ -78,3 +78,17 @@ class GrammarDetailScreen(Screen):
         # 返回上一页逻辑
         if self.manager:
             self.manager.current = 'main'
+
+def test_grammar_detail_screen():
+    from kivy.app import App
+    from kivy.uix.screenmanager import ScreenManager
+    class TestApp(App):
+        def build(self):
+            sm = ScreenManager()
+            sm.add_widget(GrammarDetailScreen(name="grammar_detail"))
+            sm.current = "grammar_detail"
+            return sm
+    TestApp().run()
+
+if __name__ == "__main__":
+    test_grammar_detail_screen()
