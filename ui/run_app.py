@@ -12,6 +12,8 @@ from screens.main_screen import MainScreen
 from screens.reading_content_screen import ReadingContentScreen
 from screens.vocab_detail_screen import VocabDetailScreen
 from screens.grammar_detail_screen import GrammarDetailScreen
+from screens.reading_content_textinput_screen import ReadingContentTextInputScreen
+from screens.text_input_chat_screen import TextInputChatScreen
 # from screens.read_content_screen import ReadContentScreen
 
 class LangUIApp(App):
@@ -24,6 +26,10 @@ class LangUIApp(App):
         sm.add_widget(main_screen)
         read_screen = ReadingContentScreen(name="read")
         sm.add_widget(read_screen)
+        textinput_screen = ReadingContentTextInputScreen(name="textinput_read")
+        sm.add_widget(textinput_screen)
+        textinput_chat_screen = TextInputChatScreen(name="textinput_chat")
+        sm.add_widget(textinput_chat_screen)
         vocab_detail_screen = VocabDetailScreen(name="vocab_detail")
         sm.add_widget(vocab_detail_screen)
         grammar_detail_screen = GrammarDetailScreen(name="grammar_detail")

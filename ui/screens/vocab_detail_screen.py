@@ -14,8 +14,8 @@ class VocabDetailScreen(Screen):
     def setup_ui(self):
         # 主布局
         main_layout = BoxLayout(orientation='vertical', padding=0, spacing=0)
-        # 内容区外层加padding和圆角白底
-        content_outer = BoxLayout(orientation='vertical', padding=10, size_hint_y=0.92)
+        # 内容区外层加padding和圆角白底 - 调整为全屏高度
+        content_outer = BoxLayout(orientation='vertical', padding=10, size_hint_y=1)
         with content_outer.canvas.before:
             Color(1, 1, 1, 1)
             self.bg_rect = RoundedRectangle(pos=content_outer.pos, size=content_outer.size, radius=[20])
@@ -63,13 +63,7 @@ class VocabDetailScreen(Screen):
         content_outer.add_widget(scroll)
         main_layout.add_widget(content_outer)
 
-        # 底部tab栏
-        tab_bar = BoxLayout(orientation='horizontal', size_hint_y=0.08, height=40)
-        read_btn = Button(text='read', background_color=(1,1,1,1), color=(0,0,0,1), font_size=16)
-        review_btn = Button(text='review', background_color=(1,1,1,1), color=(0,0,0,1), font_size=16)
-        tab_bar.add_widget(read_btn)
-        tab_bar.add_widget(review_btn)
-        main_layout.add_widget(tab_bar)
+        # 删除底部tab栏 - 不再需要
 
         self.add_widget(main_layout)
 

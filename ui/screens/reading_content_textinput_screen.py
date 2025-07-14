@@ -16,10 +16,22 @@ class ReadingContentTextInputScreen(Screen):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.article_title = ""
-        self.article_content = ""
+        self.article_title = "Sample Article"
+        self.article_content = """The Internet and Language Learning
+
+The internet has revolutionized the way we learn languages. With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.
+
+Online language learning platforms offer a variety of features that traditional classroom settings cannot provide. These include interactive exercises, real-time feedback, personalized learning paths, and access to native speakers from around the world. Students can now practice their language skills at any time and from anywhere, making learning more flexible and convenient.
+
+One of the most significant advantages of internet-based language learning is the availability of authentic materials. Learners can access real news articles, videos, podcasts, and social media content in their target language. This exposure to authentic language use helps develop natural communication skills and cultural understanding.
+
+Furthermore, the internet facilitates collaborative learning through online communities and language exchange programs. Students can connect with peers from different countries, practice conversation skills, and share cultural insights. This global connectivity creates a rich learning environment that goes beyond traditional textbook exercises.
+
+However, it's important to note that while the internet provides excellent resources for language learning, it should be used as a supplement to, rather than a replacement for, structured learning programs. The most effective approach combines online resources with traditional learning methods to create a comprehensive language learning experience.
+
+In conclusion, the internet has transformed language learning by making it more accessible, interactive, and engaging. As technology continues to evolve, we can expect even more innovative tools and platforms to emerge, further enhancing the language learning experience for students worldwide."""
         self.article_id = None
-        self.original_text = ""
+        self.original_text = self.article_content
         self.setup_ui()
     
     def setup_ui(self):
@@ -173,6 +185,9 @@ class ReadingContentTextInputScreen(Screen):
         else:
             # 如果没有原始文本，设置默认内容
             self.content_textinput.text = "No article content loaded. Please load an article first."
+        
+        # 更新标题
+        self.title_label.text = self.article_title
         
         self.content_textinput.scroll_y = 1  # 滚动到顶部
         self.content_textinput.readonly = True  # 确保只读
