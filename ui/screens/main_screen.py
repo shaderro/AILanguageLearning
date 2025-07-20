@@ -18,6 +18,7 @@ try:
     from components.cards import ClickableCard, VocabCard
     from components.buttons import TabButton, SubTabButton
     from utils.swipe_handler import SwipeHandler
+    from viewmodels.article_list_viewmodel import ArticleListViewModel
 except ImportError:
     # 如果直接运行此文件，使用相对导入
     import sys
@@ -26,6 +27,7 @@ except ImportError:
     from components.cards import ClickableCard, VocabCard
     from components.buttons import TabButton, SubTabButton
     from utils.swipe_handler import SwipeHandler
+    from viewmodels.article_list_viewmodel import ArticleListViewModel
 
 
 class MainScreen(Screen):
@@ -35,20 +37,14 @@ class MainScreen(Screen):
         super().__init__(**kwargs)
         self.swipe_handler = SwipeHandler()
         
-        # 初始化数据控制器
-        try:
-            from data_managers.data_controller import DataController
-            self.data_controller = DataController()
-        except ImportError:
-            print("无法导入DataController，使用模拟数据")
-            self.data_controller = None
+        # 初始化ViewModel
+        self.article_viewmodel = ArticleListViewModel()
         
         # 存储卡片引用
         self.article_cards = []
         self.vocab_cards = []
         
         self._setup_background()
-        self._load_data()
         self._setup_layout()
         #self._setup_topbar()
         self._setup_reading_page()
@@ -64,15 +60,6 @@ class MainScreen(Screen):
             Color(1, 1, 1, 1)
             self.bg_rect = Rectangle(pos=self.pos, size=self.size)
         self.bind(pos=self._update_bg, size=self._update_bg)
-    
-    def _load_data(self):
-        """加载数据"""
-        if self.data_controller:
-            try:
-                self.data_controller.load_all_data()
-                print("数据加载成功")
-            except Exception as e:
-                print(f"数据加载失败: {e}")
     
     def _setup_layout(self):
         """设置主布局"""
@@ -93,34 +80,21 @@ class MainScreen(Screen):
         self.layout.add_widget(topbar)
     
     def _setup_reading_page(self):
-        """设置卡片列表"""
-        # 从数据控制器获取原始文本标题
-        try:
-            text_titles = self.data_controller.list_texts_by_title()
-        except Exception as e:
-            print(f"获取文本标题时出错: {e}")
-            text_titles = []
+        """设置卡片列表 - 使用ViewModel加载真实数据"""
+        # 从ViewModel获取文章数据
+        articles = self.article_viewmodel.load_articles()
         
-        # 如果没有数据，使用测试数据
-        if not text_titles:
-            text_titles = [
-                "The Internet and Language",
-                "Modern Communication", 
-                "Cultural Linguistics",
-                "Global Dialects"
-            ]
-            print("使用测试文章数据")
-        
-        # 为每个标题创建卡片
-        for title in text_titles:
-            # 使用默认值，因为目前只需要标题
+        # 为每个文章创建卡片
+        for article in articles:
             card = ClickableCard(
-                title, 0, "N/A", 0, 
-                on_press_callback=partial(self.open_article, title)
+                article.title, 
+                article.word_count, 
+                article.level, 
+                article.progress_percent, 
+                on_press_callback=partial(self.open_article, article.text_id)
             )
             self.article_cards.append(card)
-            print(f"创建卡片: {title}")  # 调试信息
-            # 不直接添加到容器，由tab切换方法添加
+            print(f"📚 创建文章卡片: {article.title} (ID: {article.text_id})")
     
     def _setup_learn_page(self):
         """设置学习页面内容区域 - 包含子tab bar和内容区域"""
@@ -301,9 +275,18 @@ class MainScreen(Screen):
     
     def open_article(self, text_id):
         print(f"点击了文章: {text_id}")
-        # 跳转到text_input_chat页面（基于TextInputWithChatApp）
-        if self.manager:
-            self.manager.current = "textinput_chat"
+        # 从ViewModel获取文章详情
+        article = self.article_viewmodel.get_article_by_id(text_id)
+        if article:
+            print(f"📖 加载文章: {article.text_title}")
+            # 跳转到text_input_chat页面，并传递文章数据
+            if self.manager:
+                textinput_screen = self.manager.get_screen("textinput_chat")
+                # 设置文章数据
+                textinput_screen.set_article(article)
+                self.manager.current = "textinput_chat"
+        else:
+            print(f"❌ 未找到文章 ID: {text_id}")
     
     def show_tab1(self, *args):
         """显示标签1 - 文章列表"""

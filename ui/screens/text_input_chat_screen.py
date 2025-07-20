@@ -23,7 +23,10 @@ class TextInputChatScreen(Screen):
         self.is_text_selected = False
         self.selection_start = 0
         self.selection_end = 0
-        self.original_text = """The Internet and Language Learning
+        
+        # 文章数据
+        self.article_title = "Article Title"
+        self.article_content = """The Internet and Language Learning
 
 The internet has revolutionized the way we learn languages. With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.
 
@@ -35,6 +38,41 @@ Furthermore, the internet facilitates collaborative learning through online comm
         
         self._setup_ui()
         self._bind_events()
+    
+    def set_article(self, article_data):
+        """设置文章数据"""
+        if hasattr(article_data, 'text_title'):
+            self.article_title = article_data.text_title
+        else:
+            self.article_title = "Article Title"
+        
+        if hasattr(article_data, 'text_by_sentence'):
+            # 将句子列表转换为文本
+            sentences = []
+            for sentence in article_data.text_by_sentence:
+                sentences.append(sentence.sentence_body)
+            self.article_content = " ".join(sentences)
+        else:
+            self.article_content = "Article content not available."
+        
+        # 更新UI显示
+        self._update_article_display()
+        print(f"📖 设置文章: {self.article_title}")
+        print(f"📝 文章内容长度: {len(self.article_content)} 字符")
+    
+    def _update_article_display(self):
+        """更新文章显示"""
+        if hasattr(self, 'article_title_label'):
+            self.article_title_label.text = f'Article: {self.article_title}'
+        
+        if hasattr(self, 'article_content_widget'):
+            self.article_content_widget.text = self.article_content
+    
+    def _go_back(self, instance):
+        """返回主页面"""
+        print("⬅️ 返回主页面")
+        if self.manager:
+            self.manager.current = "main"
     
     def _setup_ui(self):
         """设置UI界面"""
@@ -55,13 +93,13 @@ Furthermore, the internet facilitates collaborative learning through online comm
         """创建文章阅读面板"""
         reading_panel = BoxLayout(orientation='vertical', size_hint_y=0.6, spacing=10)
         
-        # 文章标题
-        article_title = self._create_article_title()
-        reading_panel.add_widget(article_title)
+        # 顶部栏（返回按钮 + 文章标题）
+        top_bar = self._create_top_bar()
+        reading_panel.add_widget(top_bar)
         
         # 文章内容
-        self.article_content = self._create_article_content()
-        reading_panel.add_widget(self.article_content)
+        self.article_content_widget = self._create_article_content()
+        reading_panel.add_widget(self.article_content_widget)
         
         # 选中文本显示
         self.selection_label = self._create_selection_label()
@@ -69,10 +107,33 @@ Furthermore, the internet facilitates collaborative learning through online comm
         
         return reading_panel
     
+    def _create_top_bar(self):
+        """创建顶部栏（返回按钮 + 文章标题）"""
+        top_bar = BoxLayout(orientation='horizontal', size_hint_y=None, height=80, spacing=10, padding=(10, 5))
+        
+        # 返回按钮
+        back_button = Button(
+            text='← Back',
+            size_hint_x=None,
+            width=100,
+            background_color=(0.2, 0.6, 1, 1),
+            color=(1, 1, 1, 1),
+            font_size=24,
+            bold=True
+        )
+        back_button.bind(on_press=self._go_back)
+        top_bar.add_widget(back_button)
+        
+        # 文章标题
+        self.article_title_label = self._create_article_title()
+        top_bar.add_widget(self.article_title_label)
+        
+        return top_bar
+    
     def _create_article_title(self):
         """创建文章标题"""
         article_title = Label(
-            text='Article: The Internet and Language Learning',
+            text=f'Article: {self.article_title}',
             size_hint_y=None,
             height=80,
             bold=True,
@@ -89,7 +150,7 @@ Furthermore, the internet facilitates collaborative learning through online comm
     def _create_article_content(self):
         """创建文章内容区域"""
         article_content = TextInput(
-            text=self.original_text,
+            text=self.article_content,
             readonly=True,
             multiline=True,
             size_hint_y=1,
@@ -222,10 +283,10 @@ Furthermore, the internet facilitates collaborative learning through online comm
         self.chat_input.bind(focus=self._on_chat_input_focus)
         
         # 绑定文章内容的选择变化事件
-        self.article_content.bind(selection_text=self._on_text_selection_change)
+        self.article_content_widget.bind(selection_text=self._on_text_selection_change)
         
-        # 定期更新选中文本显示
-        Clock.schedule_interval(self._update_selection_display, 0.1)
+        # 定期更新选中文本显示 - 降低频率避免性能问题
+        Clock.schedule_interval(self._update_selection_display, 0.5)
         
         # 添加欢迎消息
         self._add_chat_message("AI Assistant", "Hello! I'm here to help you with language learning. You can select any text from the article and ask me questions about it.", is_ai=True)
@@ -248,24 +309,28 @@ Furthermore, the internet facilitates collaborative learning through online comm
     
     def _on_text_selection_change(self, instance, value):
         """处理文本选择变化"""
-        if value:  # 有选中文本
-            self.selected_text_backup = value
-            self.is_text_selected = True
-            # 保存选择位置
-            self.selection_start = self.article_content.selection_from
-            self.selection_end = self.article_content.selection_to
-            print(f"文本选择变化: {value} (位置: {self.selection_start}-{self.selection_end})")
-        else:  # 没有选中文本
-            # 只有在不是从聊天输入框切换回来时才清除
-            if not self.chat_input.focus:
-                self.selected_text_backup = ""
-                self.is_text_selected = False
-                self.selection_start = 0
-                self.selection_end = 0
-                print("清除选中文本备份")
-            else:
-                # 如果聊天输入框有焦点，保持高亮
-                self._keep_text_highlighted()
+        try:
+            if value:  # 有选中文本
+                self.selected_text_backup = value
+                self.is_text_selected = True
+                # 保存选择位置
+                self.selection_start = self.article_content_widget.selection_from
+                self.selection_end = self.article_content_widget.selection_to
+                print(f"文本选择变化: {value} (位置: {self.selection_start}-{self.selection_end})")
+            else:  # 没有选中文本
+                # 只有在不是从聊天输入框切换回来时才清除
+                if not self.chat_input.focus:
+                    self.selected_text_backup = ""
+                    self.is_text_selected = False
+                    self.selection_start = 0
+                    self.selection_end = 0
+                    print("清除选中文本备份")
+                else:
+                    # 如果聊天输入框有焦点，保持高亮
+                    self._keep_text_highlighted()
+        except Exception as e:
+            print(f"文本选择变化处理出错: {e}")
+            # 出错时不要崩溃，只是记录错误
     
     def _update_selection_display(self, dt):
         """更新选中文本显示"""
@@ -287,11 +352,11 @@ Furthermore, the internet facilitates collaborative learning through online comm
         """获取选中的文本"""
         try:
             # 首先尝试从当前选择获取
-            start, end = self.article_content.selection_from, self.article_content.selection_to
+            start, end = self.article_content_widget.selection_from, self.article_content_widget.selection_to
             if start != end:
                 if start > end:
                     start, end = end, start
-                selected_text = self.article_content.text[start:end]
+                selected_text = self.article_content_widget.text[start:end]
                 current_selection = selected_text.strip()
                 if current_selection:
                     return current_selection
@@ -313,11 +378,8 @@ Furthermore, the internet facilitates collaborative learning through online comm
         if self.is_text_selected and self.selected_text_backup and self.selection_start != self.selection_end:
             try:
                 # 使用select_text方法来设置选择
-                self.article_content.select_text(self.selection_start, self.selection_end)
+                self.article_content_widget.select_text(self.selection_start, self.selection_end)
                 print(f"保持高亮: {self.selection_start}-{self.selection_end}")
-                
-                # 强制更新显示
-                Clock.schedule_once(self._force_selection_update, 0.1)
             except Exception as e:
                 print(f"保持高亮时出错: {e}")
     
@@ -326,7 +388,7 @@ Furthermore, the internet facilitates collaborative learning through online comm
         try:
             # 重新设置选择范围
             if self.is_text_selected and self.selection_start != self.selection_end:
-                self.article_content.select_text(self.selection_start, self.selection_end)
+                self.article_content_widget.select_text(self.selection_start, self.selection_end)
                 print(f"强制更新选择: {self.selection_start}-{self.selection_end}")
         except Exception as e:
             print(f"强制更新选择时出错: {e}")
