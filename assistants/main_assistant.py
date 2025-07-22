@@ -37,23 +37,32 @@ class MainAssistant:
         self.dialogue_record = self.data_controller.dialogue_record
         self.dialogue_history = self.data_controller.dialogue_history
 
-    def run(self, quoted_sentence: Sentence, user_question: str):
+    def run(self, quoted_sentence: Sentence, user_question: str, quoted_string: str = None):
         """
         主处理函数，接收引用的句子、用户问题和AI响应，并进行相关处理。
+        
+        Args:
+            quoted_sentence: 完整的句子对象
+            user_question: 用户问题
+            quoted_string: 用户选中的部分文本（可选），如果为None则使用完整句子
         """
         self.session_state.reset()  # 重置会话状态
+        
+        # 如果提供了quoted_string，则使用它；否则使用完整句子
+        effective_sentence_body = quoted_string if quoted_string else quoted_sentence.sentence_body
+        
         self.dialogue_record.add_user_message(quoted_sentence, user_question)
         #是否和主题相关
-        if(self.check_if_topic_relevant_function(quoted_sentence, user_question) is False):
+        if(self.check_if_topic_relevant_function(quoted_sentence, user_question, effective_sentence_body) is False):
             print("The question is not relevant to language learning, skipping processing.")
             self.dialogue_record.add_ai_response(quoted_sentence, "The question is not relevant to language learning, skipping processing.")
             return
         print("The question is relevant to language learning, proceeding with processing...")
         #回答问题
-        ai_response = self.answer_question_function(quoted_sentence, user_question)
+        ai_response = self.answer_question_function(quoted_sentence, user_question, effective_sentence_body)
         self.dialogue_record.add_ai_response(quoted_sentence, ai_response)
         #检查是否加入新语法和词汇
-        self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response)
+        self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response, effective_sentence_body)
         self.add_new_to_data()
         print("✅ 处理完成，已更新会话状态和对话历史。")
         self.print_data_controller_data()
@@ -67,26 +76,49 @@ class MainAssistant:
         print("Vocab List:", self.data_controller.vocab_manager.get_all_vocab_body())
         #print("Session State:", self.session_state)
 
-    def check_if_topic_relevant_function(self, quoted_sentence: Sentence, user_question: str) -> bool:
+    def _ensure_sentence_integrity(self, sentence: Sentence, context: str) -> bool:
+        """
+        确保句子完整性并打印调试信息
+        
+        Args:
+            sentence: 要验证的句子对象
+            context: 验证上下文
+            
+        Returns:
+            bool: 句子是否完整
+        """
+        if sentence and hasattr(sentence, 'text_id') and hasattr(sentence, 'sentence_id'):
+            print(f"✅ {context}: 句子完整性验证通过 - text_id:{sentence.text_id}, sentence_id:{sentence.sentence_id}")
+            return True
+        else:
+            print(f"❌ {context}: 句子完整性验证失败")
+            return False
+
+    def check_if_topic_relevant_function(self, quoted_sentence: Sentence, user_question: str, effective_sentence_body: str = None) -> bool:
+        sentence_to_check = effective_sentence_body if effective_sentence_body else quoted_sentence.sentence_body
         result = self.check_if_relevant.run(
-            quoted_sentence.sentence_body,
+            sentence_to_check,
             user_question
         )
         # 确保 result 是字典类型
         if isinstance(result, str):
             result = {"is_relevant": False}
         
-        if result.get("is_relevant") is True:
-            self.session_state.set_current_input(user_question)
-            self.session_state.set_current_sentence(quoted_sentence)
+        # 总是设置 session state，确保后续处理有完整信息
+        self.session_state.set_current_input(user_question)
+        self.session_state.set_current_sentence(quoted_sentence)
+        
+        # 验证句子完整性
+        self._ensure_sentence_integrity(quoted_sentence, "Session State 设置")
+        
         return result.get("is_relevant", False)
 
-    def answer_question_function(self, quoted_sentence: Sentence, user_question: str) -> str:
+    def answer_question_function(self, quoted_sentence: Sentence, user_question: str, sentence_body: str) -> str:
         """
         使用AI回答用户问题。
         """
         ai_response = self.answer_question_assistant.run(
-            quoted_sentence.sentence_body,
+            sentence_body,
             user_question
         )
         print("AI Response:", ai_response)
@@ -120,13 +152,17 @@ class MainAssistant:
 
         return False
 
-    def handle_grammar_vocab_function(self, quoted_sentence: Sentence, user_question: str, ai_response: str):
+    def handle_grammar_vocab_function(self, quoted_sentence: Sentence, user_question: str, ai_response: str, effective_sentence_body: str = None):
         """
         处理与语法和词汇相关的操作。
         """
+        # 如果没有提供effective_sentence_body，使用完整句子
+        if effective_sentence_body is None:
+            effective_sentence_body = quoted_sentence.sentence_body
+            
         # 检查是否与语法相关
-        grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(quoted_sentence.sentence_body, user_question, ai_response)
-        vocab_relevant_response = self.check_if_vocab_relevant_assistant.run(quoted_sentence.sentence_body, user_question, ai_response)
+        grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(effective_sentence_body, user_question, ai_response)
+        vocab_relevant_response = self.check_if_vocab_relevant_assistant.run(effective_sentence_body, user_question, ai_response)
         
         # 确保响应是字典类型
         if isinstance(grammar_relevant_response, str):
@@ -142,7 +178,7 @@ class MainAssistant:
         if self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.grammar:
             print("✅ 语法相关，开始总结语法规则。")
             # 确保所有参数都不为 None
-            sentence_body = self.session_state.current_sentence.sentence_body if self.session_state.current_sentence else quoted_sentence.sentence_body
+            sentence_body = effective_sentence_body
             user_input = self.session_state.current_input if self.session_state.current_input else user_question
             ai_response_str = self.session_state.current_response if self.session_state.current_response else ai_response
             
@@ -167,7 +203,7 @@ class MainAssistant:
         if self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.vocab:
             print("✅ 词汇相关，开始总结词汇。")
             # 确保所有参数都不为 None
-            sentence_body = self.session_state.current_sentence.sentence_body if self.session_state.current_sentence else quoted_sentence.sentence_body
+            sentence_body = effective_sentence_body
             user_input = self.session_state.current_input if self.session_state.current_input else user_question
             ai_response_str = self.session_state.current_response if self.session_state.current_response else ai_response
             
@@ -208,6 +244,8 @@ class MainAssistant:
                         has_similar = True
                         existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
+                        # 验证句子完整性
+                        self._ensure_sentence_integrity(current_sentence, "Grammar Explanation 调用")
                         example_explanation = self.grammar_example_explanation_assistant.run(
                             sentence=current_sentence,
                             grammar=self.data_controller.grammar_manager.get_rule_by_id(existing_rule_id).name)
@@ -245,6 +283,8 @@ class MainAssistant:
                         has_similar = True
                         existing_vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab)
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
+                        # 验证句子完整性
+                        self._ensure_sentence_integrity(current_sentence, "Vocab Explanation 调用")
                         example_explanation = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
                             vocab=vocab
@@ -279,6 +319,8 @@ class MainAssistant:
                 )
             current_sentence = self.session_state.current_sentence
             if current_sentence:
+                # 验证句子完整性
+                self._ensure_sentence_integrity(current_sentence, "新语法 Explanation 调用")
                 example_explanation = self.grammar_example_explanation_assistant.run(
                                 sentence=current_sentence,
                                 grammar=grammar.rule_name)
@@ -296,6 +338,8 @@ class MainAssistant:
             
             current_sentence = self.session_state.current_sentence
             if current_sentence:
+                # 验证句子完整性
+                self._ensure_sentence_integrity(current_sentence, "新词汇 Explanation 调用")
                 example_explanation = self.vocab_example_explanation_assistant.run(
                                 sentence=current_sentence,
                                 vocab=vocab.vocab)
