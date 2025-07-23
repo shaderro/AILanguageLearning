@@ -694,6 +694,11 @@ Furthermore, the internet facilitates collaborative learning through online comm
                 
                 return True
         
+        # 如果没有找到token，但正在拖拽，也要处理
+        if self.is_dragging:
+            print("🎯 拖拽到空白区域")
+            return True
+        
         return False
     
     def _on_token_touch_up(self, instance, touch):
@@ -720,6 +725,8 @@ Furthermore, the internet facilitates collaborative learning through online comm
         self.selected_indices.clear()
         self.selection_start_index = -1
         self.selection_end_index = -1
+        # 重置拖拽状态
+        self.is_dragging = False
     
     def _highlight_token(self, token_widget, is_selected):
         """高亮或取消高亮token"""
@@ -779,6 +786,8 @@ Furthermore, the internet facilitates collaborative learning through online comm
         
         # 点击了空白处，清除所有选择
         print("🎯 点击空白处，清除所有选择")
+        # 重置拖拽状态
+        self.is_dragging = False
         self._clear_all_selections()
         self._update_selection_from_tokens()
         return True
