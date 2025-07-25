@@ -133,5 +133,20 @@
                 "context_explanation": "```json\n{\"explanation\": \"在这句话中，'Oberzentrum' 指的是一个具有重要区域功能的中心城市，提供广泛的服务和设施，如高等教育、专科医疗和大型购物中心。句子中提到的城市被规划为具有部分 'Oberzentrum' 功能的 'Mittelzentrum'，意味着它虽然是一个中等规模的中心城市，但也承担了一些更高级别中心城市的职责。\"}\n```"
             }
         ]
+    },
+    "10": {
+        "vocab": {
+            "vocab_id": 10,
+            "vocab_body": "revolutionize",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 10,
+                "text_id": 3,
+                "sentence_id": 0,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'revolutionize' 的意思是互联网彻底改变了我们学习语言的方式，带来了巨大的进步和创新。\"}\n```"
+            }
+        ]
     }
 }

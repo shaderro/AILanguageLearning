@@ -31,7 +31,53 @@
           "timestamp": "2024-01-01T10:00:00Z"
         }
       ],
-      "max_turns": 3
+      "max_turns": 100
+    },
+    "3": {
+      "text_title": "Text 3",
+      "current_summary": "1. 用户询问句子语法结构，AI未回答\n2. 用户问\"sowie\"意思，AI解释为连词\"以及/还有\"，相当于英语\"as well as\"\n3. 用户问\"Einwohnern\"意思，AI解释为\"居民/人口\"，是Einwohner的复数形式\n4. 用户问\"Teilfunktionen\"意思，AI解释为复合词\"部分功能\"，指城市具有部分大区域中心功能",
+      "messages": [
+        {
+          "user": "What does revolutionized mean?",
+          "ai": "{'answer': 'revolutionized意思是‘彻底改变’或‘带来革命性变化’。在这里指互联网使语言学习方式发生了根本性的改变。比如：Smartphones revolutionized how we communicate.（智能手机彻底改变了我们的交流方式。）'}",
+          "sentence_id": 0,
+          "quote": {
+            "text_id": 3,
+            "sentence_id": 0,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What does revolutionized mean?",
+          "ai": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这个词表示某事物带来了巨大的、根本性的改变。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
+          "sentence_id": 0,
+          "quote": {
+            "text_id": 3,
+            "sentence_id": 0,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What does revolutionized mean?Use English to answer!",
+          "ai": "{'answer': \"The word 'revolutionized' means to completely and dramatically change or transform something, making it much better or more effective than before. In this sentence, it means the internet has completely changed and improved how we learn languages.\"}",
+          "sentence_id": 0,
+          "quote": {
+            "text_id": 3,
+            "sentence_id": 0,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        }
+      ],
+      "max_turns": 100
     }
   }
 }

@@ -157,6 +157,37 @@
           }
         ]
       }
+    },
+    "3": {
+      "text_title": "Text 3",
+      "sentences": {
+        "0": [
+          {
+            "user_question": "yy",
+            "ai_response": "The question is not relevant to language learning, skipping processing.",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does revolutionized mean?",
+            "ai_response": "{'answer': 'revolutionized意思是‘彻底改变’或‘带来革命性变化’。在这里指互联网使语言学习方式发生了根本性的改变。比如：Smartphones revolutionized how we communicate.（智能手机彻底改变了我们的交流方式。）'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does revolutionized mean?",
+            "ai_response": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这个词表示某事物带来了巨大的、根本性的改变。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does revolutionized mean?Use English to answer!",
+            "ai_response": "{'answer': \"The word 'revolutionized' means to completely and dramatically change or transform something, making it much better or more effective than before. In this sentence, it means the internet has completely changed and improved how we learn languages.\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          }
+        ]
+      }
     }
   }
 }
