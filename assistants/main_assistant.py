@@ -15,6 +15,7 @@ from assistants.sub_assistants.summarize_vocab import SummarizeVocabAssistant
 from assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
 from assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
 from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
+from assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
 from data_managers.data_classes import Sentence
 from data_managers import data_controller
 from data_managers.dialogue_record import DialogueRecordBySentence
@@ -32,6 +33,7 @@ class MainAssistant:
         self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
         self.grammar_example_explanation_assistant = GrammarExampleExplanationAssistant()
         self.vocab_example_explanation_assistant = VocabExampleExplanationAssistant()
+        self.vocab_explanation_assistant = VocabExplanationAssistant()
         self.data_controller = data_controller_instance if data_controller_instance else data_controller.DataController(max_turns)
         # 使用 data_controller 的实例而不是创建新的
         self.dialogue_record = self.data_controller.dialogue_record
@@ -72,8 +74,12 @@ class MainAssistant:
         """
         打印数据管理器中的数据，便于调试和验证。
         """
-        print("Grammar Rules:", self.data_controller.grammar_manager.get_all_rules_name())
-        print("Vocab List:", self.data_controller.vocab_manager.get_all_vocab_body())
+        print("📚 Grammar Rules (by name):", self.data_controller.grammar_manager.get_all_rules_name())
+        print("📖 Vocab List:", self.data_controller.vocab_manager.get_all_vocab_body())
+        
+        # 显示规则的ID顺序
+        self.data_controller.grammar_manager.print_rules_order()
+        
         #print("Session State:", self.session_state)
 
     def _ensure_sentence_integrity(self, sentence: Sentence, context: str) -> bool:
@@ -334,21 +340,43 @@ class MainAssistant:
 
         if self.session_state.vocab_to_add:
             for vocab in self.session_state.vocab_to_add:
-                self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation="test explanation")  
-            
-            current_sentence = self.session_state.current_sentence
-            if current_sentence:
-                # 验证句子完整性
-                self._ensure_sentence_integrity(current_sentence, "新词汇 Explanation 调用")
-                example_explanation = self.vocab_example_explanation_assistant.run(
-                                sentence=current_sentence,
-                                vocab=vocab.vocab)
-                self.data_controller.add_vocab_example(
-                    vocab_id=self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab),
-                    text_id=current_sentence.text_id,
-                    sentence_id=current_sentence.sentence_id,
-                    context_explanation=example_explanation
-                )
+                # 生成词汇解释
+                current_sentence = self.session_state.current_sentence
+                if current_sentence:
+                    # 验证句子完整性
+                    self._ensure_sentence_integrity(current_sentence, "新词汇 Explanation 调用")
+                    vocab_explanation = self.vocab_explanation_assistant.run(
+                        sentence=current_sentence,
+                        vocab=vocab.vocab
+                    )
+                    # 解析JSON响应
+                    if isinstance(vocab_explanation, str):
+                        try:
+                            import json
+                            explanation_data = json.loads(vocab_explanation)
+                            explanation_text = explanation_data.get("explanation", "No explanation provided")
+                        except:
+                            explanation_text = vocab_explanation
+                    else:
+                        explanation_text = str(vocab_explanation)
+                else:
+                    explanation_text = "No explanation provided"
+                
+                # 添加新词汇
+                self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation=explanation_text)
+                
+                # 生成词汇例句解释
+                if current_sentence:
+                    example_explanation = self.vocab_example_explanation_assistant.run(
+                        sentence=current_sentence,
+                        vocab=vocab.vocab
+                    )
+                    self.data_controller.add_vocab_example(
+                        vocab_id=self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab),
+                        text_id=current_sentence.text_id,
+                        sentence_id=current_sentence.sentence_id,
+                        context_explanation=example_explanation
+                    )
 
 if __name__ == "__main__":
     print("✅ 启动语言学习助手。默认引用句如下：")

@@ -34,6 +34,12 @@
                 "text_id": 1,
                 "sentence_id": 1,
                 "explanation_context": "```json\n{\"explanation\": \"\u5728\u8fd9\u4e2a\u53e5\u5b50\u4e2d\uff0c\u4e3b\u8bed\u662f'342 languages'\uff0c\u8c13\u8bed\u52a8\u8bcd\u662f'are'\uff0c\u56e0\u4e3a\u4e3b\u8bed\u662f\u590d\u6570\u5f62\u5f0f\uff0c\u6240\u4ee5\u8c13\u8bed\u52a8\u8bcd\u4e5f\u4f7f\u7528\u590d\u6570\u5f62\u5f0f'are'\uff0c\u4fdd\u6301\u4e86\u4e3b\u8c13\u4e00\u81f4\u3002\u540c\u6837\uff0c'14 are closed'\u4e2d\uff0c\u4e3b\u8bed'14'\uff08\u6307\u4ee314\u79cd\u8bed\u8a00\uff09\u4e5f\u662f\u590d\u6570\uff0c\u8c13\u8bed\u52a8\u8bcd\u4e5f\u4f7f\u7528\u590d\u6570\u5f62\u5f0f'are'\u3002\"}\n```"
+            },
+            {
+                "rule_id": 6,
+                "text_id": 5,
+                "sentence_id": 5,
+                "explanation_context": "```json\n{\"explanation\": \"\u5728\u8fd9\u4e2a\u53e5\u5b50\u4e2d\uff0c\u4e3b\u8bed\u662f'One of the most significant advantages'\uff0c\u5b83\u662f\u4e00\u4e2a\u5355\u6570\u5f62\u5f0f\u7684\u540d\u8bcd\u77ed\u8bed\uff0c\u56e0\u6b64\u8c13\u8bed\u52a8\u8bcd'is'\u4e5f\u4f7f\u7528\u5355\u6570\u5f62\u5f0f\uff0c\u4ee5\u4fdd\u6301\u4e3b\u8c13\u4e00\u81f4\u3002\"}\n```"
             }
         ]
     },
@@ -109,6 +115,12 @@
                 "text_id": 1,
                 "sentence_id": 1,
                 "explanation_context": "```json\n{\"explanation\": \"\u5728\u8fd9\u4e2a\u53e5\u5b50\u4e2d\uff0c'This'\u662f\u4e3b\u8bed\uff0c'is'\u662f\u7cfb\u52a8\u8bcd\uff0c'the first test sentence'\u662f\u8868\u8bed\uff0c\u4e09\u8005\u5171\u540c\u6784\u6210\u4e86\u4e3b\u7cfb\u8868\u7ed3\u6784\uff0c\u8bf4\u660e\u4e3b\u8bed\u7684\u8eab\u4efd\u6216\u7279\u5f81\u3002\"}\n```"
+            },
+            {
+                "rule_id": 11,
+                "text_id": 5,
+                "sentence_id": 5,
+                "explanation_context": "```json\n{\"explanation\": \"\u5728\u8fd9\u4e2a\u53e5\u5b50\u4e2d\uff0c'is' \u662f\u7cfb\u52a8\u8bcd\uff0c\u8fde\u63a5\u4e3b\u8bed 'One of the most significant advantages of internet-based language learning' \u548c\u8868\u8bed 'the availability of authentic materials'\uff0c\u8bf4\u660e\u4e3b\u8bed\u7684\u6027\u8d28\u6216\u72b6\u6001\u3002\"}\n```"
             }
         ]
     },
@@ -154,6 +166,21 @@
                 "text_id": 1,
                 "sentence_id": 1,
                 "explanation_context": "```json\n{\"explanation\": \"\u5728\u8fd9\u4e2a\u53e5\u5b50\u4e2d\uff0c'Landesplanung' \u662f\u4e00\u4e2a\u590d\u5408\u8bcd\uff0c\u7531 'Landes'\uff08\u56fd\u5bb6\u7684\uff09\u548c 'Planung'\uff08\u89c4\u5212\uff09\u7ec4\u6210\uff0c\u610f\u601d\u662f\u56fd\u5bb6\u89c4\u5212\u3002'Mittelzentrum' \u7531 'Mittel'\uff08\u4e2d\u95f4\u7684\uff09\u548c 'Zentrum'\uff08\u4e2d\u5fc3\uff09\u7ec4\u6210\uff0c\u610f\u601d\u662f\u4e2d\u7b49\u4e2d\u5fc3\u3002'Oberzentrum' \u7531 'Ober'\uff08\u4e0a\u5c42\u7684\uff09\u548c 'Zentrum'\uff08\u4e2d\u5fc3\uff09"
+            }
+        ]
+    },
+    "1": {
+        "rule": {
+            "rule_id": 1,
+            "name": "Noun phrase with relative clause",
+            "explanation": "A noun phrase can consist of a determiner + noun modified by a relative clause that describes the noun."
+        },
+        "examples": [
+            {
+                "rule_id": 1,
+                "text_id": 5,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"\u5728\u8fd9\u4e2a\u53e5\u5b50\u4e2d\uff0c'the way we learn languages' \u662f\u4e00\u4e2a\u540d\u8bcd\u77ed\u8bed\uff0c\u5176\u4e2d\u5305\u542b\u4e00\u4e2a\u5173\u7cfb\u4ece\u53e5 'we learn languages'\u3002\u8fd9\u4e2a\u5173\u7cfb\u4ece\u53e5\u4fee\u9970 'the way'\uff0c\u8bf4\u660e\u662f\u4ec0\u4e48\u6837\u7684\u65b9\u5f0f\u3002\u6574\u4e2a\u540d\u8bcd\u77ed\u8bed\u7684\u610f\u601d\u662f '\u6211\u4eec\u5b66\u4e60\u8bed\u8a00\u7684\u65b9\u5f0f'\u3002\"}\n```"
             }
         ]
     }

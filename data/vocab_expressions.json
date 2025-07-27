@@ -146,6 +146,50 @@
                 "text_id": 3,
                 "sentence_id": 0,
                 "context_explanation": "```json\n{\"explanation\": \"在这句话中，'revolutionize' 的意思是互联网彻底改变了我们学习语言的方式，带来了巨大的进步和创新。\"}\n```"
+            },
+            {
+                "vocab_id": 10,
+                "text_id": 5,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'revolutionize' 的意思是互联网彻底改变了我们学习语言的方式，带来了巨大的进步和创新。\"}\n```"
+            }
+        ]
+    },
+    "11": {
+        "vocab": {
+            "vocab_id": 11,
+            "vocab_body": "advent",
+            "explanation": "test explanation"
+        },
+        "example": [
+            {
+                "vocab_id": 11,
+                "text_id": 5,
+                "sentence_id": 2,
+                "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'advent'指的是在线平台、移动应用和数字资源的出现或到来，强调了这些新技术和工具的出现使得语言学习变得更加容易获取。\"}\n```"
+            }
+        ]
+    },
+    "12": {
+        "vocab": {
+            "vocab_id": 12,
+            "vocab_body": "advent",
+            "explanation": "test explanation"
+        },
+        "example": []
+    },
+    "13": {
+        "vocab": {
+            "vocab_id": 13,
+            "vocab_body": "facilitate",
+            "explanation": "{'explanation': \"The word 'facilitate' is a verb that means to make an action or process easier or more efficient. In the given sentence, it is used to describe how the internet helps or enables collaborative learning by providing platforms like online communities and language exchange programs. It implies that the internet acts as a tool or medium that supports and simplifies the process of learning together. The word is often used in contexts where something or someone helps to bring about a desired outcome with less effort or difficulty.\"}"
+        },
+        "example": [
+            {
+                "vocab_id": 13,
+                "text_id": 5,
+                "sentence_id": 7,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'facilitate' 的意思是互联网使协作学习变得更容易或更顺畅，通过在线社区和语言交换项目来实现。\"}\n```"
             }
         ]
     }

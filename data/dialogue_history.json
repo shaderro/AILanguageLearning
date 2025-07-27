@@ -78,6 +78,130 @@
         }
       ],
       "max_turns": 100
+    },
+    "5": {
+      "text_title": "Text 5",
+      "current_summary": "1. 用户询问句子语法结构，AI未回答\n2. 用户问\"sowie\"意思，AI解释为连词\"以及/还有\"，相当于英语\"as well as\"\n3. 用户问\"Einwohnern\"意思，AI解释为\"居民/人口\"，是Einwohner的复数形式\n4. 用户问\"Teilfunktionen\"意思，AI解释为复合词\"部分功能\"，指城市具有部分大区域中心功能",
+      "messages": [
+        {
+          "user": "What does revolutionized mean？",
+          "ai": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这里指互联网完全改变了我们学习语言的方式。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 1,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What does revolutionized mean ? Please answer in  English",
+          "ai": "{'answer': \"The word 'revolutionized' means to completely change or transform something in a very significant way. In this sentence, it means the internet has dramatically changed how we learn languages.\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 1,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What does this word mean, answer in English",
+          "ai": "{'answer': \"The word 'revolutionized' means to completely change or transform something in a radical or fundamental way, often leading to significant improvement or innovation.\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 1,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What does advent mean? please answer in English",
+          "ai": "{'answer': \"The word 'advent' means the arrival or beginning of something important. For example: 'The advent of computers changed the world.' It often refers to the start of a new era or significant development.\"}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 2,
+            "sentence_body": "With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What is the grammatical structure of this sentence? please answer in English",
+          "ai": "{'answer': \"The grammatical structure is: Subject ('One of the most significant advantages of internet-based language learning') + Linking Verb ('is') + Subject Complement ('the availability of authentic materials'). It's a simple sentence with a subject-verb-complement pattern.\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 5,
+            "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What is subject complement?",
+          "ai": "{'answer': \"在英语语法中，subject complement（主语补足语）是用来说明或描述主语的成分。在你引用的句子中，'the availability of authentic materials'就是主语补足语，它用来说明主语'One of the most significant advantages of internet-based language learning'是什么。主语补足语通常出现在系动词（如is, are, seem等）之后。\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 5,
+            "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What is the grammaticle structure of this sentence? please answer in English",
+          "ai": "{'answer': \"The grammatical structure is: Subject ('One of the most significant advantages of internet-based language learning') + Linking Verb ('is') + Subject Complement ('the availability of authentic materials'). It's a simple sentence with a subject-verb-complement pattern.\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 5,
+            "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What is the grammaticle structure of this phrase, please answer in English",
+          "ai": "{'answer': \"The grammatical structure is: [determiner 'the'] + [noun 'way'] + [relative clause 'we learn languages']. It's a noun phrase where 'the way' is modified by the clause 'we learn languages' (which describes what kind of way).\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 1,
+            "sentence_body": "The internet has revolutionized the way we learn languages.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "What does this word mean? please explain in simple english",
+          "ai": "{'answer': \"Facilitates means 'makes something easier' or 'helps something happen'. For example: 'The new software facilitates communication' means the software makes communication easier.\"}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 5,
+            "sentence_id": 7,
+            "sentence_body": "Furthermore, the internet facilitates collaborative learning through online communities and language exchange programs.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        }
+      ],
+      "max_turns": 100
     }
   }
 }

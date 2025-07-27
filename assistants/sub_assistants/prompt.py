@@ -375,3 +375,22 @@ vocab_example_explanation_template = """
 这是需要解释的词汇表达：
 {vocab_knowledge_point}
 """
+
+vocab_explanation_sys_prompt = """
+你是一个语言学习助手，用户正在学习新的词汇或表达。
+你需要根据用户引用的句子和词汇，给出一个详细而准确的词汇解释。
+请你根据用户的引用句子和词汇，给出一个对于该词汇或表达的详细解释。
+请注意：
+- 解释应该包括词汇的基本含义、用法、词性等
+- 解释应该清晰明了，适合语言学习者理解
+- 可以参考句子中的语境来提供更准确的解释
+请只返回如下 JSON 格式，不要有多余的内容：
+{"explanation": "你的解释内容"}
+"""
+
+vocab_explanation_template = """
+这是用户引用的句子：
+{quoted_sentence}
+这是需要解释的词汇表达：
+{vocab_knowledge_point}
+"""

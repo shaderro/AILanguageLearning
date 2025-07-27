@@ -1,8 +1,11 @@
 """
 Text Input Chat Screen Test Module
 Based on TextInputChatScreen, used for testing new features
+Now with async processing support
 """
 
+import threading
+import queue
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
@@ -12,9 +15,14 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
 from kivy.clock import Clock
 from kivy.graphics import Color, Rectangle
+from kivy.properties import BooleanProperty, StringProperty
 
 class TextInputChatScreenTest(Screen):
-    """Text Input Chat Screen Test Version"""
+    """Text Input Chat Screen Test Version with Async Processing"""
+    
+    # Kivy属性，用于UI状态绑定
+    is_processing = BooleanProperty(False)
+    processing_status = StringProperty("")
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -25,6 +33,11 @@ class TextInputChatScreenTest(Screen):
         self.is_text_selected = False
         self.selection_start = 0
         self.selection_end = 0
+        
+        # 异步处理相关变量
+        self.processing_queue = queue.Queue()
+        self.processing_thread = None
+        self.is_processing_thread_running = False
         
         # Article data
         self.article_title = "Test Article"
@@ -61,6 +74,12 @@ Furthermore, the internet facilitates collaborative learning through online comm
         self.previous_context_sentence = ""  # Previous conversation complete sentence
         self.previous_context_sentence_id = -1  # Previous conversation sentence ID
         self.last_used_tokens = []  # Recently used tokens (for follow-up questions)
+        
+        # 启动异步处理线程
+        self._start_processing_thread()
+        
+        # 启动状态更新定时器
+        Clock.schedule_interval(self._update_processing_status, 0.1)
     
     def _initialize_main_assistant(self):
         """Initialize MainAssistant and DataController"""
@@ -95,31 +114,53 @@ Furthermore, the internet facilitates collaborative learning through online comm
             except Exception as e:
                 print(f"⚠️ Error loading data, starting with empty data: {e}")
             
+            # 创建测试文本（如果不存在）
+            self._create_test_text()
+            
             # Create MainAssistant instance with DataController
             print("🔧 Creating MainAssistant...")
             self.main_assistant = MainAssistant(data_controller_instance=self.data_controller)
-            print("✅ MainAssistant created")
+            print("✅ MainAssistant created successfully")
             
-            print("✅ MainAssistant initialized successfully")
-            print(f"📊 Current data status:")
-            print(f"   - Grammar rules: {len(self.data_controller.grammar_manager.get_all_rules_name())}")
-            print(f"   - Vocabulary items: {len(self.data_controller.vocab_manager.get_all_vocab_body())}")
-            print(f"   - Original texts: {len(self.data_controller.text_manager.list_texts_by_title())}")
-            
-        except ImportError as e:
-            print(f"❌ Failed to import required modules: {e}")
-            import traceback
-            traceback.print_exc()
-            print("⚠️ MainAssistant will not be available, using fallback AI responses")
-            self.main_assistant = None
-            self.data_controller = None
         except Exception as e:
-            print(f"❌ Failed to initialize MainAssistant: {e}")
-            import traceback
-            traceback.print_exc()
-            print("⚠️ MainAssistant will not be available, using fallback AI responses")
+            print(f"❌ Error initializing MainAssistant: {e}")
             self.main_assistant = None
-            self.data_controller = None
+    
+    def _create_test_text(self):
+        """创建测试文本"""
+        try:
+            # 检查是否已经存在测试文本
+            existing_text = self.data_controller.text_manager.get_text_by_title("The Internet and Language Learning")
+            if existing_text:
+                self.article_id = existing_text.text_id
+                print(f"✅ Found existing test text with ID: {self.article_id}")
+                return
+            
+            # 创建新的测试文本
+            self.data_controller.text_manager.add_text("The Internet and Language Learning")
+            # 获取刚创建的文本ID
+            new_text = self.data_controller.text_manager.get_text_by_title("The Internet and Language Learning")
+            if new_text:
+                self.article_id = new_text.text_id
+                print(f"✅ Created new test text with ID: {self.article_id}")
+            else:
+                raise Exception("Failed to create test text")
+            
+            # 将文章内容分割成句子并添加到文本中
+            sentences = self.article_content.split('. ')
+            for i, sentence in enumerate(sentences):
+                if sentence.strip():
+                    # 确保句子以句号结尾
+                    if not sentence.endswith('.'):
+                        sentence += '.'
+                    self.data_controller.text_manager.add_sentence_to_text(self.article_id, sentence.strip())
+            
+            print(f"✅ Added {len(sentences)} sentences to test text")
+            
+        except Exception as e:
+            print(f"❌ Error creating test text: {e}")
+            # 如果创建失败，使用一个不存在的ID来避免错误
+            self.article_id = -1
     
     def _save_data(self):
         """Save data to files"""
@@ -140,10 +181,17 @@ Furthermore, the internet facilitates collaborative learning through online comm
         """Convert UI selection data to MainAssistant expected Sentence object"""
         from data_managers.data_classes import Sentence
         
+        # 使用正确的text_id
+        text_id = getattr(self, 'article_id', 0)
+        
+        # 如果text_id无效，使用一个默认值
+        if text_id <= 0:
+            text_id = 1  # 使用一个默认的text_id
+        
         # Construct Sentence object
         sentence_object = Sentence(
-            text_id=getattr(self, 'article_id', 0),
-            sentence_id=sentence_id,
+            text_id=text_id,
+            sentence_id=sentence_id if sentence_id >= 0 else 0,
             sentence_body=full_sentence,
             grammar_annotations=[],  # Empty for now, will be filled by AI later
             vocab_annotations=[]     # Empty for now, will be filled by AI later
@@ -277,8 +325,27 @@ Furthermore, the internet facilitates collaborative learning through online comm
             # Pre-process contractions
             sentence = re.sub(r"(\w+)'(\w+)", r"\1'\2", sentence)
             
-            # Tokenize with punctuation merging
-            tokens = re.findall(r'\b\w+(?:[,\-\.!…?\)\]\}""'']+)?|[\w\s]*[\(\[\{"'']\w+|\w+[,\-\.!…?\)\]\}""'']+|\w+', sentence)
+            # Tokenize with punctuation merging - using a simpler approach
+            # Split by whitespace first
+            words = sentence.split()
+            tokens = []
+            
+            for word in words:
+                # Handle punctuation at the end
+                if re.search(r'[,\-\.!…?\)\]\}""'']$', word):
+                    tokens.append(word)
+                # Handle punctuation at the beginning
+                elif re.search(r'^[\(\[\{"'']', word):
+                    tokens.append(word)
+                # Handle punctuation in the middle
+                elif re.search(r'[,\-\.!…?\)\]\}""'']', word):
+                    # Split by punctuation
+                    parts = re.split(r'([,\-\.!…?\)\]\}""''])', word)
+                    for part in parts:
+                        if part.strip():
+                            tokens.append(part)
+                else:
+                    tokens.append(word)
             
             # Post-process tokens
             processed_tokens = []
@@ -526,7 +593,7 @@ Furthermore, the internet facilitates collaborative learning through online comm
             # 为每个词/短语添加背景和点击事件
             with token_label.canvas.before:
                 Color(1, 1, 1, 1)  # 白色背景
-                self.token_bg = Rectangle(pos=token_label.pos, size=token_label.size)
+                token_label.token_bg = Rectangle(pos=token_label.pos, size=token_label.size)  # 修复：每个token有自己的背景
             
             # 绑定事件
             token_label.bind(
@@ -583,6 +650,16 @@ Furthermore, the internet facilitates collaborative learning through online comm
         # 聊天标题
         chat_title = self._create_chat_title()
         chat_panel.add_widget(chat_title)
+        
+        # 状态标签（新增）
+        self.status_label = Label(
+            text='',
+            size_hint_y=None,
+            height=30,
+            font_size=20,
+            color=(0.6, 0.6, 0.6, 1)
+        )
+        chat_panel.add_widget(self.status_label)
         
         # 聊天滚动区域
         self.chat_scroll, self.chat_container = self._create_chat_scroll_area()
@@ -723,9 +800,14 @@ Furthermore, the internet facilitates collaborative learning through online comm
         pass
     
     def _on_send_message(self, *args):
-        """发送消息 - 智能提问控制逻辑"""
+        """发送消息 - 异步版本"""
         message = self.chat_input.text.strip()
         if not message:
+            return
+        
+        # 检查是否正在处理中
+        if self.is_processing:
+            print("⚠️ Already processing, please wait...")
             return
         
         # 获取当前选中的文本和tokens
@@ -793,6 +875,9 @@ Furthermore, the internet facilitates collaborative learning through online comm
         else:
             self._add_chat_message("You", message, is_ai=False)
         
+        # 禁用UI交互
+        self._disable_ui_interaction()
+        
         # Convert to Sentence object and call MainAssistant
         sentence_object = self._convert_to_sentence_object(
             context_tokens, 
@@ -801,15 +886,19 @@ Furthermore, the internet facilitates collaborative learning through online comm
             message
         )
         
-        # Call MainAssistant for AI response
-        ai_response = self._call_main_assistant(sentence_object, message, context_tokens)
-        self._add_chat_message("AI Assistant", ai_response, is_ai=True)
-        
-        # Save data after processing
-        self._save_data()
+        # 添加异步任务（只添加一个任务）
+        task = {
+            'type': 'main_assistant',
+            'sentence_object': sentence_object,
+            'user_question': message,
+            'selected_tokens': context_tokens
+        }
+        self.processing_queue.put(task)
         
         # 清空输入
         self.chat_input.text = ''
+        
+        print("🚀 Async task added to processing queue")
 
     def _show_selection_required_warning(self):
         """显示需要选择句子的警告"""
@@ -1323,26 +1412,34 @@ Furthermore, the internet facilitates collaborative learning through online comm
         return False
     
     def test_run(self):
-        """测试运行功能 - 使用测试数据运行当前页面"""
-        print("🧪 Starting test run for TextInputChatScreenTest...")
-        
-        # 设置测试文章数据
-        test_article_data = self._create_test_article_data()
-        self.set_article(test_article_data)
+        """测试运行"""
+        print("🚀 Running TextInputChatScreenTest...")
         
         # 添加一些测试消息
         self._add_test_messages()
         
-        print("✅ Test data setup complete")
-        print("📖 Article Title:", self.article_title)
-        print("📝 Article content length:", len(self.article_content))
-        print("💬 Number of chat messages:", len(self.chat_history))
+        print("✅ TextInputChatScreenTest completed")
+        print("\n🎯 异步UI功能测试说明:")
+        print("1. 文章内容字号已放大到48px (原来的3倍)")
+        print("2. 选中文本显示字号已放大到42px (原来的3倍)")
+        print("3. 点击输入框时，之前选择的文本会被保持")
+        print("4. 新增异步处理功能:")
+        print("   - 发送消息后UI不会卡顿")
+        print("   - 实时显示处理状态")
+        print("   - 后台处理MainAssistant")
+        print("   - 后台继续处理语法/词汇")
+        print("5. 可以测试以下操作:")
+        print("   - 在文章中选择文本")
+        print("   - 点击输入框")
+        print("   - 输入问题并发送")
+        print("   - 验证选中文本是否被保持")
+        print("   - 观察异步处理状态")
     
     def _create_test_article_data(self):
         """创建测试文章数据"""
         class TestArticleData:
             def __init__(self):
-                self.text_id = 3  # 设置文章ID
+                self.text_id = 5  # 设置文章ID，对应original_texts.json中的文章
                 self.text_title = "The Internet and Language Learning"
                 self.text_by_sentence = [
                     type('MockSentence', (), {'sentence_body': 'The internet has revolutionized the way we learn languages.'})(),
@@ -1352,7 +1449,9 @@ Furthermore, the internet facilitates collaborative learning through online comm
                     type('MockSentence', (), {'sentence_body': 'One of the most significant advantages of internet-based language learning is the availability of authentic materials.'})(),
                     type('MockSentence', (), {'sentence_body': 'Learners can access real news articles, videos, podcasts, and social media content in their target language.'})(),
                     type('MockSentence', (), {'sentence_body': 'Furthermore, the internet facilitates collaborative learning through online communities and language exchange programs.'})(),
-                    type('MockSentence', (), {'sentence_body': 'Students can connect with peers from different countries, practice conversation skills, and share cultural insights.'})()
+                    type('MockSentence', (), {'sentence_body': 'Students can connect with peers from different countries, practice conversation skills, and share cultural insights.'})(),
+                    type('MockSentence', (), {'sentence_body': 'Although artificial intelligence has been integrated into language learning applications, which has significantly improved the personalization of educational content, many educators still believe that human interaction remains irreplaceable in the learning process.'})(),
+                    type('MockSentence', (), {'sentence_body': 'The research conducted by linguists at prestigious universities, who have analyzed data from over 10,000 language learners across 50 countries, suggests that the most effective learning strategies involve a combination of technology-assisted practice and traditional face-to-face instruction.'})()
                 ]
         
         return TestArticleData()
@@ -1370,6 +1469,16 @@ Furthermore, the internet facilitates collaborative learning through online comm
                 'selected_text': 'the way we learn',
                 'user_message': 'What grammar structure is used here?',
                 'ai_response': 'This is a noun phrase structure: "the way we learn". Here, "the way" is a noun phrase meaning "the method or manner", and "we learn" is a relative clause that modifies "way". The relative pronoun "that" or "in which" is omitted.'
+            },
+            {
+                'selected_text': 'Although artificial intelligence has been integrated',
+                'user_message': 'What is the grammatical function of "Although" in this sentence?',
+                'ai_response': '"Although" is a subordinating conjunction that introduces a concessive clause. It shows contrast between two ideas - the integration of AI and the belief that human interaction is irreplaceable. This creates a complex sentence with a dependent clause followed by an independent clause.'
+            },
+            {
+                'selected_text': 'who have analyzed data from over 10,000 language learners',
+                'user_message': 'What type of clause is this?',
+                'ai_response': 'This is a relative clause introduced by "who". It modifies the noun "linguists" and provides additional information about what the linguists have done. The relative pronoun "who" refers to "linguists" and functions as the subject of the relative clause.'
             },
             {
                 'selected_text': '',
@@ -1395,3 +1504,320 @@ Furthermore, the internet facilitates collaborative learning through online comm
                 self._on_text_selection_change(None, "")
         
         print(f"✅ Added {len(test_scenarios)} test conversation scenarios") 
+
+    def _start_processing_thread(self):
+        """启动异步处理线程"""
+        if not self.is_processing_thread_running:
+            self.is_processing_thread_running = True
+            self.processing_thread = threading.Thread(target=self._processing_worker, daemon=True)
+            self.processing_thread.start()
+            print("🔄 Started async processing thread")
+    
+    def _processing_worker(self):
+        """异步处理工作线程"""
+        while self.is_processing_thread_running:
+            try:
+                # 从队列获取任务
+                task = self.processing_queue.get(timeout=1.0)
+                if task is None:  # 停止信号
+                    break
+                
+                # 处理任务
+                self._process_task(task)
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"❌ Error in processing worker: {e}")
+                # 发送错误响应到主线程
+                self._send_error_response(str(e))
+    
+    def _process_task(self, task):
+        """处理单个任务"""
+        try:
+            task_type = task.get('type')
+            
+            if task_type == 'main_assistant':
+                # 处理MainAssistant任务
+                self._process_main_assistant_task(task)
+            elif task_type == 'post_processing':
+                # 处理后续任务
+                self._process_post_processing_task(task)
+            else:
+                print(f"⚠️ Unknown task type: {task_type}")
+                
+        except Exception as e:
+            print(f"❌ Error processing task: {e}")
+            self._send_error_response(str(e))
+    
+    def _process_main_assistant_task(self, task):
+        """处理MainAssistant任务"""
+        try:
+            sentence_object = task['sentence_object']
+            user_question = task['user_question']
+            selected_tokens = task['selected_tokens']
+            
+            print("🤖 Processing MainAssistant task...")
+            
+            # 更新处理状态
+            self._update_processing_status_async("Processing AI response and knowledge extraction...")
+            
+            # 调用MainAssistant - 这已经包含了所有处理
+            quoted_string = " ".join(selected_tokens) if selected_tokens else None
+            
+            print(f"🤖 Calling MainAssistant.run() with:")
+            print(f"   - quoted_sentence: {sentence_object.sentence_body}")
+            print(f"   - user_question: {user_question}")
+            print(f"   - quoted_string: {quoted_string}")
+            
+            self.main_assistant.run(
+                quoted_sentence=sentence_object,
+                user_question=user_question,
+                quoted_string=quoted_string
+            )
+            
+            print("✅ MainAssistant.run() completed")
+            print(f"📊 Session state grammar_to_add: {len(self.main_assistant.session_state.grammar_to_add)}")
+            print(f"📊 Session state vocab_to_add: {len(self.main_assistant.session_state.vocab_to_add)}")
+            for grammar in self.main_assistant.session_state.grammar_to_add:
+                print(f"   - Grammar: {grammar.rule_name}")
+            for vocab in self.main_assistant.session_state.vocab_to_add:
+                print(f"   - Vocab: {vocab.vocab}")
+            
+            # 获取AI响应
+            ai_response = self.main_assistant.session_state.current_response
+            if not ai_response:
+                ai_response = self._generate_fallback_response(user_question, sentence_object.sentence_body)
+            
+            # 立即保存数据（此时所有处理都已完成）
+            self._save_data_async()
+            
+            # 发送响应到主线程
+            self._send_ai_response(ai_response)
+            
+            # 发送处理完成信号
+            Clock.schedule_once(lambda dt: self._handle_post_processing_complete(), 0)
+            
+        except Exception as e:
+            print(f"❌ Error in MainAssistant processing: {e}")
+            self._send_error_response(str(e))
+    
+    def _process_post_processing_task(self, task):
+        """处理后续任务（语法、词汇处理等）"""
+        try:
+            sentence_object = task['sentence_object']
+            user_question = task['user_question']
+            selected_tokens = task['selected_tokens']
+            
+            print("🔄 Processing post-processing tasks...")
+            
+            # 更新处理状态
+            self._update_processing_status_async("Processing grammar and vocabulary...")
+            
+            # 调用MainAssistant的完整处理流程
+            # 这包括所有后续的AI assistant功能
+            self._run_full_main_assistant_processing(sentence_object, user_question, selected_tokens)
+            
+            # 注意：数据保存已经在_run_full_main_assistant_processing中完成
+            # 不需要再次调用_save_data_async()
+            
+            # 更新处理状态
+            self._update_processing_status_async("Completed")
+            
+        except Exception as e:
+            print(f"❌ Error in post-processing: {e}")
+    
+    def _run_full_main_assistant_processing(self, sentence_object, user_question, selected_tokens):
+        """运行完整的MainAssistant处理流程"""
+        try:
+            print("🔄 Running full MainAssistant processing...")
+            
+            # 更新处理状态
+            self._update_processing_status_async("Checking grammar and vocabulary relevance...")
+            
+            # 1. 检查语法和词汇相关性
+            quoted_string = " ".join(selected_tokens) if selected_tokens else None
+            
+            # 调用MainAssistant的handle_grammar_vocab_function
+            self.main_assistant.handle_grammar_vocab_function(
+                quoted_sentence=sentence_object,
+                user_question=user_question,
+                ai_response=self.main_assistant.session_state.current_response,
+                effective_sentence_body=quoted_string
+            )
+            
+            # 更新处理状态
+            self._update_processing_status_async("Adding new knowledge points...")
+            
+            # 2. 添加新知识点到数据
+            self.main_assistant.add_new_to_data()
+            
+            # 3. 立即保存数据到文件
+            self._save_data_async()
+            
+            # 4. 打印处理结果
+            self.main_assistant.print_data_controller_data()
+            
+            # 5. 发送处理完成信号到主线程
+            Clock.schedule_once(lambda dt: self._handle_post_processing_complete(), 0)
+            
+            print("✅ Full MainAssistant processing completed")
+            
+        except Exception as e:
+            print(f"❌ Error in full MainAssistant processing: {e}")
+            raise e
+    
+    def _add_post_processing_task(self, sentence_object, user_question, selected_tokens):
+        """添加后续处理任务"""
+        task = {
+            'type': 'post_processing',
+            'sentence_object': sentence_object,
+            'user_question': user_question,
+            'selected_tokens': selected_tokens
+        }
+        self.processing_queue.put(task)
+    
+    def _send_ai_response(self, ai_response):
+        """发送AI响应到主线程"""
+        Clock.schedule_once(lambda dt: self._handle_ai_response(ai_response), 0)
+    
+    def _send_error_response(self, error_message):
+        """发送错误响应到主线程"""
+        Clock.schedule_once(lambda dt: self._handle_error_response(error_message), 0)
+    
+    def _update_processing_status_async(self, status):
+        """异步更新处理状态"""
+        Clock.schedule_once(lambda dt: setattr(self, 'processing_status', status), 0)
+    
+    def _handle_ai_response(self, ai_response):
+        """在主线程中处理AI响应"""
+        # 添加AI消息到聊天界面
+        self._add_chat_message("AI Assistant", ai_response, is_ai=True)
+        
+        # 恢复UI交互
+        self._restore_ui_interaction()
+        
+        print("✅ AI response handled successfully")
+    
+    def _handle_error_response(self, error_message):
+        """在主线程中处理错误响应"""
+        # 添加错误消息到聊天界面
+        self._add_chat_message("System", f"Error: {error_message}", is_ai=True)
+        
+        # 恢复UI交互
+        self._restore_ui_interaction()
+        
+        print(f"❌ Error response handled: {error_message}")
+    
+    def _restore_ui_interaction(self):
+        """恢复UI交互"""
+        self.is_processing = False
+        self.processing_status = ""
+        
+        # 恢复输入框和发送按钮
+        if hasattr(self, 'chat_input'):
+            self.chat_input.disabled = False
+        if hasattr(self, 'send_button'):
+            self.send_button.disabled = False
+        
+        print("🔄 UI interaction restored")
+    
+    def _disable_ui_interaction(self):
+        """禁用UI交互"""
+        self.is_processing = True
+        self.processing_status = "Processing..."
+        
+        # 禁用输入框和发送按钮
+        if hasattr(self, 'chat_input'):
+            self.chat_input.disabled = True
+        if hasattr(self, 'send_button'):
+            self.send_button.disabled = True
+        
+        print("⏸️ UI interaction disabled")
+    
+    def _update_processing_status(self, dt):
+        """更新处理状态显示"""
+        if hasattr(self, 'status_label') and self.is_processing:
+            self.status_label.text = self.processing_status
+    
+    def _save_data_async(self):
+        """异步保存数据"""
+        try:
+            if hasattr(self, 'data_controller'):
+                # 在主线程中执行保存操作
+                Clock.schedule_once(lambda dt: self._perform_save_data(), 0)
+        except Exception as e:
+            print(f"❌ Error scheduling data save: {e}")
+    
+    def _perform_save_data(self):
+        """执行数据保存（在主线程中）"""
+        try:
+            if hasattr(self, 'data_controller'):
+                print("🔄 Starting data save...")
+                
+                # 打印保存前的数据状态
+                grammar_rules = self.data_controller.grammar_manager.get_all_rules_name()
+                vocab_items = self.data_controller.vocab_manager.get_all_vocab_body()
+                print(f"📊 Before save - Grammar rules: {len(grammar_rules)}, Vocab items: {len(vocab_items)}")
+                print(f"📚 Grammar rules: {grammar_rules}")
+                print(f"📖 Vocab items: {vocab_items}")
+                
+                self.data_controller.save_data(
+                    grammar_path='data/grammar_rules.json',
+                    vocab_path='data/vocab_expressions.json',
+                    text_path='data/original_texts.json',
+                    dialogue_record_path='data/dialogue_record.json',
+                    dialogue_history_path='data/dialogue_history.json'
+                )
+                print("✅ Data saved successfully to JSON files")
+                
+                # 验证保存后的文件
+                import os
+                grammar_file_size = os.path.getsize('data/grammar_rules.json')
+                vocab_file_size = os.path.getsize('data/vocab_expressions.json')
+                print(f"📁 Grammar file size: {grammar_file_size} bytes")
+                print(f"📁 Vocab file size: {vocab_file_size} bytes")
+                
+        except Exception as e:
+            print(f"❌ Error saving data: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def on_stop(self):
+        """停止时清理资源"""
+        self.is_processing_thread_running = False
+        if self.processing_thread:
+            self.processing_queue.put(None)  # 发送停止信号
+            self.processing_thread.join(timeout=2.0)
+        print("🛑 Async processing thread stopped") 
+
+    def _show_processing_results(self):
+        """显示处理结果"""
+        try:
+            if hasattr(self, 'main_assistant') and self.main_assistant:
+                # 获取当前数据状态
+                grammar_rules = self.main_assistant.data_controller.grammar_manager.get_all_rules_name()
+                vocab_items = self.main_assistant.data_controller.vocab_manager.get_all_vocab_body()
+                
+                # 显示结果
+                result_message = f" Processing Results:\n"
+                result_message += f"📚 Grammar Rules: {len(grammar_rules)}\n"
+                result_message += f"📖 Vocabulary Items: {len(vocab_items)}\n"
+                
+                if grammar_rules:
+                    result_message += f"🔍 Latest Grammar Rules: {', '.join(grammar_rules[-3:])}\n"
+                if vocab_items:
+                    result_message += f" Latest Vocabulary: {', '.join(vocab_items[-3:])}\n"
+                
+                # 添加到聊天界面
+                self._add_chat_message("System", result_message, is_ai=True)
+                
+        except Exception as e:
+            print(f"❌ Error showing processing results: {e}")
+
+    def _handle_post_processing_complete(self):
+        """处理后续处理完成"""
+        # 显示处理结果
+        self._show_processing_results()
+        
+        print("✅ Post-processing completed") 
