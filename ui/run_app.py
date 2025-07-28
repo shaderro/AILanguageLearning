@@ -1,29 +1,36 @@
 #!/usr/bin/env python3
 """
 Language Learning App - Main startup file
-Refactored modular application entry point
+Refactored modular application entry point with MainAssistant integration
 """
+
+import os
+import sys
+
+# Add parent directory to path for imports
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parent_dir)
 
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, NoTransition
 
 # Import refactored components
-from screens.main_screen import MainScreen
-from screens.reading_content_screen import ReadingContentScreen
-from screens.vocab_detail_screen import VocabDetailScreen
-from screens.grammar_detail_screen import GrammarDetailScreen
-from screens.reading_content_textinput_screen import ReadingContentTextInputScreen
-from screens.text_input_chat_screen import TextInputChatScreen
-from screens.learn_screen import LearnScreen
-# from screens.read_content_screen import ReadContentScreen
+from ui.screens.main_screen import MainScreen
+from ui.screens.reading_content_screen import ReadingContentScreen
+from ui.screens.vocab_detail_screen import VocabDetailScreen
+from ui.screens.grammar_detail_screen import GrammarDetailScreen
+from ui.screens.reading_content_textinput_screen import ReadingContentTextInputScreen
+from ui.screens.text_input_chat_screen import TextInputChatScreen
+from ui.screens.learn_screen import LearnScreen
+# from ui.screens.read_content_screen import ReadContentScreen
 
 # Import data binding services and managers
-from services.language_learning_binding_service import LanguageLearningBindingService
+from ui.services.language_learning_binding_service import LanguageLearningBindingService
 from data_managers.grammar_rule_manager import GrammarRuleManager
 from data_managers.vocab_manager import VocabManager
 
 class LangUIApp(App):
-    """Language learning app main class"""
+    """Language learning app main class with MainAssistant integration"""
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -33,6 +40,8 @@ class LangUIApp(App):
     
     def build(self):
         """Build application interface"""
+        print("🚀 Building Language Learning App with MainAssistant integration...")
+        
         # Initialize data binding service
         self._initialize_data_binding_service()
         
@@ -52,6 +61,7 @@ class LangUIApp(App):
         textinput_screen = ReadingContentTextInputScreen(name="textinput_read")
         sm.add_widget(textinput_screen)
         
+        # Enhanced TextInputChatScreen with MainAssistant integration
         textinput_chat_screen = TextInputChatScreen(name="textinput_chat")
         sm.add_widget(textinput_chat_screen)
         
@@ -67,6 +77,7 @@ class LangUIApp(App):
         self.data_binding_service.register_viewmodel("LearnScreenViewModel", learn_screen.viewmodel)
         sm.add_widget(learn_screen)
         
+        print("✅ All screens initialized successfully")
         return sm
     
     def _initialize_data_binding_service(self):
@@ -126,9 +137,9 @@ class LangUIApp(App):
 
 if __name__ == '__main__':
     import os, sys
-    print("🚀 Starting language learning app...")
+    print("🚀 Starting language learning app with MainAssistant integration...")
     print("📁 Current working directory:", os.getcwd())
     print("🐍 Python version:", sys.version.split()[0])
-    print("📦 Using refactored modular structure")
+    print("📦 Using enhanced modular structure with AI integration")
     print("-" * 50)
     LangUIApp().run()
