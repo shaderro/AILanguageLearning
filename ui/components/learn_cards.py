@@ -9,6 +9,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import Color, RoundedRectangle
 from kivy.properties import StringProperty, NumericProperty
 from ui.components.cards import BaseCard
+from ui.utils.font_utils import FontUtils
 
 
 class GrammarRuleCard(BaseCard):
@@ -37,7 +38,7 @@ class GrammarRuleCard(BaseCard):
         header = BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
         
         # Title
-        title_label = Label(
+        title_label = FontUtils.create_label_with_chinese_support(
             text=f"[b][color=000000]{self.rule_name}[/color][/b]",
             markup=True, font_size=32, halign='left', valign='middle',
             size_hint_x=0.7
@@ -46,7 +47,7 @@ class GrammarRuleCard(BaseCard):
         
         # Difficulty label
         difficulty_color = self._get_difficulty_color(self.difficulty)
-        difficulty_label = Label(
+        difficulty_label = FontUtils.create_label_with_chinese_support(
             text=f"[color={difficulty_color}]{self.difficulty.upper()}[/color]",
             markup=True, font_size=24, size_hint_x=0.3,
             halign='right', valign='middle'
@@ -55,7 +56,7 @@ class GrammarRuleCard(BaseCard):
         self.add_widget(header)
         
         # Explanation
-        explanation_label = Label(
+        explanation_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=000000]{self.explanation[:100]}{'...' if len(self.explanation) > 100 else ''}[/color]",
             markup=True, font_size=26, halign='left', valign='top',
             size_hint_y=None, height=80, text_size=(self.width - 30, None)
@@ -66,14 +67,14 @@ class GrammarRuleCard(BaseCard):
         footer = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
         
         # Example count
-        example_label = Label(
+        example_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=000000]📝 {self.example_count} examples[/color]",
             markup=True, font_size=24, halign='left', valign='middle'
         )
         footer.add_widget(example_label)
         
         # Click hint
-        click_label = Label(
+        click_label = FontUtils.create_label_with_chinese_support(
             text="[color=666666]Click for details[/color]",
             markup=True, font_size=20, size_hint_x=None, width=120,
             halign='right', valign='middle'
@@ -124,7 +125,7 @@ class VocabExpressionCard(BaseCard):
         header = BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
         
         # Title
-        title_label = Label(
+        title_label = FontUtils.create_label_with_chinese_support(
             text=f"[b][color=000000]{self.vocab_name}[/color][/b]",
             markup=True, font_size=32, halign='left', valign='middle',
             size_hint_x=0.7
@@ -133,7 +134,7 @@ class VocabExpressionCard(BaseCard):
         
         # Difficulty label
         difficulty_color = self._get_difficulty_color(self.difficulty)
-        difficulty_label = Label(
+        difficulty_label = FontUtils.create_label_with_chinese_support(
             text=f"[color={difficulty_color}]{self.difficulty.upper()}[/color]",
             markup=True, font_size=24, size_hint_x=0.3,
             halign='right', valign='middle'
@@ -142,7 +143,7 @@ class VocabExpressionCard(BaseCard):
         self.add_widget(header)
         
         # Vocabulary body
-        body_label = Label(
+        body_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=000000]{self.vocab_body}[/color]",
             markup=True, font_size=28, halign='left', valign='top',
             size_hint_y=None, height=40
@@ -150,7 +151,7 @@ class VocabExpressionCard(BaseCard):
         self.add_widget(body_label)
         
         # Explanation
-        explanation_label = Label(
+        explanation_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=000000]{self.explanation[:80]}{'...' if len(self.explanation) > 80 else ''}[/color]",
             markup=True, font_size=24, halign='left', valign='top',
             size_hint_y=None, height=60, text_size=(self.width - 30, None)
@@ -161,14 +162,14 @@ class VocabExpressionCard(BaseCard):
         footer = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
         
         # Example count
-        example_label = Label(
+        example_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=000000]📝 {self.example_count} examples[/color]",
             markup=True, font_size=24, halign='left', valign='middle'
         )
         footer.add_widget(example_label)
         
         # Click hint
-        click_label = Label(
+        click_label = FontUtils.create_label_with_chinese_support(
             text="[color=666666]Click for details[/color]",
             markup=True, font_size=20, size_hint_x=None, width=120,
             halign='right', valign='middle'

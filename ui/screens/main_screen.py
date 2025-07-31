@@ -40,6 +40,11 @@ class MainScreen(Screen):
         # Initialize ViewModel
         self.article_viewmodel = ArticleListViewModel()
         
+        # Initialize data managers for real grammar and vocabulary data
+        self.grammar_manager = None
+        self.vocab_manager = None
+        self._initialize_data_managers()
+        
         # Store card references
         self.article_cards = []
         self.vocab_cards = []
@@ -53,6 +58,37 @@ class MainScreen(Screen):
         
         # Initially show reading cards
         self.show_tab1()
+    
+    def _initialize_data_managers(self):
+        """Initialize grammar and vocabulary data managers"""
+        try:
+            print("📚 Initializing data managers for real grammar and vocabulary data...")
+            
+            # Import data managers
+            from data_managers.grammar_rule_manager import GrammarRuleManager
+            from data_managers.vocab_manager import VocabManager
+            
+            # Create managers
+            self.grammar_manager = GrammarRuleManager()
+            self.vocab_manager = VocabManager()
+            
+            # Load data from files
+            try:
+                self.grammar_manager.load_from_file("data/grammar_rules.json")
+                print(f"✅ Loaded {len(self.grammar_manager.grammar_bundles)} grammar rules")
+            except Exception as e:
+                print(f"⚠️ Failed to load grammar rules: {e}")
+            
+            try:
+                self.vocab_manager.load_from_file("data/vocab_expressions.json")
+                print(f"✅ Loaded {len(self.vocab_manager.vocab_bundles)} vocabulary expressions")
+            except Exception as e:
+                print(f"⚠️ Failed to load vocabulary expressions: {e}")
+            
+        except Exception as e:
+            print(f"❌ Error initializing data managers: {e}")
+            self.grammar_manager = None
+            self.vocab_manager = None
     
     def _setup_background(self):
         """Setup background"""
@@ -166,46 +202,124 @@ class MainScreen(Screen):
         self.learn_content_container.add_widget(content_area)
     
     def show_grammar_content(self, *args):
-        """Show grammar content"""
+        """Show grammar content with real data"""
         self.sub_tab1_btn.set_active(True)
         self.sub_tab2_btn.set_active(False)
         
         # Clear container
         self.learn_container.clear_widgets()
         
-        # Add grammar cards
-        grammar_cards = [
-            VocabCard("Present Perfect", "Used for actions completed in the past with present relevance", 
-                     "I have finished my homework.", "medium"),
-            VocabCard("Past Continuous", "Used for actions in progress at a specific time in the past", 
-                     "I was reading when she called.", "easy"),
-            VocabCard("Future Perfect", "Used for actions that will be completed before a future time", 
-                     "By next week, I will have finished the project.", "hard")
-        ]
-        
-        for card in grammar_cards:
-            self.learn_container.add_widget(card)
+        if self.grammar_manager and self.grammar_manager.grammar_bundles:
+            # Use real grammar data
+            print(f"📚 Loading {len(self.grammar_manager.grammar_bundles)} grammar rules...")
+            
+            for rule_id, bundle in self.grammar_manager.grammar_bundles.items():
+                rule = bundle.rule
+                examples = bundle.examples
+                
+                # Get example sentence if available
+                example_text = "No example available"
+                if examples:
+                    # Use the first example
+                    example = examples[0]
+                    # Try to get the sentence from text manager
+                    try:
+                        from data_managers.original_text_manager import OriginalTextManager
+                        text_manager = OriginalTextManager()
+                        text_manager.load_from_file("data/original_texts.json")
+                        sentence = text_manager.get_sentence_by_id(example.text_id, example.sentence_id)
+                        if sentence:
+                            example_text = sentence.sentence_body
+                    except Exception as e:
+                        print(f"⚠️ Could not load example sentence: {e}")
+                
+                # Determine difficulty based on rule complexity
+                difficulty = self._determine_grammar_difficulty(rule.explanation)
+                
+                # Create grammar card
+                card = VocabCard(
+                    rule.name,
+                    rule.explanation,
+                    example_text,
+                    difficulty,
+                    on_press_callback=partial(self.open_grammar_detail, rule.name, rule.explanation, example_text, difficulty)
+                )
+                self.learn_container.add_widget(card)
+                print(f"📝 Added grammar card: {rule.name}")
+        else:
+            # Fallback to hardcoded data if no real data available
+            print("⚠️ No real grammar data available, using fallback data")
+            grammar_cards = [
+                VocabCard("Present Perfect", "Used for actions completed in the past with present relevance", 
+                         "I have finished my homework.", "medium"),
+                VocabCard("Past Continuous", "Used for actions in progress at a specific time in the past", 
+                         "I was reading when she called.", "easy"),
+                VocabCard("Future Perfect", "Used for actions that will be completed before a future time", 
+                         "By next week, I will have finished the project.", "hard")
+            ]
+            
+            for card in grammar_cards:
+                self.learn_container.add_widget(card)
     
     def show_vocab_content(self, *args):
-        """Show vocabulary content"""
+        """Show vocabulary content with real data"""
         self.sub_tab1_btn.set_active(False)
         self.sub_tab2_btn.set_active(True)
         
         # Clear container
         self.learn_container.clear_widgets()
         
-        # Add vocabulary cards
-        vocab_cards = [
-            VocabCard("Serendipity", "The occurrence and development of events by chance in a happy or beneficial way", 
-                     "Finding that book was pure serendipity.", "hard"),
-            VocabCard("Ubiquitous", "Present, appearing, or found everywhere", 
-                     "Mobile phones have become ubiquitous in modern society.", "medium"),
-            VocabCard("Ephemeral", "Lasting for a very short time", 
-                     "The beauty of cherry blossoms is ephemeral.", "medium")
-        ]
-        
-        for card in vocab_cards:
-            self.learn_container.add_widget(card)
+        if self.vocab_manager and self.vocab_manager.vocab_bundles:
+            # Use real vocabulary data
+            print(f"📚 Loading {len(self.vocab_manager.vocab_bundles)} vocabulary expressions...")
+            
+            for vocab_id, bundle in self.vocab_manager.vocab_bundles.items():
+                vocab = bundle.vocab
+                examples = bundle.example
+                
+                # Get example sentence if available
+                example_text = "No example available"
+                if examples:
+                    # Use the first example
+                    example = examples[0]
+                    # Try to get the sentence from text manager
+                    try:
+                        from data_managers.original_text_manager import OriginalTextManager
+                        text_manager = OriginalTextManager()
+                        text_manager.load_from_file("data/original_texts.json")
+                        sentence = text_manager.get_sentence_by_id(example.text_id, example.sentence_id)
+                        if sentence:
+                            example_text = sentence.sentence_body
+                    except Exception as e:
+                        print(f"⚠️ Could not load example sentence: {e}")
+                
+                # Determine difficulty based on vocabulary complexity
+                difficulty = self._determine_vocab_difficulty(vocab.vocab_body, vocab.explanation)
+                
+                # Create vocabulary card
+                card = VocabCard(
+                    vocab.vocab_body,
+                    vocab.explanation,
+                    example_text,
+                    difficulty,
+                    on_press_callback=partial(self.open_vocab_detail, vocab.vocab_body, vocab.explanation, example_text, difficulty)
+                )
+                self.learn_container.add_widget(card)
+                print(f"📝 Added vocabulary card: {vocab.vocab_body}")
+        else:
+            # Fallback to hardcoded data if no real data available
+            print("⚠️ No real vocabulary data available, using fallback data")
+            vocab_cards = [
+                VocabCard("Serendipity", "The occurrence and development of events by chance in a happy or beneficial way", 
+                         "Finding that book was pure serendipity.", "hard"),
+                VocabCard("Ubiquitous", "Present, appearing, or found everywhere", 
+                         "Mobile phones have become ubiquitous in modern society.", "medium"),
+                VocabCard("Ephemeral", "Lasting for a very short time", 
+                         "The beauty of cherry blossoms is ephemeral.", "medium")
+            ]
+            
+            for card in vocab_cards:
+                self.learn_container.add_widget(card)
     
     def _setup_tab_bar(self):
         """Setup tab bar"""
@@ -307,6 +421,26 @@ class MainScreen(Screen):
             # Can pass data here, expandable later
             # grammar_screen.set_grammar(rule_name, explanation, example, difficulty)
             self.manager.current = "grammar_detail"
+    
+    def _determine_grammar_difficulty(self, explanation):
+        """Determine grammar rule difficulty based on explanation"""
+        # Simple heuristic based on explanation length and complexity
+        if len(explanation) < 50:
+            return "easy"
+        elif len(explanation) < 100:
+            return "medium"
+        else:
+            return "hard"
+    
+    def _determine_vocab_difficulty(self, vocab_body, explanation):
+        """Determine vocabulary difficulty based on word and explanation"""
+        # Simple heuristic based on word length and explanation complexity
+        if len(vocab_body) <= 5 and len(explanation) < 50:
+            return "easy"
+        elif len(vocab_body) <= 8 and len(explanation) < 100:
+            return "medium"
+        else:
+            return "hard"
 
 
 # Test application

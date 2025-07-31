@@ -71,6 +71,18 @@ class OriginalTextManager:
             if text.text_title == text_title:
                 return text
         return None
+    
+    def get_sentence_by_id(self, text_id: int, sentence_id: int) -> Sentence | None:
+        """根据text_id和sentence_id获取句子"""
+        text = self.original_texts.get(text_id)
+        if not text:
+            return None
+        
+        for sentence in text.text_by_sentence:
+            if sentence.sentence_id == sentence_id:
+                return sentence
+        
+        return None
 
     def remove_text_by_id(self, text_id: int):
         if text_id in self.original_texts:

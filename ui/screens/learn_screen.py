@@ -19,6 +19,7 @@ from ui.components.learn_cards import (
     CategoryFilterButton, SearchBox
 )
 from ui.components.buttons import TabButton, BottomTabBar
+from ui.utils.font_utils import FontUtils
 
 
 class LearnScreen(Screen):
@@ -64,7 +65,7 @@ class LearnScreen(Screen):
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
         
         # Title
-        title = Label(
+        title = FontUtils.create_label_with_chinese_support(
             text="[b][color=000000]Learning Center[/color][/b]",
             markup=True, font_size=48, size_hint_y=None, height=80,
             halign='center', valign='middle'
@@ -78,17 +79,13 @@ class LearnScreen(Screen):
         # Category filter buttons
         filter_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=60)
         
-        self.all_button = CategoryFilterButton(
-            "All", "all", True, self._on_category_filter_change
-        )
         self.grammar_button = CategoryFilterButton(
-            "Grammar", "grammar", False, self._on_category_filter_change
+            "Grammar", "grammar", True, self._on_category_filter_change
         )
         self.vocab_button = CategoryFilterButton(
             "Vocabulary", "vocab", False, self._on_category_filter_change
         )
         
-        filter_layout.add_widget(self.all_button)
         filter_layout.add_widget(self.grammar_button)
         filter_layout.add_widget(self.vocab_button)
         main_layout.add_widget(filter_layout)
@@ -96,11 +93,11 @@ class LearnScreen(Screen):
         # Statistics
         stats_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=50)
         
-        self.grammar_stats = Label(
+        self.grammar_stats = FontUtils.create_label_with_chinese_support(
             text="[color=000000]Grammar Rules: 0[/color]",
             markup=True, font_size=24, halign='left', valign='middle'
         )
-        self.vocab_stats = Label(
+        self.vocab_stats = FontUtils.create_label_with_chinese_support(
             text="[color=000000]Vocabulary: 0[/color]",
             markup=True, font_size=24, halign='right', valign='middle'
         )
@@ -110,19 +107,19 @@ class LearnScreen(Screen):
         main_layout.add_widget(stats_layout)
         
         # Content area
-        content_layout = BoxLayout(orientation='vertical', spacing=15)
+        self.content_layout = BoxLayout(orientation='vertical', spacing=15)
         
         # Grammar rules section
-        grammar_section = self._build_grammar_section()
-        content_layout.add_widget(grammar_section)
+        self.grammar_section = self._build_grammar_section()
+        self.content_layout.add_widget(self.grammar_section)
         
         # Vocabulary expressions section
-        vocab_section = self._build_vocab_section()
-        content_layout.add_widget(vocab_section)
+        self.vocab_section = self._build_vocab_section()
+        self.content_layout.add_widget(self.vocab_section)
         
         # Scroll view
         scroll_view = ScrollView(size_hint=(1, 1))
-        scroll_view.add_widget(content_layout)
+        scroll_view.add_widget(self.content_layout)
         main_layout.add_widget(scroll_view)
         
         # Bottom tab bar
@@ -145,7 +142,7 @@ class LearnScreen(Screen):
         section = BoxLayout(orientation='vertical', spacing=10)
         
         # Title
-        grammar_title = Label(
+        grammar_title = FontUtils.create_label_with_chinese_support(
             text="[b][color=000000]Grammar Rules[/color][/b]",
             markup=True, font_size=36, size_hint_y=None, height=60,
             halign='left', valign='middle'
@@ -158,8 +155,8 @@ class LearnScreen(Screen):
         )
         self.grammar_container.bind(minimum_height=self.grammar_container.setter('height'))
         
-        # Grammar scroll view
-        grammar_scroll = ScrollView(size_hint=(1, None), height=400)
+        # Grammar scroll view - 使用自适应高度
+        grammar_scroll = ScrollView(size_hint=(1, 1))
         grammar_scroll.add_widget(self.grammar_container)
         section.add_widget(grammar_scroll)
         
@@ -170,7 +167,7 @@ class LearnScreen(Screen):
         section = BoxLayout(orientation='vertical', spacing=10)
         
         # Title
-        vocab_title = Label(
+        vocab_title = FontUtils.create_label_with_chinese_support(
             text="[b][color=000000]Vocabulary Expressions[/color][/b]",
             markup=True, font_size=36, size_hint_y=None, height=60,
             halign='left', valign='middle'
@@ -183,8 +180,8 @@ class LearnScreen(Screen):
         )
         self.vocab_container.bind(minimum_height=self.vocab_container.setter('height'))
         
-        # Vocabulary scroll view
-        vocab_scroll = ScrollView(size_hint=(1, None), height=400)
+        # Vocabulary scroll view - 使用自适应高度
+        vocab_scroll = ScrollView(size_hint=(1, 1))
         vocab_scroll.add_widget(self.vocab_container)
         section.add_widget(vocab_scroll)
         
@@ -208,7 +205,23 @@ class LearnScreen(Screen):
     
     def _initialize_data(self, dt):
         """Initialize data"""
+        print("🔧 LearnScreen: 开始初始化数据...")
         self.viewmodel.on_initialize()
+        self.viewmodel.refresh_data()
+        
+        # 设置默认显示状态（Grammar为默认选中）
+        self.grammar_section.opacity = 1
+        self.grammar_section.size_hint_y = 1
+        self.vocab_section.opacity = 0
+        self.vocab_section.size_hint_y = None
+        self.vocab_section.height = 0
+        
+        # 强制刷新数据
+        Clock.schedule_once(self._force_refresh_data, 0.5)
+    
+    def _force_refresh_data(self, dt):
+        """强制刷新数据"""
+        print("🔄 LearnScreen: 强制刷新数据...")
         self.viewmodel.refresh_data()
     
     def _on_grammar_rules_changed(self, instance, value):
@@ -257,52 +270,62 @@ class LearnScreen(Screen):
     
     def _update_grammar_cards(self, grammar_rules):
         """Update grammar cards"""
+        print(f"📝 LearnScreen: 更新语法卡片，数据数量: {len(grammar_rules) if grammar_rules else 0}")
         self.grammar_container.clear_widgets()
         
         if not grammar_rules:
             # Show empty state
-            empty_label = Label(
+            empty_label = FontUtils.create_label_with_chinese_support(
                 text="[color=666666]No grammar rules available[/color]",
                 markup=True, font_size=28, size_hint_y=None, height=100,
                 halign='center', valign='middle'
             )
             self.grammar_container.add_widget(empty_label)
+            print("📝 LearnScreen: Showing grammar rules empty state")
             return
         
         # Add grammar cards
-        for rule_data in grammar_rules:
+        for i, rule_data in enumerate(grammar_rules):
+            print(f"📝 LearnScreen: Adding grammar card {i+1}: {rule_data.get('name', 'Unknown')}")
             card = GrammarRuleCard(
                 rule_data=rule_data,
                 on_press_callback=lambda rd=rule_data: self._on_grammar_card_press(rd)
             )
             self.grammar_container.add_widget(card)
+        
+        print(f"📝 LearnScreen: Grammar cards update completed, total {len(grammar_rules)} cards")
     
     def _update_vocab_cards(self, vocab_expressions):
         """Update vocabulary cards"""
+        print(f"📝 LearnScreen: 更新词汇卡片，数据数量: {len(vocab_expressions) if vocab_expressions else 0}")
         self.vocab_container.clear_widgets()
         
         if not vocab_expressions:
             # Show empty state
-            empty_label = Label(
+            empty_label = FontUtils.create_label_with_chinese_support(
                 text="[color=666666]No vocabulary expressions available[/color]",
                 markup=True, font_size=28, size_hint_y=None, height=100,
                 halign='center', valign='middle'
             )
             self.vocab_container.add_widget(empty_label)
+            print("📝 LearnScreen: Showing vocabulary expressions empty state")
             return
         
         # Add vocabulary cards
-        for vocab_data in vocab_expressions:
+        for i, vocab_data in enumerate(vocab_expressions):
+            print(f"📝 LearnScreen: Adding vocabulary card {i+1}: {vocab_data.get('name', 'Unknown')}")
             card = VocabExpressionCard(
                 vocab_data=vocab_data,
                 on_press_callback=lambda vd=vocab_data: self._on_vocab_card_press(vd)
             )
             self.vocab_container.add_widget(card)
+        
+        print(f"📝 LearnScreen: Vocabulary cards update completed, total {len(vocab_expressions)} cards")
     
     def _show_grammar_loading(self):
         """Show grammar loading state"""
         self.grammar_container.clear_widgets()
-        loading_label = Label(
+        loading_label = FontUtils.create_label_with_chinese_support(
             text="[color=000000]Loading grammar rules...[/color]",
             markup=True, font_size=28, size_hint_y=None, height=100,
             halign='center', valign='middle'
@@ -317,7 +340,7 @@ class LearnScreen(Screen):
     def _show_vocab_loading(self):
         """Show vocabulary loading state"""
         self.vocab_container.clear_widgets()
-        loading_label = Label(
+        loading_label = FontUtils.create_label_with_chinese_support(
             text="[color=000000]Loading vocabulary expressions...[/color]",
             markup=True, font_size=28, size_hint_y=None, height=100,
             halign='center', valign='middle'
@@ -332,7 +355,7 @@ class LearnScreen(Screen):
     def _show_grammar_error(self, error_message: str):
         """Show grammar error"""
         self.grammar_container.clear_widgets()
-        error_label = Label(
+        error_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=FF0000]Failed to load grammar rules: {error_message}[/color]",
             markup=True, font_size=24, size_hint_y=None, height=100,
             halign='center', valign='middle'
@@ -342,7 +365,7 @@ class LearnScreen(Screen):
     def _show_vocab_error(self, error_message: str):
         """Show vocabulary error"""
         self.vocab_container.clear_widgets()
-        error_label = Label(
+        error_label = FontUtils.create_label_with_chinese_support(
             text=f"[color=FF0000]Failed to load vocabulary expressions: {error_message}[/color]",
             markup=True, font_size=24, size_hint_y=None, height=100,
             halign='center', valign='middle'
@@ -356,9 +379,22 @@ class LearnScreen(Screen):
     def _on_category_filter_change(self, category: str):
         """Handle category filter change"""
         # Update button states
-        self.all_button.set_selected(category == "all")
         self.grammar_button.set_selected(category == "grammar")
         self.vocab_button.set_selected(category == "vocab")
+        
+        # Show/hide sections based on category
+        if category == "grammar":
+            self.grammar_section.opacity = 1
+            self.grammar_section.size_hint_y = 1
+            self.vocab_section.opacity = 0
+            self.vocab_section.size_hint_y = None
+            self.vocab_section.height = 0
+        elif category == "vocab":
+            self.grammar_section.opacity = 0
+            self.grammar_section.size_hint_y = None
+            self.grammar_section.height = 0
+            self.vocab_section.opacity = 1
+            self.vocab_section.size_hint_y = 1
         
         # Update filter
         self.viewmodel.set_category_filter(category)
@@ -384,8 +420,62 @@ class LearnScreen(Screen):
         """Handle vocabulary card press"""
         vocab_id = vocab_data.get("vocab_id")
         print(f"Clicked vocabulary expression: {vocab_id}")
-        # TODO: Navigate to vocabulary detail page
-        # self.manager.switch_to_screen("vocab_detail_screen", vocab_id=vocab_id)
+        
+        # 获取完整的词汇数据
+        vocab_bundles = self.viewmodel.get_data("vocab_bundles")
+        
+        # 尝试不同的ID格式
+        vocab_bundle = None
+        if vocab_bundles:
+            # 尝试字符串格式
+            if str(vocab_id) in vocab_bundles:
+                vocab_bundle = vocab_bundles[str(vocab_id)]
+            # 尝试整数格式
+            elif vocab_id in vocab_bundles:
+                vocab_bundle = vocab_bundles[vocab_id]
+        
+        if vocab_bundle:
+            # 创建词汇数据字典
+            vocab_detail_data = {
+                'vocab_id': vocab_bundle.vocab.vocab_id,
+                'vocab_body': vocab_bundle.vocab.vocab_body,
+                'explanation': vocab_bundle.vocab.explanation,
+                'examples': []
+            }
+            
+            # 添加示例数据
+            for example in vocab_bundle.example:
+                example_data = {
+                    'text_id': example.text_id,
+                    'sentence_id': example.sentence_id,
+                    'context_explanation': example.context_explanation
+                }
+                vocab_detail_data['examples'].append(example_data)
+            
+            # 创建词汇详情页面并传递数据
+            from ui.screens.vocab_detail_screen import VocabDetailScreen
+            
+            # 检查是否已存在词汇详情页面
+            existing_screen = None
+            for screen in self.manager.screens:
+                if screen.name == 'vocab_detail_screen':
+                    existing_screen = screen
+                    break
+            
+            if existing_screen:
+                # 如果已存在，更新数据并切换到该页面
+                existing_screen.vocab_data = vocab_detail_data
+                existing_screen.load_vocab_data()
+                self.manager.current = 'vocab_detail_screen'
+            else:
+                # 如果不存在，创建新页面
+                vocab_detail_screen = VocabDetailScreen(vocab_data=vocab_detail_data)
+                vocab_detail_screen.name = 'vocab_detail_screen'
+                self.manager.add_widget(vocab_detail_screen)
+                self.manager.current = 'vocab_detail_screen'
+        else:
+            print(f"⚠️ Vocabulary data not found for ID: {vocab_id}")
+            print(f"⚠️ Available IDs: {list(vocab_bundles.keys()) if vocab_bundles else 'None'}")
     
     def on_enter(self):
         """Called when entering the screen"""

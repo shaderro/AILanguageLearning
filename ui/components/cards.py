@@ -90,9 +90,11 @@ class ClickableCard(BaseCard):
 class VocabCard(BaseCard):
     """Vocabulary card"""
     
-    def __init__(self, word, meaning, example, difficulty, **kwargs):
+    def __init__(self, word, meaning, example, difficulty, on_press_callback=None, **kwargs):
         super().__init__(orientation='vertical', padding=15, spacing=8, 
                         size_hint_y=None, height=120, **kwargs)
+        
+        self.on_press_callback = on_press_callback
         
         # Word and difficulty
         top_row = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
@@ -126,4 +128,9 @@ class VocabCard(BaseCard):
             "medium": "FF8800",    # Orange
             "hard": "FF0000"       # Red
         }
-        return colors.get(difficulty.lower(), "FF8800") 
+        return colors.get(difficulty.lower(), "FF8800")
+    
+    def on_press(self):
+        """Handle press event"""
+        if self.on_press_callback:
+            self.on_press_callback() 

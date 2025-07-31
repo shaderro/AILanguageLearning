@@ -24,7 +24,7 @@ class LearnScreenViewModel(BaseViewModel):
     
     # Filter and search properties
     search_text = StringProperty("")
-    selected_category = StringProperty("all")  # "all", "grammar", "vocab"
+    selected_category = StringProperty("grammar")  # "grammar", "vocab"
     
     # Statistics
     total_grammar_rules = NumericProperty(0)
@@ -195,7 +195,7 @@ class LearnScreenViewModel(BaseViewModel):
     
     def _filter_grammar_rules(self, rules: List[Dict]) -> List[Dict]:
         """Filter grammar rules"""
-        if self.selected_category != "all" and self.selected_category != "grammar":
+        if self.selected_category != "grammar":
             return []
         
         if not self.search_text:
@@ -213,7 +213,7 @@ class LearnScreenViewModel(BaseViewModel):
     
     def _filter_vocab_expressions(self, vocabs: List[Dict]) -> List[Dict]:
         """Filter vocabulary expressions"""
-        if self.selected_category != "all" and self.selected_category != "vocab":
+        if self.selected_category != "vocab":
             return []
         
         if not self.search_text:
@@ -267,17 +267,32 @@ class LearnScreenViewModel(BaseViewModel):
     
     def refresh_data(self):
         """Refresh all data"""
+        print("🔄 LearnScreenViewModel: Starting data refresh...")
+        
         # Get data directly from data service
         grammar_bundles = self.get_data("grammar_bundles")
         vocab_bundles = self.get_data("vocab_bundles")
         
+        print(f"🔄 LearnScreenViewModel: Got grammar data: {type(grammar_bundles)}, count: {len(grammar_bundles) if grammar_bundles else 0}")
+        print(f"🔄 LearnScreenViewModel: Got vocabulary data: {type(vocab_bundles)}, count: {len(vocab_bundles) if vocab_bundles else 0}")
+        
         if grammar_bundles:
             self._grammar_bundles = grammar_bundles
-            self.grammar_rules = self._transform_grammar_bundles(grammar_bundles)
+            transformed_grammar = self._transform_grammar_bundles(grammar_bundles)
+            self.grammar_rules = transformed_grammar
+            print(f"🔄 LearnScreenViewModel: Grammar rules transformation completed, display count: {len(transformed_grammar)}")
+        else:
+            print("🔄 LearnScreenViewModel: No grammar data received")
         
         if vocab_bundles:
             self._vocab_bundles = vocab_bundles
-            self.vocab_expressions = self._transform_vocab_bundles(vocab_bundles)
+            transformed_vocab = self._transform_vocab_bundles(vocab_bundles)
+            self.vocab_expressions = transformed_vocab
+            print(f"🔄 LearnScreenViewModel: Vocabulary expressions transformation completed, display count: {len(transformed_vocab)}")
+        else:
+            print("🔄 LearnScreenViewModel: No vocabulary data received")
+        
+        print("🔄 LearnScreenViewModel: Data refresh completed")
     
     def on_destroy(self):
         """Cleanup on destroy"""

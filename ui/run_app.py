@@ -20,7 +20,7 @@ from ui.screens.reading_content_screen import ReadingContentScreen
 from ui.screens.vocab_detail_screen import VocabDetailScreen
 from ui.screens.grammar_detail_screen import GrammarDetailScreen
 from ui.screens.reading_content_textinput_screen import ReadingContentTextInputScreen
-from ui.screens.text_input_chat_screen import TextInputChatScreen
+# from ui.screens.text_input_chat_screen import TextInputChatScreen  # Commented out, using test version instead
 from ui.screens.learn_screen import LearnScreen
 # from ui.screens.read_content_screen import ReadContentScreen
 
@@ -62,7 +62,9 @@ class LangUIApp(App):
         sm.add_widget(textinput_screen)
         
         # Enhanced TextInputChatScreen with MainAssistant integration
-        textinput_chat_screen = TextInputChatScreen(name="textinput_chat")
+        # Use the test version which has better text rendering
+        from ui.screens.text_input_chat_screen_test import TextInputChatScreenTest
+        textinput_chat_screen = TextInputChatScreenTest(name="textinput_chat")
         sm.add_widget(textinput_chat_screen)
         
         vocab_detail_screen = VocabDetailScreen(name="vocab_detail")
@@ -72,10 +74,10 @@ class LangUIApp(App):
         sm.add_widget(grammar_detail_screen)
         
         # Add Learn screen with data binding service
-        learn_screen = LearnScreen(data_binding_service=self.data_binding_service)
-        # Register ViewModel to data binding service
-        self.data_binding_service.register_viewmodel("LearnScreenViewModel", learn_screen.viewmodel)
+        learn_screen = LearnScreen(data_binding_service=self.data_binding_service, name="learn")
         sm.add_widget(learn_screen)
+        
+        print("✅ Learn screen added with data binding service")
         
         print("✅ All screens initialized successfully")
         return sm
@@ -92,22 +94,16 @@ class LangUIApp(App):
     
     def _load_grammar_vocab_data(self):
         """Load grammar and vocabulary data"""
-        # Load grammar rules
-        try:
-            self.grammar_manager.load_from_file("../data/grammar_rules.json")
-            print(f"✅ Loaded {len(self.grammar_manager.grammar_bundles)} grammar rules")
-        except Exception as e:
-            print(f"❌ Failed to load grammar rules: {e}")
+        # Note: Data binding service already loads data in its initialization
+        # This method is kept for compatibility but data is already loaded
+        print("📝 Note: Data binding service already loads data automatically")
         
-        # Load vocabulary expressions
-        try:
-            self.vocab_manager.load_from_file("../data/vocab_expressions.json")
-            print(f"✅ Loaded {len(self.vocab_manager.vocab_bundles)} vocabulary expressions")
-        except Exception as e:
-            print(f"❌ Failed to load vocabulary expressions: {e}")
+        # Check if data is already loaded in binding service
+        grammar_bundles = self.data_binding_service.get_data("grammar_bundles")
+        vocab_bundles = self.data_binding_service.get_data("vocab_bundles")
         
-        # Register data to binding service
-        self._register_data_to_binding_service()
+        print(f"📊 Data binding service has {len(grammar_bundles) if grammar_bundles else 0} grammar rules")
+        print(f"📊 Data binding service has {len(vocab_bundles) if vocab_bundles else 0} vocabulary expressions")
     
     def _register_data_to_binding_service(self):
         """Register data to binding service"""

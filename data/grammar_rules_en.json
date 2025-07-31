@@ -1,0 +1,181 @@
+{
+    "4": {
+        "rule": {
+            "rule_id": 4,
+            "name": "Usage of Adverb 'currently'",
+            "explanation": "'currently' means 'at present' or 'now', used as an adverb to indicate the current situation or state at this time period, commonly used to describe current conditions or behaviors"
+        },
+        "examples": []
+    },
+    "5": {
+        "rule": {
+            "rule_id": 5,
+            "name": "Usage of 'in which' in Relative Clauses",
+            "explanation": "'in which' is equivalent to 'where', introducing a relative clause to modify the preceding noun, where 'which' refers to the antecedent, and 'in' indicates the locational relationship 'in...'"
+        },
+        "examples": [
+            {
+                "rule_id": 5,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, 'in which' introduces the relative clause '342 languages are currently active and 14 are closed' which modifies the preceding '344 languages of the world'. 'In which' here is equivalent to 'in the 344 languages of the world', indicating that among these languages, 342 are active and 14 are closed.\"}\n```"
+            }
+        ]
+    },
+    "6": {
+        "rule": {
+            "rule_id": 6,
+            "name": "Subject-Verb Agreement",
+            "explanation": "In English, plural subjects must match with plural forms of the verb 'be'"
+        },
+        "examples": [
+            {
+                "rule_id": 6,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, the subject is '342 languages' and the predicate verb is 'are'. Since the subject is in plural form, the predicate verb also uses the plural form 'are', maintaining subject-verb agreement. Similarly, in '14 are closed', the subject '14' (referring to 14 languages) is also plural, so the predicate verb also uses the plural form 'are'.\"}\n```"
+            },
+            {
+                "rule_id": 6,
+                "text_id": 5,
+                "sentence_id": 5,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, the subject is 'One of the most significant advantages', which is a singular noun phrase, so the predicate verb 'is' also uses the singular form to maintain subject-verb agreement.\"}\n```"
+            }
+        ]
+    },
+    "7": {
+        "rule": {
+            "rule_id": 7,
+            "name": "Usage of Conjunction 'sowie'",
+            "explanation": "'sowie' is a conjunction in German, meaning 'as well as' or 'and also', used to connect two parallel components, similar to 'as well as' or 'and also' in English."
+        },
+        "examples": [
+            {
+                "rule_id": 7,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "{\"explanation\": \"In this sentence, 'sowie' is used to connect two parallel components: 'Bärbel Bas' and 'Tim Klüssendorf'. It indicates that besides the previously mentioned Bärbel Bas, there is also Tim Klüssendorf who was elected as the party's secretary. 'Sowie' here is equivalent to 'as well as' or 'and also', used to list similar things.\"}"
+            }
+        ]
+    },
+    "8": {
+        "rule": {
+            "rule_id": 8,
+            "name": "Contracted Form of Preposition and Article",
+            "explanation": "In German, the preposition 'zu' and the definite article 'der' can be contracted to 'zur', meaning 'to/as (feminine noun)'"
+        },
+        "examples": [
+            {
+                "rule_id": 8,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, 'bei der' is the contracted form of the preposition 'bei' and the definite article 'der', meaning 'at...' or 'in...aspect'. Here it is used to indicate what happened in the SPD (Social Democratic Party) election.\"}\n```"
+            }
+        ]
+    },
+    "9": {
+        "rule": {
+            "rule_id": 9,
+            "name": "Usage of Preposition 'Bei'",
+            "explanation": "'Bei' in German means 'within/at...', used to explain the organizational scope where an event occurs, equivalent to 'at' or 'within' in English."
+        },
+        "examples": [
+            {
+                "rule_id": 9,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, the preposition 'Bei' means 'in the context of...' or 'in the process of...', referring to the SPD (German Social Democratic Party) election process, where Bärbel Bas and Lars Klingbeil were elected as party chairs, and Tim Klüssendorf was elected as the party's secretary.\"}\n```"
+            }
+        ]
+    },
+    "10": {
+        "rule": {
+            "rule_id": 10,
+            "name": "Past Participle Passive Voice",
+            "explanation": "'gewählt' is the past participle of 'wählen', forming the passive voice with 'worden sind', indicating the completed action of 'being elected'"
+        },
+        "examples": [
+            {
+                "rule_id": 10,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, 'gewählt worden sind' forms the passive voice, indicating that Bärbel Bas and Lars Klingbeil have been elected as party chairs. The past participle 'gewählt' combined with 'worden sind' expresses the completed passive action.\"}\n```"
+            }
+        ]
+    },
+    "11": {
+        "rule": {
+            "rule_id": 11,
+            "name": "Subject-Linking Verb-Predicative Structure",
+            "explanation": "This is a basic sentence structure where the subject is connected to the predicative through a linking verb, describing the subject's state or characteristics"
+        },
+        "examples": [
+            {
+                "rule_id": 11,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, 'Bärbel Bas und Lars Klingbeil' is the subject, 'sind' is the linking verb, and 'zu Parteivorsitzenden gewählt worden' is the predicative, describing the state of being elected as party chairs.\"}\n```"
+            }
+        ]
+    },
+    "12": {
+        "rule": {
+            "rule_id": 12,
+            "name": "Basic Declarative Sentence Structure",
+            "explanation": "The basic structure of a declarative sentence includes subject, predicate, and object, with the subject typically coming first, followed by the predicate and object"
+        },
+        "examples": [
+            {
+                "rule_id": 12,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"This sentence follows the basic declarative structure: subject (Bärbel Bas und Lars Klingbeil) + predicate (sind gewählt worden) + object (zu Parteivorsitzenden), clearly expressing who did what.\"}\n```"
+            }
+        ]
+    },
+    "13": {
+        "rule": {
+            "rule_id": 13,
+            "name": "Singular and Plural Forms of 'Einwohner'",
+            "explanation": "'Einwohner' is a German noun meaning 'resident' or 'inhabitant'. In singular form it's 'Einwohner', in plural form it's 'Einwohner' (same form for both singular and plural)"
+        },
+        "examples": [
+            {
+                "rule_id": 13,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this context, 'Einwohner' refers to the residents or inhabitants of a place. The word maintains the same form whether referring to one person or multiple people, which is common in German nouns.\"}\n```"
+            }
+        ]
+    },
+    "14": {
+        "rule": {
+            "rule_id": 14,
+            "name": "German Compound Word Formation",
+            "explanation": "German compound words are formed by combining multiple words into one, with the last word determining the gender and plural form of the compound"
+        },
+        "examples": [
+            {
+                "rule_id": 14,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, 'Parteivorsitzenden' is a compound word formed by combining 'Partei' (party) + 'Vorsitzenden' (chairperson), meaning 'party chairperson'. The gender and plural form are determined by the last component 'Vorsitzenden'.\"}\n```"
+            }
+        ]
+    },
+    "15": {
+        "rule": {
+            "rule_id": 15,
+            "name": "Noun Phrase with Relative Clause",
+            "explanation": "A noun phrase can be modified by a relative clause that provides additional information about the noun, introduced by relative pronouns like 'which', 'who', 'where', etc."
+        },
+        "examples": [
+            {
+                "rule_id": 15,
+                "text_id": 1,
+                "sentence_id": 1,
+                "explanation_context": "```json\n{\"explanation\": \"In this sentence, '344 languages of the world' is the noun phrase, and 'in which 342 languages are currently active and 14 are closed' is the relative clause that modifies it, providing specific information about the languages.\"}\n```"
+            }
+        ]
+    }
+} 

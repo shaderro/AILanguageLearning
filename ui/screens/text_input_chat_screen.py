@@ -336,7 +336,8 @@ Furthermore, the internet facilitates collaborative learning through online comm
                     height=25,
                     color=(0, 0, 0, 1),
                     halign='left',
-                    valign='middle'
+                    valign='middle',
+                    text_size=(len(token) * 10 + 10, 25)
                 )
                 
                 # 为每个token创建独立的背景
@@ -684,8 +685,10 @@ Furthermore, the internet facilitates collaborative learning through online comm
             color=(0, 0, 0, 1),
             halign='left',
             valign='top',
-            text_size=(None, None)
+            text_size=(self.article_content_scroll.width - 20, None)
         )
+        # 绑定尺寸变化以更新text_size
+        self.article_content_widget.bind(size=self._update_article_text_size)
         self.article_content_container.add_widget(self.article_content_widget)
         
         self.article_content_scroll.add_widget(self.article_content_container)
@@ -952,8 +955,9 @@ Furthermore, the internet facilitates collaborative learning through online comm
                 color=(0.6, 0.6, 0.6, 1),
                 halign='left',
                 valign='middle',
-                text_size=(None, None)
+                text_size=(self.chat_scroll_view.width - 20, None)
             )
+            quoted_label.bind(size=self._update_quoted_text_size)
             message_container.add_widget(quoted_label)
         
         # 消息内容
@@ -964,9 +968,12 @@ Furthermore, the internet facilitates collaborative learning through online comm
             color=(0, 0, 0, 1),
             halign='left',
             valign='top',
-            text_size=(None, None)
+            text_size=(self.chat_scroll_view.width - 20, None)
         )
-        message_label.bind(texture_size=lambda instance, size: setattr(instance, 'height', size[1] + 10))
+        message_label.bind(
+            size=self._update_message_text_size,
+            texture_size=lambda instance, size: setattr(instance, 'height', size[1] + 10)
+        )
         message_container.add_widget(message_label)
         
         # 添加到聊天容器
@@ -1023,4 +1030,19 @@ Furthermore, the internet facilitates collaborative learning through online comm
     
     def _update_chat_container_bg(self, *args):
         """更新聊天容器背景"""
-        pass 
+        pass
+    
+    def _update_article_text_size(self, instance, value):
+        """更新文章文本的text_size"""
+        if hasattr(self, 'article_content_scroll'):
+            instance.text_size = (self.article_content_scroll.width - 20, None)
+    
+    def _update_message_text_size(self, instance, value):
+        """更新消息文本的text_size"""
+        if hasattr(self, 'chat_scroll_view'):
+            instance.text_size = (self.chat_scroll_view.width - 20, None)
+    
+    def _update_quoted_text_size(self, instance, value):
+        """更新引用文本的text_size"""
+        if hasattr(self, 'chat_scroll_view'):
+            instance.text_size = (self.chat_scroll_view.width - 20, None) 

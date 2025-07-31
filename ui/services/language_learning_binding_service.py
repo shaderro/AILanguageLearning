@@ -20,11 +20,69 @@ class LanguageLearningBindingService(DataBindingService):
     def __init__(self, data_controller=None, **kwargs):
         super().__init__(data_controller, **kwargs)
         self._setup_language_learning_methods()
+        self._load_real_data()
     
     def _setup_language_learning_methods(self):
         """设置语言学习相关的方法"""
         # 可以在这里添加语言学习特定的初始化逻辑
         print("LanguageLearningBindingService: 初始化语言学习功能")
+    
+    def _load_real_data(self):
+        """加载真实的语法和词汇数据"""
+        try:
+            print("LanguageLearningBindingService: 开始加载真实数据...")
+            
+            # 导入数据管理器
+            from data_managers.grammar_rule_manager import GrammarRuleManager
+            from data_managers.vocab_manager import VocabManager
+            
+            # 创建数据管理器
+            grammar_manager = GrammarRuleManager()
+            vocab_manager = VocabManager()
+            
+            # 加载语法数据
+            try:
+                grammar_manager.load_from_file("data/grammar_rules_en.json")
+                grammar_bundles = grammar_manager.grammar_bundles
+                self.update_data("grammar_bundles", grammar_bundles)
+                self.update_data("total_grammar_rules", len(grammar_bundles))
+                print(f"LanguageLearningBindingService: Successfully loaded {len(grammar_bundles)} grammar rules")
+            except Exception as e:
+                print(f"LanguageLearningBindingService: Failed to load grammar data - {e}")
+                self.update_data("grammar_bundles", {})
+                self.update_data("total_grammar_rules", 0)
+            
+            # 加载词汇数据
+            try:
+                vocab_manager.load_from_file("data/vocab_expressions.json")
+                vocab_bundles = vocab_manager.vocab_bundles
+                self.update_data("vocab_bundles", vocab_bundles)
+                self.update_data("total_vocab_expressions", len(vocab_bundles))
+                print(f"LanguageLearningBindingService: Successfully loaded {len(vocab_bundles)} vocabulary expressions")
+            except Exception as e:
+                print(f"LanguageLearningBindingService: Failed to load vocabulary data - {e}")
+                self.update_data("vocab_bundles", {})
+                self.update_data("total_vocab_expressions", 0)
+            
+            # 设置加载状态
+            self.update_data("grammar_loading", False)
+            self.update_data("vocab_loading", False)
+            self.update_data("grammar_error", "")
+            self.update_data("vocab_error", "")
+            
+            print("LanguageLearningBindingService: Real data loading completed")
+            
+        except Exception as e:
+            print(f"LanguageLearningBindingService: Error occurred while loading real data - {e}")
+            # 设置默认值
+            self.update_data("grammar_bundles", {})
+            self.update_data("vocab_bundles", {})
+            self.update_data("total_grammar_rules", 0)
+            self.update_data("total_vocab_expressions", 0)
+            self.update_data("grammar_loading", False)
+            self.update_data("vocab_loading", False)
+            self.update_data("grammar_error", str(e))
+            self.update_data("vocab_error", str(e))
     
     def load_article_data(self, article_id: str) -> Optional[Dict[str, Any]]:
         """加载文章数据

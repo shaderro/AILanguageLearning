@@ -1021,8 +1021,10 @@ Furthermore, the internet facilitates collaborative learning through online comm
                 height=30,
                 color=(0.8, 0.8, 0.8, 1),
                 halign='left',
-                font_size=20
+                font_size=20,
+                text_size=(self.chat_scroll.width - 20, None)
             )
+            quoted_label.bind(size=self._update_async_quoted_text_size)
             message_layout.add_widget(quoted_label)
         
         # 消息内容
@@ -1033,9 +1035,10 @@ Furthermore, the internet facilitates collaborative learning through online comm
             color=(0.2, 0.2, 0.2, 1),
             halign='left',
             valign='top',
-            text_size=(None, None),
+            text_size=(self.chat_scroll.width - 20, None),
             font_size=24
         )
+        message_label.bind(size=self._update_async_message_text_size)
         message_layout.add_widget(message_label)
         
         # 添加到聊天历史
@@ -1097,6 +1100,16 @@ Furthermore, the internet facilitates collaborative learning through online comm
     def test_run(self):
         """测试运行"""
         print(" Running async chat screen test...")
+    
+    def _update_async_message_text_size(self, instance, value):
+        """更新异步版本消息文本的text_size"""
+        if hasattr(self, 'chat_scroll'):
+            instance.text_size = (self.chat_scroll.width - 20, None)
+    
+    def _update_async_quoted_text_size(self, instance, value):
+        """更新异步版本引用文本的text_size"""
+        if hasattr(self, 'chat_scroll'):
+            instance.text_size = (self.chat_scroll.width - 20, None)
         
         # 添加一些测试消息
         self._add_chat_message("System", "Welcome to the async chat interface!", is_ai=True)
