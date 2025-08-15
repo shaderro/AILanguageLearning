@@ -12,13 +12,27 @@ from assistants.sub_assistants.summarize_grammar_rule import SummarizeGrammarRul
 from assistants.sub_assistants.check_if_relevant import CheckIfRelevant
 from assistants.sub_assistants.answer_question import AnswerQuestionAssistant
 from assistants.sub_assistants.summarize_vocab import SummarizeVocabAssistant
-from assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
+# 测试阶段暂时关闭语法比较功能
+# from assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
 from assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
 from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
 from assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
 from data_managers.data_classes import Sentence
+# 导入新数据结构类
+try:
+    from data_managers.data_classes_new import Sentence as NewSentence, Token
+    NEW_STRUCTURE_AVAILABLE = True
+except ImportError:
+    NEW_STRUCTURE_AVAILABLE = False
+    print("⚠️ 新数据结构类不可用，将使用旧结构")
 from data_managers import data_controller
 from data_managers.dialogue_record import DialogueRecordBySentence
+# 只读能力探测适配层（不改变业务逻辑）
+from assistants.adapters import CapabilityDetector, DataAdapter, GrammarRuleAdapter, VocabAdapter
+
+# 定义联合类型，支持新旧两种 Sentence 类型
+from typing import Union
+SentenceType = Union[Sentence, NewSentence] if NEW_STRUCTURE_AVAILABLE else Sentence
 
 class MainAssistant:
     
@@ -30,7 +44,8 @@ class MainAssistant:
         self.answer_question_assistant = AnswerQuestionAssistant()
         self.summarize_grammar_rule_assistant = SummarizeGrammarRuleAssistant()
         self.summarize_vocab_rule_assistant = SummarizeVocabAssistant()
-        self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
+        # 测试阶段暂时关闭语法比较功能
+        # self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
         self.grammar_example_explanation_assistant = GrammarExampleExplanationAssistant()
         self.vocab_example_explanation_assistant = VocabExampleExplanationAssistant()
         self.vocab_explanation_assistant = VocabExplanationAssistant()
@@ -38,13 +53,16 @@ class MainAssistant:
         # 使用 data_controller 的实例而不是创建新的
         self.dialogue_record = self.data_controller.dialogue_record
         self.dialogue_history = self.data_controller.dialogue_history
+        
+        # 只读：能力探测缓存（不用于业务分支，仅打印）
+        self._capabilities_cache = {}
 
-    def run(self, quoted_sentence: Sentence, user_question: str, quoted_string: str = None):
+    def run(self, quoted_sentence: SentenceType, user_question: str, quoted_string: str = None):
         """
         主处理函数，接收引用的句子、用户问题和AI响应，并进行相关处理。
         
         Args:
-            quoted_sentence: 完整的句子对象
+            quoted_sentence: 完整的句子对象（支持新旧两种类型）
             user_question: 用户问题
             quoted_string: 用户选中的部分文本（可选），如果为None则使用完整句子
         """
@@ -53,12 +71,16 @@ class MainAssistant:
         # 如果提供了quoted_string，则使用它；否则使用完整句子
         effective_sentence_body = quoted_string if quoted_string else quoted_sentence.sentence_body
         
+        # 只读演示：能力探测与打印（不改业务逻辑）
+        self._log_sentence_capabilities(quoted_sentence)
+        
         self.dialogue_record.add_user_message(quoted_sentence, user_question)
-        #是否和主题相关
-        if(self.check_if_topic_relevant_function(quoted_sentence, user_question, effective_sentence_body) is False):
-            print("The question is not relevant to language learning, skipping processing.")
-            self.dialogue_record.add_ai_response(quoted_sentence, "The question is not relevant to language learning, skipping processing.")
-            return
+        #是否和主题相关（暂时注释掉以便测试）
+        # if(self.check_if_topic_relevant_function(quoted_sentence, user_question, effective_sentence_body) is False):
+        #     print("The question is not relevant to language learning, skipping processing.")
+        #     self.dialogue_record.add_ai_response(quoted_sentence, "The question is not relevant to language learning, skipping processing.")
+        #     return
+        # print("The question is relevant to language learning, proceeding with processing...")
         print("The question is relevant to language learning, proceeding with processing...")
         #回答问题
         ai_response = self.answer_question_function(quoted_sentence, user_question, effective_sentence_body)
@@ -226,45 +248,48 @@ class MainAssistant:
                         vocab=vocab.get("vocab", "Unknown")
                     )
 
-        current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
+        # 测试阶段：暂时关闭语法比较和新语法添加功能
+        print("🧪 测试阶段：跳过语法比较和新语法添加逻辑")
         new_grammar_summaries = []
-        for result in self.session_state.summarized_results:
-            has_similar = False
-            for existing_rule in current_grammar_rule_names:
-                if isinstance(result, GrammarSummary):
-                    compare_result = self.compare_grammar_rule_assistant.run(
-                        existing_rule,
-                        result.grammar_rule_name,
-                        verbose=True
-                    )
-                    # 确保 compare_result 是字典类型
-                    if isinstance(compare_result, str):
-                        compare_result = {"is_similar": False}
-                    elif isinstance(compare_result, list) and len(compare_result) > 0:
-                        compare_result = compare_result[0] if isinstance(compare_result[0], dict) else {"is_similar": False}
-                    elif not isinstance(compare_result, dict):
-                        compare_result = {"is_similar": False}
-                    
-                    if compare_result.get("is_similar", False):
-                        print(f"✅ 语法规则 '{existing_rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
-                        has_similar = True
-                        existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
-                        current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
-                        # 验证句子完整性
-                        self._ensure_sentence_integrity(current_sentence, "Grammar Explanation 调用")
-                        example_explanation = self.grammar_example_explanation_assistant.run(
-                            sentence=current_sentence,
-                            grammar=self.data_controller.grammar_manager.get_rule_by_id(existing_rule_id).name)
-                        self.data_controller.add_grammar_example(
-                            rule_id=existing_rule_id,
-                            text_id=current_sentence.text_id,
-                            sentence_id=current_sentence.sentence_id,
-                            explanation_context=example_explanation
-                        )
-                        break  # 跳出内层循环
-            if not has_similar and isinstance(result, GrammarSummary):
-                print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加到已有规则中")
-                new_grammar_summaries.append(result)
+        # 注释掉原有的语法比较逻辑
+        # current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
+        # for result in self.session_state.summarized_results:
+        #     has_similar = False
+        #     for existing_rule in current_grammar_rule_names:
+        #         if isinstance(result, GrammarSummary):
+        #             compare_result = self.compare_grammar_rule_assistant.run(
+        #                 existing_rule,
+        #                 result.grammar_rule_name,
+        #                 verbose=True
+        #             )
+        #             # 确保 compare_result 是字典类型
+        #             if isinstance(compare_result, str):
+        #                 compare_result = {"is_similar": False}
+        #             elif isinstance(compare_result, list) and len(compare_result) > 0:
+        #                 compare_result = compare_result[0] if isinstance(compare_result[0], dict) else {"is_similar": False}
+        #             elif not isinstance(compare_result, dict):
+        #                 compare_result = {"is_similar": False}
+        #             
+        #             if compare_result.get("is_similar", False):
+        #                 print(f"✅ 语法规则 '{existing_rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
+        #                 has_similar = True
+        #                 existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
+        #             current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
+        #             # 验证句子完整性
+        #             self._ensure_sentence_integrity(current_sentence, "Grammar Explanation 调用")
+        #             example_explanation = self.grammar_example_explanation_assistant.run(
+        #                 sentence=current_sentence,
+        #                 grammar=self.data_controller.grammar_manager.get_rule_by_id(existing_rule_id).name)
+        #             self.data_controller.add_grammar_example(
+        #                 rule_id=existing_rule_id,
+        #                 text_id=current_sentence.text_id,
+        #                 sentence_id=current_sentence.sentence_id,
+        #                 explanation_context=example_explanation
+        #             )
+        #             break  # 跳出内层循环
+        #     if not has_similar and isinstance(result, GrammarSummary):
+        #         print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加到已有规则中")
+        #         new_grammar_summaries.append(result)
 
         for grammar in new_grammar_summaries:
             self.session_state.add_grammar_to_add(
@@ -377,6 +402,23 @@ class MainAssistant:
                         sentence_id=current_sentence.sentence_id,
                         context_explanation=example_explanation
                     )
+
+    def _log_sentence_capabilities(self, sentence: Sentence):
+        """只读：打印句子层能力（tokens/难度等），不影响任何分支"""
+        try:
+            if sentence in self._capabilities_cache:
+                caps = self._capabilities_cache[sentence]
+            else:
+                caps = CapabilityDetector.detect_sentence_capabilities(sentence)
+                self._capabilities_cache[sentence] = caps
+            print(f"🔍 Sentence capabilities: has_tokens={caps.get('has_tokens')}, token_count={caps.get('token_count')}, has_difficulty_level={caps.get('has_difficulty_level')}")
+            # 若具备 tokens，演示性打印前若干 token 文本（不参与逻辑）
+            if caps.get('has_tokens'):
+                tokens = DataAdapter.get_tokens(sentence) or []
+                preview = ", ".join([getattr(t, 'token_body', str(t)) for t in tokens[:10]])
+                print(f"   ⤷ tokens preview: {preview}")
+        except Exception as e:
+            print(f"[Warn] capability logging failed: {e}")
 
 if __name__ == "__main__":
     print("✅ 启动语言学习助手。默认引用句如下：")

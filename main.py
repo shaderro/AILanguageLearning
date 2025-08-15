@@ -3,7 +3,7 @@ from assistants.main_assistant import MainAssistant
 from data_managers.data_classes import Sentence
 import json
 
-data_controller = DataController(3)
+data_controller = DataController(3, use_new_structure=True, save_to_new_data_class=True)
 main_assistant = MainAssistant(data_controller, 3)
 
 if __name__ == "__main__":
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     )
     print("✅ 启动语言学习助手。默认引用句如下：")
     test_sentence_str = (
-        " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen."
+        " Die Finne ist groß und stark gebogen, sie besitzt dabei zugleich eine sehr breite Basis. "
 )
     print("引用句（Quoted Sentence）:")
     print(test_sentence_str)

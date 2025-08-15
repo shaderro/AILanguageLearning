@@ -54,6 +54,12 @@
 - 自动管理语法规则、词汇表达和对话记录
 - 提供数据备份和恢复功能
 
+#### 🔄 新结构模式开关
+- **USE_NEW_STRUCTURE**：全局开关，默认为`False`
+- **渐进式切换**：支持在运行时动态切换数据结构模式
+- **向后兼容**：保留旧结构加载逻辑，确保平滑过渡
+- **自动回退**：新结构加载失败时自动回退到旧结构
+
 ## 🏗️ 架构设计
 
 ### 模块化设计
@@ -70,6 +76,7 @@
 - 支持添加新的子助手模块
 - 可扩展的数据结构设计
 - 模块化的架构便于功能扩展
+- 新结构模式支持Token级别的细粒度分析
 
 ## 📁 项目结构
 
@@ -81,11 +88,12 @@ langApp514/
 │   ├── chat_info/                # 会话管理
 │   └── utility.py                # 工具函数
 ├── data_managers/                # 数据管理系统
-│   ├── data_classes.py           # 数据类定义
-│   ├── data_controller.py        # 数据控制器
-│   ├── grammar_rule_manager.py   # 语法规则管理
-│   ├── vocab_manager.py          # 词汇管理
-│   ├── original_text_manager.py  # 原始文本管理
+│   ├── data_classes.py           # 旧数据结构类定义
+│   ├── data_classes_new.py       # 新数据结构类定义
+│   ├── data_controller.py        # 数据控制器（支持双模式）
+│   ├── grammar_rule_manager.py   # 旧结构语法规则管理
+│   ├── vocab_manager.py          # 旧结构词汇管理
+│   ├── original_text_manager.py  # 旧结构原始文本管理
 │   └── dialogue_record.py        # 对话记录管理
 └── data/                         # 数据文件
     ├── grammar_rules.json        # 语法规则数据
@@ -105,8 +113,11 @@ langApp514/
 from assistants.main_assistant import MainAssistant
 from data_managers import data_controller
 
-# 初始化数据控制器
+# 初始化数据控制器（使用默认的旧结构模式）
 dc = data_controller.DataController(max_turns=100)
+
+# 或者明确指定使用新结构模式
+dc = data_controller.DataController(max_turns=100, use_new_structure=True)
 
 # 创建主助手
 assistant = MainAssistant(data_controller_instance=dc)
@@ -115,11 +126,29 @@ assistant = MainAssistant(data_controller_instance=dc)
 assistant.run(sentence, user_question, quoted_string)
 ```
 
+### 新结构模式切换
+```python
+# 运行时切换到新结构模式
+if dc.switch_to_new_structure():
+    print("已切换到新数据结构")
+else:
+    print("切换失败，保持旧结构")
+
+# 切换回旧结构模式
+if dc.switch_to_old_structure():
+    print("已切换回旧数据结构")
+
+# 查看当前使用的结构模式
+current_mode = dc.get_structure_mode()
+print(f"当前使用: {current_mode} 结构")
+```
+
 ## 🔧 配置说明
 
 - **max_turns**：最大对话轮数设置
 - **数据文件路径**：可在DataController中配置
 - **AI模型参数**：可在各子助手中调整
+- **USE_NEW_STRUCTURE**：全局新结构模式开关
 
 ## 📝 注意事项
 
@@ -127,7 +156,23 @@ assistant.run(sentence, user_question, quoted_string)
 - 定期备份重要数据
 - 监控AI助手的响应质量
 - 根据需要调整相关性判断阈值
+- 新结构模式需要相应的管理器文件支持
+- 切换结构模式前建议备份数据
+
+## 🔄 新结构模式特性
+
+### Token级别分析
+- 支持词、标点符号、空格的细粒度识别
+- 词性标注和原型词提取
+- 语法结构标记识别
+- 词汇关联和难度分级
+
+### 渐进式迁移
+- 支持运行时动态切换
+- 自动数据格式转换
+- 失败时自动回退
+- 保持向后兼容性
 
 ---
 
-*本项目专注于AI驱动的语言学习体验，通过智能分析和数据管理，为用户提供个性化的语言学习支持。*
+*本项目专注于AI驱动的语言学习体验，通过智能分析和数据管理，为用户提供个性化的语言学习支持。支持新旧数据结构模式的平滑过渡。*

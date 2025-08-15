@@ -2,11 +2,11 @@
   "texts": {
     "1": {
       "text_title": "Text 1",
-      "current_summary": "1. 用户询问句子语法结构，AI未回答\n2. 用户问\"sowie\"意思，AI解释为连词\"以及/还有\"，相当于英语\"as well as\"\n3. 用户问\"Einwohnern\"意思，AI解释为\"居民/人口\"，是Einwohner的复数形式\n4. 用户问\"Teilfunktionen\"意思，AI解释为复合词\"部分功能\"，指城市具有部分大区域中心功能",
+      "current_summary": "用户提问和AI回答总结：\n1. 用户询问\"die\"是否本身没有格，AI解释\"die\"是主格，物主代词\"ihren\"采用属格形式，需与名词保持性数格一致。\n2. 用户问\"Mittelzentrum\"意思，AI解释为德语\"中等中心\"，指具有中等规模服务功能的城市，并对比了更高级的\"Oberzentrum\"。\n3. 用户询问\"ausgew",
       "messages": [
         {
-          "user": "我在学习语言，这句话中的ausgewiesen是什么意思？",
-          "ai": "{'answer': 'ausgewiesen在这里的意思是‘被指定’或‘被划定为’。它是一个动词的过去分词形式，表示被动语态。整句意思是：这座拥有约31,100居民的城市在区域规划中被指定为具有部分高级中心功能的中级中心。'}",
+          "user": "What is the grammar structure of this sentence?",
+          "ai": "{'answer': \"这个德语句子的语法结构是：介词短语(Mit...)作状语 + 系动词(ist) + 主语(die Stadt) + 介词短语(in...)作状语 + 表语(als Mittelzentrum...) + 过去分词短语(ausgewiesen)作补足语。主要框架是'Mit...ist die Stadt...als...ausgewiesen'（随着...这个城市被指定为...）。\"}",
           "sentence_id": 1,
           "quote": {
             "text_id": 1,
@@ -18,190 +18,33 @@
           "timestamp": "2024-01-01T10:00:00Z"
         },
         {
-          "user": "我在学习语言，Oberzentrums是Obe高级） + zentrums中心）的意思吗？",
-          "ai": "{'answer': '是的，你的理解基本正确。Oberzentrum是由Ober（高级）和Zentrum（中心）组成的复合词，意思是‘高级中心’或‘主要中心’。德语中常用这种复合词构成新词。'}",
+          "user": "这个德语句子中的语法结构是什么？",
+          "ai": "{'answer': \"这个德语句子包含两个并列主句，用逗号和'dabei'连接。第一个主句'Die Finne ist groß und stark gebogen'是简单句，主语+系动词+表语结构。第二个主句'sie besitzt dabei zugleich eine sehr breite Basis'是主语+谓语+宾语结构，'dabei'和'zugleich'是副词修饰。两个形容词短语'sehr breite'修饰名词'Basis'。\"}",
           "sentence_id": 1,
           "quote": {
             "text_id": 1,
             "sentence_id": 1,
-            "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+            "sentence_body": " Die Finne ist groß und stark gebogen, sie besitzt dabei zugleich eine sehr breite Basis. ",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2024-01-01T10:00:00Z"
+        },
+        {
+          "user": "为何这句话个主谓宾，dabei在这种情况下是什么意思，如何使用？",
+          "ai": "{'answer': \"这句话的主谓宾结构是：Die Finne（主语）ist（谓语）groß und stark gebogen（表语）。dabei在这里是副词，意思是'同时/此外'，用来补充说明前文信息。使用方式：放在句中，连接前后两个相关的事实。\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 1,
+            "sentence_body": " Die Finne ist groß und stark gebogen, sie besitzt dabei zugleich eine sehr breite Basis. ",
             "grammar_annotations": [],
             "vocab_annotations": []
           },
           "timestamp": "2024-01-01T10:00:00Z"
         }
       ],
-      "max_turns": 100
-    },
-    "3": {
-      "text_title": "Text 3",
-      "current_summary": "1. 用户询问句子语法结构，AI未回答\n2. 用户问\"sowie\"意思，AI解释为连词\"以及/还有\"，相当于英语\"as well as\"\n3. 用户问\"Einwohnern\"意思，AI解释为\"居民/人口\"，是Einwohner的复数形式\n4. 用户问\"Teilfunktionen\"意思，AI解释为复合词\"部分功能\"，指城市具有部分大区域中心功能",
-      "messages": [
-        {
-          "user": "What does revolutionized mean?",
-          "ai": "{'answer': 'revolutionized意思是‘彻底改变’或‘带来革命性变化’。在这里指互联网使语言学习方式发生了根本性的改变。比如：Smartphones revolutionized how we communicate.（智能手机彻底改变了我们的交流方式。）'}",
-          "sentence_id": 0,
-          "quote": {
-            "text_id": 3,
-            "sentence_id": 0,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What does revolutionized mean?",
-          "ai": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这个词表示某事物带来了巨大的、根本性的改变。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
-          "sentence_id": 0,
-          "quote": {
-            "text_id": 3,
-            "sentence_id": 0,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What does revolutionized mean?Use English to answer!",
-          "ai": "{'answer': \"The word 'revolutionized' means to completely and dramatically change or transform something, making it much better or more effective than before. In this sentence, it means the internet has completely changed and improved how we learn languages.\"}",
-          "sentence_id": 0,
-          "quote": {
-            "text_id": 3,
-            "sentence_id": 0,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        }
-      ],
-      "max_turns": 100
-    },
-    "5": {
-      "text_title": "Text 5",
-      "current_summary": "1. 用户询问句子语法结构，AI未回答\n2. 用户问\"sowie\"意思，AI解释为连词\"以及/还有\"，相当于英语\"as well as\"\n3. 用户问\"Einwohnern\"意思，AI解释为\"居民/人口\"，是Einwohner的复数形式\n4. 用户问\"Teilfunktionen\"意思，AI解释为复合词\"部分功能\"，指城市具有部分大区域中心功能",
-      "messages": [
-        {
-          "user": "What does revolutionized mean？",
-          "ai": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这里指互联网完全改变了我们学习语言的方式。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 1,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What does revolutionized mean ? Please answer in  English",
-          "ai": "{'answer': \"The word 'revolutionized' means to completely change or transform something in a very significant way. In this sentence, it means the internet has dramatically changed how we learn languages.\"}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 1,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What does this word mean, answer in English",
-          "ai": "{'answer': \"The word 'revolutionized' means to completely change or transform something in a radical or fundamental way, often leading to significant improvement or innovation.\"}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 1,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What does advent mean? please answer in English",
-          "ai": "{'answer': \"The word 'advent' means the arrival or beginning of something important. For example: 'The advent of computers changed the world.' It often refers to the start of a new era or significant development.\"}",
-          "sentence_id": 2,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 2,
-            "sentence_body": "With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What is the grammatical structure of this sentence? please answer in English",
-          "ai": "{'answer': \"The grammatical structure is: Subject ('One of the most significant advantages of internet-based language learning') + Linking Verb ('is') + Subject Complement ('the availability of authentic materials'). It's a simple sentence with a subject-verb-complement pattern.\"}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 5,
-            "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What is subject complement?",
-          "ai": "{'answer': \"在英语语法中，subject complement（主语补足语）是用来说明或描述主语的成分。在你引用的句子中，'the availability of authentic materials'就是主语补足语，它用来说明主语'One of the most significant advantages of internet-based language learning'是什么。主语补足语通常出现在系动词（如is, are, seem等）之后。\"}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 5,
-            "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What is the grammaticle structure of this sentence? please answer in English",
-          "ai": "{'answer': \"The grammatical structure is: Subject ('One of the most significant advantages of internet-based language learning') + Linking Verb ('is') + Subject Complement ('the availability of authentic materials'). It's a simple sentence with a subject-verb-complement pattern.\"}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 5,
-            "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What is the grammaticle structure of this phrase, please answer in English",
-          "ai": "{'answer': \"The grammatical structure is: [determiner 'the'] + [noun 'way'] + [relative clause 'we learn languages']. It's a noun phrase where 'the way' is modified by the clause 'we learn languages' (which describes what kind of way).\"}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 1,
-            "sentence_body": "The internet has revolutionized the way we learn languages.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        },
-        {
-          "user": "What does this word mean? please explain in simple english",
-          "ai": "{'answer': \"Facilitates means 'makes something easier' or 'helps something happen'. For example: 'The new software facilitates communication' means the software makes communication easier.\"}",
-          "sentence_id": 7,
-          "quote": {
-            "text_id": 5,
-            "sentence_id": 7,
-            "sentence_body": "Furthermore, the internet facilitates collaborative learning through online communities and language exchange programs.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2024-01-01T10:00:00Z"
-        }
-      ],
-      "max_turns": 100
+      "max_turns": 3
     }
   }
 }

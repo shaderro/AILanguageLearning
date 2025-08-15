@@ -149,112 +149,40 @@ answer_question_sys_prompt = """
 下面是几个例子供你参考：
 
 示例1：
+
+用户引用并提问的部分：
+"after Mackenzie accused them of corruption"
 引用句子：
 "In York, Upper Canada, members of the Family Compact destroyed William Lyon Mackenzie's printing press in the Types Riot after Mackenzie accused them of corruption."
 
 用户问题：
-"after Mackenzie accused them of corruption中的them指代谁？"
+them指代谁？"
 
 回答：
 {"answer": "这里的them指的是前文提到的the Family Compact（家族协定成员）。英语中代词如them通常指代前文出现的复数名词，这里指的是那群人。"}
 
 示例2：
-引用句子：
-"She said she would call him after the meeting."
-
-用户问题：
-"she would call him中的him指谁？"
-
-回答：
-{"answer": "him指的是前文提到的某个男性人物。英语中代词him一般用于指代前文提到的男性，具体是谁要结合上下文来判断。"}
-
-示例3：
-引用句子：
-"They had never seen a city so big before, and it overwhelmed them."
-
-用户问题：
-"为什么用it来指代city？"
-
-回答：
-{"answer": "it在这里指代的是前面提到的city（城市），因为city是单数名词。英语中常用it来指代单数事物，这是一种常见的代词用法。"}
-
-示例4：
-引用句子：
-"The soldiers carried out the mission under difficult conditions."
-
-用户问题：
-"carried out是什么意思？"
-
-回答：
-{"answer": "carried out是一个固定短语，意思是‘执行’或‘完成’任务。比如：They carried out the plan successfully.（他们成功执行了计划。）"}
-
-示例5：
-引用句子：
-"He gave up his position in order to protest the decision."
-
-用户问题：
-"gave up是什么意思？"
-
-回答：
-{"answer": "gave up意思是‘放弃’。它是一个固定短语，give up something 表示不再坚持某事。比如：She gave up smoking.（她戒烟了。）"}
-
-示例6：
-引用句子：
-"The city was on the brink of collapse."
-
-用户问题：
-"on the brink of collapse这个表达是什么意思？"
-
-回答：
-{"answer": "on the brink of collapse意思是‘濒临崩溃’。on the brink of... 是一个表达“即将发生某事”，常用于强调危险或重大转变。例如：The country was on the brink of war（国家濒临战争）。"}
-
-现在请你根据用户引用的句子和问题，仿照以上格式进行回答。
-
-示例7：
-引用句子：
-"The storm caused widespread damage across the region."
-
-用户问题：
-"这句什么意思？"
-
-回答：
-{"answer": "这句话的意思是：这场暴风雨在整个地区造成了大范围的破坏。你是想问‘widespread’的意思，还是句子的结构让你困惑呢？"}
-
-示例8：
+用户引用并提问的部分：
+"He was forced to resign after the scandal."
 引用句子：
 "He was forced to resign after the scandal."
 
 用户问题：
-"我看不太懂这句。"
+"我看不太懂。"
 
 回答：
 {"answer": "意思是：因为丑闻，他被迫辞职了。你是想问‘resign’这个词，还是‘was forced to’这个被动结构？"}
-
-示例9：
-引用句子：
-"The proposal was rejected due to lack of evidence."
-
-用户问题：
-"什么意思？"
-
-回答：
-{"answer": "意思是：这个提议因为缺乏证据而被否决了。你想了解‘due to’的用法，还是整句话的语序让你有点不明白？"}
-
-示例10：
-引用句子：
-"The rebels eventually surrendered to government forces."
-
-用户问题：
-"这句我没懂。"
-
-回答：
-{"answer": "这句的意思是：叛军最终向政府军投降了。你是对‘surrendered’这个词不熟，还是整句话的结构不太明白？"}
 """
+
 answer_question_template = """
-这是用户引用的句子：
-{quoted_sentence}
+这是用户引用并提问的部分：
+{quoted_part}
 这是用户的提问：
 {user_question}
+这是用户引用的完整句子：
+{full_sentence}
+这是对话前文信息：
+{context_info}
 """
 
 summarize_vocab_sys_prompt = """

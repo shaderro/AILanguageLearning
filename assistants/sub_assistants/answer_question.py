@@ -12,18 +12,24 @@ class AnswerQuestionAssistant(SubAssistant):
 
     def build_prompt(
         self,
-        quoted_sentence: str,
+        
+        full_sentence: str,
         user_question: str,
+        quoted_part: Optional[str] = None,
         context_info: Optional[str] = None
     ) -> str:
         context_info = (
             f"这是对话的上文，用于提供背景参考：\n{context_info}"
             if context_info else "这是第一轮对话，没有上文。"
         )
-
+        quoted_part = (
+            f"\n{quoted_part}"
+            if quoted_part else "用户引用了整句话\n"
+        )
         return answer_question_template.format(
+            quoted_part=quoted_part,
             context_info=context_info,
-            quoted_sentence=quoted_sentence,
+            full_sentence=full_sentence,
             user_question=user_question
         )
 

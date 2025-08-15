@@ -9,36 +9,138 @@ from data_managers.dialogue_record import DialogueRecordBySentence
 from assistants.chat_info.dialogue_history import DialogueHistory
 from data_managers.data_classes import VocabExpressionBundle
 
+# 新结构模式开关
+USE_NEW_STRUCTURE = False
+# 新结构数据保存开关
+SAVE_TO_NEW_DATA_CLASS = False
+
 class DataController:
     """
     A controller class for managing data operations related to grammar rules, vocabulary expressions, and original texts.
     """
-    def __init__(self, max_turns:int):
-        self.grammar_manager = GrammarRuleManager()
-        self.vocab_manager = VocabManager()
-        self.text_manager = OriginalTextManager()
+    def __init__(self, max_turns:int, use_new_structure: bool = None, save_to_new_data_class: bool = None):
+        # 如果未指定，使用全局开关设置
+        if use_new_structure is None:
+            use_new_structure = USE_NEW_STRUCTURE
+        if save_to_new_data_class is None:
+            save_to_new_data_class = SAVE_TO_NEW_DATA_CLASS
+            
+        self.use_new_structure = use_new_structure
+        self.save_to_new_data_class = save_to_new_data_class
+        
+        # 根据结构模式初始化相应的管理器
+        if self.use_new_structure:
+            # 使用现有管理器并开启新结构模式
+            self.grammar_manager = GrammarRuleManager(use_new_structure=True)
+            self.vocab_manager = VocabManager(use_new_structure=True)
+            self.text_manager = OriginalTextManager(use_new_structure=True)
+            print("✅ 已启用新数据结构模式")
+        else:
+            # 旧结构模式
+            self._init_old_structure()
+            
+        if self.save_to_new_data_class:
+            print("✅ 已启用新结构数据保存模式")
+            
         self.dialogue_record = DialogueRecordBySentence()
         self.dialogue_history = DialogueHistory(max_turns)
+    
+    def _init_old_structure(self):
+        """初始化旧结构的管理器"""
+        self.grammar_manager = GrammarRuleManager(use_new_structure=False)
+        self.vocab_manager = VocabManager(use_new_structure=False)
+        self.text_manager = OriginalTextManager(use_new_structure=False)
+        print("✅ 已启用旧数据结构模式")
 
     def load_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """
         Load data from specified JSON files.
         """
+        try:
+            if self.use_new_structure:
+                # 新结构模式的数据加载逻辑
+                self._load_data_new_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+            else:
+                # 旧结构模式的数据加载逻辑
+                self._load_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+        except Exception as e:
+            print(f"⚠️ 数据加载失败，尝试回退到旧结构: {e}")
+            self.use_new_structure = False
+            self._init_old_structure()
+            self._load_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+    
+    def _load_data_old_structure(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
+        """旧结构模式的数据加载"""
         self.grammar_manager.load_from_file(grammar_path)
         self.vocab_manager.load_from_file(vocab_path)
         self.text_manager.load_from_file(text_path)
         self.dialogue_record.load_from_file(dialogue_record_path)
         self.dialogue_history.load_from_file(dialogue_history_path)
+    
+    def _load_data_new_structure(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
+        """新结构模式的数据加载"""
+        # 目前新旧结构共用旧 JSON 文件，直接调用旧加载
+        self._load_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
         
     def save_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """
         Save data to specified JSON files.
         """
+        try:
+            if self.use_new_structure:
+                # 新结构模式的数据保存逻辑
+                self._save_data_new_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+            else:
+                # 旧结构模式的数据保存逻辑
+                self._save_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+        except Exception as e:
+            print(f"⚠️ 数据保存失败，尝试回退到旧结构: {e}")
+            self.use_new_structure = False
+            self._init_old_structure()
+            self._save_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+    
+    def _save_data_old_structure(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
+        """旧结构模式的数据保存"""
         self.grammar_manager.save_to_file(grammar_path)
         self.vocab_manager.save_to_file(vocab_path)
         self.text_manager.save_to_file(text_path)
         self.dialogue_record.save_all_to_file(dialogue_record_path)
         self.dialogue_history.save_to_file(dialogue_history_path)
+    
+    def _save_data_new_structure(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
+        """新结构模式的数据保存"""
+        if self.save_to_new_data_class:
+            # 保存新结构数据到新的 JSON 文件
+            self._save_data_to_new_format(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+        else:
+            # 目前新旧结构共用旧 JSON 导出
+            self._save_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+    
+    def _save_data_to_new_format(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
+        """保存数据为新结构格式"""
+        try:
+            # 生成新格式的文件路径
+            new_grammar_path = grammar_path.replace('.json', '_new.json')
+            new_vocab_path = vocab_path.replace('.json', '_new.json')
+            new_text_path = text_path.replace('.json', '_new.json')
+            
+            print(f"🔄 保存新结构数据到: {new_grammar_path}, {new_vocab_path}, {new_text_path}")
+            
+            # 保存新结构数据
+            self.grammar_manager.save_to_new_format(new_grammar_path)
+            self.vocab_manager.save_to_new_format(new_vocab_path)
+            self.text_manager.save_to_new_format(new_text_path)
+            
+            # 对话记录和历史仍使用旧格式（因为结构没有变化）
+            self.dialogue_record.save_all_to_file(dialogue_record_path)
+            self.dialogue_history.save_to_file(dialogue_history_path)
+            
+            print("✅ 新结构数据保存完成")
+            
+        except Exception as e:
+            print(f"❌ 新结构数据保存失败: {e}")
+            print("⚠️ 回退到旧格式保存")
+            self._save_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
 
     def add_new_text(self, text_title: str):
         """
@@ -132,3 +234,77 @@ class DataController:
             vocab_data.append((vocab.vocab_body, vocab.explanation, example_text, difficulty))
         
         return vocab_data
+    
+    def switch_to_new_structure(self) -> bool:
+        """
+        切换到新结构模式
+        
+        Returns:
+            bool: 切换是否成功
+        """
+        try:
+            if not self.use_new_structure:
+                # 保存当前数据（旧结构）
+                self._save_data_old_structure(
+                    "data/grammar_rules.json",
+                    "data/vocab_expressions.json", 
+                    "data/original_texts.json",
+                    "data/dialogue_record.json",
+                    "data/dialogue_history.json"
+                )
+                # 切换为新结构的管理器
+                self.grammar_manager = GrammarRuleManager(use_new_structure=True)
+                self.vocab_manager = VocabManager(use_new_structure=True)
+                self.text_manager = OriginalTextManager(use_new_structure=True)
+                self.use_new_structure = True
+                print("✅ 已成功切换到新数据结构模式")
+                return True
+        except Exception as e:
+            print(f"❌ 切换到新结构失败: {e}")
+            return False
+        return False
+    
+    def switch_to_old_structure(self) -> bool:
+        """
+        切换回旧结构模式
+        
+        Returns:
+            bool: 切换是否成功
+        """
+        try:
+            if self.use_new_structure:
+                # 保存当前数据
+                self._save_data_new_structure(
+                    "data/grammar_rules.json",
+                    "data/vocab_expressions.json",
+                    "data/original_texts.json", 
+                    "data/dialogue_record.json",
+                    "data/dialogue_history.json"
+                )
+                
+                # 切换回旧结构
+                self._init_old_structure()
+                print("✅ 已成功切换回旧数据结构模式")
+                return True
+        except Exception as e:
+            print(f"❌ 切换回旧结构失败: {e}")
+            return False
+        return False
+    
+    def get_structure_mode(self) -> str:
+        """
+        获取当前使用的数据结构模式
+        
+        Returns:
+            str: "new" 或 "old"
+        """
+        return "new" if self.use_new_structure else "old"
+    
+    def get_save_mode(self) -> str:
+        """
+        获取当前的数据保存模式
+        
+        Returns:
+            str: "new" 或 "old"
+        """
+        return "new" if self.save_to_new_data_class else "old"

@@ -192,5 +192,43 @@
                 "context_explanation": "```json\n{\"explanation\": \"在这句话中，'facilitate' 的意思是互联网使协作学习变得更容易或更顺畅，通过在线社区和语言交换项目来实现。\"}\n```"
             }
         ]
+    },
+    "14": {
+        "vocab": {
+            "vocab_id": 14,
+            "vocab_body": "ausweisen",
+            "explanation": "{'explanation': \"动词 'ausweisen' 在德语中有多重含义：\\n1. 官方指定/分类：指官方正式将某物或某人归类或指定为特定类别（如例句中的城市规划分类）\\n2. 驱逐/遣返：指官方命令某人离开某个地区或国家\\n3. 证明/表明：指显示或证明某事物的特性或身份\\n4. 标明/标识：指清楚地标记或指示某物\\n\\n该动词为不规则变化：ausweisen - wies aus - ausgewiesen。在不同语境中需要根据具体含义来理解。\"}"
+        },
+        "example": [
+            {
+                "vocab_id": 14,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"在这句话中，'ausweisen' 的意思是‘被指定’或‘被归类’。整句话的意思是，这座城市在区域规划中被指定为具有部分高级中心功能的中级中心。\"}\n```"
+            }
+        ]
+    },
+    "15": {
+        "vocab": {
+            "vocab_id": 15,
+            "vocab_body": "ihren",
+            "explanation": "No explanation provided"
+        },
+        "example": [
+            {
+                "vocab_id": 15,
+                "text_id": 1,
+                "sentence_id": 1,
+                "context_explanation": "```json\n{\"explanation\": \"这里的'ihren'指的是'der Stadt'（这座城市）的，表示'大约31,100名居民'是属于这座城市的。\"}\n```"
+            }
+        ]
+    },
+    "16": {
+        "vocab": {
+            "vocab_id": 16,
+            "vocab_body": "mittelzentrum",
+            "explanation": "No explanation provided"
+        },
+        "example": []
     }
 }

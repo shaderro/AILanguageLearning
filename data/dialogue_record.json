@@ -123,6 +123,84 @@
             "ai_response": "{'answer': '是的，你的理解基本正确。Oberzentrum是由Ober（高级）和Zentrum（中心）组成的复合词，意思是‘高级中心’或‘主要中心’。德语中常用这种复合词构成新词。'}",
             "timestamp": "2024-01-01T10:00:00Z",
             "is_learning_related": true
+          },
+          {
+            "user_question": "ausgewiesen是什么意思？",
+            "ai_response": "The question is not relevant to language learning, skipping processing.",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does ausgewiesen mean? I'm trying to lean German and want to learn this word",
+            "ai_response": "{'answer': \"ausgewiesen means 'designated' or 'classified' in this context. It's a past participle of the verb 'ausweisen', which generally means to designate or identify something officially. In this sentence, it means the city is officially classified as a medium-sized center with partial functions of a higher-level center.\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "为什么这里用ihen？",
+            "ai_response": "{'answer': \"这里的'ihren'是物主代词，意思是'它的'，指代前文提到的'die Stadt'(这个城市)。德语中物主代词需要和名词的性、数、格保持一致，这里用ihren是因为Einwohnern是复数第三格。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "是物主代词？",
+            "ai_response": "{'answer': \"是的，'ihren'是物主代词（Possessivpronomen），在这里指代'der Stadt'（这座城市），表示'这座城市的约31,100名居民'。德语中物主代词需要根据所修饰名词的性、数、格变化，这里用复数第三格形式。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "名词的格是什么",
+            "ai_response": "{'answer': \"名词的格（Kasus）是指名词在句子中与其他词的关系，德语有4个格：第一格（主格）、第二格（属格）、第三格（与格）、第四格（宾格）。在这句中'ihren'是第三格复数形式，表示所属关系（约31,100名居民）。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "是代词吗？它根据哪个名词的格这句话哪个名词是属格，为什么？",
+            "ai_response": "{'answer': \"句子中'ihren'是物主代词（属格），指代前文的'die Stadt'（城市）。德语中物主代词要根据所指名词的性数格变化，这里'die Stadt'是阴性单数，所以用'ihr'的第三格复数形式'ihren'修饰阴性名词'Einwohnern'。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "也就是说，这句话中的di本身并不具有\"格\"，对吗，是物主代词需要指代它才变成属格的，对吗",
+            "ai_response": "{'answer': \"是的，这里的'die'（指代'die Stadt'）本身是主格形式。物主代词'ihren'（指代'der Stadt'）采用了属格形式，这是德语中物主代词需要与被指代名词保持性数格一致的语法规则。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What does Mittelzentrum mean?",
+            "ai_response": "{'answer': \"Mittelzentrum是德语专有名词，字面意思是'中等中心'，指城市规划中具有中等规模服务功能的城市。在这句话里可以理解为'区域中等中心城市'。Oberzentrum是更高级别的'区域中心城市'。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "ausgewiesen这个单词或词缀组成的吗",
+            "ai_response": "{'answer': \"ausgewiesen是动词ausweisen的过去分词形式，意思是'被指定/被划定为'。这里是被动态用法，表示'被规划确定为'。这个词由前缀aus-（表示向外）和weisen（指示）组成。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "/Users/mac/langApp514/venv/bin/python /Users/mac/langApp514/main.py",
+            "ai_response": "{'answer': \"这句话的意思是：这座拥有约31,100名居民的城市，在区域规划中被定位为具有部分高级中心功能的中级中心。你是想问某个具体词汇（如'Mittelzentrum'）还是句子结构？\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "What is the grammar structure of this sentence?",
+            "ai_response": "{'answer': \"这个德语句子的语法结构是：介词短语(Mit...)作状语 + 系动词(ist) + 主语(die Stadt) + 介词短语(in...)作状语 + 表语(als Mittelzentrum...) + 过去分词短语(ausgewiesen)作补足语。主要框架是'Mit...ist die Stadt...als...ausgewiesen'（随着...这个城市被指定为...）。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "这个德语句子中的语法结构是什么？",
+            "ai_response": "{'answer': \"这个德语句子包含两个并列主句，用逗号和'dabei'连接。第一个主句'Die Finne ist groß und stark gebogen'是简单句，主语+系动词+表语结构。第二个主句'sie besitzt dabei zugleich eine sehr breite Basis'是主语+谓语+宾语结构，'dabei'和'zugleich'是副词修饰。两个形容词短语'sehr breite'修饰名词'Basis'。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "为何这句话个主谓宾，dabei在这种情况下是什么意思，如何使用？",
+            "ai_response": "{'answer': \"这句话的主谓宾结构是：Die Finne（主语）ist（谓语）groß und stark gebogen（表语）。dabei在这里是副词，意思是'同时/此外'，用来补充说明前文信息。使用方式：放在句中，连接前后两个相关的事实。\"}",
+            "timestamp": "2024-01-01T10:00:00Z",
+            "is_learning_related": true
           }
         ]
       }
