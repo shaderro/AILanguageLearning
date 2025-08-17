@@ -104,25 +104,25 @@ class MainAssistant:
         
         #print("Session State:", self.session_state)
 
-    def _ensure_sentence_integrity(self, sentence: Sentence, context: str) -> bool:
+    def _ensure_sentence_integrity(self, sentence: SentenceType, context: str) -> bool:
         """
         确保句子完整性并打印调试信息
         
         Args:
-            sentence: 要验证的句子对象
+            sentence: 要验证的句子对象（支持新旧两种类型）
             context: 验证上下文
             
         Returns:
             bool: 句子是否完整
         """
         if sentence and hasattr(sentence, 'text_id') and hasattr(sentence, 'sentence_id'):
-            print(f"✅ {context}: 句子完整性验证通过 - text_id:{sentence.text_id}, sentence_id:{sentence.sentence_id}")
+            print(f"✅ {context}: 句子数据结构完整性验证通过 - text_id:{sentence.text_id}, sentence_id:{sentence.sentence_id}")
             return True
         else:
-            print(f"❌ {context}: 句子完整性验证失败")
+            print(f"❌ {context}: 句子数据结构完整性验证失败")
             return False
 
-    def check_if_topic_relevant_function(self, quoted_sentence: Sentence, user_question: str, effective_sentence_body: str = None) -> bool:
+    def check_if_topic_relevant_function(self, quoted_sentence: SentenceType, user_question: str, effective_sentence_body: str = None) -> bool:
         sentence_to_check = effective_sentence_body if effective_sentence_body else quoted_sentence.sentence_body
         result = self.check_if_relevant.run(
             sentence_to_check,
@@ -141,7 +141,7 @@ class MainAssistant:
         
         return result.get("is_relevant", False)
 
-    def answer_question_function(self, quoted_sentence: Sentence, user_question: str, sentence_body: str) -> str:
+    def answer_question_function(self, quoted_sentence: SentenceType, user_question: str, sentence_body: str) -> str:
         """
         使用AI回答用户问题。
         """
@@ -180,7 +180,7 @@ class MainAssistant:
 
         return False
 
-    def handle_grammar_vocab_function(self, quoted_sentence: Sentence, user_question: str, ai_response: str, effective_sentence_body: str = None):
+    def handle_grammar_vocab_function(self, quoted_sentence: SentenceType, user_question: str, ai_response: str, effective_sentence_body: str = None):
         """
         处理与语法和词汇相关的操作。
         """
@@ -403,7 +403,7 @@ class MainAssistant:
                         context_explanation=example_explanation
                     )
 
-    def _log_sentence_capabilities(self, sentence: Sentence):
+    def _log_sentence_capabilities(self, sentence: SentenceType):
         """只读：打印句子层能力（tokens/难度等），不影响任何分支"""
         try:
             if sentence in self._capabilities_cache:
@@ -431,8 +431,8 @@ if __name__ == "__main__":
         text_id=0,
         sentence_id=0,
         sentence_body=test_sentence_str,
-        grammar_annotations=[],
-        vocab_annotations=[]
+        grammar_annotations=(),
+        vocab_annotations=()
     )
     
     main_assistant = MainAssistant()

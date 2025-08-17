@@ -236,8 +236,8 @@ class ArticleListViewModel:
                     text_id=sentence_data.get("text_id", text_id),
                     sentence_id=sentence_data.get("sentence_id", 0),
                     sentence_body=sentence_data.get("sentence_body", ""),
-                    grammar_annotations=sentence_data.get("grammar_annotations", []),
-                    vocab_annotations=sentence_data.get("vocab_annotations", [])
+                    grammar_annotations=tuple(sentence_data.get("grammar_annotations", [])),
+                    vocab_annotations=tuple(sentence_data.get("vocab_annotations", []))
                 )
                 sentences.append(sentence)
             
@@ -261,39 +261,39 @@ class ArticleListViewModel:
                 text_id=1,
                 text_title="First Test Text",
                 text_by_sentence=[
-                    Sentence(1, 1, "The Internet and Language Learning", [], []),
-                    Sentence(1, 2, "The internet has revolutionized the way we learn languages.", [], []),
-                    Sentence(1, 3, "With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.", [], []),
-                    Sentence(1, 4, "Online language learning platforms offer a variety of features that traditional classroom settings cannot provide.", [], []),
-                    Sentence(1, 5, "These include interactive exercises, real-time feedback, personalized learning paths, and access to native speakers from around the world.", [], [])
+                    Sentence(1, 1, "The Internet and Language Learning", (), ()),
+                    Sentence(1, 2, "The internet has revolutionized the way we learn languages.", (), ()),
+                    Sentence(1, 3, "With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.", (), ()),
+                    Sentence(1, 4, "Online language learning platforms offer a variety of features that traditional classroom settings cannot provide.", (), ()),
+                    Sentence(1, 5, "These include interactive exercises, real-time feedback, personalized learning paths, and access to native speakers from around the world.", (), ())
                 ]
             ),
             2: OriginalText(
                 text_id=2,
                 text_title="Second Test Text",
                 text_by_sentence=[
-                    Sentence(2, 1, "Artificial Intelligence in Education", [], []),
-                    Sentence(2, 2, "AI is transforming how we teach and learn.", [], []),
-                    Sentence(2, 3, "Machine learning algorithms can personalize education for each student.", [], []),
-                    Sentence(2, 4, "This technology helps identify learning gaps and provides targeted support.", [], [])
+                    Sentence(2, 1, "Artificial Intelligence in Education", (), ()),
+                    Sentence(2, 2, "AI is transforming how we teach and learn.", (), ()),
+                    Sentence(2, 3, "Machine learning algorithms can personalize education for each student.", (), ()),
+                    Sentence(2, 4, "This technology helps identify learning gaps and provides targeted support.", (), ())
                 ]
             ),
             3: OriginalText(
                 text_id=3,
                 text_title="Test Text",
                 text_by_sentence=[
-                    Sentence(3, 1, "Climate Change and Sustainability", [], []),
-                    Sentence(3, 2, "Climate change is one of the most pressing issues of our time.", [], []),
-                    Sentence(3, 3, "We must take action to reduce carbon emissions and protect our planet.", [], [])
+                    Sentence(3, 1, "Climate Change and Sustainability", (), ()),
+                    Sentence(3, 2, "Climate change is one of the most pressing issues of our time.", (), ()),
+                    Sentence(3, 3, "We must take action to reduce carbon emissions and protect our planet.", (), ())
                 ]
             ),
             4: OriginalText(
                 text_id=4,
                 text_title="Test Text",
                 text_by_sentence=[
-                    Sentence(4, 1, "The Future of Technology", [], []),
-                    Sentence(4, 2, "Technology continues to evolve at an unprecedented pace.", [], []),
-                    Sentence(4, 3, "From artificial intelligence to renewable energy, innovation drives progress.", [], [])
+                    Sentence(4, 1, "The Future of Technology", (), ()),
+                    Sentence(4, 2, "Technology continues to evolve at an unprecedented pace.", (), ()),
+                    Sentence(4, 3, "From artificial intelligence to renewable energy, innovation drives progress.", (), ())
                 ]
             )
         }

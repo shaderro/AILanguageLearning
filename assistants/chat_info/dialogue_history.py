@@ -1,7 +1,13 @@
 from data_managers.data_classes import Sentence
+from data_managers.data_classes_new import Sentence as NewSentence
 from assistants.sub_assistants.summarize_dialogue_history import SummarizeDialogueHistoryAssistant
 import json
 import chardet
+from typing import Union
+from datetime import datetime
+
+# 类型别名，支持新旧两种句子类型
+SentenceType = Union[Sentence, NewSentence]
 
 class DialogueHistory:
     def __init__(self, max_turns):
@@ -10,7 +16,10 @@ class DialogueHistory:
         self.summary = str()
         self.summarize_dialogue_assistant = SummarizeDialogueHistoryAssistant()
 
-    def add_message(self, user_input: str, ai_response: str, quoted_sentence: Sentence):
+    def add_message(self, user_input: str, ai_response: str, quoted_sentence: SentenceType):
+        """
+        添加对话消息到历史记录，支持新旧两种数据结构
+        """
         self.messages_history.append({
             "user": user_input,
             "ai": ai_response,
@@ -50,7 +59,7 @@ class DialogueHistory:
         self._summarize_and_clear() if len(self.messages_history) > self.max_turns else None
 
     def save_to_file(self, path: str):
-        # 按text_id组织数据
+        # 按text_id组织数据，支持新旧数据结构
         organized_data = {"texts": {}}
         
         for msg in self.messages_history:
@@ -66,19 +75,43 @@ class DialogueHistory:
                     "max_turns": self.max_turns
                 }
             
+            # 构建quote数据，适配新旧数据结构
+            quote_data = {
+                "text_id": msg["quote"].text_id,
+                "sentence_id": msg["quote"].sentence_id,
+                "sentence_body": msg["quote"].sentence_body,
+                "grammar_annotations": msg["quote"].grammar_annotations,
+                "vocab_annotations": msg["quote"].vocab_annotations,
+            }
+            
+            # 如果是新数据结构，添加额外信息
+            if hasattr(msg["quote"], 'sentence_difficulty_level'):
+                quote_data["sentence_difficulty_level"] = msg["quote"].sentence_difficulty_level
+            
+            if hasattr(msg["quote"], 'tokens') and msg["quote"].tokens:
+                quote_data["tokens"] = [
+                    {
+                        "token_body": token.token_body,
+                        "token_type": token.token_type,
+                        "difficulty_level": token.difficulty_level,
+                        "global_token_id": token.global_token_id,
+                        "sentence_token_id": token.sentence_token_id,
+                        "pos_tag": token.pos_tag,
+                        "lemma": token.lemma,
+                        "is_grammar_marker": token.is_grammar_marker,
+                        "linked_vocab_id": token.linked_vocab_id
+                    }
+                    for token in msg["quote"].tokens
+                ]
+            
             # 添加消息
             organized_data["texts"][text_id]["messages"].append({
                 "user": msg["user"],
                 "ai": msg["ai"],
                 "sentence_id": sentence_id,
-                "quote": {
-                    "text_id": msg["quote"].text_id,
-                    "sentence_id": msg["quote"].sentence_id,
-                    "sentence_body": msg["quote"].sentence_body,
-                    "grammar_annotations": msg["quote"].grammar_annotations,
-                    "vocab_annotations": msg["quote"].vocab_annotations,
-                },
-                "timestamp": "2024-01-01T10:00:00Z"  # 可以添加真实时间戳
+                "quote": quote_data,
+                "timestamp": datetime.now().isoformat(),
+                "data_type": "new" if hasattr(msg["quote"], 'sentence_difficulty_level') else "old"
             })
         
         # 如果没有消息，保存空结构
@@ -122,16 +155,50 @@ class DialogueHistory:
             for text_id_str, text_data in data["texts"].items():
                 self.summary = text_data.get("current_summary", "")
                 for msg in text_data.get("messages", []):
+                    quote_data = msg["quote"]
+                    data_type = msg.get("data_type", "old")
+                    
+                    if data_type == "new" and "tokens" in quote_data:
+                        # 创建新数据结构句子
+                        from data_managers.data_classes_new import Token
+                        tokens = [
+                            Token(
+                                token_body=token_data["token_body"],
+                                token_type=token_data["token_type"],
+                                difficulty_level=token_data.get("difficulty_level"),
+                                global_token_id=token_data.get("global_token_id"),
+                                sentence_token_id=token_data.get("sentence_token_id"),
+                                pos_tag=token_data.get("pos_tag"),
+                                lemma=token_data.get("lemma"),
+                                is_grammar_marker=token_data.get("is_grammar_marker", False),
+                                linked_vocab_id=token_data.get("linked_vocab_id")
+                            )
+                            for token_data in quote_data["tokens"]
+                        ]
+                        
+                        sentence = NewSentence(
+                            text_id=quote_data["text_id"],
+                            sentence_id=quote_data["sentence_id"],
+                            sentence_body=quote_data["sentence_body"],
+                            grammar_annotations=tuple(quote_data["grammar_annotations"]),
+                            vocab_annotations=tuple(quote_data["vocab_annotations"]),
+                            sentence_difficulty_level=quote_data.get("sentence_difficulty_level"),
+                            tokens=tuple(tokens)
+                        )
+                    else:
+                        # 创建旧数据结构句子
+                        sentence = Sentence(
+                            text_id=quote_data["text_id"],
+                            sentence_id=quote_data["sentence_id"],
+                            sentence_body=quote_data["sentence_body"],
+                            grammar_annotations=tuple(quote_data["grammar_annotations"]),
+                            vocab_annotations=tuple(quote_data["vocab_annotations"])
+                        )
+                    
                     self.messages_history.append({
                         "user": msg["user"],
                         "ai": msg["ai"],
-                        "quote": Sentence(
-                            text_id=msg["quote"]["text_id"],
-                            sentence_id=msg["quote"]["sentence_id"],
-                            sentence_body=msg["quote"]["sentence_body"],
-                            grammar_annotations=msg["quote"]["grammar_annotations"],
-                            vocab_annotations=msg["quote"]["vocab_annotations"]
-                        )
+                        "quote": sentence
                     })
         
         # 兼容旧的格式
@@ -145,8 +212,8 @@ class DialogueHistory:
                         text_id=item["quote"]["text_id"],
                         sentence_id=item["quote"]["sentence_id"],
                         sentence_body=item["quote"]["sentence_body"],
-                        grammar_annotations=item["quote"]["grammar_annotations"],
-                        vocab_annotations=item["quote"]["vocab_annotations"]
+                        grammar_annotations=tuple(item["quote"]["grammar_annotations"]),
+                        vocab_annotations=tuple(item["quote"]["vocab_annotations"])
                     )
                 }
                 for item in data.get("messages", [])
@@ -155,4 +222,93 @@ class DialogueHistory:
             print(f"[Warning] Unknown data format in {path}. Starting with empty history.")
             self.summary = ""
             self.messages_history = []
+
+    def get_dialogue_analytics(self) -> dict:
+        """获取对话分析数据，支持新旧数据结构"""
+        analytics = {
+            "total_messages": len(self.messages_history),
+            "summary": self.summary,
+            "data_types": {"old": 0, "new": 0},
+            "difficulty_levels": {},
+            "token_statistics": {},
+            "learning_progress": {}
+        }
+        
+        for msg in self.messages_history:
+            sentence = msg["quote"]
+            
+            # 统计数据结构类型
+            if hasattr(sentence, 'sentence_difficulty_level'):
+                analytics["data_types"]["new"] += 1
+                
+                # 统计难度级别
+                difficulty = sentence.sentence_difficulty_level
+                if difficulty not in analytics["difficulty_levels"]:
+                    analytics["difficulty_levels"][difficulty] = 0
+                analytics["difficulty_levels"][difficulty] += 1
+                
+                # 统计token信息
+                if hasattr(sentence, 'tokens') and sentence.tokens:
+                    if "total_tokens" not in analytics["token_statistics"]:
+                        analytics["token_statistics"]["total_tokens"] = 0
+                    analytics["token_statistics"]["total_tokens"] += len(sentence.tokens)
+                    
+                    # 统计困难词汇
+                    hard_tokens = [t.token_body for t in sentence.tokens 
+                                 if hasattr(t, 'difficulty_level') and t.difficulty_level == "hard"]
+                    if hard_tokens:
+                        if "hard_tokens" not in analytics["token_statistics"]:
+                            analytics["token_statistics"]["hard_tokens"] = []
+                        analytics["token_statistics"]["hard_tokens"].extend(hard_tokens)
+            else:
+                analytics["data_types"]["old"] += 1
+        
+        # 计算学习进度
+        analytics["learning_progress"] = {
+            "engagement_level": "high" if len(self.messages_history) > 10 else "medium" if len(self.messages_history) > 5 else "low",
+            "new_structure_usage_ratio": analytics["data_types"]["new"] / len(self.messages_history) if self.messages_history else 0
+        }
+        
+        return analytics
+
+    def get_new_structure_messages(self) -> list:
+        """获取使用新数据结构的消息列表"""
+        return [msg for msg in self.messages_history 
+                if hasattr(msg["quote"], 'sentence_difficulty_level')]
+
+    def get_old_structure_messages(self) -> list:
+        """获取使用旧数据结构的消息列表"""
+        return [msg for msg in self.messages_history 
+                if not hasattr(msg["quote"], 'sentence_difficulty_level')]
+
+    def get_messages_by_difficulty(self, difficulty: str) -> list:
+        """根据难度级别获取消息列表"""
+        return [msg for msg in self.messages_history 
+                if hasattr(msg["quote"], 'sentence_difficulty_level') and 
+                msg["quote"].sentence_difficulty_level == difficulty]
+
+    def get_hard_tokens_summary(self) -> dict:
+        """获取困难词汇总结"""
+        hard_tokens_summary = {}
+        
+        for msg in self.messages_history:
+            sentence = msg["quote"]
+            if hasattr(sentence, 'tokens') and sentence.tokens:
+                hard_tokens = [t.token_body for t in sentence.tokens 
+                             if hasattr(t, 'difficulty_level') and t.difficulty_level == "hard"]
+                
+                for token in hard_tokens:
+                    if token not in hard_tokens_summary:
+                        hard_tokens_summary[token] = {
+                            "count": 0,
+                            "contexts": []
+                        }
+                    hard_tokens_summary[token]["count"] += 1
+                    hard_tokens_summary[token]["contexts"].append({
+                        "sentence": sentence.sentence_body,
+                        "user_question": msg["user"],
+                        "ai_response": msg["ai"]
+                    })
+        
+        return hard_tokens_summary
 

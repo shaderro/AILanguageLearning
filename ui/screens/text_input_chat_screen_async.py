@@ -1063,8 +1063,8 @@ Furthermore, the internet facilitates collaborative learning through online comm
             text_id=0,  # 可以根据实际情况设置
             sentence_id=sentence_id if sentence_id >= 0 else 0,
             sentence_body=full_sentence,
-            grammar_annotations=[],
-            vocab_annotations=[]
+                    grammar_annotations=(),
+        vocab_annotations=()
         )
     
     def _generate_fallback_response(self, user_question, sentence_body):

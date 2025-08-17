@@ -6,6 +6,7 @@ from data_managers.grammar_rule_manager import GrammarRuleManager
 from data_managers.vocab_manager import VocabManager
 from data_managers.original_text_manager import OriginalTextManager
 from data_managers.dialogue_record import DialogueRecordBySentence
+from data_managers.dialogue_record_new import DialogueRecordBySentenceNew
 from assistants.chat_info.dialogue_history import DialogueHistory
 from data_managers.data_classes import VocabExpressionBundle
 
@@ -42,7 +43,11 @@ class DataController:
         if self.save_to_new_data_class:
             print("✅ 已启用新结构数据保存模式")
             
-        self.dialogue_record = DialogueRecordBySentence()
+        # 根据结构模式选择对话记录类
+        if self.use_new_structure:
+            self.dialogue_record = DialogueRecordBySentenceNew()
+        else:
+            self.dialogue_record = DialogueRecordBySentence()
         self.dialogue_history = DialogueHistory(max_turns)
     
     def _init_old_structure(self):

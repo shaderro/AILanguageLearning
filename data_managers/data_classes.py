@@ -38,13 +38,13 @@ class VocabExpressionBundle:
     vocab: VocabExpression
     example: list[VocabExpressionExample]
 
-@dataclass
+@dataclass(frozen=True)
 class Sentence:
     text_id: int
     sentence_id: int
     sentence_body: str
-    grammar_annotations: list[int] #rule id
-    vocab_annotations: list[int] #word id
+    grammar_annotations: tuple[int, ...] #rule id
+    vocab_annotations: tuple[int, ...] #word id
 
 @dataclass
 class OriginalText:

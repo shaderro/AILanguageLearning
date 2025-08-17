@@ -245,13 +245,5 @@
         "source": "qa",
         "is_starred": false,
         "examples": []
-    },
-    "17": {
-        "vocab_id": 17,
-        "vocab_body": "dabei",
-        "explanation": "No explanation provided",
-        "source": "qa",
-        "is_starred": false,
-        "examples": []
     }
 }

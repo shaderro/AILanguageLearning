@@ -89,8 +89,8 @@ class OriginalTextManager:
                 text_id=text_id, 
                 sentence_id=current_sentence_id,
                 sentence_body=sentence_text, 
-                grammar_annotations=[], 
-                vocab_annotations=[]
+                grammar_annotations=(), 
+                vocab_annotations=()
             )
         
         current_text.text_by_sentence.append(new_sentence)
@@ -284,8 +284,8 @@ class OriginalTextManager:
                                 text_id=sentence['text_id'],
                                 sentence_id=sentence['sentence_id'],
                                 sentence_body=sentence['sentence_body'],
-                                grammar_annotations=sentence.get('grammar_annotations', []),
-                                vocab_annotations=sentence.get('vocab_annotations', [])
+                                grammar_annotations=tuple(sentence.get('grammar_annotations', [])),
+                                vocab_annotations=tuple(sentence.get('vocab_annotations', []))
                             ) for sentence in text_data['text_by_sentence']
                         ]
                     )

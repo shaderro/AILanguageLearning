@@ -1,7 +1,7 @@
 from typing import Optional, Literal
 from dataclasses import dataclass, field
 
-@dataclass
+@dataclass(frozen=True)
 class Token:
     token_body: str
     token_type: Literal["text", "punctuation", "space"]
@@ -13,15 +13,15 @@ class Token:
     is_grammar_marker: Optional[bool] = False  # 是否参与语法结构识别
     linked_vocab_id: Optional[int] = None  # 指向词汇中心解释
 
-@dataclass
+@dataclass(frozen=True)
 class Sentence:
     text_id: int
     sentence_id: int
     sentence_body: str
-    grammar_annotations: list[int] = None  # rule id
-    vocab_annotations: list[int] = None    # word id
+    grammar_annotations: tuple[int, ...] = ()  # rule id
+    vocab_annotations: tuple[int, ...] = ()    # word id
     sentence_difficulty_level: Optional[Literal["easy", "hard"]] = None
-    tokens: list[Token] = None
+    tokens: tuple[Token, ...] = ()
 
 @dataclass
 class OriginalText:

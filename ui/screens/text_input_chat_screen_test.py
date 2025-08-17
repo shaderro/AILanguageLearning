@@ -193,8 +193,8 @@ Furthermore, the internet facilitates collaborative learning through online comm
             text_id=text_id,
             sentence_id=sentence_id if sentence_id >= 0 else 0,
             sentence_body=full_sentence,
-            grammar_annotations=[],  # Empty for now, will be filled by AI later
-            vocab_annotations=[]     # Empty for now, will be filled by AI later
+                    grammar_annotations=(),  # Empty for now, will be filled by AI later
+        vocab_annotations=()     # Empty for now, will be filled by AI later
         )
         
         print(f"🔄 Converted to Sentence object:")
