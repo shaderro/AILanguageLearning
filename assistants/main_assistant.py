@@ -5,6 +5,7 @@ print("✅ 当前工作目录：", os.getcwd())
 import re
 from assistants.chat_info.dialogue_history import DialogueHistory
 from assistants.chat_info.session_state import SessionState, CheckRelevantDecision, GrammarSummary, VocabSummary, GrammarToAdd, VocabToAdd
+from assistants.chat_info.selected_token import SelectedToken, create_selected_token_from_text
 from assistants.sub_assistants.sub_assistant import SubAssistant
 from assistants.sub_assistants.check_if_grammar_relevant_assistant import CheckIfGrammarRelevantAssistant
 from assistants.sub_assistants.check_if_vocab_relevant_assistant import CheckIfVocabRelevantAssistant
@@ -57,37 +58,53 @@ class MainAssistant:
         # 只读：能力探测缓存（不用于业务分支，仅打印）
         self._capabilities_cache = {}
 
-    def run(self, quoted_sentence: SentenceType, user_question: str, quoted_string: str = None):
+    def run(self, quoted_sentence: SentenceType, user_question: str, selected_text: str = None):
         """
-        主处理函数，接收引用的句子、用户问题和AI响应，并进行相关处理。
+        主处理函数，支持用户选择特定token或整句话进行提问
         
         Args:
             quoted_sentence: 完整的句子对象（支持新旧两种类型）
             user_question: 用户问题
-            quoted_string: 用户选中的部分文本（可选），如果为None则使用完整句子
+            selected_text: 用户选择的特定文本（可选），如果为None则使用完整句子
         """
         self.session_state.reset()  # 重置会话状态
         
-        # 如果提供了quoted_string，则使用它；否则使用完整句子
-        effective_sentence_body = quoted_string if quoted_string else quoted_sentence.sentence_body
+        # 创建SelectedToken对象
+        if selected_text:
+            # 用户选择了特定文本
+            selected_token = create_selected_token_from_text(quoted_sentence, selected_text)
+            effective_sentence_body = selected_text
+            print(f"🎯 用户选择了特定文本: '{selected_text}'")
+        else:
+            # 用户选择整句话
+            selected_token = SelectedToken.from_full_sentence(quoted_sentence)
+            effective_sentence_body = quoted_sentence.sentence_body
+            print(f"📖 用户选择了整句话: '{quoted_sentence.sentence_body}'")
+        
+        # 设置会话状态
+        self.session_state.set_current_sentence(quoted_sentence)
+        self.session_state.set_current_selected_token(selected_token)
+        self.session_state.set_current_input(user_question)
         
         # 只读演示：能力探测与打印（不改业务逻辑）
         self._log_sentence_capabilities(quoted_sentence)
         
-        self.dialogue_record.add_user_message(quoted_sentence, user_question)
-        #是否和主题相关（暂时注释掉以便测试）
-        # if(self.check_if_topic_relevant_function(quoted_sentence, user_question, effective_sentence_body) is False):
-        #     print("The question is not relevant to language learning, skipping processing.")
-        #     self.dialogue_record.add_ai_response(quoted_sentence, "The question is not relevant to language learning, skipping processing.")
-        #     return
-        # print("The question is relevant to language learning, proceeding with processing...")
+        # 记录用户消息（包含selected_token信息）
+        self.dialogue_record.add_user_message(quoted_sentence, user_question, selected_token)
+        
         print("The question is relevant to language learning, proceeding with processing...")
-        #回答问题
+        
+        # 回答问题
         ai_response = self.answer_question_function(quoted_sentence, user_question, effective_sentence_body)
+        self.session_state.set_current_response(ai_response)
+        
+        # 记录AI响应（包含selected_token信息）
         self.dialogue_record.add_ai_response(quoted_sentence, ai_response)
-        #检查是否加入新语法和词汇
+        
+        # 检查是否加入新语法和词汇
         self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response, effective_sentence_body)
         self.add_new_to_data()
+        
         print("✅ 处理完成，已更新会话状态和对话历史。")
         self.print_data_controller_data()
         return

@@ -4,7 +4,8 @@ from assistants.sub_assistants.prompt import (
     vocab_explanation_template,
 )
 from data_managers.data_classes import Sentence
-from typing import Optional
+from data_managers.data_classes_new import Sentence as NewSentence
+from typing import Optional, Union
 
 
 class VocabExplanationAssistant(SubAssistant):
@@ -18,7 +19,7 @@ class VocabExplanationAssistant(SubAssistant):
     def build_prompt(
         self,
         vocab: str,
-        sentence: Sentence,
+        sentence: Union[Sentence, NewSentence],
     ) -> str:
         return vocab_explanation_template.format(
             quoted_sentence=sentence.sentence_body,
@@ -28,7 +29,7 @@ class VocabExplanationAssistant(SubAssistant):
     def run(
         self,
         vocab: str,
-        sentence: Sentence,
+        sentence: Union[Sentence, NewSentence],
         **kwargs,
     ) -> dict | list[dict] | str:
         return super().run(vocab=vocab, sentence=sentence, **kwargs) 

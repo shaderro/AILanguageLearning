@@ -2,7 +2,11 @@ from data_managers.data_controller import DataController
 from assistants.main_assistant import MainAssistant
 from data_managers.data_classes import Sentence
 from data_managers.data_classes_new import Sentence as NewSentence, Token
+from typing import Union
 import json
+
+# 类型别名，支持新旧两种句子类型
+SentenceType = Union[Sentence, NewSentence]
 
 data_controller = DataController(3, use_new_structure=True, save_to_new_data_class=True)
 main_assistant = MainAssistant(data_controller, 3)

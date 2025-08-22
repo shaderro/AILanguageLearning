@@ -11,9 +11,9 @@ from assistants.chat_info.dialogue_history import DialogueHistory
 from data_managers.data_classes import VocabExpressionBundle
 
 # 新结构模式开关
-USE_NEW_STRUCTURE = False
+USE_NEW_STRUCTURE = True
 # 新结构数据保存开关
-SAVE_TO_NEW_DATA_CLASS = False
+SAVE_TO_NEW_DATA_CLASS = True
 
 class DataController:
     """
@@ -84,8 +84,22 @@ class DataController:
     
     def _load_data_new_structure(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """新结构模式的数据加载"""
-        # 目前新旧结构共用旧 JSON 文件，直接调用旧加载
-        self._load_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+        # 强制使用新结构加载数据
+        print("🔄 使用新结构模式加载数据...")
+        
+        # 确保所有管理器都使用新结构
+        self.grammar_manager.use_new_structure = True
+        self.vocab_manager.use_new_structure = True
+        self.text_manager.use_new_structure = True
+        
+        # 加载数据
+        self.grammar_manager.load_from_file(grammar_path)
+        self.vocab_manager.load_from_file(vocab_path)
+        self.text_manager.load_from_file(text_path)
+        self.dialogue_record.load_from_file(dialogue_record_path)
+        self.dialogue_history.load_from_file(dialogue_history_path)
+        
+        print("✅ 新结构数据加载完成")
         
     def save_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """
@@ -114,20 +128,16 @@ class DataController:
     
     def _save_data_new_structure(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """新结构模式的数据保存"""
-        if self.save_to_new_data_class:
-            # 保存新结构数据到新的 JSON 文件
-            self._save_data_to_new_format(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
-        else:
-            # 目前新旧结构共用旧 JSON 导出
-            self._save_data_old_structure(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
+        # 强制使用新格式保存数据
+        self._save_data_to_new_format(grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path)
     
     def _save_data_to_new_format(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """保存数据为新结构格式"""
         try:
             # 生成新格式的文件路径
-            new_grammar_path = grammar_path.replace('.json', '_new.json')
-            new_vocab_path = vocab_path.replace('.json', '_new.json')
-            new_text_path = text_path.replace('.json', '_new.json')
+            new_grammar_path = grammar_path.replace('.json', '_new_new.json')
+            new_vocab_path = vocab_path.replace('.json', '_new_new.json')
+            new_text_path = text_path.replace('.json', '_new_new.json')
             
             print(f"🔄 保存新结构数据到: {new_grammar_path}, {new_vocab_path}, {new_text_path}")
             
@@ -225,18 +235,34 @@ class DataController:
         """
         vocab_data = []
         for vocab_id, bundle in self.vocab_manager.vocab_bundles.items():
-            vocab = bundle.vocab
-            # 获取第一个例子作为示例
-            example_text = ""
-            if bundle.example:
-                example = bundle.example[0]
-                # 这里可以进一步获取句子的实际内容，暂时使用context_explanation
-                example_text = example.context_explanation
-            
-            # 根据词汇长度或复杂度判断难度
-            difficulty = "简单" if len(vocab.vocab_body) <= 6 else "中等" if len(vocab.vocab_body) <= 10 else "困难"
-            
-            vocab_data.append((vocab.vocab_body, vocab.explanation, example_text, difficulty))
+            if self.use_new_structure:
+                # 新结构：bundle 直接是 VocabExpression
+                vocab = bundle
+                # 获取第一个例子作为示例
+                example_text = ""
+                if vocab.examples:
+                    example = vocab.examples[0]
+                    # 这里可以进一步获取句子的实际内容，暂时使用context_explanation
+                    example_text = example.context_explanation
+                
+                # 根据词汇长度或复杂度判断难度
+                difficulty = "简单" if len(vocab.vocab_body) <= 6 else "中等" if len(vocab.vocab_body) <= 10 else "困难"
+                
+                vocab_data.append((vocab.vocab_body, vocab.explanation, example_text, difficulty))
+            else:
+                # 旧结构：bundle 是 VocabExpressionBundle
+                vocab = bundle.vocab
+                # 获取第一个例子作为示例
+                example_text = ""
+                if bundle.example:
+                    example = bundle.example[0]
+                    # 这里可以进一步获取句子的实际内容，暂时使用context_explanation
+                    example_text = example.context_explanation
+                
+                # 根据词汇长度或复杂度判断难度
+                difficulty = "简单" if len(vocab.vocab_body) <= 6 else "中等" if len(vocab.vocab_body) <= 10 else "困难"
+                
+                vocab_data.append((vocab.vocab_body, vocab.explanation, example_text, difficulty))
         
         return vocab_data
     

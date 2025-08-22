@@ -1,0 +1,192 @@
+{
+  "text_id": 10,
+  "text_title": "Tenth Article",
+  "text_by_sentence": [
+    {
+      "text_id": 10,
+      "sentence_id": 1,
+      "sentence_body": "This is tenth article for testing ID handling.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "sentence_difficulty_level": "easy",
+      "tokens": [
+        {
+          "token_body": "This",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 0,
+          "sentence_token_id": 1,
+          "pos_tag": null,
+          "lemma": "this",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 1,
+          "sentence_token_id": 2,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "is",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 2,
+          "sentence_token_id": 3,
+          "pos_tag": null,
+          "lemma": "is",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 3,
+          "sentence_token_id": 4,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "tenth",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 4,
+          "sentence_token_id": 5,
+          "pos_tag": null,
+          "lemma": "tenth",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 5,
+          "sentence_token_id": 6,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "article",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 6,
+          "sentence_token_id": 7,
+          "pos_tag": null,
+          "lemma": "article",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 7,
+          "sentence_token_id": 8,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "for",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 8,
+          "sentence_token_id": 9,
+          "pos_tag": null,
+          "lemma": "for",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 9,
+          "sentence_token_id": 10,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "testing",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 10,
+          "sentence_token_id": 11,
+          "pos_tag": null,
+          "lemma": "testing",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 11,
+          "sentence_token_id": 12,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "ID",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 12,
+          "sentence_token_id": 13,
+          "pos_tag": null,
+          "lemma": "id",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 13,
+          "sentence_token_id": 14,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "handling",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 14,
+          "sentence_token_id": 15,
+          "pos_tag": null,
+          "lemma": "handling",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "difficulty_level": null,
+          "global_token_id": 15,
+          "sentence_token_id": 16,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 from assistants.sub_assistants.sub_assistant import SubAssistant
 from assistants.sub_assistants.prompt import summarize_dialogue_history_sys_prompt, summarize_dialogue_history_template
-from typing import Optional
+from typing import Optional, Union
 from data_managers.data_classes import Sentence
+from data_managers.data_classes_new import Sentence as NewSentence
 
 class SummarizeDialogueHistoryAssistant(SubAssistant):
     def __init__(self):
@@ -14,7 +15,7 @@ class SummarizeDialogueHistoryAssistant(SubAssistant):
     def build_prompt(
         self,
         dialogue_history: str,
-        sentence: Sentence
+        sentence: Union[Sentence, NewSentence]
     ) -> str:
 
         return summarize_dialogue_history_template.format(
@@ -25,7 +26,7 @@ class SummarizeDialogueHistoryAssistant(SubAssistant):
     def run(
         self,
         dialogue_history: str,
-        sentence: Sentence,
+        sentence: Union[Sentence, NewSentence],
         verbose: bool = False
     ) -> str:
         """

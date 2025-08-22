@@ -1,0 +1,238 @@
+{
+  "1": {
+    "text_id": 1,
+    "text_title": "First Test Text",
+    "text_by_sentence": [
+      {
+        "text_id": 1,
+        "sentence_id": 1,
+        "sentence_body": "This is the first test sentence.",
+        "grammar_annotations": [
+          12,
+          13,
+          14,
+          2
+        ],
+        "vocab_annotations": [
+          6,
+          7,
+          8,
+          9,
+          14,
+          15
+        ],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 2,
+        "sentence_body": "Bei der SPD neu gewählt worden sind Bärbel Bas, gemein­sam mit Lars Klingbeil, zur Vorsit­zenden sowie Tim Klüssen­dorf als General­sekretär der Partei.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 3,
+        "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 4,
+        "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 5,
+        "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 6,
+        "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      }
+    ]
+  },
+  "2": {
+    "text_id": 2,
+    "text_title": "Second Test Text",
+    "text_by_sentence": [
+      {
+        "text_id": 2,
+        "sentence_id": 1,
+        "sentence_body": "This is the second test sentence.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      }
+    ]
+  },
+  "3": {
+    "text_id": 3,
+    "text_title": "Test Text",
+    "text_by_sentence": []
+  },
+  "4": {
+    "text_id": 4,
+    "text_title": "Test Text",
+    "text_by_sentence": []
+  },
+  "5": {
+    "text_id": 5,
+    "text_title": "The Internet and Language Learning",
+    "text_by_sentence": [
+      {
+        "text_id": 5,
+        "sentence_id": 1,
+        "sentence_body": "The internet has revolutionized the way we learn languages.",
+        "grammar_annotations": [
+          1
+        ],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 2,
+        "sentence_body": "With the advent of online platforms, mobile applications, and digital resources, language learning has become more accessible than ever before.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 3,
+        "sentence_body": "Online language learning platforms offer a variety of features that traditional classroom settings cannot provide.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 4,
+        "sentence_body": "These include interactive exercises, real-time feedback, personalized learning paths, and access to native speakers from around the world.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 5,
+        "sentence_body": "One of the most significant advantages of internet-based language learning is the availability of authentic materials.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 6,
+        "sentence_body": "Learners can access real news articles, videos, podcasts, and social media content in their target language.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 7,
+        "sentence_body": "Furthermore, the internet facilitates collaborative learning through online communities and language exchange programs.",
+        "grammar_annotations": [],
+        "vocab_annotations": [
+          13
+        ],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 8,
+        "sentence_body": "Students can connect with peers from different countries, practice conversation skills, and share cultural insights.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 9,
+        "sentence_body": "Although artificial intelligence has been integrated into language learning applications, which has significantly improved the personalization of educational content, many educators still believe that human interaction remains irreplaceable in the learning process.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 5,
+        "sentence_id": 10,
+        "sentence_body": "The research conducted by linguists at prestigious universities, who have analyzed data from over 10,000 language learners across 50 countries, suggests that the most effective learning strategies involve a combination of technology-assisted practice and traditional face-to-face instruction.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      }
+    ]
+  },
+  "6": {
+    "text_id": 6,
+    "text_title": "Test Text",
+    "text_by_sentence": []
+  },
+  "7": {
+    "text_id": 7,
+    "text_title": "Test Text",
+    "text_by_sentence": []
+  },
+  "8": {
+    "text_id": 8,
+    "text_title": "Test Text",
+    "text_by_sentence": []
+  },
+  "9": {
+    "text_id": 9,
+    "text_title": "Language Learning Basics",
+    "text_by_sentence": [
+      {
+        "text_id": 9,
+        "sentence_id": 1,
+        "sentence_body": "Learning a new language is challenging but rewarding.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      },
+      {
+        "text_id": 9,
+        "sentence_id": 2,
+        "sentence_body": "Grammar and vocabulary are essential components of language study.",
+        "grammar_annotations": [],
+        "vocab_annotations": [],
+        "sentence_difficulty_level": null,
+        "tokens": null
+      }
+    ]
+  }
+}

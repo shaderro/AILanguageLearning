@@ -1,8 +1,13 @@
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from data_managers.data_classes import Sentence
+from data_managers.data_classes_new import Sentence as NewSentence
+from assistants.chat_info.selected_token import SelectedToken
 import json
 import chardet
 import os
+
+# 类型别名，支持新旧两种句子类型
+SentenceType = Union[Sentence, NewSentence]
 
 class DialogueRecordBySentence:
     def __init__(self):
@@ -11,25 +16,36 @@ class DialogueRecordBySentence:
         self.messages_history: List[Dict] = []
         self.max_turns: int = 100  # 默认保留最近100条消息
 
-    def add_user_message(self, sentence: Sentence, user_input: str):
+    def add_user_message(self, sentence: SentenceType, user_input: str, selected_token: Optional[SelectedToken] = None):
         key = (sentence.text_id, sentence.sentence_id)
         if key not in self.records:
             self.records[key] = []
-        self.records[key].append({user_input: None})
+        
+        # 创建消息记录，包含selected_token信息
+        message_record = {
+            "user_input": user_input,
+            "ai_response": None,
+            "selected_token": selected_token.to_dict() if selected_token else None
+        }
+        
+        self.records[key].append(message_record)
 
-    def add_ai_response(self, sentence: Sentence, ai_response: str):
+    def add_ai_response(self, sentence: SentenceType, ai_response: str):
         key = (sentence.text_id, sentence.sentence_id)
         if key in self.records and self.records[key]:
             # 补充到最近一条没有 AI 回复的记录中
             for turn in reversed(self.records[key]):
-                for user_question, ai_response_old in turn.items():
-                    if ai_response_old is None:
-                        turn[user_question] = ai_response
-                        return
+                if isinstance(turn, dict) and turn.get("ai_response") is None:
+                    turn["ai_response"] = ai_response
+                    return
         # 如果没有找到，就直接加一个完整条目
-        self.records.setdefault(key, []).append({"[Missing user input]": ai_response})
+        self.records.setdefault(key, []).append({
+            "user_input": "[Missing user input]",
+            "ai_response": ai_response,
+            "selected_token": None
+        })
 
-    def get_records_by_sentence(self, sentence: Sentence) -> List[Dict[str, Optional[str]]]:
+    def get_records_by_sentence(self, sentence: SentenceType) -> List[Dict[str, Optional[str]]]:
         return self.records.get((sentence.text_id, sentence.sentence_id), [])
     
     def to_dict_list(self) -> List[Dict]:
@@ -148,7 +164,7 @@ class DialogueRecordBySentence:
         except json.JSONDecodeError:
             print(f"[Error] Failed to parse JSON from '{path}'.")
 
-    def print_records_by_sentence(self, sentence: Sentence):
+    def print_records_by_sentence(self, sentence: SentenceType):
         print(f"\n📚 对话记录 - 第 {sentence.text_id} 篇 第 {sentence.sentence_id} 句：{sentence.sentence_body}")
         for turn in self.get_records_by_sentence(sentence):
             for user_question, ai_response in turn.items():

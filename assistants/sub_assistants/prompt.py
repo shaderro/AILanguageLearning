@@ -322,3 +322,54 @@ vocab_explanation_template = """
 这是需要解释的词汇表达：
 {vocab_knowledge_point}
 """
+
+# 难度评估相关的 prompt 模板
+difficulty_estimation_system_template_default = """
+你是一个语言学习助手，专门负责评估英语词汇的难度级别。
+你需要根据词汇的复杂性、使用频率、语法结构等因素来判断词汇的难度。
+
+评估标准：
+- easy: 基础词汇，常见词汇，简单语法结构
+- hard: 复杂词汇，专业术语，不常见的表达
+
+请只返回如下格式：
+{{"difficulty": "easy"}} 或 {{"difficulty": "hard"}}
+"""
+
+difficulty_estimation_system_template_specific_standard = """
+你是一个语言学习助手，专门负责评估{language}词汇的难度级别。
+你需要根据词汇的复杂性、使用频率、语法结构等因素来判断词汇的难度。
+
+评估标准：
+- easy: 基础词汇，常见词汇，简单语法结构
+- hard: 复杂词汇，专业术语，不常见的表达
+
+请只返回如下格式：
+{{"difficulty": "easy"}} 或 {{"difficulty": "hard"}}
+"""
+
+assessment_user_template = """
+请评估以下词汇的难度级别：
+
+词汇：{word}
+
+请根据词汇的复杂性、使用频率、语法结构等因素来判断。
+"""
+
+grammar_analysis_sys_prompt = """
+你是一个语法分析助手。请分析给定句子的语法结构并返回 JSON 格式：
+{
+  "explanation": "语法讲解，详细到成分和从句类型",
+  "keywords": ["关键词1", "关键词2", ...],
+}
+要求：
+- keywords 是句子中的关键语法词汇或连接词
+- 只返回 JSON，不要返回其他文字
+"""
+
+grammar_analysis_prompt_template = """
+这是需要分析的句子：
+{sentence}
+这是句子的上下文（如果空则无需考虑。只参考，不需要分析！）：
+{context}
+"""

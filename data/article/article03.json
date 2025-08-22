@@ -1,0 +1,214 @@
+{
+  "text_id": 3,
+  "text_title": "Article 03",
+  "text_by_sentence": [
+    {
+      "text_id": 3,
+      "sentence_id": 1,
+      "sentence_body": "The internet has revolutionized the way we learn languages.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "sentence_difficulty_level": "easy",
+      "tokens": [
+        {
+          "token_body": "The",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 0,
+          "sentence_token_id": 1,
+          "pos_tag": null,
+          "lemma": "the",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 1,
+          "sentence_token_id": 2,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "internet",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 2,
+          "sentence_token_id": 3,
+          "pos_tag": null,
+          "lemma": "internet",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 3,
+          "sentence_token_id": 4,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "has",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 4,
+          "sentence_token_id": 5,
+          "pos_tag": null,
+          "lemma": "ha",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 5,
+          "sentence_token_id": 6,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "revolutionized",
+          "token_type": "text",
+          "difficulty_level": "hard",
+          "global_token_id": 6,
+          "sentence_token_id": 7,
+          "pos_tag": null,
+          "lemma": "revolutionized",
+          "is_grammar_marker": false,
+          "linked_vocab_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 7,
+          "sentence_token_id": 8,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "the",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 8,
+          "sentence_token_id": 9,
+          "pos_tag": null,
+          "lemma": "the",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 9,
+          "sentence_token_id": 10,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "way",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 10,
+          "sentence_token_id": 11,
+          "pos_tag": null,
+          "lemma": "way",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 11,
+          "sentence_token_id": 12,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "we",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 12,
+          "sentence_token_id": 13,
+          "pos_tag": null,
+          "lemma": "we",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 13,
+          "sentence_token_id": 14,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "learn",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 14,
+          "sentence_token_id": 15,
+          "pos_tag": null,
+          "lemma": "learn",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "difficulty_level": null,
+          "global_token_id": 15,
+          "sentence_token_id": 16,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": "languages",
+          "token_type": "text",
+          "difficulty_level": "easy",
+          "global_token_id": 16,
+          "sentence_token_id": 17,
+          "pos_tag": null,
+          "lemma": "language",
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "difficulty_level": null,
+          "global_token_id": 17,
+          "sentence_token_id": 18,
+          "pos_tag": null,
+          "lemma": null,
+          "is_grammar_marker": false,
+          "linked_vocab_id": null
+        }
+      ]
+    }
+  ]
+}

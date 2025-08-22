@@ -3,6 +3,7 @@ from data_managers.data_classes import Sentence
 from data_managers.data_classes_new import Sentence as NewSentence
 from dataclasses import dataclass
 from typing import Union, Optional, List
+from assistants.chat_info.selected_token import SelectedToken
 
 @dataclass
 class GrammarToAdd:
@@ -34,6 +35,7 @@ class SessionState:
     def __init__(self):
         #self.dialogue_history = DialogueHistory(max_turns=max_turns)
         self.current_sentence: Optional[SentenceType] = None
+        self.current_selected_token: Optional[SelectedToken] = None  # 新增：当前选择的token
         self.current_input: Optional[str] = None
         self.current_response: Optional[str] = None
         self.check_relevant_decision: Optional[CheckRelevantDecision] = None
@@ -47,6 +49,12 @@ class SessionState:
         支持新旧两种数据结构。
         """
         self.current_sentence = sentence
+
+    def set_current_selected_token(self, selected_token: SelectedToken):
+        """
+        设置当前用户选择的token。
+        """
+        self.current_selected_token = selected_token
 
     def set_current_input(self, user_input: str):
         """
@@ -80,6 +88,7 @@ class SessionState:
 
     def reset(self):
         self.current_sentence = None
+        self.current_selected_token = None
         self.current_input = None
         self.current_response = None
         self.check_relevant_decision = None

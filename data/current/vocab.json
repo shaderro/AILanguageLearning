@@ -1,0 +1,74 @@
+[
+  {
+    "vocab_id": 1,
+    "vocab_body": "challenging",
+    "explanation": "",
+    "examples": [
+      {
+        "vocab_id": 1,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'challenging' 指的是学习一门新语言可能会遇到困难，需要付出努力和耐心。\"}\n```",
+        "token_indices": [
+          11
+        ]
+      }
+    ],
+    "source": "auto",
+    "is_starred": false
+  },
+  {
+    "vocab_id": 2,
+    "vocab_body": "rewarding",
+    "explanation": "",
+    "examples": [
+      {
+        "vocab_id": 2,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "```json\n{\"explanation\": \"在这句话中，'rewarding' 的意思是学习新语言虽然具有挑战性，但最终会带来满足感和好处，比如掌握一门新技能、能够与更多人交流等。\"}\n```",
+        "token_indices": [
+          15
+        ]
+      }
+    ],
+    "source": "auto",
+    "is_starred": false
+  },
+  {
+    "vocab_id": 3,
+    "vocab_body": "component",
+    "explanation": "",
+    "examples": [
+      {
+        "vocab_id": 3,
+        "text_id": 2,
+        "sentence_id": 1,
+        "context_explanation": "```json\n{\"explanation\": \"在这句话中，'component'指的是语言学习中必不可少的部分或要素，即语法和词汇是语言学习的重要组成部分。\"}\n```",
+        "token_indices": [
+          11
+        ]
+      }
+    ],
+    "source": "auto",
+    "is_starred": false
+  },
+  {
+    "vocab_id": 4,
+    "vocab_body": "revolutionized",
+    "explanation": "",
+    "examples": [
+      {
+        "vocab_id": 4,
+        "text_id": 3,
+        "sentence_id": 1,
+        "context_explanation": "```json\n{\"explanation\": \"在这句话中，'revolutionized' 的意思是互联网彻底改变了我们学习语言的方式，带来了巨大的、根本性的变化。\"}\n```",
+        "token_indices": [
+          7
+        ]
+      }
+    ],
+    "source": "auto",
+    "is_starred": false
+  }
+]

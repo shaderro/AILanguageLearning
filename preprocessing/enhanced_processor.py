@@ -62,10 +62,9 @@ class EnhancedArticleProcessor:
     def _init_difficulty_estimator(self):
         """初始化难度评估器"""
         try:
-            # 这里需要根据你的主项目结构调整导入路径
-            # from src.agents.single_token_difficulty_estimation import SingleTokenDifficultyEstimator
-            # self.difficulty_estimator = SingleTokenDifficultyEstimator()
-            print("⚠️  难度评估器需要根据主项目结构调整导入路径")
+            from preprocessing.single_token_difficulty_estimation import SingleTokenDifficultyEstimator
+            self.difficulty_estimator = SingleTokenDifficultyEstimator()
+            print("✅ 难度评估器初始化成功")
         except ImportError as e:
             print(f"❌ 无法导入难度评估器: {e}")
             self.enable_difficulty_estimation = False
@@ -73,10 +72,9 @@ class EnhancedArticleProcessor:
     def _init_lemma_processor(self):
         """初始化lemma处理器"""
         try:
-            # 这里需要根据你的主项目结构调整导入路径
-            # from src.utils.get_lemma import get_lemma
-            # self.lemma_processor = get_lemma
-            print("⚠️  Lemma处理器需要根据主项目结构调整导入路径")
+            from preprocessing.get_lemma import get_lemma
+            self.lemma_processor = get_lemma
+            print("✅ Lemma处理器初始化成功")
         except ImportError as e:
             print(f"❌ 无法导入lemma处理器: {e}")
             self.lemma_processor = None
@@ -84,11 +82,10 @@ class EnhancedArticleProcessor:
     def _init_vocab_converter(self):
         """初始化词汇转换器"""
         try:
-            # 这里需要根据你的主项目结构调整导入路径
-            # from src.utils.token_to_vocab import TokenToVocabConverter
-            # vocab_data_file = os.path.join(self.output_base_dir, "vocab_data.json")
-            # self.vocab_converter = TokenToVocabConverter(vocab_data_file)
-            print("⚠️  词汇转换器需要根据主项目结构调整导入路径")
+            from preprocessing.token_to_vocab import TokenToVocabConverter
+            vocab_data_file = os.path.join(self.output_base_dir, "vocab_data.json")
+            self.vocab_converter = TokenToVocabConverter(vocab_data_file)
+            print("✅ 词汇转换器初始化成功")
         except ImportError as e:
             print(f"❌ 无法导入词汇转换器: {e}")
             self.enable_vocab_explanation = False
@@ -115,13 +112,29 @@ class EnhancedArticleProcessor:
             # 调用难度评估器
             difficulty_result = self.difficulty_estimator.run(token_body, verbose=False)
             
-            # 清理结果，确保只返回 "easy" 或 "hard"
-            difficulty_result = difficulty_result.strip().lower()
-            if difficulty_result in ["easy", "hard"]:
-                return difficulty_result
-            else:
-                print(f"⚠️  警告：token '{token_body}' 的难度评估结果格式异常: '{difficulty_result}'")
-                return "easy"  # 默认返回easy
+            # 处理返回结果
+            if isinstance(difficulty_result, dict) and 'difficulty' in difficulty_result:
+                difficulty = difficulty_result['difficulty'].lower()
+                if difficulty in ['easy', 'hard']:
+                    return difficulty
+            elif isinstance(difficulty_result, str):
+                # 尝试解析JSON字符串
+                try:
+                    import json
+                    parsed = json.loads(difficulty_result)
+                    if isinstance(parsed, dict) and 'difficulty' in parsed:
+                        difficulty = parsed['difficulty'].lower()
+                        if difficulty in ['easy', 'hard']:
+                            return difficulty
+                except json.JSONDecodeError:
+                    pass
+                # 尝试直接匹配
+                difficulty_result_clean = difficulty_result.strip().lower()
+                if difficulty_result_clean in ['easy', 'hard']:
+                    return difficulty_result_clean
+            
+            print(f"⚠️  警告：token '{token_body}' 的难度评估结果格式异常: '{difficulty_result}'")
+            return "easy"  # 默认返回easy
                 
         except Exception as e:
             print(f"❌ 评估token '{token_body}' 难度时发生错误: {e}")
@@ -161,7 +174,7 @@ class EnhancedArticleProcessor:
     def _call_vocab_explanation(self, sentence_body: str, vocab_body: str) -> Optional[str]:
         """调用词汇解释Agent，失败则返回None"""
         try:
-            from src.agents.vocab_explanation import VocabExplanationAssistant  # type: ignore
+            from assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant  # type: ignore
             class _S:  # 轻量对象，满足 .sentence_body 访问
                 def __init__(self, body):
                     self.sentence_body = body
@@ -179,7 +192,7 @@ class EnhancedArticleProcessor:
     def _call_vocab_example_explanation(self, sentence_body: str, vocab_body: str) -> Optional[str]:
         """调用上下文例句解释Agent，失败则返回句子本身"""
         try:
-            from src.agents.vocab_example_explanation import VocabExampleExplanationAssistant  # type: ignore
+            from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant  # type: ignore
             class _S:
                 def __init__(self, body):
                     self.sentence_body = body

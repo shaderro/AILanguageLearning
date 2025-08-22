@@ -1,7 +1,8 @@
 from assistants.sub_assistants.sub_assistant import SubAssistant
 from assistants.sub_assistants.prompt import grammar_example_explanation_sys_prompt,grammar_example_explanation_template
-from typing import Optional
+from typing import Optional, Union
 from data_managers.data_classes import Sentence
+from data_managers.data_classes_new import Sentence as NewSentence
 
 class GrammarExampleExplanationAssistant(SubAssistant):
     def __init__(self):
@@ -14,7 +15,7 @@ class GrammarExampleExplanationAssistant(SubAssistant):
     def build_prompt(
         self,
         grammar: str,
-        sentence: Sentence
+        sentence: Union[Sentence, NewSentence]
     ) -> str:
         return grammar_example_explanation_template.format(
             quoted_sentence=sentence.sentence_body,
@@ -24,7 +25,7 @@ class GrammarExampleExplanationAssistant(SubAssistant):
     def run(
         self,
         grammar: str,
-        sentence: Sentence
+        sentence: Union[Sentence, NewSentence]
     ) -> str:
         """
         执行对话历史总结。

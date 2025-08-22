@@ -1,9 +1,10 @@
 from data_managers.data_classes import Sentence
 from data_managers.data_classes_new import Sentence as NewSentence
 from assistants.sub_assistants.summarize_dialogue_history import SummarizeDialogueHistoryAssistant
+from assistants.chat_info.selected_token import SelectedToken
 import json
 import chardet
-from typing import Union
+from typing import Union, Optional
 from datetime import datetime
 
 # 类型别名，支持新旧两种句子类型
@@ -16,15 +17,27 @@ class DialogueHistory:
         self.summary = str()
         self.summarize_dialogue_assistant = SummarizeDialogueHistoryAssistant()
 
-    def add_message(self, user_input: str, ai_response: str, quoted_sentence: SentenceType):
+    def add_message(self, user_input: str, ai_response: str, quoted_sentence: SentenceType, selected_token: Optional[SelectedToken] = None):
         """
-        添加对话消息到历史记录，支持新旧两种数据结构
+        添加对话消息到历史记录，支持新旧两种数据结构和选择的token
+        
+        Args:
+            user_input: 用户输入
+            ai_response: AI响应
+            quoted_sentence: 引用的句子
+            selected_token: 用户选择的token（可选）
         """
-        self.messages_history.append({
+        message_data = {
             "user": user_input,
             "ai": ai_response,
             "quote": quoted_sentence
-        })
+        }
+        
+        # 如果提供了selected_token，添加到消息中
+        if selected_token:
+            message_data["selected_token"] = selected_token.to_dict()
+        
+        self.messages_history.append(message_data)
         self.keep_in_max_turns()
 
     def _summarize_and_clear(self):
