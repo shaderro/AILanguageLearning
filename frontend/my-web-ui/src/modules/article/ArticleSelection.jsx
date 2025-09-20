@@ -1,79 +1,37 @@
 import { useState } from 'react'
 import ArticleList from './components/ArticleList'
 import FilterBar from '../shared/components/FilterBar'
+import { useArticles } from '../../hooks/useApi'
 
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
-  // 示例文章数据
-  const [articles] = useState([
-    {
-      id: 'react-basics',
-      title: 'React 基础教程',
-      description: '学习 React 的核心概念和基本用法，包括组件、状态管理、生命周期等基础知识。适合初学者入门学习。',
-      difficulty: 'Beginner',
-      wordCount: 1500,
-      estimatedTime: '15 min',
-      category: 'Programming',
-      tags: ['React', 'JavaScript', 'Frontend', 'Components']
-    },
-    {
-      id: 'fastapi-intro',
-      title: 'FastAPI 入门指南',
-      description: '快速构建高性能的 Python Web API，学习现代 Python 后端开发的最佳实践。',
-      difficulty: 'Intermediate',
-      wordCount: 2000,
-      estimatedTime: '20 min',
-      category: 'Programming',
-      tags: ['Python', 'FastAPI', 'Backend', 'API']
-    },
-    {
-      id: 'ai-fundamentals',
-      title: '人工智能基础',
-      description: '探索人工智能的基本概念，包括机器学习、深度学习、神经网络等核心技术的介绍。',
-      difficulty: 'Advanced',
-      wordCount: 2500,
-      estimatedTime: '25 min',
-      category: 'Technology',
-      tags: ['AI', 'Machine Learning', 'Deep Learning', 'Neural Networks']
-    },
-    {
-      id: 'web-security',
-      title: 'Web 安全基础',
-      description: '了解 Web 应用安全的基本概念，学习如何保护你的应用免受常见的安全威胁。',
-      difficulty: 'Intermediate',
-      wordCount: 1800,
-      estimatedTime: '18 min',
-      category: 'Technology',
-      tags: ['Security', 'Web', 'Authentication', 'Encryption']
-    },
-    {
-      id: 'data-science-intro',
-      title: '数据科学入门',
-      description: '数据科学的基础知识，包括数据收集、清洗、分析和可视化的完整流程。',
-      difficulty: 'Beginner',
-      wordCount: 2200,
-      estimatedTime: '22 min',
-      category: 'Science',
-      tags: ['Data Science', 'Python', 'Statistics', 'Visualization']
-    },
-    {
-      id: 'blockchain-basics',
-      title: '区块链技术基础',
-      description: '深入了解区块链技术的原理和应用，包括比特币、以太坊等主流区块链平台。',
-      difficulty: 'Advanced',
-      wordCount: 2800,
-      estimatedTime: '28 min',
-      category: 'Technology',
-      tags: ['Blockchain', 'Cryptocurrency', 'Bitcoin', 'Ethereum']
-    }
-  ])
+  const { data, isLoading, isError, error } = useArticles()
+  const summaries = Array.isArray(data?.data) ? data.data : []
+  // 将后端摘要映射为列表卡片需要的结构
+  const mappedArticles = summaries.map((s) => ({
+    id: s.text_id,
+    title: s.text_title || `Article ${s.text_id}`,
+    description: `Sentences: ${s.total_sentences} • Tokens: ${s.total_tokens} • Selectable: ${s.text_tokens}`,
+    difficulty: 'N/A',
+    wordCount: s.total_tokens || 0,
+    estimatedTime: `${Math.max(1, Math.ceil((s.total_sentences || 1) / 5))} min`,
+    category: 'Article',
+    tags: []
+  }))
 
-  const [filteredArticles, setFilteredArticles] = useState(articles)
+  const [filteredArticles, setFilteredArticles] = useState(mappedArticles)
+
+  // 同步远端变化
+  if (filteredArticles !== mappedArticles && summaries.length > 0 && filteredArticles.length === 0) {
+    // 初次加载后填充一次
+    // 注：保持简单，避免引入 useEffect 以最少改动接入
+    setFilteredArticles(mappedArticles)
+  }
 
   const handleFilterChange = (filterId, value) => {
     console.log('Filter changed:', filterId, value)
     
     // 简单的筛选逻辑
-    let filtered = [...articles]
+    let filtered = [...mappedArticles]
     
     if (filterId === 'category' && value !== 'all') {
       filtered = filtered.filter(article => 
@@ -126,10 +84,18 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
             </p>
           </div>
 
+          {/* Loading / Error */}
+          {isLoading && (
+            <div className="text-center text-gray-600 py-8">Loading articles...</div>
+          )}
+          {isError && (
+            <div className="text-center text-red-600 py-8">{String(error)}</div>
+          )}
+
           {/* Article Count */}
           <div className="mb-6">
             <p className="text-gray-600">
-              Showing {filteredArticles.length} of {articles.length} articles
+              Showing {filteredArticles.length} of {mappedArticles.length} articles
             </p>
           </div>
 

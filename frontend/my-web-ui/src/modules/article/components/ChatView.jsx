@@ -1,24 +1,24 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 
 export default function ChatView({ quotedText, onClearQuote, disabled = false }) {
   const [messages, setMessages] = useState([
-    { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
+    { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() },
+    { id: 2, text: "这是一条测试消息，用来测试滚动功能是否正常工作。", isUser: true, timestamp: new Date() },
+    { id: 3, text: "另一条测试消息，确保聊天框有足够的内容来测试滚动。", isUser: false, timestamp: new Date() },
+    { id: 4, text: "继续添加更多消息来测试滚动功能。", isUser: true, timestamp: new Date() },
+    { id: 5, text: "这是第五条消息，应该足够测试滚动功能了。", isUser: false, timestamp: new Date() },
+    { id: 6, text: "第六条消息，继续测试滚动。", isUser: true, timestamp: new Date() },
+    { id: 7, text: "第七条消息，确保有足够的内容。", isUser: false, timestamp: new Date() },
+    { id: 8, text: "第八条消息，测试滚动功能。", isUser: true, timestamp: new Date() },
+    { id: 9, text: "第九条消息，继续测试。", isUser: false, timestamp: new Date() },
+    { id: 10, text: "第十条消息，应该足够测试滚动功能了。", isUser: true, timestamp: new Date() }
   ])
   const [inputText, setInputText] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const messagesEndRef = useRef(null)
-
-  // Auto scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
 
   const handleSendMessage = () => {
     if (inputText.trim() === '') return
@@ -53,19 +53,19 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       // Show toast notice after AI reply
       setTimeout(() => {
         const knowledgePoints = [
-          'React组件化开发',
-          '虚拟DOM技术',
-          'JSX语法特性',
-          '状态管理原理',
+          'React 组件化开发',
+          '虚拟 DOM 技术',
+          'JSX 语法要点',
+          '状态管理基础',
           '生命周期钩子',
-          '事件处理机制',
+          '事件处理范式',
           '条件渲染技巧',
           '列表渲染优化'
         ]
         const randomPoint = knowledgePoints[Math.floor(Math.random() * knowledgePoints.length)]
-        setToastMessage(`${randomPoint}知识点已总结加入列表`)
+        setToastMessage(`${randomPoint} 知识点已总结并加入列表`)
         setShowToast(true)
-      }, 500) // 延迟500ms显示toast
+      }, 500) // 延迟 500ms 显示 toast
     }, 1000)
   }
 
@@ -82,7 +82,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
   }
 
   const handleSuggestedQuestionSelect = (question) => {
-    // 自动发送选中的问题
+    // 自动发送已选择的问题
     const userMessage = {
       id: Date.now(),
       text: question,
@@ -93,7 +93,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
     
     setMessages(prev => [...prev, userMessage])
     
-    // Clear quote after sending
+    // 发送后清空引用
     if (onClearQuote) {
       onClearQuote()
     }
@@ -102,7 +102,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
     setTimeout(() => {
       const autoReply = {
         id: Date.now() + 1,
-        text: `关于"${quotedText}"，${question} 这是一个很好的问题！让我为你详细解释一下...`,
+        text: `关于"${quotedText}"，你问的是「${question}」。这是一个很好的问题，我来为你详细解释`,
         isUser: false,
         timestamp: new Date()
       }
@@ -111,17 +111,17 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       // Show toast notice after AI reply
       setTimeout(() => {
         const knowledgePoints = [
-          'React组件化开发',
-          '虚拟DOM技术',
-          'JSX语法特性',
-          '状态管理原理',
+          'React 组件化开发',
+          '虚拟 DOM 技术',
+          'JSX 语法要点',
+          '状态管理基础',
           '生命周期钩子',
-          '事件处理机制',
+          '事件处理范式',
           '条件渲染技巧',
           '列表渲染优化'
         ]
         const randomPoint = knowledgePoints[Math.floor(Math.random() * knowledgePoints.length)]
-        setToastMessage(`${randomPoint}知识点已总结加入列表`)
+        setToastMessage(`${randomPoint} 知识点已总结并加入列表`)
         setShowToast(true)
       }, 500)
     }, 1000)
@@ -157,7 +157,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 max-h-[calc(100vh-200px)]">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -177,7 +177,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
                     ? 'bg-blue-400 text-blue-50' 
                     : 'bg-gray-200 text-gray-600'
                 }`}>
-                  <div className="font-medium mb-1">引用：</div>
+                  <div className="font-medium mb-1">引用</div>
                   <div className="italic">"{message.quote}"</div>
                 </div>
               )}
@@ -197,20 +197,11 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       {/* Quote Display */}
       {quotedText && (
         <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <div className="flex-1">
-              <div className="text-xs text-blue-600 font-medium mb-1">引用：</div>
+              <div className="text-xs text-blue-600 font-medium mb-1">引用</div>
               <div className="text-sm text-blue-800 italic">"{quotedText}"</div>
             </div>
-            <button
-              onClick={onClearQuote}
-              className="ml-2 p-1 text-blue-500 hover:text-blue-700 rounded"
-              title="清除引用"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
         </div>
       )}
@@ -232,7 +223,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={disabled ? "聊天暂时不可用" : (quotedText ? `回复引用："${quotedText}"` : "输入消息...")}
+            placeholder={disabled ? "聊天暂时不可用" : (quotedText ? `回复引用："${quotedText}"` : "输入消息...") }
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={disabled}
           />
@@ -255,4 +246,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       />
     </div>
   )
-} 
+}
+
+
+

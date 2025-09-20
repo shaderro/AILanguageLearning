@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useVocabList, useWordInfo } from '../../hooks/useApi'
-import WordCard from './components/WordCard'
-import WordCardDetail from './components/WordCardDetail'
-import StartReviewButton from '../shared/components/StartReviewButton'
-import ReviewCard from './components/ReviewCard'
-import ReviewResults from './components/ReviewResults'
+import LearnPageLayout from '../shared/components/LearnPageLayout'
+import LearnCard from '../shared/components/LearnCard'
+import LearnDetailPage from '../shared/components/LearnDetailPage'
+import ReviewCard from '../shared/components/ReviewCard'
+import ReviewResults from '../shared/components/ReviewResults'
 
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
@@ -35,20 +35,27 @@ function WordDemo() {
     }
   }
 
-  const handleReviewAnswer = (isCorrect) => {
+  const handleReviewAnswer = (choice) => {
     const currentWord = reviewWords[currentReviewIndex]
-    setReviewResults(prev => [...prev, { word: currentWord, isCorrect }])
-    
+    setReviewResults((prev) => [...prev, { item: currentWord, choice }])
+  }
+
+  const handleNextReview = () => {
     if (currentReviewIndex < reviewWords.length - 1) {
-      setCurrentReviewIndex(prev => prev + 1)
+      setCurrentReviewIndex((prev) => prev + 1)
     } else {
-      setIsReviewMode(false)
+      // 显示结果页：保持复习模式为真，但将索引推进到长度以触发结果视图
+      setCurrentReviewIndex(reviewWords.length)
     }
   }
 
   const handleBackToWords = () => {
     setIsReviewMode(false)
     setSelectedWord(null)
+  }
+
+  const handleFilterChange = (filterId, value) => {
+    // 这里可以根据需要在本地过滤 vocab 列表
   }
 
   if (isLoading) {
@@ -67,74 +74,82 @@ function WordDemo() {
     )
   }
 
+  // 复习模式
   if (isReviewMode) {
     if (currentReviewIndex < reviewWords.length) {
       return (
-        <ReviewCard
-          word={reviewWords[currentReviewIndex]}
-          onAnswer={handleReviewAnswer}
-          currentIndex={currentReviewIndex}
-          totalCount={reviewWords.length}
-        />
-      )
-    } else {
-      return (
-        <ReviewResults
-          results={reviewResults}
-          onBackToWords={handleBackToWords}
-        />
+        <div className="h-full bg-gray-100 p-8">
+          <div className="max-w-6xl mx-auto">
+            <ReviewCard
+              type="vocab"
+              item={reviewWords[currentReviewIndex]}
+              index={currentReviewIndex}
+              total={reviewWords.length}
+              onAnswer={handleReviewAnswer}
+              onNext={handleNextReview}
+            />
+          </div>
+        </div>
       )
     }
-  }
-
-  if (selectedWord) {
     return (
-      <WordCardDetail
-        word={selectedWord}
-        onBack={() => setSelectedWord(null)}
-      />
+      <div className="h-full bg-gray-100 p-8">
+        <div className="max-w-6xl mx-auto">
+          <ReviewResults results={reviewResults} onBack={handleBackToWords} />
+        </div>
+      </div>
     )
   }
 
-  return (
-    <div className="h-full bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">词汇学习</h1>
-          <StartReviewButton onClick={handleStartReview} />
-        </div>
-
-        {/* 搜索功能 */}
-        <div className="mb-6">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="搜索词汇..."
-              className="flex-1 px-4 py-2 border rounded-lg"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          {wordInfo.isSuccess && wordInfo.data.status === 'success' && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold">{wordInfo.data.data.word}</h3>
-              <p>{wordInfo.data.data.definition || '暂无定义'}</p>
-            </div>
-          )}
-        </div>
-
-        {/* 词汇列表 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vocabData?.data?.map((word) => (
-            <WordCard
-              key={word.vocab_id}
-              word={word}
-              onClick={() => handleWordSelect(word)}
-            />
-          ))}
+  // 详情页面
+  if (selectedWord) {
+    return (
+      <div className="h-full bg-gray-100 p-8">
+        <div className="max-w-6xl mx-auto">
+          <LearnDetailPage
+            type="vocab"
+            data={selectedWord}
+            onBack={() => setSelectedWord(null)}
+          />
         </div>
       </div>
-    </div>
+    )
+  }
+
+  // 主列表页面（使用统一布局）
+  const list = (vocabData?.data || [])
+    .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
+
+  return (
+    <LearnPageLayout
+      title="词汇学习"
+      onStartReview={handleStartReview}
+      onSearch={(value) => setSearchTerm(value)}
+      onFilterChange={handleFilterChange}
+      showFilters={true}
+      showSearch={true}
+      backgroundClass="bg-gray-100"
+    >
+      {/* 搜索建议区域（可选） */}
+      {wordInfo.isSuccess && wordInfo.data?.status === 'success' && (
+        <div className="col-span-1 md:col-span-2 lg:col-span-3">
+          <div className="mt-0 mb-4 p-4 bg-blue-50 rounded-lg">
+            <h3 className="font-semibold">{wordInfo.data.data.word}</h3>
+            <p>{wordInfo.data.data.definition || '暂无定义'}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 词汇列表 */}
+      {list.map((word) => (
+        <LearnCard
+          key={word.vocab_id}
+          type="vocab"
+          data={word}
+          onClick={() => handleWordSelect(word)}
+        />
+      ))}
+    </LearnPageLayout>
   )
 }
 

@@ -1,81 +1,91 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
+import { ApiDemo } from './components/ApiDemo'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
 import ArticleSelection from './modules/article/ArticleSelection'
 import ArticleChatView from './modules/article/ArticleChatView'
-import Navigation from './modules/shared/components/Navigation'
-import { ApiDemo } from './components/ApiDemo'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('apiDemo') // 'apiDemo', 'wordDemo', 'grammarDemo', or 'article'
-  const [selectedArticle, setSelectedArticle] = useState(null)
+  const [currentPage, setCurrentPage] = useState('article')
+  const [selectedArticleId, setSelectedArticleId] = useState(null)
   const [isUploadMode, setIsUploadMode] = useState(false)
 
-  const handlePageChange = (pageId) => {
-    if (pageId === 'article') {
-      // 如果当前在文章聊天页面，点击Article会返回文章选择页面
-      setSelectedArticle(null)
-    }
-    setCurrentPage(pageId)
-  }
-
-  const handleArticleSelect = (articleId) => {
-    setSelectedArticle(articleId)
-  }
-
-  const handleUploadNew = () => {
-    setIsUploadMode(true)
-  }
-
-  const handleBackFromUpload = () => {
-    setIsUploadMode(false)
-  }
-
-  const handleUploadComplete = () => {
-    setIsUploadMode(false)
-    setSelectedArticle('uploaded-article') // 设置一个虚拟的文章ID
-  }
+  const navButton = (id, label) => (
+    <button
+      onClick={() => setCurrentPage(id)}
+      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+        currentPage === id
+          ? 'border-blue-500 text-gray-900'
+          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+      }`}
+    >
+      {label}
+    </button>
+  )
 
   return (
-    <div className="min-h-screen">
-      {/* Navigation Bar */}
-      <Navigation 
-        currentPage={currentPage} 
-        onPageChange={handlePageChange} 
-      />
+    <div className="h-screen bg-gray-100 overflow-hidden">
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <h1 className="text-xl font-bold text-gray-900">Language Learning App</h1>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                {navButton('apiDemo', 'API Demo')}
+                {navButton('wordDemo', 'Word Demo')}
+                {navButton('grammarDemo', 'Grammar Demo')}
+                {navButton('article', 'Article')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Page Content */}
-      <div className="h-[calc(100vh-4rem)]">
-        {currentPage === 'apiDemo' ? (
-          <ApiDemo />
-        ) : currentPage === 'wordDemo' ? (
-          <WordDemo />
-        ) : currentPage === 'grammarDemo' ? (
-          <GrammarDemo />
-        ) : currentPage === 'article' ? (
-          selectedArticle ? (
-            <div className="h-full bg-gray-100 p-8">
-              <ArticleChatView 
-                articleId={selectedArticle} 
-                onBack={() => setSelectedArticle(null)}
-              />
+      <div className="max-w-7xl mx-auto h-full sm:px-6 lg:px-8">
+        <div className="px-4 h-full sm:px-0">
+          {/* Pages */}
+          {currentPage === 'apiDemo' && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <ApiDemo />
             </div>
-          ) : isUploadMode ? (
-            <div className="h-full bg-gray-100 p-8">
-              <ArticleChatView 
-                articleId="upload-mode" 
-                onBack={handleBackFromUpload}
-                isUploadMode={true}
-                onUploadComplete={handleUploadComplete}
+          )}
+
+          {currentPage === 'wordDemo' && <WordDemo />}
+
+          {currentPage === 'grammarDemo' && <GrammarDemo />}
+
+          {currentPage === 'article' && (
+            selectedArticleId ? (
+              <ArticleChatView
+                articleId={selectedArticleId}
+                isUploadMode={isUploadMode}
+                onBack={() => {
+                  setSelectedArticleId(null)
+                  setIsUploadMode(false)
+                }}
+                onUploadComplete={() => setIsUploadMode(false)}
               />
-            </div>
-          ) : (
-            <ArticleSelection onArticleSelect={handleArticleSelect} onUploadNew={handleUploadNew} />
-          )
-        ) : null}
+            ) : (
+              <ArticleSelection
+                onArticleSelect={(id) => {
+                  setSelectedArticleId(id)
+                  setIsUploadMode(false)
+                }}
+                onUploadNew={() => {
+                  setSelectedArticleId('upload')
+                  setIsUploadMode(true)
+                }}
+              />
+            )
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
 export default App
+
+

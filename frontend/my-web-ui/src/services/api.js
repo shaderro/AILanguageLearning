@@ -1,60 +1,83 @@
-import axios from 'axios';
+import axios from "axios";
 
-// åˆ›å»º axios å®žä¾‹
+// ´´½¨ axios ÊµÀý
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: "http://localhost:8000",
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// è¯·æ±‚æ‹¦æˆªå™¨
+// ÇëÇóÀ¹½ØÆ÷
 api.interceptors.request.use(
   (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    console.log("API Request:", config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
 
-// å“åº”æ‹¦æˆªå™¨
+// ÏìÓ¦À¹½ØÆ÷
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url);
+    console.log("API Response:", response.status, response.config.url);
     return response.data;
   },
   (error) => {
-    console.error('API Response Error:', error.response?.status, error.message);
+    console.error("API Response Error:", error?.response?.status, error?.message);
     return Promise.reject(error);
   }
 );
 
-// API å‡½æ•°
+// API º¯Êý
 export const apiService = {
-  // å¥åº·æ£€æŸ¥
-  healthCheck: () => api.get('/api/health'),
-  
-  // æŒ‰è¯æŸ¥è¯¢
+  // ½¡¿µ¼ì²é
+  healthCheck: () => api.get("/api/health"),
+
+  // °´´Ê²éÑ¯
   getWordInfo: (text) => api.get(`/api/word?text=${encodeURIComponent(text)}`),
-  
-  // èŽ·å–è¯æ±‡åˆ—è¡¨
-  getVocabList: () => api.get('/api/vocab'),
-  
-  // èŽ·å–å•ä¸ªè¯æ±‡è¯¦æƒ…
+
+  // »ñÈ¡´Ê»ãÁÐ±í
+  getVocabList: () => api.get("/api/vocab"),
+
+  // »ñÈ¡µ¥¸ö´Ê»ãÏêÇé
   getVocabById: (id) => api.get(`/api/vocab/${id}`),
-  
-  // èŽ·å–è¯­æ³•è§„åˆ™åˆ—è¡¨
-  getGrammarList: () => api.get('/api/grammar'),
-  
-  // èŽ·å–å•ä¸ªè¯­æ³•è§„åˆ™è¯¦æƒ…
+
+  // »ñÈ¡Óï·¨¹æÔòÁÐ±í
+  getGrammarList: () => api.get("/api/grammar"),
+
+  // »ñÈ¡µ¥¸öÓï·¨¹æÔòÏêÇé
   getGrammarById: (id) => api.get(`/api/grammar/${id}`),
-  
-  // èŽ·å–ç»Ÿè®¡æ•°æ®
-  getStats: () => api.get('/api/stats'),
+
+  // »ñÈ¡Í³¼ÆÊý¾Ý
+  getStats: () => api.get("/api/stats"),
+
+  // »ñÈ¡ÎÄÕÂÁÐ±íÕªÒª
+  getArticlesList: () => api.get("/api/articles"),
+
+  // »ñÈ¡ÎÄÕÂÏêÇé
+  getArticleById: (id) => api.get(`/api/articles/${id}`),
+
+  // ÐÂÔö£º»ñÈ¡´Ê»ã½âÊÍ
+  getVocabExplanation: (word, context = "") => {
+    // Ä¿Ç°·µ»Ø²âÊÔÊý¾Ý
+    return Promise.resolve({
+      word: word,
+      definition: "This is a test explanation",
+      examples: [],
+      difficulty: "medium",
+      lemma: word.toLowerCase(),
+      pronunciation: `/${word.toLowerCase()}/`,
+      partOfSpeech: "noun",
+      etymology: `The word "${word}" has interesting historical origins.`,
+      synonyms: [],
+      antonyms: []
+    });
+  }
 };
 
 export default api;

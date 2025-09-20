@@ -15,7 +15,7 @@ class DataService:
     
     def _init_file_mode(self):
         """文件读取模式：直接读取 JSON 文件"""
-        print("📁 使用文件读取模式：直接读取 JSON 文件")
+        print("使用文件读取模式：直接读取 JSON 文件")
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # 修正路径：从 frontend/my-web-ui/backend 到 backend/data/current
         self.vocab_file_path = os.path.join(current_dir, "..", "..", "..", "backend", "data", "current", "vocab.json")

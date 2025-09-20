@@ -14,6 +14,10 @@ export const queryKeys = {
     detail: (id) => ['grammar', id],
   },
   stats: ['stats'],
+  articles: {
+    all: ['articles'],
+    detail: (id) => ['articles', id],
+  },
 };
 
 // 健康检查 Hook
@@ -90,6 +94,7 @@ export const useRefreshData = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.vocab.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.grammar.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.stats });
+    queryClient.invalidateQueries({ queryKey: queryKeys.articles.all });
   };
   
   const refreshVocab = () => {
@@ -99,10 +104,34 @@ export const useRefreshData = () => {
   const refreshGrammar = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.grammar.all });
   };
+
+  const refreshArticles = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.articles.all });
+  };
   
   return {
     refreshAll,
     refreshVocab,
     refreshGrammar,
+    refreshArticles,
   };
+};
+
+// 获取文章列表 Hook
+export const useArticles = () => {
+  return useQuery({
+    queryKey: queryKeys.articles.all,
+    queryFn: apiService.getArticlesList,
+    staleTime: 5 * 60 * 1000, // 5分钟
+  });
+};
+
+// 获取文章详情 Hook
+export const useArticle = (id) => {
+  return useQuery({
+    queryKey: queryKeys.articles.detail(id),
+    queryFn: () => apiService.getArticleById(id),
+    enabled: !!id, // 只有当 id 存在时才执行查询
+    staleTime: 10 * 60 * 1000, // 10分钟
+  });
 };

@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Explanation Feature Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Vocab Explanation Feature Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Feature Overview</h2>
+            <div class="space-y-3 text-gray-600">
+                <div class="flex items-start">
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-3">1</span>
+                    <div>
+                        <strong>Single Token Selection:</strong> Click on any text token to select it
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-3">2</span>
+                    <div>
+                        <strong>Vocab Explanation Button:</strong> When a single text token is selected, a "vocab explanation" button appears below it
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-3">3</span>
+                    <div>
+                        <strong>Click to Get Explanation:</strong> Click the button to fetch vocabulary explanation (currently shows fake data)
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-3">4</span>
+                    <div>
+                        <strong>Hover for Quick View:</strong> After getting explanation, hover over the token to see a quick tooltip
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Implementation Details</h2>
+            <div class="space-y-3 text-gray-600">
+                <div>
+                    <strong>Components Added:</strong>
+                    <ul class="list-disc list-inside mt-2 ml-4">
+                        <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">VocabExplanationButton</code> - Button component for getting explanations</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">VocabTooltip</code> - Hover tooltip for quick explanation view</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>API Integration:</strong>
+                    <ul class="list-disc list-inside mt-2 ml-4">
+                        <li>Added <code class="bg-gray-100 px-2 py-1 rounded text-sm">getVocabExplanation</code> function to API service</li>
+                        <li>Currently returns fake data, ready for real API integration</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>State Management:</strong>
+                    <ul class="list-disc list-inside mt-2 ml-4">
+                        <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">vocabExplanations</code> - Map to store explanations by token ID</li>
+                        <li><code class="bg-gray-100 px-2 py-1 rounded text-sm">hoveredTokenId</code> - Track which token is being hovered</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">How to Test</h2>
+            <div class="space-y-3 text-gray-600">
+                <div class="flex items-start">
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-3">Step 1</span>
+                    <div>Start the frontend application: <code class="bg-gray-100 px-2 py-1 rounded text-sm">npm run dev</code></div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-3">Step 2</span>
+                    <div>Navigate to an article and click on any text token (word)</div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-3">Step 3</span>
+                    <div>Look for the blue "vocab explanation" button that appears below the selected token</div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-3">Step 4</span>
+                    <div>Click the button to see the vocabulary explanation (fake data for now)</div>
+                </div>
+                <div class="flex items-start">
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-3">Step 5</span>
+                    <div>After getting explanation, hover over the token to see a quick tooltip</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h3 class="font-semibold text-yellow-800 mb-2">Note:</h3>
+            <p class="text-yellow-700 text-sm">
+                The vocabulary explanation feature is now implemented with fake data. 
+                To connect to real vocabulary explanation APIs, update the <code class="bg-yellow-100 px-1 py-0.5 rounded text-xs">getVocabExplanation</code> 
+                function in <code class="bg-yellow-100 px-1 py-0.5 rounded text-xs">src/services/api.js</code> to call your backend API.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

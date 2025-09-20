@@ -1,0 +1,478 @@
+{
+  "text_id": 1,
+  "text_title": "Basic Test",
+  "sentences": [
+    {
+      "sentence_id": 1,
+      "sentence_body": "This is a test article for demonstrating advanced features.",
+      "tokens": [
+        {
+          "token_body": "This",
+          "token_type": "text",
+          "global_token_id": 0,
+          "sentence_token_id": 1,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1,
+          "sentence_token_id": 2,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "is",
+          "token_type": "text",
+          "global_token_id": 2,
+          "sentence_token_id": 3,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 3,
+          "sentence_token_id": 4,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "a",
+          "token_type": "text",
+          "global_token_id": 4,
+          "sentence_token_id": 5,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 5,
+          "sentence_token_id": 6,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "test",
+          "token_type": "text",
+          "global_token_id": 6,
+          "sentence_token_id": 7,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 7,
+          "sentence_token_id": 8,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "article",
+          "token_type": "text",
+          "global_token_id": 8,
+          "sentence_token_id": 9,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 9,
+          "sentence_token_id": 10,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "for",
+          "token_type": "text",
+          "global_token_id": 10,
+          "sentence_token_id": 11,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 11,
+          "sentence_token_id": 12,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "demonstrating",
+          "token_type": "text",
+          "global_token_id": 12,
+          "sentence_token_id": 13,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 13,
+          "sentence_token_id": 14,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "advanced",
+          "token_type": "text",
+          "global_token_id": 14,
+          "sentence_token_id": 15,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 15,
+          "sentence_token_id": 16,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "features",
+          "token_type": "text",
+          "global_token_id": 16,
+          "sentence_token_id": 17,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 17,
+          "sentence_token_id": 18,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        }
+      ],
+      "token_count": 18
+    },
+    {
+      "sentence_id": 2,
+      "sentence_body": "The word \"revolutionized\" should be marked as hard difficulty.",
+      "tokens": [
+        {
+          "token_body": "The",
+          "token_type": "text",
+          "global_token_id": 18,
+          "sentence_token_id": 1,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 19,
+          "sentence_token_id": 2,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "word",
+          "token_type": "text",
+          "global_token_id": 20,
+          "sentence_token_id": 3,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 21,
+          "sentence_token_id": 4,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "\"",
+          "token_type": "punctuation",
+          "global_token_id": 22,
+          "sentence_token_id": 5,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "revolutionized",
+          "token_type": "text",
+          "global_token_id": 23,
+          "sentence_token_id": 6,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "\"",
+          "token_type": "punctuation",
+          "global_token_id": 24,
+          "sentence_token_id": 7,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 25,
+          "sentence_token_id": 8,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "should",
+          "token_type": "text",
+          "global_token_id": 26,
+          "sentence_token_id": 9,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 27,
+          "sentence_token_id": 10,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "be",
+          "token_type": "text",
+          "global_token_id": 28,
+          "sentence_token_id": 11,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 29,
+          "sentence_token_id": 12,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "marked",
+          "token_type": "text",
+          "global_token_id": 30,
+          "sentence_token_id": 13,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 31,
+          "sentence_token_id": 14,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "as",
+          "token_type": "text",
+          "global_token_id": 32,
+          "sentence_token_id": 15,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 33,
+          "sentence_token_id": 16,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "hard",
+          "token_type": "text",
+          "global_token_id": 34,
+          "sentence_token_id": 17,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 35,
+          "sentence_token_id": 18,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "difficulty",
+          "token_type": "text",
+          "global_token_id": 36,
+          "sentence_token_id": 19,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 37,
+          "sentence_token_id": 20,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        }
+      ],
+      "token_count": 20
+    },
+    {
+      "sentence_id": 3,
+      "sentence_body": "Grammar and vocabulary are essential components of language study.",
+      "tokens": [
+        {
+          "token_body": "Grammar",
+          "token_type": "text",
+          "global_token_id": 38,
+          "sentence_token_id": 1,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 39,
+          "sentence_token_id": 2,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "and",
+          "token_type": "text",
+          "global_token_id": 40,
+          "sentence_token_id": 3,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 41,
+          "sentence_token_id": 4,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "vocabulary",
+          "token_type": "text",
+          "global_token_id": 42,
+          "sentence_token_id": 5,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 43,
+          "sentence_token_id": 6,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "are",
+          "token_type": "text",
+          "global_token_id": 44,
+          "sentence_token_id": 7,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 45,
+          "sentence_token_id": 8,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "essential",
+          "token_type": "text",
+          "global_token_id": 46,
+          "sentence_token_id": 9,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 47,
+          "sentence_token_id": 10,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "components",
+          "token_type": "text",
+          "global_token_id": 48,
+          "sentence_token_id": 11,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 49,
+          "sentence_token_id": 12,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "of",
+          "token_type": "text",
+          "global_token_id": 50,
+          "sentence_token_id": 13,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 51,
+          "sentence_token_id": 14,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "language",
+          "token_type": "text",
+          "global_token_id": 52,
+          "sentence_token_id": 15,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 53,
+          "sentence_token_id": 16,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": "study",
+          "token_type": "text",
+          "global_token_id": 54,
+          "sentence_token_id": 17,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 55,
+          "sentence_token_id": 18,
+          "pos_tag": null,
+          "is_grammar_marker": false
+        }
+      ],
+      "token_count": 18
+    }
+  ],
+  "total_sentences": 3,
+  "total_tokens": 56,
+  "vocab_expressions": []
+}

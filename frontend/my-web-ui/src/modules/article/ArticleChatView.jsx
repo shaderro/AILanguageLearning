@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
@@ -11,18 +11,13 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [uploadComplete, setUploadComplete] = useState(false)
   
   // Sample text for the ArticleViewer
-  const sampleText = isUploadMode ? '' : `React 是一个用于构建用户界面的 JavaScript 库。它由 Facebook 开发和维护，被广泛用于构建单页应用程序。React 使用组件化的架构，让开发者可以创建可重用的 UI 组件。它的虚拟 DOM 技术提供了高效的渲染性能，而 JSX 语法让组件的编写更加直观。React 生态系统非常丰富，包括 React Router 用于路由管理，Redux 用于状态管理，以及各种 UI 组件库。`
+  const sampleText = isUploadMode ? '' : 'Sample text for demo'
 
-  const handleTokenSelect = (token, allSelectedTokens) => {
-    setSelectedTokens(Array.from(allSelectedTokens))
-    // 设置引用文本为选中的词汇
-    if (allSelectedTokens.size > 0) {
-      setQuotedText(Array.from(allSelectedTokens).join(' '))
-    } else {
-      setQuotedText('')
-    }
-    console.log('Selected token:', token)
-    console.log('All selected tokens:', Array.from(allSelectedTokens))
+  const handleTokenSelect = (tokenText, selectedSet, selectedTexts = []) => {
+    setSelectedTokens(selectedTexts)
+    setQuotedText(selectedTexts.join(' '))
+    console.log('Selected token:', tokenText)
+    console.log('All selected tokens:', selectedTexts)
   }
 
   const handleClearQuote = () => {
@@ -62,8 +57,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex gap-8 h-full min-h-0 p-4">
+      {/* Main Content (slightly shorter than viewport to fully show both panels) */}
+      <div className="flex gap-8 h-[calc(100vh-120px)] p-4">
         {isUploadMode ? (
           showUploadProgress ? (
             <UploadProgress onComplete={handleUploadComplete} />
@@ -72,7 +67,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           )
         ) : (
           <ArticleViewer 
-            text={sampleText} 
+            articleId={articleId} 
             onTokenSelect={handleTokenSelect}
           />
         )}
@@ -85,3 +80,6 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     </div>
   )
 } 
+
+
+
