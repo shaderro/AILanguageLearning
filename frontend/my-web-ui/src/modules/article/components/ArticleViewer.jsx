@@ -1,59 +1,66 @@
-import { useMemo, useRef, useState } from 'react'
+﻿import { useMemo, useRef, useState } from 'react'
 import { useArticle } from '../../../hooks/useApi'
 import { apiService } from '../../../services/api'
+import { useChatEvent } from '../contexts/ChatEventContext'
 
-// VocabExplanationButton ���
-function VocabExplanationButton({ token, onGetExplanation }) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [explanation, setExplanation] = useState(null)
-  const [error, setError] = useState(null)
+// InlineExplanation 组件 - 用于显示hover时的解释
+function InlineExplanation({ explanation = "This is a quick explanation", token = null }) {
+  const { sendMessageToChat } = useChatEvent()
 
-  const handleClick = async () => {
-    if (explanation) return
+  const handleDetailClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
     
-    setIsLoading(true)
-    setError(null)
-    try {
-      const result = await apiService.getVocabExplanation(token.token_body)
-      setExplanation(result)
-      if (onGetExplanation) {
-        onGetExplanation(token, result)
-      }
-    } catch (error) {
-      console.error('Failed to get vocab explanation:', error)
-      setError('Failed to load explanation')
-    } finally {
-      setIsLoading(false)
+    const tokenText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
+    console.log('Token text:', tokenText) // 添加调试信息
+    
+    sendMessageToChat(
+      "请为这个词和它在句中的用法提供详细解释",
+      tokenText
+    )
+  }
+
+  return (
+    <div className="absolute top-full left-0 z-10 mt-1">
+      <div className="px-2 py-1 text-xs bg-gray-100 text-gray-500 border border-gray-300 rounded shadow-lg">
+        <div className="mb-1">{explanation}</div>
+        <button
+          onClick={handleDetailClick}
+          className="text-xs text-blue-600 hover:text-blue-800 underline cursor-pointer"
+        >
+          detail explanation with AI
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// VocabExplanationButton 简化版 - 绝对定位覆盖
+function VocabExplanationButton({ token, onGetExplanation }) {
+  const [isClicked, setIsClicked] = useState(false)
+
+  const handleClick = (e) => {
+    e.preventDefault() // 阻止默认行为
+    e.stopPropagation() // 阻止事件冒泡
+    setIsClicked(true)
+    
+    // 新增：调用回调函数来通知父组件
+    if (onGetExplanation) {
+      onGetExplanation(token, null) // 传递null作为explanation
     }
   }
 
   return (
-    <div className="mt-1 flex items-center gap-2">
-      <button
-        onClick={handleClick}
-        disabled={isLoading}
-        className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded border border-blue-300 transition-colors duration-150 disabled:opacity-50"
-      >
-        {isLoading ? 'Loading...' : 'vocab explanation'}
-      </button>
-      {error && (
-        <div className="mt-1 text-xs text-red-600">{error}</div>
-      )}
-      {explanation && (
-        <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded text-sm max-w-md">
-          <div className="font-semibold text-gray-800 text-base">{explanation.word}</div>
-          <div className="text-gray-700 mt-2">{explanation.definition}</div>
-          {explanation.examples && explanation.examples.length > 0 && (
-            <div className="mt-3">
-              <div className="font-medium text-gray-700 text-sm">Examples:</div>
-              {explanation.examples.map((example, idx) => (
-                <div key={idx} className="text-gray-600 text-xs mt-1 italic pl-2 border-l-2 border-gray-300">
-                  {example}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="absolute top-full left-0 z-10 mt-1">
+      {isClicked ? (
+        <InlineExplanation explanation="This is a test explanation" />
+      ) : (
+        <button
+          onClick={handleClick}
+          className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded border border-blue-300 transition-colors duration-150 shadow-lg"
+        >
+          quick translation
+        </button>
       )}
     </div>
   )
@@ -90,8 +97,17 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
   const [selectedTokenIds, setSelectedTokenIds] = useState(() => new Set())
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(null)
   
-  // ����״̬���洢�ʻ����
+  // 存储词汇解释
   const [vocabExplanations, setVocabExplanations] = useState(() => new Map())
+  
+  // 新增：存储被点击了vocab explanation的token ID
+  const [clickedVocabTokenIds, setClickedVocabTokenIds] = useState(() => new Set())
+  
+  // 新增：存储当前hover的token ID
+  const [hoveredTokenId, setHoveredTokenId] = useState(null)
+  
+  // 新增：存储当前选中的token对象
+  const [selectedToken, setSelectedToken] = useState(null)
 
   // selection / drag state
   const isDraggingRef = useRef(false)
@@ -128,24 +144,58 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
   const emitSelection = (set, lastTokenText = '') => {
     setSelectedTokenIds(set)
+    
+    // 新增：更新选中的token对象
+    if (set.size === 1) {
+      const selectedTokenObj = getSelectedTokenObject(set)
+      setSelectedToken(selectedTokenObj)
+    } else {
+      setSelectedToken(null)
+    }
+    
     if (onTokenSelect) {
       const selectedTexts = buildSelectedTexts(activeSentenceRef.current, set)
       onTokenSelect(lastTokenText, set, selectedTexts)
     }
   }
 
-  const clearSelection = () => {
-    const empty = new Set()
-    emitSelection(empty, '')
-    activeSentenceRef.current = null
-    setActiveSentenceIndex(null)
+  // 修改：获取被选中的token对象
+  const getSelectedTokenObject = (tokenIdSet) => {
+    if (tokenIdSet.size !== 1) return null
+    
+    // 使用activeSentenceRef.current来限制搜索范围
+    const sIdx = activeSentenceRef.current
+    if (sIdx == null) return null
+    
+    const tokens = sentences[sIdx]?.tokens || []
+    for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+      const token = tokens[tIdx]
+      const uid = getTokenId(token)
+      if (uid && tokenIdSet.has(uid)) {
+        return token
+      }
+    }
+    return null
   }
 
-  // �����������ʻ���ͻ�ȡ
+  const clearSelection = () => {
+    const empty = new Set()
+    setSelectedTokenIds(empty)
+    setSelectedToken(null) // 新增：清除选中的token对象
+    activeSentenceRef.current = null
+    setActiveSentenceIndex(null)
+    if (onTokenSelect) {
+      onTokenSelect('', empty, [])
+    }
+  }
+
+  // 修改：处理词汇解释获取
   const handleGetExplanation = (token, explanation) => {
     const tokenId = getTokenId(token)
     if (tokenId) {
       setVocabExplanations(prev => new Map(prev).set(tokenId, explanation))
+      // 新增：标记该token已被点击
+      setClickedVocabTokenIds(prev => new Set(prev).add(tokenId))
     }
   }
 
@@ -162,6 +212,10 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
       activeSentenceRef.current = sIdx
       setActiveSentenceIndex(sIdx)
     }
+    
+    // 新增：直接设置选中的token对象
+    setSelectedToken(token)
+    
     emitSelection(next, token?.token_body ?? '')
   }
 
@@ -292,6 +346,33 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     if (!el) clearSelection()
   }
 
+  // 新增：处理token hover事件
+  const handleTokenHover = (token) => {
+    const tokenId = getTokenId(token)
+    setHoveredTokenId(tokenId)
+  }
+
+  const handleTokenLeave = () => {
+    setHoveredTokenId(null)
+  }
+
+  // 在ArticleViewer组件中添加一个函数来获取被选中的token
+  const getSelectedToken = () => {
+    if (selectedTokenIds.size !== 1) return null
+    
+    for (let sIdx = 0; sIdx < sentences.length; sIdx++) {
+      const tokens = sentences[sIdx]?.tokens || []
+      for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+        const token = tokens[tIdx]
+        const uid = getTokenId(token)
+        if (uid && selectedTokenIds.has(uid)) {
+          return token
+        }
+      }
+    }
+    return null
+  }
+
   if (isLoading) {
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto h-full max-h-[calc(100vh-200px)]">
@@ -327,11 +408,21 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
               const hasSelection = selectedTokenIds && selectedTokenIds.size > 0
               const hoverAllowed = selectable && (!hasSelection ? (activeSentenceIndex == null || activeSentenceIndex === sIdx) : activeSentenceIndex === sIdx)
               const cursorClass = hoverAllowed ? 'cursor-pointer' : 'cursor-default'
+              
+              // 新增：检查该token是否被点击了vocab explanation
+              const isClickedVocab = uid ? clickedVocabTokenIds.has(uid) : false
+              
+              // 新增：检查是否正在hover这个token
+              const isHovered = uid === hoveredTokenId
+              
               const bgClass = selected
                 ? 'bg-yellow-300'
                 : (hoverAllowed ? 'bg-transparent hover:bg-yellow-200' : 'bg-transparent')
               
-              // ����Ƿ�Ϊtext����token
+              // 新增：下划线样式
+              const underlineClass = isClickedVocab ? 'underline decoration-2 decoration-blue-500' : ''
+              
+              // 判断是否为text类型token
               const isTextToken = typeof t === 'object' && t?.token_type === 'text'
               
               return (
@@ -346,19 +437,31 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
                       tokenRefsRef.current[sIdx][tIdx] = el
                     }}
                     onMouseDown={(e) => handleMouseDownToken(sIdx, tIdx, t, e)}
-                    onMouseEnter={() => handleMouseEnterToken(sIdx, tIdx, t)}
+                    onMouseEnter={() => {
+                      handleMouseEnterToken(sIdx, tIdx, t)
+                      handleTokenHover(t)
+                    }}
+                    onMouseLeave={handleTokenLeave}
                     onClick={(e) => { if (!isDraggingRef.current && selectable) { e.preventDefault(); addSingle(sIdx, t) } }}
-                    className={['px-0.5 rounded-sm transition-colors duration-150 select-none', cursorClass, bgClass].join(' ')}
+                    className={['px-0.5 rounded-sm transition-colors duration-150 select-none', cursorClass, bgClass, underlineClass].join(' ')}
                     style={{ color: '#111827' }}
                   >
                     {displayText}
                   </span>
                   
-                  {/* ��ʾvocab explanation button - ����ѡ�е���text����tokenʱ */}
+                  {/* 显示vocab explanation button - 当选中单个text类型token时 */}
                   {isTextToken && selected && selectedTokenIds.size === 1 && (
                     <VocabExplanationButton 
                       token={t} 
                       onGetExplanation={handleGetExplanation}
+                    />
+                  )}
+                  
+                  {/* 新增：显示hover解释 - 当token已被点击且正在hover时 */}
+                  {isTextToken && isClickedVocab && isHovered && (
+                    <InlineExplanation 
+                      explanation="This is a test explanation" 
+                      token={selectedToken}
                     />
                   )}
                 </span>

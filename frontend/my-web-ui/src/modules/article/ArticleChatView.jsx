@@ -1,8 +1,9 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
 import ChatView from './components/ChatView'
+import { ChatEventProvider } from './contexts/ChatEventContext'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
   const [selectedTokens, setSelectedTokens] = useState([])
@@ -38,46 +39,48 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Back to Articles</span>
-          </button>
+    <ChatEventProvider>
+      <div className="h-full flex flex-col">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onBack}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back to Articles</span>
+            </button>
+          </div>
+          <div className="text-sm text-gray-500">
+            Article ID: {articleId}
+          </div>
         </div>
-        <div className="text-sm text-gray-500">
-          Article ID: {articleId}
-        </div>
-      </div>
 
-      {/* Main Content (slightly shorter than viewport to fully show both panels) */}
-      <div className="flex gap-8 h-[calc(100vh-120px)] p-4">
-        {isUploadMode ? (
-          showUploadProgress ? (
-            <UploadProgress onComplete={handleUploadComplete} />
+        {/* Main Content (slightly shorter than viewport to fully show both panels) */}
+        <div className="flex gap-8 h-[calc(100vh-120px)] p-4">
+          {isUploadMode ? (
+            showUploadProgress ? (
+              <UploadProgress onComplete={handleUploadComplete} />
+            ) : (
+              <UploadInterface onUploadStart={handleUploadStart} />
+            )
           ) : (
-            <UploadInterface onUploadStart={handleUploadStart} />
-          )
-        ) : (
-          <ArticleViewer 
-            articleId={articleId} 
-            onTokenSelect={handleTokenSelect}
+            <ArticleViewer 
+              articleId={articleId} 
+              onTokenSelect={handleTokenSelect}
+            />
+          )}
+          <ChatView 
+            quotedText={quotedText}
+            onClearQuote={handleClearQuote}
+            disabled={isUploadMode && !uploadComplete}
           />
-        )}
-        <ChatView 
-          quotedText={quotedText}
-          onClearQuote={handleClearQuote}
-          disabled={isUploadMode && !uploadComplete}
-        />
+        </div>
       </div>
-    </div>
+    </ChatEventProvider>
   )
 } 
 

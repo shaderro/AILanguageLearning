@@ -1,8 +1,10 @@
 ﻿import { useState, useRef, useEffect } from 'react'
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
+import { useChatEvent } from '../contexts/ChatEventContext'
 
 export default function ChatView({ quotedText, onClearQuote, disabled = false }) {
+  const { pendingMessage, clearPendingMessage } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() },
     { id: 2, text: "这是一条测试消息，用来测试滚动功能是否正常工作。", isUser: true, timestamp: new Date() },
@@ -19,6 +21,51 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const messagesEndRef = useRef(null)
+
+  // 新增：自动滚动到底部的函数
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // 新增：监听messages变化，自动滚动到底部
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // 新增：监听待发送消息
+  useEffect(() => {
+    if (pendingMessage) {
+      // 自动发送消息
+      const userMessage = {
+        id: Date.now(),
+        text: pendingMessage.text,
+        isUser: true,
+        timestamp: pendingMessage.timestamp,
+        quote: pendingMessage.quotedText || null
+      }
+      
+      setMessages(prev => [...prev, userMessage])
+      
+      // 清除待发送消息
+      clearPendingMessage()
+      
+      // 清空当前引用（如果有的话）
+      if (onClearQuote) {
+        onClearQuote()
+      }
+
+      // Auto reply after a short delay
+      setTimeout(() => {
+        const autoReply = {
+          id: Date.now() + 1,
+          text: `关于"${pendingMessage.quotedText}"，我来为你提供详细解释。这是一个很好的问题！`,
+          isUser: false,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, autoReply])
+      }, 1000)
+    }
+  }, [pendingMessage, clearPendingMessage, onClearQuote])
 
   const handleSendMessage = () => {
     if (inputText.trim() === '') return
