@@ -17,55 +17,51 @@ const ToastNotice = ({
       const timer = setTimeout(() => {
         setIsFading(true)
         
+        // 先触发渐隐和上移动画，动画结束后再关闭
         const fadeTimer = setTimeout(() => {
-          setIsShowing(false)
-          onClose && onClose()
-        }, 300) // 渐隐动画时间
-        
+          setIsFading(true) // 开始渐隐和上移
+          // 1000ms后（动画结束）再隐藏（与下方 CSS 过渡时长一致）
+          const hideTimer = setTimeout(() => {
+            setIsShowing(false)
+            onClose && onClose()
+          }, 600)
+          // 清理hideTimer
+          return () => clearTimeout(hideTimer)
+        }, 0) // 立即执行渐隐和上移
         return () => clearTimeout(fadeTimer)
       }, duration)
       
       return () => clearTimeout(timer)
     }
-  }, [isVisible, duration, onClose])
+  }, [isVisible, duration])
 
   if (!isShowing) return null
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-      <div 
-        className={`
-          bg-blue-600 text-white px-6 py-4 rounded-lg shadow-lg
-          transform transition-all duration-300 ease-in-out
-          ${isFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
-          pointer-events-auto
-        `}
-        style={{
-          aspectRatio: '4/3',
-          minWidth: '280px',
-          maxWidth: '400px'
-        }}
-      >
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-2">
-              <svg 
-                className="w-5 h-5 mr-2" 
-                fill="currentColor" 
-                viewBox="0 0 20 20"
-              >
-                <path 
-                  fillRule="evenodd" 
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
-                  clipRule="evenodd" 
-                />
-              </svg>
-              <span className="font-medium">知识点总结</span>
-            </div>
-            <p className="text-sm leading-relaxed">
-              {message}
-            </p>
-          </div>
+    <div 
+      className={`
+        bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg
+        transform transition-all duration-1000 ease-in-out
+        ${isFading ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}
+        pointer-events-auto
+        max-w-xs w-[320px]
+      `}
+    >
+      <div className="flex items-start">
+        <svg 
+          className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" 
+          fill="currentColor" 
+          viewBox="0 0 20 20"
+        >
+          <path 
+            fillRule="evenodd" 
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
+            clipRule="evenodd" 
+          />
+        </svg>
+        <div className="flex-1">
+          <div className="font-medium leading-5 mb-0.5">知识点总结</div>
+          <p className="text-sm leading-snug break-words">{message}</p>
         </div>
       </div>
     </div>

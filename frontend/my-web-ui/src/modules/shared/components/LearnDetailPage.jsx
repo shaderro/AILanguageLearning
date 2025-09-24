@@ -43,7 +43,7 @@ const LearnDetailPage = ({
       <h2 className="text-2xl font-bold text-gray-900">
         {type === 'vocab'
           ? (data?.vocab_body || 'Unknown Word')
-          : (data?.rule_name || data?.rule || 'Unknown Rule')}
+          : (data?.name || 'Unknown Rule')}
       </h2>
       {onBack && (
         <button
@@ -59,48 +59,113 @@ const LearnDetailPage = ({
   const content = customContent ?? (
     type === 'vocab' ? (
       <div className="space-y-6">
-        <section>
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Definition</h3>
-          <p className="text-gray-800 leading-relaxed">{data?.explanation || '暂无定义'}</p>
+        {/* 词汇基本信息 */}
+        <section className="bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">{data?.vocab_body}</h3>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">ID: {data?.vocab_id}</span>
+              {data?.is_starred && <span className="text-yellow-500">⭐</span>}
+            </div>
+          </div>
         </section>
 
-        {Array.isArray(data?.examples) && data.examples.length > 0 && (
+        {/* 完整解释 */}
+        {data?.explanation && (
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Examples</h3>
-            <ul className="space-y-2 list-disc pl-5 text-gray-700">
-              {data.examples.map((ex, i) => (
-                <li key={i} className="leading-relaxed">
-                  {ex?.context_explanation || 'Example'}
-                </li>
-              ))}
-            </ul>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">完整解释</h3>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-gray-800 leading-relaxed whitespace-pre-line">{data.explanation}</p>
+            </div>
           </section>
         )}
 
-        <section className="text-sm text-gray-500 flex items-center justify-between">
-          <span>Source: {data?.source || 'unknown'}</span>
-          {data?.is_starred && <span className="text-yellow-500">⭐</span>}
+        {/* 所有例子 */}
+        {Array.isArray(data?.examples) && data.examples.length > 0 && (
+          <section>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">使用例子</h3>
+            <div className="space-y-4">
+              {data.examples.map((example, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">例子 {index + 1}</span>
+                    <div className="text-xs text-gray-500">
+                      <span>文章ID: {example.text_id}</span>
+                      <span className="mx-2">|</span>
+                      <span>句子ID: {example.sentence_id}</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">
+                    {example.context_explanation}
+                  </p>
+                  {example.token_indices && example.token_indices.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      相关词汇位置: {example.token_indices.join(', ')}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 元信息 */}
+        <section className="text-sm text-gray-500 flex items-center justify-between pt-4 border-t">
+          <span>来源: {data?.source || 'unknown'}</span>
+          <span>词汇ID: {data?.vocab_id}</span>
         </section>
       </div>
     ) : (
       <div className="space-y-6">
-        <section>
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Structure</h3>
-          <p className="text-gray-800 leading-relaxed">{data?.structure || '暂无结构说明'}</p>
+        {/* 语法规则基本信息 */}
+        <section className="bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">{data?.name}</h3>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">ID: {data?.rule_id}</span>
+              {data?.is_starred && <span className="text-yellow-500">⭐</span>}
+            </div>
+          </div>
         </section>
-        <section>
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Usage</h3>
-          <p className="text-gray-800 leading-relaxed">{data?.usage || '暂无用法说明'}</p>
-        </section>
-        {data?.example && (
+
+        {/* 完整解释 */}
+        {data?.explanation && (
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Example</h3>
-            <p className="text-gray-600 italic leading-relaxed">"{data.example}"</p>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">规则解释</h3>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-gray-800 leading-relaxed whitespace-pre-line">{data.explanation}</p>
+            </div>
           </section>
         )}
-        <section className="text-sm text-gray-500 flex items-center justify-between">
-          <span>Source: {data?.source || 'unknown'}</span>
-          {data?.is_starred && <span className="text-yellow-500">⭐</span>}
+
+        {/* 所有例子 */}
+        {Array.isArray(data?.examples) && data.examples.length > 0 && (
+          <section>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">使用例子</h3>
+            <div className="space-y-4">
+              {data.examples.map((example, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-green-400">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">例子 {index + 1}</span>
+                    <div className="text-xs text-gray-500">
+                      <span>文章ID: {example.text_id}</span>
+                      <span className="mx-2">|</span>
+                      <span>句子ID: {example.sentence_id}</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">
+                    {example.explanation_context}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 元信息 */}
+        <section className="text-sm text-gray-500 flex items-center justify-between pt-4 border-t">
+          <span>来源: {data?.source || 'unknown'}</span>
+          <span>规则ID: {data?.rule_id}</span>
         </section>
       </div>
     )

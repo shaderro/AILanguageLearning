@@ -8,6 +8,12 @@ const LearnCard = ({
   error = null,
   customContent = null
 }) => {
+  // 获取解释的第一行
+  const getFirstLine = (text) => {
+    if (!text) return ''
+    return text.split('\n')[0].trim()
+  }
+
   // 根据数据类型确定显示内容
   const getCardContent = () => {
     if (customContent) {
@@ -17,40 +23,32 @@ const LearnCard = ({
     if (type === 'vocab') {
       return (
         <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-              Definition
-            </h3>
-            <p className="text-gray-800 leading-relaxed">
-              {data?.explanation || '暂无定义'}
-            </p>
+          {/* 词汇本身 */}
+          <div className="text-lg font-semibold text-gray-900">
+            {data?.vocab_body || 'Unknown Word'}
           </div>
           
-          {data?.examples && data.examples.length > 0 && (
+          {/* 解释的第一行 */}
+          {data?.explanation && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-                Examples
-              </h3>
-              <div className="space-y-2">
-                {data.examples.slice(0, 2).map((example, index) => (
-                  <div key={index} className="text-gray-600 italic leading-relaxed">
-                    {example.context_explanation ? (
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Context:</p>
-                        <p className="text-sm">{example.context_explanation}</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm">Example {index + 1}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <p className="text-gray-800 leading-relaxed text-sm">
+                {getFirstLine(data.explanation)}
+              </p>
             </div>
           )}
           
-          <div className="flex justify-between items-center text-sm text-gray-500">
+          {/* 第一个例子的第一行 */}
+          {data?.examples && data.examples.length > 0 && data.examples[0]?.context_explanation && (
+            <div>
+              <p className="text-gray-600 italic leading-relaxed text-sm">
+                {getFirstLine(data.examples[0].context_explanation)}
+              </p>
+            </div>
+          )}
+          
+          <div className="flex justify-between items-center text-xs text-gray-500">
             <span>Source: {data?.source || 'unknown'}</span>
-            {data?.is_starred && <span className="text-yellow-500"></span>}
+            {data?.is_starred && <span className="text-yellow-500">⭐</span>}
           </div>
         </div>
       )
@@ -59,38 +57,32 @@ const LearnCard = ({
     if (type === 'grammar') {
       return (
         <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-              Structure
-            </h3>
-            <p className="text-gray-800 leading-relaxed">
-              {data?.structure || '暂无结构说明'}
-            </p>
+          {/* 语法规则名称 */}
+          <div className="text-lg font-semibold text-gray-900">
+            {data?.name || 'Unknown Rule'}
           </div>
           
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-              Usage
-            </h3>
-            <p className="text-gray-800 leading-relaxed">
-              {data?.usage || '暂无用法说明'}
-            </p>
-          </div>
-          
-          {data?.example && (
+          {/* 解释的第一行 */}
+          {data?.explanation && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">
-                Example
-              </h3>
-              <p className="text-gray-600 italic leading-relaxed">
-                "{data.example}"
+              <p className="text-gray-800 leading-relaxed text-sm">
+                {getFirstLine(data.explanation)}
               </p>
             </div>
           )}
           
-          <div className="flex justify-between items-center text-sm text-gray-500">
+          {/* 第一个例子的第一行 */}
+          {data?.examples && data.examples.length > 0 && data.examples[0]?.explanation_context && (
+            <div>
+              <p className="text-gray-600 italic leading-relaxed text-sm">
+                {getFirstLine(data.examples[0].explanation_context)}
+              </p>
+            </div>
+          )}
+          
+          <div className="flex justify-between items-center text-xs text-gray-500">
             <span>Source: {data?.source || 'unknown'}</span>
-            {data?.is_starred && <span className="text-yellow-500"></span>}
+            {data?.is_starred && <span className="text-yellow-500">⭐</span>}
           </div>
         </div>
       )
@@ -99,15 +91,9 @@ const LearnCard = ({
     return null
   }
 
-  // 获取卡片标题
+  // 获取卡片标题 - 现在标题已经在内容中显示，所以返回空字符串
   const getCardTitle = () => {
-    if (type === 'vocab') {
-      return data?.vocab_body || 'Unknown Word'
-    }
-    if (type === 'grammar') {
-      return data?.rule_name || data?.rule || 'Unknown Rule'
-    }
-    return 'Unknown'
+    return ''
   }
 
   return (

@@ -9,7 +9,11 @@ Token to Vocab 转换模块
 import json
 import os
 from typing import List, Dict, Any, Optional
-from data_managers.data_classes_new import Token, VocabExpression, VocabExpressionExample
+from backend.data_managers.data_classes_new import (
+    Token,
+    VocabExpression,
+    VocabExpressionExample,
+)
 
 class TokenToVocabConverter:
     """Token到Vocab转换器"""
@@ -70,11 +74,15 @@ class TokenToVocabConverter:
         
         try:
             # 延迟导入以避免循环导入
-            from assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
-            from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
+            from backend.assistants.sub_assistants.vocab_explanation import (
+                VocabExplanationAssistant,
+            )
+            from backend.assistants.sub_assistants.vocab_example_explanation import (
+                VocabExampleExplanationAssistant,
+            )
             
             # 创建临时Sentence对象用于API调用
-            from data_managers.data_classes_new import Sentence
+            from backend.data_managers.data_classes_new import Sentence
             temp_sentence = Sentence(
                 text_id=text_id,
                 sentence_id=sentence_id,
@@ -88,11 +96,40 @@ class TokenToVocabConverter:
             vocab_explanation_assistant = VocabExplanationAssistant()
             vocab_example_assistant = VocabExampleExplanationAssistant()
             
-            # 获取词汇解释
-            vocab_explanation_result = vocab_explanation_assistant.run(temp_sentence, token.token_body)
-            
-            # 获取上下文解释
-            context_explanation_result = vocab_example_assistant.run(token.token_body, temp_sentence)
+            # 获取词汇解释与上下文解释（可能调用大模型，需兜底）
+            try:
+                vocab_explanation_result = vocab_explanation_assistant.run(
+                    token.token_body, temp_sentence
+                )
+                context_explanation_result = vocab_example_assistant.run(
+                    token.token_body, temp_sentence
+                )
+            except Exception as e:
+                err_text = str(e)
+                if ("Insufficient Balance" in err_text) or ("Error code: 402" in err_text):
+                    # 余额不足：返回本地 mock 结果，保证功能可用
+                    explanation = f"(mock) 词汇 {token.token_body} 的占位解释"
+                    vocab_expression = VocabExpression(
+                        vocab_id=self.vocab_counter,
+                        vocab_body=token.token_body,
+                        explanation=explanation,
+                        source="mock",
+                        is_starred=False,
+                        examples=[],
+                    )
+                    vocab_example = VocabExpressionExample(
+                        vocab_id=self.vocab_counter,
+                        text_id=text_id,
+                        sentence_id=sentence_id,
+                        context_explanation=f"(mock) 上下文解释：{sentence_body[:50]}",
+                        token_indices=[token.sentence_token_id] if token.sentence_token_id else [],
+                    )
+                    vocab_expression.examples.append(vocab_example)
+                    self.vocab_counter += 1
+                    self._save_vocab_counter()
+                    return vocab_expression
+                # 其它错误继续抛出，由上层处理
+                raise
             
             # 解析解释结果
             explanation = self._parse_explanation(vocab_explanation_result)
@@ -126,8 +163,9 @@ class TokenToVocabConverter:
             return vocab_expression
             
         except Exception as e:
+            # 不要吞掉异常，向上抛出让 server.py 返回详细错误到前端
             print(f"转换token '{token.token_body}' 到vocab失败: {e}")
-            return None
+            raise
     
     def _parse_explanation(self, result: Any) -> str:
         """解析词汇解释结果"""

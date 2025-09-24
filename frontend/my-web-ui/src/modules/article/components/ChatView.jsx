@@ -4,7 +4,7 @@ import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
 export default function ChatView({ quotedText, onClearQuote, disabled = false }) {
-  const { pendingMessage, clearPendingMessage } = useChatEvent()
+  const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() },
     { id: 2, text: "这是一条测试消息，用来测试滚动功能是否正常工作。", isUser: true, timestamp: new Date() },
@@ -20,11 +20,31 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
   const [inputText, setInputText] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  // 新增：多实例 toast 栈
+  const [toasts, setToasts] = useState([]) // {id, message, slot}
   const messagesEndRef = useRef(null)
 
   // 新增：自动滚动到底部的函数
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // 抽取：显示“知识点已加入”提示卡片
+  const showKnowledgeToast = (currentKnowledge) => {
+    const text = String(currentKnowledge ?? '').trim()
+    const msg = `${text} 知识点已总结并加入列表`
+    // 兼容旧的单实例
+    setToastMessage(msg)
+    setShowToast(true)
+    // 新：推入多实例栈
+    const id = Date.now() + Math.random()
+    // 为每个 toast 设置独立的显示时间，避免同一批次由父层重渲染触发同一时刻开始计时
+    setTimeout(() => {
+      setToasts(prev => {
+        const slot = prev.length // 固定槽位：加入时的序号
+        return [...prev, { id, message: msg, slot }]
+      })
+    }, 0)
   }
 
   // 新增：监听messages变化，自动滚动到底部
@@ -67,6 +87,34 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
     }
   }, [pendingMessage, clearPendingMessage, onClearQuote])
 
+  // 新增：监听跨组件触发的 toast
+  useEffect(() => {
+    if (pendingToast) {
+      showKnowledgeToast(pendingToast)
+      clearPendingToast()
+    }
+  }, [pendingToast, clearPendingToast])
+
+  // 新增：测试连续 Toast 的方法（按下 S 键触发，每 0.5s 一次，共 3 次）
+  const triggerSequentialToasts = () => {
+    const items = ['测试Toast 1', '测试Toast 2', '测试Toast 3']
+    items.forEach((msg, idx) => {
+      setTimeout(() => {
+        showKnowledgeToast(msg)
+      }, idx * 500)
+    })
+  }
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.key || '').toLowerCase() === 's') {
+        triggerSequentialToasts()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   const handleSendMessage = () => {
     if (inputText.trim() === '') return
 
@@ -99,19 +147,8 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       
       // Show toast notice after AI reply
       setTimeout(() => {
-        const knowledgePoints = [
-          'React 组件化开发',
-          '虚拟 DOM 技术',
-          'JSX 语法要点',
-          '状态管理基础',
-          '生命周期钩子',
-          '事件处理范式',
-          '条件渲染技巧',
-          '列表渲染优化'
-        ]
-        const randomPoint = knowledgePoints[Math.floor(Math.random() * knowledgePoints.length)]
-        setToastMessage(`${randomPoint} 知识点已总结并加入列表`)
-        setShowToast(true)
+        const currentKnowledge = 'XXX单词 或 语法'
+        showKnowledgeToast(currentKnowledge)
       }, 500) // 延迟 500ms 显示 toast
     }, 1000)
   }
@@ -168,8 +205,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
           '列表渲染优化'
         ]
         const randomPoint = knowledgePoints[Math.floor(Math.random() * knowledgePoints.length)]
-        setToastMessage(`${randomPoint} 知识点已总结并加入列表`)
-        setShowToast(true)
+        showKnowledgeToast(randomPoint)
       }, 500)
     }, 1000)
   }
@@ -284,13 +320,28 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
         </div>
       </div>
 
-      {/* Toast Notice */}
-      <ToastNotice
-        message={toastMessage}
-        isVisible={showToast}
-        onClose={handleToastClose}
-        duration={2000}
-      />
+      {/* Toast Stack - 底部居中，固定槽位，避免上移 */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none" style={{ position: 'fixed' }}>
+        {toasts.map(t => (
+          <div
+            key={t.id}
+            className="pointer-events-auto"
+            style={{
+              position: 'absolute',
+              bottom: `${t.slot * 64}px`, // 每个槽位 64px 间距
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <ToastNotice
+              message={t.message}
+              isVisible={true}
+              duration={2000}
+              onClose={() => setToasts(prev => prev.filter(x => x.id !== t.id))}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

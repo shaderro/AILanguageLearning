@@ -1,23 +1,107 @@
-﻿import { useMemo, useRef, useState } from 'react'
+﻿import { useMemo, useRef, useState, useEffect } from 'react'
 import { useArticle } from '../../../hooks/useApi'
 import { apiService } from '../../../services/api'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
 // InlineExplanation 组件 - 用于显示hover时的解释
-function InlineExplanation({ explanation = "This is a quick explanation", token = null }) {
-  const { sendMessageToChat } = useChatEvent()
+function InlineExplanation({ explanation = "This is a quick explanation", token = null, sentenceBody = "", textId = 1, sentenceId = 1 }) {
+  const { sendMessageToChat, triggerKnowledgeToast } = useChatEvent()
+  const [isConverting, setIsConverting] = useState(false)
+
+  // 测试token转vocab功能
+  const testTokenToVocab = async (tokenData) => {
+    if (!tokenData || typeof tokenData !== 'object') {
+      console.warn('[InlineExplanation] Invalid token data for conversion')
+      return
+    }
+
+    setIsConverting(true)
+    console.log('[InlineExplanation] 🧪 开始测试token转vocab功能...')
+    console.log('[InlineExplanation] Token数据:', tokenData)
+
+    try {
+      const requestData = {
+        token: {
+          token_body: tokenData.token_body || tokenData.token || '',
+          token_type: tokenData.token_type || 'text',
+          difficulty_level: tokenData.difficulty_level || 'hard',
+          global_token_id: tokenData.global_token_id || 1,
+          sentence_token_id: tokenData.sentence_token_id || 1
+        },
+        sentence_body: sentenceBody,
+        text_id: textId,
+        sentence_id: sentenceId
+      }
+
+      console.log('[InlineExplanation] 发送请求数据:', requestData)
+
+      const response = await fetch('http://localhost:8000/api/test-token-to-vocab', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      })
+
+      const result = await response.json()
+      console.log('[InlineExplanation] 🎉 Token转Vocab结果:', result)
+
+      if (result.success && result.data) {
+        console.log('[InlineExplanation] ✅ 转换成功!')
+        console.log('[InlineExplanation] 📊 Vocab数据详情:')
+        console.log('  - Vocab ID:', result.data.vocab_id)
+        console.log('  - Vocab Body:', result.data.vocab_body)
+        console.log('  - Explanation:', result.data.explanation)
+        console.log('  - Source:', result.data.source)
+        console.log('  - Examples:', result.data.examples)
+        console.log('[InlineExplanation] 🎯 完整Vocab对象:', JSON.stringify(result.data, null, 2))
+      } else {
+        console.error('[InlineExplanation] ❌ 转换失败:', result.error)
+      }
+    } catch (error) {
+      console.error('[InlineExplanation] ❌ 请求失败:', error)
+    } finally {
+      setIsConverting(false)
+    }
+  }
 
   const handleDetailClick = (e) => {
     e.preventDefault()
     e.stopPropagation()
     
+    // Debug: trace token resolution path
+    console.log('[InlineExplanation] detail-click: raw token =', token)
+    console.log('[InlineExplanation] detail-click: typeof token =', typeof token)
+    if (token && typeof token === 'object') {
+      console.log('[InlineExplanation] detail-click: token.token_body =', token?.token_body)
+      console.log('[InlineExplanation] detail-click: token.token =', token?.token)
+      console.log('[InlineExplanation] detail-click: available keys =', Object.keys(token))
+    }
+
     const tokenText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
-    console.log('Token text:', tokenText) // 添加调试信息
-    
+    console.log('[InlineExplanation] detail-click: computed tokenText =', tokenText)
+    if (!tokenText) {
+      console.warn('[InlineExplanation] detail-click: tokenText is empty. Falling back checks...', {
+        tokenStringFallback: String(token ?? ''),
+      })
+    }
+
+    // 触发知识点 toast（使用 token 的文本）
+    if (tokenText) {
+      triggerKnowledgeToast(tokenText)
+    }
+
+    // 🧪 测试阶段：异步转换token为vocab
+    if (token && typeof token === 'object') {
+      console.log('🧪 测试阶段：开始异步转换token为vocab')
+      testTokenToVocab(token)
+    }
+
     sendMessageToChat(
       "请为这个词和它在句中的用法提供详细解释",
       tokenText
     )
+    console.log('[InlineExplanation] detail-click: sent message to chat with tokenText')
   }
 
   return (
@@ -26,9 +110,14 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
         <div className="mb-1">{explanation}</div>
         <button
           onClick={handleDetailClick}
-          className="text-xs text-blue-600 hover:text-blue-800 underline cursor-pointer"
+          disabled={isConverting}
+          className={`text-xs underline cursor-pointer ${
+            isConverting 
+              ? 'text-gray-400 cursor-not-allowed' 
+              : 'text-blue-600 hover:text-blue-800'
+          }`}
         >
-          detail explanation with AI
+          {isConverting ? '🧪 转换中...' : 'detail explanation with AI'}
         </button>
       </div>
     </div>
@@ -53,7 +142,13 @@ function VocabExplanationButton({ token, onGetExplanation }) {
   return (
     <div className="absolute top-full left-0 z-10 mt-1">
       {isClicked ? (
-        <InlineExplanation explanation="This is a test explanation" />
+        <InlineExplanation 
+          explanation="This is a test explanation" 
+          token={token}
+          sentenceBody=""
+          textId={1}
+          sentenceId={1}
+        />
       ) : (
         <button
           onClick={handleClick}
@@ -461,7 +556,10 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
                   {isTextToken && isClickedVocab && isHovered && (
                     <InlineExplanation 
                       explanation="This is a test explanation" 
-                      token={selectedToken}
+                      token={t}
+                      sentenceBody={sentence?.sentence_body || ""}
+                      textId={data?.data?.text_id ?? 1}
+                      sentenceId={sentence?.sentence_id || sIdx + 1}
                     />
                   )}
                 </span>

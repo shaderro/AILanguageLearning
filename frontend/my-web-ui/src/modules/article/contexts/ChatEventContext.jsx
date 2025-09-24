@@ -12,6 +12,7 @@ export const useChatEvent = () => {
 
 export const ChatEventProvider = ({ children }) => {
   const [pendingMessage, setPendingMessage] = useState(null)
+  const [pendingToast, setPendingToast] = useState(null)
 
   // 发送消息到Chat
   const sendMessageToChat = (message, quotedText = null) => {
@@ -27,11 +28,21 @@ export const ChatEventProvider = ({ children }) => {
     setPendingMessage(null)
   }
 
+  // 触发知识点 Toast
+  const triggerKnowledgeToast = (message) => {
+    setPendingToast(String(message ?? ''))
+  }
+
+  const clearPendingToast = () => setPendingToast(null)
+
   return (
     <ChatEventContext.Provider value={{
       pendingMessage,
       sendMessageToChat,
-      clearPendingMessage
+      clearPendingMessage,
+      pendingToast,
+      triggerKnowledgeToast,
+      clearPendingToast
     }}>
       {children}
     </ChatEventContext.Provider>
