@@ -24,7 +24,7 @@ function App() {
   )
 
   return (
-    <div className="h-screen bg-gray-100 overflow-hidden">
+    <div className="min-h-screen bg-gray-100 overflow-auto">
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -43,8 +43,8 @@ function App() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto h-full sm:px-6 lg:px-8">
-        <div className="px-4 h-full sm:px-0">
+      <div className="max-w-7xl mx-auto min-h-[calc(100vh-64px)] sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-0">
           {/* Pages */}
           {currentPage === 'apiDemo' && (
             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -65,7 +65,10 @@ function App() {
                   setSelectedArticleId(null)
                   setIsUploadMode(false)
                 }}
-                onUploadComplete={() => setIsUploadMode(false)}
+                onUploadComplete={() => {
+                  setSelectedArticleId(null)
+                  setIsUploadMode(false)
+                }}
               />
             ) : (
               <ArticleSelection

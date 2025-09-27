@@ -2,8 +2,10 @@ import { useState, useRef } from 'react'
 
 const UploadInterface = ({ onUploadStart }) => {
   const [dragActive, setDragActive] = useState(false)
-  const [uploadMethod, setUploadMethod] = useState(null) // 'url', 'file', 'drop'
+  const [uploadMethod, setUploadMethod] = useState(null) // 'url', 'file', 'drop', 'text'
   const [showProgress, setShowProgress] = useState(false)
+  const [textContent, setTextContent] = useState('')
+  const [textTitle, setTextTitle] = useState('')
   const fileInputRef = useRef(null)
 
   const handleDrag = (e) => {
@@ -44,17 +46,98 @@ const UploadInterface = ({ onUploadStart }) => {
     }
   }
 
-  const handleUrlSubmit = (e) => {
+  const handleUrlSubmit = async (e) => {
     e.preventDefault()
     const url = e.target.url.value.trim()
     if (url) {
       console.log('URL submitted:', url)
       setUploadMethod('url')
-      // 触发上传进度
-      setTimeout(() => {
-        setShowProgress(true)
-        onUploadStart && onUploadStart()
-      }, 500)
+      
+      try {
+        // 创建FormData对象
+        const formData = new FormData()
+        formData.append('url', url)
+        formData.append('title', 'URL Article')
+        
+        console.log('🚀 [Frontend] 发送URL处理请求...')
+        console.log('📤 [Frontend] FormData内容:')
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}: ${value}`)
+        }
+        
+        // 调用后端API
+        const response = await fetch('http://localhost:8000/api/upload/url', {
+          method: 'POST',
+          body: formData
+        })
+        
+        console.log('📡 [Frontend] 收到响应状态:', response.status, response.statusText)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('✅ [Frontend] URL处理成功:', result)
+          
+          // 触发上传进度
+          setTimeout(() => {
+            setShowProgress(true)
+            onUploadStart && onUploadStart()
+          }, 500)
+        } else {
+          const errorText = await response.text()
+          console.error('❌ [Frontend] URL处理失败:', response.status, errorText)
+          alert(`URL处理失败: ${response.status} - ${errorText}`)
+        }
+      } catch (error) {
+        console.error('💥 [Frontend] 网络错误:', error)
+        alert(`网络错误: ${error.message}`)
+      }
+    }
+  }
+
+  const handleTextSubmit = async (e) => {
+    e.preventDefault()
+    if (textContent.trim()) {
+      console.log('Text submitted:', { title: textTitle, content: textContent })
+      setUploadMethod('text')
+      
+      try {
+        // 创建FormData对象
+        const formData = new FormData()
+        formData.append('text', textContent)
+        formData.append('title', textTitle || 'Text Article')
+        
+        console.log('🚀 [Frontend] 发送文字处理请求...')
+        console.log('📤 [Frontend] FormData内容:')
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}: ${value}`)
+        }
+        
+        // 调用后端API
+        const response = await fetch('http://localhost:8000/api/upload/text', {
+          method: 'POST',
+          body: formData
+        })
+        
+        console.log('📡 [Frontend] 收到响应状态:', response.status, response.statusText)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log('✅ [Frontend] 文字处理成功:', result)
+          
+          // 触发上传进度
+          setTimeout(() => {
+            setShowProgress(true)
+            onUploadStart && onUploadStart()
+          }, 500)
+        } else {
+          const errorText = await response.text()
+          console.error('❌ [Frontend] 文字处理失败:', response.status, errorText)
+          alert(`文字处理失败: ${response.status} - ${errorText}`)
+        }
+      } catch (error) {
+        console.error('💥 [Frontend] 网络错误:', error)
+        alert(`网络错误: ${error.message}`)
+      }
     }
   }
 
@@ -162,6 +245,42 @@ const UploadInterface = ({ onUploadStart }) => {
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="flex items-center w-full max-w-md">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-gray-500 text-sm">OR</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        {/* Text Input */}
+        <div className="w-full max-w-md">
+          <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">Enter Text</h3>
+          <form onSubmit={handleTextSubmit} className="space-y-3">
+            <input
+              type="text"
+              placeholder="Article title (optional)..."
+              value={textTitle}
+              onChange={(e) => setTextTitle(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <textarea
+              placeholder="Enter your article text here..."
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              rows={6}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical"
+              required
+            />
+            <button
+              type="submit"
+              disabled={!textContent.trim()}
+              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Process Text
+            </button>
+          </form>
+        </div>
+
         {/* Upload Status */}
         {uploadMethod && (
           <div className="w-full max-w-md">
@@ -174,6 +293,7 @@ const UploadInterface = ({ onUploadStart }) => {
                   {uploadMethod === 'url' && 'URL uploaded successfully!'}
                   {uploadMethod === 'file' && 'File uploaded successfully!'}
                   {uploadMethod === 'drop' && 'File dropped successfully!'}
+                  {uploadMethod === 'text' && 'Text submitted successfully!'}
                 </span>
               </div>
             </div>

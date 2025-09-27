@@ -1,24 +1,32 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
 import ReviewCard from '../shared/components/ReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
+import { useGrammarList, useToggleGrammarStar, useRefreshData } from '../../hooks/useApi'
 
 const GrammarDemo = () => {
-  // Demo 数据：可替换为从后端获取
-  const allGrammar = useMemo(
-    () => [
-      { rule: 'present-perfect', rule_name: 'Present Perfect', structure: 'have/has + past participle', usage: '过去发生对现在有影响', example: 'I have eaten already.' },
-      { rule: 'past-continuous', rule_name: 'Past Continuous', structure: 'was/were + v-ing', usage: '过去某时正在进行', example: 'I was reading when he called.' },
-      { rule: 'future-simple', rule_name: 'Future Simple', structure: 'will + verb', usage: '一般将来时', example: 'I will go tomorrow.' },
-      { rule: 'conditional', rule_name: 'Conditional', structure: 'if + clause', usage: '条件句', example: 'If it rains, we will stay home.' },
-    ],
-    []
-  )
+  // 使用API获取语法数据
+  const { data: grammarData, isLoading, isError, error } = useGrammarList()
+  const toggleStarMutation = useToggleGrammarStar()
+  const { refreshGrammar } = useRefreshData()
+
+  // 处理收藏功能
+  const handleToggleStar = (grammarId, isStarred) => {
+    toggleStarMutation.mutate({ id: grammarId, isStarred })
+  }
+
+  // 处理刷新数据
+  const handleRefreshData = () => {
+    refreshGrammar()
+  }
+
+  // 从API数据中提取语法列表
+  const allGrammar = grammarData?.data || []
 
   const [filterText, setFilterText] = useState('')
-  const list = allGrammar.filter((g) => (filterText ? (g.rule_name || g.rule).toLowerCase().includes(filterText.toLowerCase()) : true))
+  const list = allGrammar.filter((g) => (filterText ? g.rule_name.toLowerCase().includes(filterText.toLowerCase()) : true))
 
   const [selectedGrammar, setSelectedGrammar] = useState(null)
   const [isReviewMode, setIsReviewMode] = useState(false)
@@ -87,9 +95,56 @@ const GrammarDemo = () => {
     return (
       <div className="h-full bg-gray-100 p-8">
         <div className="max-w-6xl mx-auto">
-          <LearnDetailPage type="grammar" data={selectedGrammar} onBack={() => setSelectedGrammar(null)} />
+          <LearnDetailPage 
+            type="grammar" 
+            data={selectedGrammar} 
+            onBack={() => setSelectedGrammar(null)}
+            onToggleStar={handleToggleStar}
+          />
         </div>
       </div>
+    )
+  }
+
+  // 加载状态
+  if (isLoading) {
+    return (
+      <LearnPageLayout
+        title="语法学习"
+        onStartReview={startReview}
+        onSearch={(value) => setFilterText(value)}
+        onFilterChange={handleFilterChange}
+        showFilters={true}
+        showSearch={true}
+        backgroundClass="bg-gray-100"
+        onRefresh={handleRefreshData}
+        showRefreshButton={true}
+      >
+        <div className="col-span-full flex justify-center items-center h-32">
+          <div className="text-gray-500">加载语法数据中...</div>
+        </div>
+      </LearnPageLayout>
+    )
+  }
+
+  // 错误状态
+  if (isError) {
+    return (
+      <LearnPageLayout
+        title="语法学习"
+        onStartReview={startReview}
+        onSearch={(value) => setFilterText(value)}
+        onFilterChange={handleFilterChange}
+        showFilters={true}
+        showSearch={true}
+        backgroundClass="bg-gray-100"
+        onRefresh={handleRefreshData}
+        showRefreshButton={true}
+      >
+        <div className="col-span-full flex justify-center items-center h-32">
+          <div className="text-red-500">加载语法数据失败: {error?.message}</div>
+        </div>
+      </LearnPageLayout>
     )
   }
 
@@ -103,9 +158,17 @@ const GrammarDemo = () => {
       showFilters={true}
       showSearch={true}
       backgroundClass="bg-gray-100"
+      onRefresh={handleRefreshData}
+      showRefreshButton={true}
     >
       {list.map((g) => (
-        <LearnCard key={g.rule} type="grammar" data={g} onClick={() => setSelectedGrammar(g)} />
+        <LearnCard 
+          key={g.rule_id} 
+          type="grammar" 
+          data={g} 
+          onClick={() => setSelectedGrammar(g)}
+          onToggleStar={handleToggleStar}
+        />
       ))}
     </LearnPageLayout>
   )

@@ -4,6 +4,18 @@ import json
 import os
 import sys
 import uvicorn
+# Import saver with fallbacks for both package and script execution
+try:
+    from .server_save_to_json import save_vocab_to_json
+except Exception:
+    try:
+        from backend.server_save_to_json import save_vocab_to_json
+    except Exception:
+        import importlib
+        SAVE_DIR = os.path.dirname(__file__)
+        if SAVE_DIR not in sys.path:
+            sys.path.insert(0, SAVE_DIR)
+        save_vocab_to_json = importlib.import_module('server_save_to_json').save_vocab_to_json
 
 # Ensure project root and backend package are importable
 # server.py is at: <repo>/frontend/my-web-ui/backend/server.py
@@ -28,7 +40,7 @@ app.add_middleware(
 )
 
 vocab_file = r'C:\Users\ranxi\AILanguageLearning\backend\data\current\vocab.json'
-result_dir = r'C:\Users\ranxi\AILanguageLearning\real_data_raw\result'
+result_dir = r'C:\Users\ranxi\AILanguageLearning\backend\data\current\articles'
 print(f"Vocab file path: {vocab_file}")
 print(f"Vocab file exists: {os.path.exists(vocab_file)}")
 print(f"Result dir path: {result_dir}")
@@ -55,6 +67,22 @@ async def get_vocab_list():
     except Exception as e:
         print(f'Error loading vocab: {e}')
         return {'data': []}
+
+@app.post('/api/vocab/refresh')
+async def refresh_vocab_data():
+    """手动刷新词汇数据"""
+    print("Manual vocab refresh requested")
+    try:
+        if os.path.exists(vocab_file):
+            with open(vocab_file, 'r', encoding='utf-8') as f:
+                vocab_data = json.load(f)
+            print(f"Refreshed {len(vocab_data)} vocab items")
+            return {'success': True, 'message': f'Successfully refreshed {len(vocab_data)} vocab items', 'data': vocab_data}
+        else:
+            return {'success': False, 'message': 'Vocab file not found', 'data': []}
+    except Exception as e:
+        print(f'Error refreshing vocab: {e}')
+        return {'success': False, 'message': str(e), 'data': []}
 
 @app.get('/api/articles')
 async def articles():
@@ -115,17 +143,23 @@ async def get_article(article_id: int):
 @app.post('/api/test-token-to-vocab')
 async def test_token_to_vocab(request_data: dict):
     """测试token转vocab功能"""
-    print("Test token-to-vocab endpoint called")
-    print(f"Request data: {request_data}")
+    print("🚀 [Backend] Test token-to-vocab endpoint called")
+    print(f"📥 [Backend] Request data: {request_data}")
     
     try:
-        # 模拟token数据
+        # 解析请求数据
         token_data = request_data.get('token', {})
         sentence_body = request_data.get('sentence_body', '')
         text_id = request_data.get('text_id', 1)
         sentence_id = request_data.get('sentence_id', 1)
         
-        # 创建模拟的Token对象（使用新的数据模型）
+        print(f"🔍 [Backend] Parsed data:")
+        print(f"  - Token data: {token_data}")
+        print(f"  - Sentence body: {sentence_body}")
+        print(f"  - Text ID: {text_id}")
+        print(f"  - Sentence ID: {sentence_id}")
+        
+        # 创建Token对象（使用新的数据模型）
         from backend.data_managers.data_classes_new import Token
         token = Token(
             token_body=token_data.get('token_body', ''),
@@ -135,13 +169,29 @@ async def test_token_to_vocab(request_data: dict):
             sentence_token_id=token_data.get('sentence_token_id', 1)
         )
         
+        print(f"🏗️ [Backend] Created Token object:")
+        print(f"  - token_body: {token.token_body}")
+        print(f"  - token_type: {token.token_type}")
+        print(f"  - difficulty_level: {token.difficulty_level}")
+        
         # 使用 TokenToVocabConverter 进行转换
         from backend.preprocessing.token_to_vocab import TokenToVocabConverter
         
+        print("🔄 [Backend] Initializing TokenToVocabConverter...")
         converter = TokenToVocabConverter()
+        
+        print("⚡ [Backend] Converting token to vocab...")
         vocab_result = converter.convert_token_to_vocab(token, sentence_body, text_id, sentence_id)
         
         if vocab_result:
+            print("✅ [Backend] Token to vocab conversion successful!")
+            print(f"📊 [Backend] Vocab result details:")
+            print(f"  - vocab_id: {vocab_result.vocab_id}")
+            print(f"  - vocab_body: {vocab_result.vocab_body}")
+            print(f"  - explanation: {vocab_result.explanation}")
+            print(f"  - source: {vocab_result.source}")
+            print(f"  - examples count: {len(vocab_result.examples)}")
+            
             # 转换为字典格式返回
             vocab_dict = {
                 'vocab_id': vocab_result.vocab_id,
@@ -159,17 +209,29 @@ async def test_token_to_vocab(request_data: dict):
                     } for ex in vocab_result.examples
                 ]
             }
-            print(f"Successfully converted token to vocab: {vocab_dict}")
-            return {'success': True, 'data': vocab_dict}
+            
+            # 🆕 保存到 vocab.json 文件（模块化）
+            print("💾 [Backend] Attempting to save vocab to JSON file...")
+            try:
+                final_id, total_count = save_vocab_to_json(vocab_file, vocab_dict)
+                vocab_dict['vocab_id'] = final_id
+                print(f"✅ [Backend] Successfully saved vocab to file! vocab_id: {final_id}")
+                print(f"📈 [Backend] Total vocab count: {total_count}")
+            except Exception as save_error:
+                print(f"⚠️ [Backend] Failed to save to file: {save_error}")
+                print("🔄 [Backend] Continuing with response anyway...")
+            
+            print(f"🎉 [Backend] Final vocab dict: {json.dumps(vocab_dict, ensure_ascii=False, indent=2)}")
+            return {'success': True, 'data': vocab_dict, 'saved_to_file': True}
         else:
-            print("Failed to convert token to vocab")
+            print("❌ [Backend] Failed to convert token to vocab")
             return {'success': False, 'error': 'Failed to convert token to vocab'}
     except Exception as e:
         # 将后端详细错误透传给前端，便于调试
-        print(f'Error in test-token-to-vocab: {e}')
+        print(f'💥 [Backend] Error in test-token-to-vocab: {e}')
         import traceback
         tb = traceback.format_exc()
-        print(tb)
+        print(f'🔍 [Backend] Full traceback:\n{tb}')
         return {
             'success': False,
             'error': str(e),

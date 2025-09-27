@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useVocabList, useWordInfo } from '../../hooks/useApi'
+import { useVocabList, useWordInfo, useToggleVocabStar, useRefreshData } from '../../hooks/useApi'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
@@ -19,6 +19,12 @@ function WordDemo() {
   // 单词查询功能
   const [searchTerm, setSearchTerm] = useState('')
   const wordInfo = useWordInfo(searchTerm)
+
+  // 收藏功能
+  const toggleStarMutation = useToggleVocabStar()
+  
+  // 数据刷新功能
+  const { refreshVocab } = useRefreshData()
 
   const handleWordSelect = (word) => {
     setSelectedWord(word)
@@ -56,6 +62,18 @@ function WordDemo() {
 
   const handleFilterChange = (filterId, value) => {
     // 这里可以根据需要在本地过滤 vocab 列表
+  }
+
+  const handleToggleStar = (item) => {
+    const newStarredState = !item.is_starred
+    toggleStarMutation.mutate({
+      id: item.vocab_id,
+      isStarred: newStarredState
+    })
+  }
+
+  const handleRefreshData = () => {
+    refreshVocab()
   }
 
   if (isLoading) {
@@ -110,6 +128,7 @@ function WordDemo() {
             type="vocab"
             data={selectedWord}
             onBack={() => setSelectedWord(null)}
+            onToggleStar={handleToggleStar}
           />
         </div>
       </div>
@@ -126,8 +145,10 @@ function WordDemo() {
       onStartReview={handleStartReview}
       onSearch={(value) => setSearchTerm(value)}
       onFilterChange={handleFilterChange}
+      onRefresh={handleRefreshData}
       showFilters={true}
       showSearch={true}
+      showRefreshButton={true}
       backgroundClass="bg-gray-100"
     >
       {/* 搜索建议区域（可选） */}
@@ -147,6 +168,7 @@ function WordDemo() {
           type="vocab"
           data={word}
           onClick={() => handleWordSelect(word)}
+          onToggleStar={handleToggleStar}
         />
       ))}
     </LearnPageLayout>

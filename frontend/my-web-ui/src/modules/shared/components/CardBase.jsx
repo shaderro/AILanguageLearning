@@ -7,11 +7,11 @@ const CardBase = ({
   error, 
   onClick, 
   children,
-  className = "bg-white rounded-lg shadow-md p-6 max-w-md mx-auto hover:shadow-lg transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform"
+  className = "bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform"
 }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+      <div className="bg-white rounded-lg shadow-md p-4">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4"></div>
           <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -24,7 +24,7 @@ const CardBase = ({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">

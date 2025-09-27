@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// ´´½¨ axios ÊµÀı
+// ï¿½ï¿½ï¿½ï¿½ axios Êµï¿½ï¿½
 const api = axios.create({
   baseURL: "http://localhost:8000",
   timeout: 10000,
@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// ÇëÇóÀ¹½ØÆ÷
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 api.interceptors.request.use(
   (config) => {
     console.log("API Request:", config.method?.toUpperCase(), config.url);
@@ -21,7 +21,7 @@ api.interceptors.request.use(
   }
 );
 
-// ÏìÓ¦À¹½ØÆ÷
+// ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 api.interceptors.response.use(
   (response) => {
     console.log("API Response:", response.status, response.config.url);
@@ -33,38 +33,38 @@ api.interceptors.response.use(
   }
 );
 
-// API º¯Êı
+// API ï¿½ï¿½ï¿½ï¿½
 export const apiService = {
-  // ½¡¿µ¼ì²é
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   healthCheck: () => api.get("/api/health"),
 
-  // °´´Ê²éÑ¯
+  // ï¿½ï¿½ï¿½Ê²ï¿½Ñ¯
   getWordInfo: (text) => api.get(`/api/word?text=${encodeURIComponent(text)}`),
 
-  // »ñÈ¡´Ê»ãÁĞ±í
+  // ï¿½ï¿½È¡ï¿½Ê»ï¿½ï¿½Ğ±ï¿½
   getVocabList: () => api.get("/api/vocab"),
 
-  // »ñÈ¡µ¥¸ö´Ê»ãÏêÇé
+  // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½ï¿½ï¿½
   getVocabById: (id) => api.get(`/api/vocab/${id}`),
 
-  // »ñÈ¡Óï·¨¹æÔòÁĞ±í
+  // ï¿½ï¿½È¡ï¿½ï·¨ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½
   getGrammarList: () => api.get("/api/grammar"),
 
-  // »ñÈ¡µ¥¸öÓï·¨¹æÔòÏêÇé
+  // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï·¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   getGrammarById: (id) => api.get(`/api/grammar/${id}`),
 
-  // »ñÈ¡Í³¼ÆÊı¾İ
+  // ï¿½ï¿½È¡Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   getStats: () => api.get("/api/stats"),
 
-  // »ñÈ¡ÎÄÕÂÁĞ±íÕªÒª
+  // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ÕªÒª
   getArticlesList: () => api.get("/api/articles"),
 
-  // »ñÈ¡ÎÄÕÂÏêÇé
+  // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   getArticleById: (id) => api.get(`/api/articles/${id}`),
 
-  // ĞÂÔö£º»ñÈ¡´Ê»ã½âÊÍ
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ê»ï¿½ï¿½ï¿½ï¿½
   getVocabExplanation: (word, context = "") => {
-    // Ä¿Ç°·µ»Ø²âÊÔÊı¾İ
+    // Ä¿Ç°ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     return Promise.resolve({
       word: word,
       definition: "This is a test explanation",
@@ -77,7 +77,13 @@ export const apiService = {
       synonyms: [],
       antonyms: []
     });
-  }
+  },
+
+  // åˆ‡æ¢è¯æ±‡æ”¶è—çŠ¶æ€
+  toggleVocabStar: (id, isStarred) => api.put(`/api/vocab/${id}/star`, { is_starred: isStarred }),
+
+  // åˆ‡æ¢è¯­æ³•è§„åˆ™æ”¶è—çŠ¶æ€
+  toggleGrammarStar: (id, isStarred) => api.put(`/api/grammar/${id}/star`, { is_starred: isStarred })
 };
 
 export default api;

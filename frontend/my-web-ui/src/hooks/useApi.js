@@ -135,3 +135,29 @@ export const useArticle = (id) => {
     staleTime: 10 * 60 * 1000, // 10分钟
   });
 };
+
+// 切换词汇收藏状态 Hook
+export const useToggleVocabStar = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, isStarred }) => apiService.toggleVocabStar(id, isStarred),
+    onSuccess: () => {
+      // 刷新词汇列表
+      queryClient.invalidateQueries({ queryKey: queryKeys.vocab.all });
+    },
+  });
+};
+
+// 切换语法规则收藏状态 Hook
+export const useToggleGrammarStar = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, isStarred }) => apiService.toggleGrammarStar(id, isStarred),
+    onSuccess: () => {
+      // 刷新语法规则列表
+      queryClient.invalidateQueries({ queryKey: queryKeys.grammar.all });
+    },
+  });
+};

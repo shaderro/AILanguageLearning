@@ -11,13 +11,17 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
   // 测试token转vocab功能
   const testTokenToVocab = async (tokenData) => {
     if (!tokenData || typeof tokenData !== 'object') {
-      console.warn('[InlineExplanation] Invalid token data for conversion')
+      console.warn('⚠️ [Frontend] Invalid token data for conversion')
       return
     }
 
     setIsConverting(true)
-    console.log('[InlineExplanation] 🧪 开始测试token转vocab功能...')
-    console.log('[InlineExplanation] Token数据:', tokenData)
+    console.log('🚀 [Frontend] 开始测试token转vocab功能...')
+    console.log('📥 [Frontend] 原始Token数据:', tokenData)
+    console.log('📋 [Frontend] 上下文信息:')
+    console.log('  - Sentence Body:', sentenceBody)
+    console.log('  - Text ID:', textId)
+    console.log('  - Sentence ID:', sentenceId)
 
     try {
       const requestData = {
@@ -33,7 +37,7 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
         sentence_id: sentenceId
       }
 
-      console.log('[InlineExplanation] 发送请求数据:', requestData)
+      console.log('📤 [Frontend] 发送请求数据:', JSON.stringify(requestData, null, 2))
 
       const response = await fetch('http://localhost:8000/api/test-token-to-vocab', {
         method: 'POST',
@@ -43,25 +47,40 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
         body: JSON.stringify(requestData)
       })
 
+      console.log('📡 [Frontend] 收到响应状态:', response.status, response.statusText)
+      
       const result = await response.json()
-      console.log('[InlineExplanation] 🎉 Token转Vocab结果:', result)
+      console.log('📥 [Frontend] 收到响应数据:', result)
 
       if (result.success && result.data) {
-        console.log('[InlineExplanation] ✅ 转换成功!')
-        console.log('[InlineExplanation] 📊 Vocab数据详情:')
+        console.log('✅ [Frontend] Token转Vocab成功!')
+        console.log('📊 [Frontend] Vocab数据详情:')
         console.log('  - Vocab ID:', result.data.vocab_id)
         console.log('  - Vocab Body:', result.data.vocab_body)
         console.log('  - Explanation:', result.data.explanation)
         console.log('  - Source:', result.data.source)
-        console.log('  - Examples:', result.data.examples)
-        console.log('[InlineExplanation] 🎯 完整Vocab对象:', JSON.stringify(result.data, null, 2))
+        console.log('  - Examples count:', result.data.examples?.length || 0)
+        console.log('  - Saved to file:', result.saved_to_file)
+        
+        console.log('🎯 [Frontend] 完整Vocab对象:')
+        console.log(JSON.stringify(result.data, null, 2))
+        
+        // 提示用户刷新数据
+        if (result.saved_to_file) {
+          console.log('💡 [Frontend] 建议: 点击Word页面的刷新按钮查看新词汇!')
+        }
       } else {
-        console.error('[InlineExplanation] ❌ 转换失败:', result.error)
+        console.error('❌ [Frontend] 转换失败:', result.error)
+        if (result.traceback) {
+          console.error('🔍 [Frontend] 后端错误详情:', result.traceback)
+        }
       }
     } catch (error) {
-      console.error('[InlineExplanation] ❌ 请求失败:', error)
+      console.error('💥 [Frontend] 请求失败:', error)
+      console.error('🔍 [Frontend] 错误详情:', error.message)
     } finally {
       setIsConverting(false)
+      console.log('🏁 [Frontend] Token转Vocab流程结束')
     }
   }
 
@@ -69,39 +88,48 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
     e.preventDefault()
     e.stopPropagation()
     
+    console.log('🎯 [Frontend] Detail按钮被点击!')
+    
     // Debug: trace token resolution path
-    console.log('[InlineExplanation] detail-click: raw token =', token)
-    console.log('[InlineExplanation] detail-click: typeof token =', typeof token)
+    console.log('🔍 [Frontend] Token解析路径追踪:')
+    console.log('  - 原始token:', token)
+    console.log('  - token类型:', typeof token)
+    
     if (token && typeof token === 'object') {
-      console.log('[InlineExplanation] detail-click: token.token_body =', token?.token_body)
-      console.log('[InlineExplanation] detail-click: token.token =', token?.token)
-      console.log('[InlineExplanation] detail-click: available keys =', Object.keys(token))
+      console.log('  - token.token_body:', token?.token_body)
+      console.log('  - token.token:', token?.token)
+      console.log('  - 可用键:', Object.keys(token))
     }
 
     const tokenText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
-    console.log('[InlineExplanation] detail-click: computed tokenText =', tokenText)
+    console.log('📝 [Frontend] 计算得出的tokenText:', tokenText)
+    
     if (!tokenText) {
-      console.warn('[InlineExplanation] detail-click: tokenText is empty. Falling back checks...', {
+      console.warn('⚠️ [Frontend] tokenText为空，进行备用检查...', {
         tokenStringFallback: String(token ?? ''),
       })
     }
 
     // 触发知识点 toast（使用 token 的文本）
     if (tokenText) {
+      console.log('🍞 [Frontend] 触发知识点toast:', tokenText)
       triggerKnowledgeToast(tokenText)
     }
 
     // 🧪 测试阶段：异步转换token为vocab
     if (token && typeof token === 'object') {
-      console.log('🧪 测试阶段：开始异步转换token为vocab')
+      console.log('🧪 [Frontend] 测试阶段：开始异步转换token为vocab')
       testTokenToVocab(token)
+    } else {
+      console.log('⚠️ [Frontend] 跳过token转vocab：token不是对象或为空')
     }
 
+    console.log('💬 [Frontend] 发送消息到聊天:', tokenText)
     sendMessageToChat(
       "请为这个词和它在句中的用法提供详细解释",
       tokenText
     )
-    console.log('[InlineExplanation] detail-click: sent message to chat with tokenText')
+    console.log('✅ [Frontend] 消息已发送到聊天')
   }
 
   return (
@@ -470,7 +498,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto h-full max-h-[calc(100vh-200px)]">
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto">
         <div className="text-gray-500">Loading article...</div>
       </div>
     )
@@ -478,7 +506,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
   if (isError) {
     return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto h-full max-h-[calc(100vh-200px)]">
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto">
         <div className="text-red-500">Failed to load: {String(error?.message || error)}</div>
       </div>
     )
@@ -486,7 +514,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
   return (
     <div
-      className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto h-full max-h-[calc(100vh-200px)] "
+      className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto"
       onClick={handleBackgroundClick}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -494,7 +522,11 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     >
       <div className="space-y-[0.66rem] leading-[1.33] text-gray-900">
         {sentences.map((sentence, sIdx) => (
-          <div key={`s-${sIdx}`} className={`select-none ${activeSentenceIndex === sIdx ? "border border-gray-300 rounded-md px-2 py-1" : ""}`} data-sentence="1">
+          <div
+            key={`s-${sIdx}`}
+            className={`select-none ${activeSentenceIndex === sIdx ? "outline outline-1 outline-gray-300 rounded-md outline-offset-1" : ""}`}
+            data-sentence="1"
+          >
             {(sentence?.tokens || []).map((t, tIdx) => {
               const displayText = typeof t === 'string' ? t : (t?.token_body ?? t?.token ?? '')
               const selectable = typeof t === 'object' ? !!t?.selectable : false

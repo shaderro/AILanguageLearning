@@ -1,0 +1,50 @@
+[
+  {
+    "rule_id": 1,
+    "rule_name": "Present Perfect Tense",
+    "rule_summary": "现在完成时用于表示过去发生但与现在有联系的动作，或表示持续到现在的动作。",
+    "examples": [
+      "I have lived in this city for five years.",
+      "She has finished her homework.",
+      "They have never been to Paris."
+    ],
+    "source": "auto",
+    "is_starred": true
+  },
+  {
+    "rule_id": 2,
+    "rule_name": "Past Continuous Tense",
+    "rule_summary": "过去进行时用于表示过去某个时间点正在进行的动作，或为另一个动作提供背景。",
+    "examples": [
+      "I was reading a book when the phone rang.",
+      "They were playing football yesterday.",
+      "She was cooking dinner at 6 PM."
+    ],
+    "source": "auto",
+    "is_starred": false
+  },
+  {
+    "rule_id": 3,
+    "rule_name": "Future Simple Tense",
+    "rule_summary": "一般将来时用于表示未来的动作、预测或自发决定。",
+    "examples": [
+      "I will help you with your project.",
+      "She will arrive at 3 PM.",
+      "They will probably win the game."
+    ],
+    "source": "auto",
+    "is_starred": true
+  },
+  {
+    "rule_id": 4,
+    "rule_name": "First Conditional",
+    "rule_summary": "第一条件句用于表示真实的可能性，一个动作依赖于另一个动作。",
+    "examples": [
+      "If it rains tomorrow, I will stay at home.",
+      "If you study hard, you will pass the exam.",
+      "If he comes early, we will have dinner together."
+    ],
+    "source": "auto",
+    "is_starred": false
+  }
+]

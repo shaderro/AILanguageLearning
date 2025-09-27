@@ -60,7 +60,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         </div>
 
         {/* Main Content (slightly shorter than viewport to fully show both panels) */}
-        <div className="flex gap-8 h-[calc(100vh-120px)] p-4">
+        <div className="flex gap-8 flex-1 p-4 overflow-hidden">
           {isUploadMode ? (
             showUploadProgress ? (
               <UploadProgress onComplete={handleUploadComplete} />

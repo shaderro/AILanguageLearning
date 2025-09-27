@@ -1,48 +1,96 @@
 [
   {
     "rule_id": 1,
-    "rule_name": "Present Perfect Tense",
-    "rule_summary": "现在完成时用于表示过去发生但与现在有联系的动作，或表示持续到现在的动作。",
+    "rule_name": "德语定冠词变化",
+    "rule_summary": "德语定冠词根据名词的性、数、格发生变化。阳性名词用der，阴性名词用die，中性名词用das。复数形式统一用die。",
     "examples": [
-      "I have lived in this city for five years.",
-      "She has finished her homework.",
-      "They have never been to Paris."
+      "Der Stein der Weisen ist ein magischer Gegenstand.",
+      "Die Frau ist sehr intelligent.",
+      "Das Kind spielt im Garten."
     ],
     "source": "auto",
     "is_starred": true
   },
   {
     "rule_id": 2,
-    "rule_name": "Past Continuous Tense",
-    "rule_summary": "过去进行时用于表示过去某个时间点正在进行的动作，或为另一个动作提供背景。",
+    "rule_name": "德语动词变位",
+    "rule_summary": "德语动词根据人称、数、时态进行变位。规则动词在现在时中，第一人称单数加-e，第二人称单数加-st，第三人称单数加-t。",
     "examples": [
-      "I was reading a book when the phone rang.",
-      "They were playing football yesterday.",
-      "She was cooking dinner at 6 PM."
+      "Ich bin ein Schüler.",
+      "Du bist sehr klug.",
+      "Er ist mein Freund."
     ],
     "source": "auto",
     "is_starred": false
   },
   {
     "rule_id": 3,
-    "rule_name": "Future Simple Tense",
-    "rule_summary": "一般将来时用于表示未来的动作、预测或自发决定。",
+    "rule_name": "德语形容词词尾变化",
+    "rule_summary": "德语形容词在名词前需要根据名词的性、数、格以及前面是否有定冠词、不定冠词或无数词来变化词尾。",
     "examples": [
-      "I will help you with your project.",
-      "She will arrive at 3 PM.",
-      "They will probably win the game."
+      "Ein großer Mann kommt.",
+      "Die schöne Frau lächelt.",
+      "Ein kleines Kind spielt."
+    ],
+    "source": "manual",
+    "is_starred": true
+  },
+  {
+    "rule_id": 4,
+    "rule_name": "德语介词搭配",
+    "rule_summary": "德语介词与名词搭配时，名词需要根据介词的语法要求变化格。有些介词要求第三格，有些要求第四格，有些两者皆可。",
+    "examples": [
+      "Ich gehe in die Schule.",
+      "Das Buch liegt auf dem Tisch.",
+      "Er kommt aus Deutschland."
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 5,
+    "rule_name": "德语从句语序",
+    "rule_summary": "德语从句中，动词通常放在句末。主句和从句之间用逗号分隔，从句的语序与主句不同。",
+    "examples": [
+      "Ich weiß, dass er kommt.",
+      "Wenn es regnet, bleibe ich zu Hause.",
+      "Obwohl es spät ist, arbeitet er noch."
     ],
     "source": "auto",
     "is_starred": true
   },
   {
-    "rule_id": 4,
-    "rule_name": "First Conditional",
-    "rule_summary": "第一条件句用于表示真实的可能性，一个动作依赖于另一个动作。",
+    "rule_id": 6,
+    "rule_name": "德语名词复数形式",
+    "rule_summary": "德语名词复数形式有多种变化规则：有些加-en，有些加-er，有些加-e，有些不变，还有些有特殊变化。需要记忆每个名词的复数形式。",
     "examples": [
-      "If it rains tomorrow, I will stay at home.",
-      "If you study hard, you will pass the exam.",
-      "If he comes early, we will have dinner together."
+      "Der Mann - die Männer",
+      "Die Frau - die Frauen",
+      "Das Kind - die Kinder"
+    ],
+    "source": "manual",
+    "is_starred": false
+  },
+  {
+    "rule_id": 7,
+    "rule_name": "德语情态动词",
+    "rule_summary": "德语情态动词（können, müssen, sollen, wollen, dürfen, mögen）在现在时中有特殊的变位形式，并且后面跟的动词用原形。",
+    "examples": [
+      "Ich kann Deutsch sprechen.",
+      "Du musst fleißig lernen.",
+      "Er will nach Hause gehen."
+    ],
+    "source": "qa",
+    "is_starred": true
+  },
+  {
+    "rule_id": 8,
+    "rule_name": "德语可分动词",
+    "rule_summary": "德语可分动词由前缀和动词根组成，在现在时和过去时中，前缀与动词根分离，前缀放在句末。",
+    "examples": [
+      "Ich komme morgen an.",
+      "Er geht jeden Tag aus.",
+      "Sie steht früh auf."
     ],
     "source": "auto",
     "is_starred": false
