@@ -16,6 +16,12 @@ export const ChatEventProvider = ({ children }) => {
 
   // 发送消息到Chat
   const sendMessageToChat = (message, quotedText = null) => {
+    // 过滤空消息
+    if (!message || String(message).trim() === '' || message === 'null' || message === 'undefined') {
+      console.warn('⚠️ [ChatEvent] Ignoring empty/null message:', message)
+      return
+    }
+    
     setPendingMessage({
       text: message,
       quotedText: quotedText,

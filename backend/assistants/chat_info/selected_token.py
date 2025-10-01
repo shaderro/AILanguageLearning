@@ -33,7 +33,12 @@ class SelectedToken:
     def __post_init__(self):
         """验证数据"""
         if not self.token_indices:
-            raise ValueError("token_indices不能为空")
+            # 提供更详细的错误信息
+            raise ValueError(
+                f"token_indices不能为空。"
+                f"token_text='{self.token_text}', "
+                f"sentence_body='{self.sentence_body[:50] if self.sentence_body else 'None'}...'"
+            )
         if not self.token_text:
             raise ValueError("token_text不能为空")
         if not self.sentence_body:
@@ -140,6 +145,12 @@ def create_selected_token_from_text(sentence: SentenceType, selected_text: str) 
     for i, word in enumerate(words):
         if word in selected_words:
             token_indices.append(i)
+    
+    # 🔧 如果找不到 token 位置（可能是句子变了），回退到整句选择
+    if not token_indices:
+        print(f"⚠️ [SelectedToken] 在句子中找不到 token '{selected_text}'，回退到整句选择")
+        print(f"  - 句子: {sentence.sentence_body[:100]}...")
+        return SelectedToken.from_full_sentence(sentence)
     
     return SelectedToken(
         token_indices=token_indices,

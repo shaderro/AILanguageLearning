@@ -31,13 +31,11 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
           difficulty_level: tokenData.difficulty_level || 'hard',
           global_token_id: tokenData.global_token_id || 1,
           sentence_token_id: tokenData.sentence_token_id || 1
-        },
-        sentence_body: sentenceBody,
-        text_id: textId,
-        sentence_id: sentenceId
+        }
+        // 注意：sentence 相关信息由后端从 session_state 读取，无需前端传入
       }
 
-      console.log('📤 [Frontend] 发送请求数据:', JSON.stringify(requestData, null, 2))
+      console.log('📤 [Frontend] 发送请求数据 (sentence 从后端 session_state 读取):', JSON.stringify(requestData, null, 2))
 
       const response = await fetch('http://localhost:8000/api/test-token-to-vocab', {
         method: 'POST',
@@ -69,6 +67,22 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
         if (result.saved_to_file) {
           console.log('💡 [Frontend] 建议: 点击Word页面的刷新按钮查看新词汇!')
         }
+        
+        // 将 AI 解释发送到聊天框
+        const explanation = result.data.explanation || ''
+        const contextExplanation = result.data.examples?.[0]?.context_explanation || ''
+        const aiResponse = explanation + (contextExplanation ? '\n\n' + contextExplanation : '')
+        
+        if (aiResponse && sendMessageToChat) {
+          console.log('💬 [Frontend] Sending AI explanation to chat:', aiResponse.substring(0, 100) + '...')
+          // 不传 quotedText，让它作为 AI 响应直接显示
+          sendMessageToChat(aiResponse, null)
+          // 触发 Toast：提示该词汇已总结
+          if (triggerKnowledgeToast) {
+            const vocabBody = result?.data?.vocab_body || tokenText || ''
+            triggerKnowledgeToast(`词汇: ${vocabBody}`)
+          }
+        }
       } else {
         console.error('❌ [Frontend] 转换失败:', result.error)
         if (result.traceback) {
@@ -84,7 +98,7 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
     }
   }
 
-  const handleDetailClick = (e) => {
+  const handleDetailClick = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     
@@ -108,28 +122,21 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
       console.warn('⚠️ [Frontend] tokenText为空，进行备用检查...', {
         tokenStringFallback: String(token ?? ''),
       })
+      return
     }
 
-    // 触发知识点 toast（使用 token 的文本）
-    if (tokenText) {
-      console.log('🍞 [Frontend] 触发知识点toast:', tokenText)
-      triggerKnowledgeToast(tokenText)
-    }
+    // 1) 先把用户意图显示到聊天（带引用 token）
+    const question = "请为这个词和它在句中的用法提供详细解释"
+    console.log('💬 [Frontend] 发送用户提问到聊天:', tokenText)
+    sendMessageToChat(question, tokenText)
 
-    // 🧪 测试阶段：异步转换token为vocab
-    if (token && typeof token === 'object') {
-      console.log('🧪 [Frontend] 测试阶段：开始异步转换token为vocab')
-      testTokenToVocab(token)
-    } else {
-      console.log('⚠️ [Frontend] 跳过token转vocab：token不是对象或为空')
+    // 2) 走 token→vocab 专用链路（不调用 /api/chat）
+    try {
+      console.log('🧪 [Frontend] 使用 token→vocab 专用接口，获取解释并回显到聊天')
+      await testTokenToVocab(token)
+    } catch (error) {
+      console.error('💥 [Frontend] Detail explanation error:', error)
     }
-
-    console.log('💬 [Frontend] 发送消息到聊天:', tokenText)
-    sendMessageToChat(
-      "请为这个词和它在句中的用法提供详细解释",
-      tokenText
-    )
-    console.log('✅ [Frontend] 消息已发送到聊天')
   }
 
   return (
@@ -251,6 +258,29 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     return Array.isArray(raw) ? raw : []
   }, [data])
 
+  // 当文章 ID 改变时，设置第一个句子为当前句子上下文
+  // 注意：只监听 articleId，不监听 data/sentences，避免数据刷新时重复设置
+  useEffect(() => {
+    if (data?.data && sentences.length > 0) {
+      const firstSentence = sentences[0]
+      if (firstSentence) {
+        const sentenceData = {
+          text_id: data.data.text_id || 1,
+          sentence_id: firstSentence.sentence_id || 1,
+          sentence_body: firstSentence.sentence_body || ''
+        }
+        console.log('📄 [Frontend] Article changed, setting first sentence as context:', sentenceData)
+        apiService.session.setSentence(sentenceData)
+          .then(response => {
+            console.log('✅ [Frontend] Session sentence set response:', response)
+          })
+          .catch(error => {
+            console.error('❌ [Frontend] Failed to set session sentence:', error)
+          })
+      }
+    }
+  }, [articleId])
+
   const buildSelectedTexts = (sIdx, idSet) => {
     if (sIdx == null) return []
     const tokens = (sentences[sIdx]?.tokens || [])
@@ -265,15 +295,114 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     return texts
   }
 
-  const emitSelection = (set, lastTokenText = '') => {
+  const emitSelection = (set, lastTokenText = '', lastTokenObj = null) => {
     setSelectedTokenIds(set)
     
-    // 新增：更新选中的token对象
+    // 打印调用栈，查看是谁在调用
+    const stack = new Error().stack
+    const caller = stack.split('\n')[2]?.trim() || 'unknown'
+    
+    console.log('📌 [Frontend] emitSelection called', {
+      setSize: set.size,
+      lastTokenText,
+      hasLastTokenObj: !!lastTokenObj,
+      activeSentenceIndex: activeSentenceRef.current,
+      calledFrom: caller
+    })
+    
+    // 更新选中的token对象并同步到 session state（使用优化的批量接口）
     if (set.size === 1) {
+      console.log('➡️ [Frontend] Single token selection branch')
       const selectedTokenObj = getSelectedTokenObject(set)
+      console.log('📍 [Frontend] selectedTokenObj:', selectedTokenObj)
       setSelectedToken(selectedTokenObj)
-    } else {
+      
+      // 同步设置 session state 的 selected_token（单选）
+      if (selectedTokenObj) {
+        const sIdx = activeSentenceRef.current
+        const sentence = sentences[sIdx]
+        
+        if (sentence) {
+          const sentenceData = {
+            text_id: data?.data?.text_id || 1,
+            sentence_id: sentence.sentence_id || sIdx + 1,
+            sentence_body: sentence.sentence_body || ''
+          }
+          
+          const tokenData = {
+            token_body: selectedTokenObj.token_body || '',
+            global_token_id: selectedTokenObj.global_token_id,
+            sentence_token_id: selectedTokenObj.sentence_token_id,
+            token_type: selectedTokenObj.token_type || 'text',
+            difficulty_level: selectedTokenObj.difficulty_level
+          }
+          
+          console.log('🎯 [Frontend] Single token selected, updating context (batch):', {
+            sentence: sentenceData.sentence_id,
+            token: tokenData.token_body
+          })
+          
+          apiService.session.updateContext({
+            sentence: sentenceData,
+            token: tokenData
+          })
+            .then(response => {
+              console.log('✅ [Frontend] Session context updated:', response)
+            })
+            .catch(error => {
+              console.error('❌ [Frontend] Failed to update session context:', error)
+            })
+        }
+      }
+    } else if (set.size > 1) {
+      console.log('➡️ [Frontend] Multiple tokens selection branch')
+      // 多选：使用最后添加的 token 更新到 session state
       setSelectedToken(null)
+      // 如果传入了 lastTokenObj，使用它；否则尝试获取
+      const tokenToUpdate = lastTokenObj || getSelectedTokenObject(set)
+      console.log('📍 [Frontend] tokenToUpdate:', tokenToUpdate)
+      
+      if (tokenToUpdate) {
+        const sIdx = activeSentenceRef.current
+        const sentence = sentences[sIdx]
+        
+        if (sentence) {
+          const sentenceData = {
+            text_id: data?.data?.text_id || 1,
+            sentence_id: sentence.sentence_id || sIdx + 1,
+            sentence_body: sentence.sentence_body || ''
+          }
+          
+          const tokenData = {
+            token_body: tokenToUpdate.token_body || '',
+            global_token_id: tokenToUpdate.global_token_id,
+            sentence_token_id: tokenToUpdate.sentence_token_id,
+            token_type: tokenToUpdate.token_type || 'text',
+            difficulty_level: tokenToUpdate.difficulty_level
+          }
+          
+          console.log('🎯 [Frontend] Multiple tokens selected, updating context (batch):', {
+            sentence: sentenceData.sentence_id,
+            token: tokenData.token_body
+          })
+          
+          apiService.session.updateContext({
+            sentence: sentenceData,
+            token: tokenData
+          })
+            .then(response => {
+              console.log('✅ [Frontend] Session context updated:', response)
+            })
+            .catch(error => {
+              console.error('❌ [Frontend] Failed to update session context:', error)
+            })
+        }
+      }
+    } else {
+      console.log('➡️ [Frontend] No selection (cleared) branch')
+      // 取消选择：清空 session state 的 selected_token
+      setSelectedToken(null)
+      console.log('🔄 [Frontend] Selection cleared')
     }
     
     if (onTokenSelect) {
@@ -336,10 +465,11 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
       setActiveSentenceIndex(sIdx)
     }
     
-    // 新增：直接设置选中的token对象
-    setSelectedToken(token)
+    // 移除这里的 setSelectedToken，因为 emitSelection 内部会设置
+    // 避免触发重复的副作用
     
-    emitSelection(next, token?.token_body ?? '')
+    // 传入 token 作为最后选中的对象，确保多选时也能更新 session state
+    emitSelection(next, token?.token_body ?? '', token)
   }
 
   const handleMouseDownToken = (sIdx, tIdx, token, e) => {
@@ -361,12 +491,15 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
       setActiveSentenceIndex(sIdx)
     }
     dragStartPointRef.current = { x: e.clientX, y: e.clientY }
+    
+    // 移除这里的 emitSelection 调用
+    // mouseDown 只初始化拖拽状态，不触发选择
+    // 真正的选择由 onClick（无拖拽）或 onMouseUp（拖拽结束）触发
     const startUid = getTokenId(token)
     if (startUid) {
       const next = new Set(selectionBeforeDragRef.current)
       next.add(startUid)
       selectionBeforeDragRef.current = new Set(next)
-      emitSelection(next, token?.token_body ?? '')
     }
     suppressNextClickRef.current = true
     setTimeout(() => { suppressNextClickRef.current = false }, 0)
@@ -379,6 +512,8 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
     hasMovedRef.current = true
 
+    // 拖拽时更新视觉反馈（高亮），但不触发 session state 设置
+    // 只更新本地 selectedTokenIds，不调用 emitSelection
     const start = dragStartIndexRef.current ?? tIdx
     const end = tIdx
     const [from, to] = start <= end ? [start, end] : [end, start]
@@ -394,7 +529,9 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
         if (id) rangeSet.add(id)
       }
     }
-    emitSelection(rangeSet, token?.token_body ?? '')
+    
+    // 只更新视觉状态，不触发 emitSelection（避免重复调用 session state）
+    setSelectedTokenIds(rangeSet)
   }
 
   const handleMouseMove = (e) => {
@@ -404,51 +541,74 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
     const start = dragStartPointRef.current
     const current = { x: e.clientX, y: e.clientY }
-    const rect = {
-      left: Math.min(start.x, current.x),
-      right: Math.max(start.x, current.x),
-      top: Math.min(start.y, current.y),
-      bottom: Math.max(start.y, current.y),
+    
+    // 检查是否真正移动了（阈值 5 像素）
+    const dx = Math.abs(current.x - start.x)
+    const dy = Math.abs(current.y - start.y)
+    if (dx < 5 && dy < 5) {
+      return
     }
-
-    const base = selectionBeforeDragRef.current ?? new Set()
-    const rangeSet = new Set(base)
-
-    const tokens = (sentences[sIdx]?.tokens || [])
-    const tokenRefsRow = tokenRefsRef.current[sIdx] || {}
-
-    const coveredIdx = []
-    for (let i = 0; i < tokens.length; i++) {
-      const tk = tokens[i]
-      if (!(tk && typeof tk === 'object' && tk.selectable)) continue
-      const el = tokenRefsRow[i]
-      if (!el) continue
-      const elRect = el.getBoundingClientRect()
-      if (rectsOverlap(rect, elRect)) {
-        coveredIdx.push(i)
-      }
-    }
-
-    let lastText = ''
-    if (coveredIdx.length > 0) {
-      const minIdx = Math.min(...coveredIdx)
-      const maxIdx = Math.max(...coveredIdx)
-      for (let i = minIdx; i <= maxIdx; i++) {
-        const tk = tokens[i]
-        if (tk && typeof tk === 'object' && tk.selectable) {
-          const id = getTokenId(tk)
-          if (id) rangeSet.add(id)
-          lastText = tk?.token_body ?? lastText
-        }
-      }
-    }
-
+    
     hasMovedRef.current = true
-    emitSelection(rangeSet, lastText)
+    // mouseMove 只用于更新视觉反馈，不调用 emitSelection
+    // 真正的选择确认在 mouseUp 时进行
   }
 
-  const handleMouseUp = () => {
-    if (isDraggingRef.current || wasDraggingRef.current) {
+  const handleMouseUp = (e) => {
+    const wasDragging = isDraggingRef.current || wasDraggingRef.current
+    
+    // 如果是拖拽操作且有移动，在这里统一处理选择
+    if (wasDragging && hasMovedRef.current) {
+      const sIdx = activeSentenceRef.current
+      if (sIdx != null) {
+        const start = dragStartPointRef.current
+        const current = { x: e.clientX, y: e.clientY }
+        const rect = {
+          left: Math.min(start.x, current.x),
+          right: Math.max(start.x, current.x),
+          top: Math.min(start.y, current.y),
+          bottom: Math.max(start.y, current.y),
+        }
+
+        const base = selectionBeforeDragRef.current ?? new Set()
+        const rangeSet = new Set(base)
+        const tokens = (sentences[sIdx]?.tokens || [])
+        const tokenRefsRow = tokenRefsRef.current[sIdx] || {}
+
+        const coveredIdx = []
+        for (let i = 0; i < tokens.length; i++) {
+          const tk = tokens[i]
+          if (!(tk && typeof tk === 'object' && tk.selectable)) continue
+          const el = tokenRefsRow[i]
+          if (!el) continue
+          const elRect = el.getBoundingClientRect()
+          if (rectsOverlap(rect, elRect)) {
+            coveredIdx.push(i)
+          }
+        }
+
+        let lastText = ''
+        let lastToken = null
+        if (coveredIdx.length > 0) {
+          const minIdx = Math.min(...coveredIdx)
+          const maxIdx = Math.max(...coveredIdx)
+          for (let i = minIdx; i <= maxIdx; i++) {
+            const tk = tokens[i]
+            if (tk && typeof tk === 'object' && tk.selectable) {
+              const id = getTokenId(tk)
+              if (id) rangeSet.add(id)
+              lastText = tk?.token_body ?? lastText
+              lastToken = tk
+            }
+          }
+        }
+
+        console.log('🖱️ [Frontend] MouseUp after drag, finalizing selection')
+        emitSelection(rangeSet, lastText, lastToken)
+      }
+    }
+    
+    if (wasDragging) {
       suppressNextClickRef.current = true
       setTimeout(() => { suppressNextClickRef.current = false }, 0)
     }

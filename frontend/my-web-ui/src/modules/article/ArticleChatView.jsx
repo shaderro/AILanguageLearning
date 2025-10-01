@@ -10,6 +10,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [quotedText, setQuotedText] = useState('')
   const [showUploadProgress, setShowUploadProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [hasSelectedToken, setHasSelectedToken] = useState(false)
   
   // Sample text for the ArticleViewer
   const sampleText = isUploadMode ? '' : 'Sample text for demo'
@@ -17,6 +18,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const handleTokenSelect = (tokenText, selectedSet, selectedTexts = []) => {
     setSelectedTokens(selectedTexts)
     setQuotedText(selectedTexts.join(' '))
+    setHasSelectedToken(selectedTexts.length > 0)
     console.log('Selected token:', tokenText)
     console.log('All selected tokens:', selectedTexts)
   }
@@ -77,6 +79,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             quotedText={quotedText}
             onClearQuote={handleClearQuote}
             disabled={isUploadMode && !uploadComplete}
+            hasSelectedToken={hasSelectedToken}
           />
         </div>
       </div>

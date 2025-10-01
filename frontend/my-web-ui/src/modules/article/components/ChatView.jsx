@@ -3,7 +3,7 @@ import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
-export default function ChatView({ quotedText, onClearQuote, disabled = false }) {
+export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false }) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() },
@@ -55,35 +55,35 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
   // 新增：监听待发送消息
   useEffect(() => {
     if (pendingMessage) {
-      // 自动发送消息
-      const userMessage = {
-        id: Date.now(),
-        text: pendingMessage.text,
-        isUser: true,
-        timestamp: pendingMessage.timestamp,
-        quote: pendingMessage.quotedText || null
-      }
-      
-      setMessages(prev => [...prev, userMessage])
-      
-      // 清除待发送消息
-      clearPendingMessage()
-      
-      // 清空当前引用（如果有的话）
-      if (onClearQuote) {
-        onClearQuote()
-      }
-
-      // Auto reply after a short delay
-      setTimeout(() => {
-        const autoReply = {
-          id: Date.now() + 1,
-          text: `关于"${pendingMessage.quotedText}"，我来为你提供详细解释。这是一个很好的问题！`,
+      // 判断消息类型：如果没有 quotedText，说明是 AI 直接响应
+      if (!pendingMessage.quotedText) {
+        // AI 响应消息
+        const aiMessage = {
+          id: Date.now(),
+          text: pendingMessage.text,
           isUser: false,
           timestamp: new Date()
         }
-        setMessages(prev => [...prev, autoReply])
-      }, 1000)
+        setMessages(prev => [...prev, aiMessage])
+      } else {
+        // 用户提问消息
+        const userMessage = {
+          id: Date.now(),
+          text: pendingMessage.text,
+          isUser: true,
+          timestamp: pendingMessage.timestamp,
+          quote: pendingMessage.quotedText
+        }
+        setMessages(prev => [...prev, userMessage])
+        
+        // 清空当前引用（如果有的话）
+        if (onClearQuote) {
+          onClearQuote()
+        }
+      }
+      
+      // 清除待发送消息
+      clearPendingMessage()
     }
   }, [pendingMessage, clearPendingMessage, onClearQuote])
 
@@ -115,13 +115,15 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (inputText.trim() === '') return
 
+    const questionText = inputText
+    
     // Add user message with quote if exists
     const userMessage = {
       id: Date.now(),
-      text: inputText,
+      text: questionText,
       isUser: true,
       timestamp: new Date(),
       quote: quotedText || null
@@ -135,22 +137,117 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       onClearQuote()
     }
 
-    // Auto reply after a short delay
-    setTimeout(() => {
-      const autoReply = {
+    // 调用后端 chat API
+    try {
+      console.log('💬 [Frontend] 步骤1: 开始调用 chat API...')
+      console.log('💬 [Frontend] 问题文本:', questionText)
+      console.log('💬 [Frontend] 是否有引用文本:', quotedText ? 'Yes' : 'No')
+      
+      const { apiService } = await import('../../../services/api')
+      console.log('💬 [Frontend] 步骤2: apiService 加载成功')
+      
+      // 先设置 current_input
+      // 🔧 如果没有引用文本（quotedText），清除旧的 token 选择
+      console.log('💬 [Frontend] 步骤3: 设置 current_input...')
+      const updatePayload = {
+        current_input: questionText
+      }
+      
+      // 如果没有引用文本，明确清除 token（表示对整句话提问）
+      if (!quotedText) {
+        console.log('💬 [Frontend] 没有引用文本，清除旧 token 选择')
+        updatePayload.token = null
+      }
+      
+      const updateResponse = await apiService.session.updateContext(updatePayload)
+      console.log('💬 [Frontend] 步骤3完成:', updateResponse)
+      
+      // 调用 chat 接口
+      console.log('💬 [Frontend] 步骤4: 调用 /api/chat 接口...')
+      const response = await apiService.sendChat({
+        user_question: questionText
+      })
+      
+      console.log('✅ [Frontend] 步骤5: 收到响应')
+      console.log('✅ [Frontend] 响应完整数据:', JSON.stringify(response, null, 2))
+      
+      if (response.success && response.data) {
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data
+        
+        // 显示 AI 响应
+        if (ai_response) {
+          const aiMessage = {
+            id: Date.now() + 1,
+            text: ai_response,
+            isUser: false,
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, aiMessage])
+        }
+        
+        // 显示总结的语法和词汇（通过 Toast）
+        const summaryItems = []
+        
+        if (grammar_to_add && grammar_to_add.length > 0) {
+          grammar_to_add.forEach(g => {
+            summaryItems.push(`🆕 语法: ${g.name}`)
+          })
+        }
+        
+        if (vocab_to_add && vocab_to_add.length > 0) {
+          vocab_to_add.forEach(v => {
+            summaryItems.push(`🆕 词汇: ${v.vocab}`)
+          })
+        }
+        
+        if (grammar_summaries && grammar_summaries.length > 0) {
+          grammar_summaries.forEach(g => {
+            summaryItems.push(`📚 语法: ${g.name}`)
+          })
+        }
+        
+        if (vocab_summaries && vocab_summaries.length > 0) {
+          vocab_summaries.forEach(v => {
+            summaryItems.push(`📖 词汇: ${v.vocab}`)
+          })
+        }
+        
+        // 逐个显示 Toast
+        summaryItems.forEach((item, idx) => {
+          setTimeout(() => {
+            showKnowledgeToast(item)
+          }, idx * 600)
+        })
+      } else {
+        console.error('❌ [Frontend] Chat request failed:', response.error)
+        // 显示错误消息
+        const errorMessage = {
+          id: Date.now() + 1,
+          text: `抱歉，处理您的问题时出现错误: ${response.error}`,
+          isUser: false,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, errorMessage])
+      }
+    } catch (error) {
+      console.error('💥 [Frontend] ❌❌❌ Chat request 发生错误 (handleSendMessage) ❌❌❌')
+      console.error('💥 [Frontend] 错误对象:', error)
+      console.error('💥 [Frontend] 错误消息:', error.message)
+      console.error('💥 [Frontend] 错误堆栈:', error.stack)
+      if (error.response) {
+        console.error('💥 [Frontend] 响应状态:', error.response.status)
+        console.error('💥 [Frontend] 响应数据:', error.response.data)
+      }
+      
+      // 显示错误消息
+      const errorMessage = {
         id: Date.now() + 1,
-        text: `我收到了你的消息："${inputText}"。这是一个自动回复，感谢你的输入！`,
+        text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
         isUser: false,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, autoReply])
-      
-      // Show toast notice after AI reply
-      setTimeout(() => {
-        const currentKnowledge = 'XXX单词 或 语法'
-        showKnowledgeToast(currentKnowledge)
-      }, 500) // 延迟 500ms 显示 toast
-    }, 1000)
+      setMessages(prev => [...prev, errorMessage])
+    }
   }
 
   const handleKeyPress = (e) => {
@@ -165,7 +262,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
     setToastMessage('')
   }
 
-  const handleSuggestedQuestionSelect = (question) => {
+  const handleSuggestedQuestionSelect = async (question) => {
     // 自动发送已选择的问题
     const userMessage = {
       id: Date.now(),
@@ -182,32 +279,97 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
       onClearQuote()
     }
 
-    // Auto reply after a short delay
-    setTimeout(() => {
-      const autoReply = {
+    // 调用后端 chat API（与 handleSendMessage 相同的逻辑）
+    try {
+      console.log('💬 [Frontend] Calling chat API for suggested question...')
+      const { apiService } = await import('../../../services/api')
+      
+      // 🔧 重要：先清除旧的 token 选择，确保使用整句话
+      // 因为建议问题通常是对整句话提问，不是针对特定 token
+      console.log('🔄 [Frontend] Clearing old token selection and setting current_input...')
+      
+      // 先设置 current_input，并明确清除 token 选择（传 null）
+      await apiService.session.updateContext({
+        current_input: question,
+        token: null  // 明确表示清除旧的 token 选择，使用整句话
+      })
+      
+      // 调用 chat 接口
+      const response = await apiService.sendChat({
+        user_question: question
+      })
+      
+      console.log('✅ [Frontend] Chat response received:', response)
+      
+      if (response.success && response.data) {
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data
+        
+        // 显示 AI 响应
+        if (ai_response) {
+          const aiMessage = {
+            id: Date.now() + 1,
+            text: ai_response,
+            isUser: false,
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, aiMessage])
+        }
+        
+        // 显示总结的语法和词汇（通过 Toast）
+        const summaryItems = []
+        
+        if (grammar_to_add && grammar_to_add.length > 0) {
+          grammar_to_add.forEach(g => {
+            summaryItems.push(`🆕 语法: ${g.name}`)
+          })
+        }
+        
+        if (vocab_to_add && vocab_to_add.length > 0) {
+          vocab_to_add.forEach(v => {
+            summaryItems.push(`🆕 词汇: ${v.vocab}`)
+          })
+        }
+        
+        if (grammar_summaries && grammar_summaries.length > 0) {
+          grammar_summaries.forEach(g => {
+            summaryItems.push(`📚 语法: ${g.name}`)
+          })
+        }
+        
+        if (vocab_summaries && vocab_summaries.length > 0) {
+          vocab_summaries.forEach(v => {
+            summaryItems.push(`📖 词汇: ${v.vocab}`)
+          })
+        }
+        
+        // 逐个显示 Toast
+        summaryItems.forEach((item, idx) => {
+          setTimeout(() => {
+            showKnowledgeToast(item)
+          }, idx * 600)
+        })
+      } else {
+        console.error('❌ [Frontend] Chat request failed:', response.error)
+      }
+    } catch (error) {
+      console.error('💥 [Frontend] ❌❌❌ Chat request 发生错误 (handleSuggestedQuestionSelect) ❌❌❌')
+      console.error('💥 [Frontend] 错误对象:', error)
+      console.error('💥 [Frontend] 错误消息:', error.message)
+      console.error('💥 [Frontend] 错误堆栈:', error.stack)
+      if (error.response) {
+        console.error('💥 [Frontend] 响应状态:', error.response.status)
+        console.error('💥 [Frontend] 响应数据:', error.response.data)
+      }
+      
+      // 显示错误消息
+      const errorMessage = {
         id: Date.now() + 1,
-        text: `关于"${quotedText}"，你问的是「${question}」。这是一个很好的问题，我来为你详细解释`,
+        text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
         isUser: false,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, autoReply])
-      
-      // Show toast notice after AI reply
-      setTimeout(() => {
-        const knowledgePoints = [
-          'React 组件化开发',
-          '虚拟 DOM 技术',
-          'JSX 语法要点',
-          '状态管理基础',
-          '生命周期钩子',
-          '事件处理范式',
-          '条件渲染技巧',
-          '列表渲染优化'
-        ]
-        const randomPoint = knowledgePoints[Math.floor(Math.random() * knowledgePoints.length)]
-        showKnowledgeToast(randomPoint)
-      }, 500)
-    }, 1000)
+      setMessages(prev => [...prev, errorMessage])
+    }
   }
 
   const handleQuestionClick = (question) => {
@@ -306,14 +468,19 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={disabled ? "聊天暂时不可用" : (quotedText ? `回复引用："${quotedText}"` : "输入消息...") }
+            placeholder={
+              disabled ? "聊天暂时不可用" : 
+              !hasSelectedToken ? "请先选择文章中的词汇或句子" :
+              (quotedText ? `回复引用："${quotedText}"` : "输入消息...")
+            }
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={disabled}
+            disabled={disabled || !hasSelectedToken}
           />
           <button
             onClick={handleSendMessage}
-            disabled={inputText.trim() === '' || disabled}
+            disabled={inputText.trim() === '' || disabled || !hasSelectedToken}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title={!hasSelectedToken ? "请先选择文章中的词汇" : "发送消息"}
           >
             发送
           </button>
@@ -336,7 +503,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false })
             <ToastNotice
               message={t.message}
               isVisible={true}
-              duration={2000}
+              duration={20000}
               onClose={() => setToasts(prev => prev.filter(x => x.id !== t.id))}
             />
           </div>

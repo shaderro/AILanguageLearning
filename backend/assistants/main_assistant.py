@@ -37,8 +37,9 @@ SentenceType = Union[Sentence, NewSentence] if NEW_STRUCTURE_AVAILABLE else Sent
 
 class MainAssistant:
     
-    def __init__(self, data_controller_instance=None, max_turns=100):
-        self.session_state = SessionState()
+    def __init__(self, data_controller_instance=None, max_turns=100, session_state_instance=None):
+        # 允许传入外部的 session_state 实例，以便共享状态
+        self.session_state = session_state_instance if session_state_instance else SessionState()
         self.check_if_relevant = CheckIfRelevant()
         self.check_if_grammar_relavent_assistant = CheckIfGrammarRelevantAssistant()
         self.check_if_vocab_relevant_assistant = CheckIfVocabRelevantAssistant()

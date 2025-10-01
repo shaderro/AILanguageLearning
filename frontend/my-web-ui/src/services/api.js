@@ -3,7 +3,7 @@ import axios from "axios";
 // ���� axios ʵ��
 const api = axios.create({
   baseURL: "http://localhost:8000",
-  timeout: 10000,
+  timeout: 60000,  // 增加到 60 秒，因为 AI 处理需要时间
   headers: {
     "Content-Type": "application/json",
   },
@@ -83,7 +83,40 @@ export const apiService = {
   toggleVocabStar: (id, isStarred) => api.put(`/api/vocab/${id}/star`, { is_starred: isStarred }),
 
   // 切换语法规则收藏状态
-  toggleGrammarStar: (id, isStarred) => api.put(`/api/grammar/${id}/star`, { is_starred: isStarred })
+  toggleGrammarStar: (id, isStarred) => api.put(`/api/grammar/${id}/star`, { is_starred: isStarred }),
+
+  // Session 管理
+  session: {
+    // 设置当前句子上下文
+    setSentence: (sentenceData) => {
+      console.log('🔵 [Frontend] Setting session sentence:', sentenceData);
+      return api.post("/api/session/set_sentence", sentenceData);
+    },
+
+    // 设置选中的 token
+    selectToken: (tokenData) => {
+      console.log('🔵 [Frontend] Setting selected token:', tokenData);
+      return api.post("/api/session/select_token", { token: tokenData });
+    },
+
+    // 一次性更新句子和 token（优化版，减少网络请求）
+    updateContext: (contextData) => {
+      console.log('🔵 [Frontend] Updating session context (batch):', contextData);
+      return api.post("/api/session/update_context", contextData);
+    },
+
+    // 重置会话状态
+    reset: () => {
+      console.log('🔵 [Frontend] Resetting session state');
+      return api.post("/api/session/reset", {});
+    }
+  },
+
+  // 聊天功能
+  sendChat: (payload = {}) => {
+    console.log('💬 [Frontend] Sending chat request:', payload);
+    return api.post("/api/chat", payload);
+  }
 };
 
 export default api;

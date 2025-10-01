@@ -110,15 +110,15 @@
   {
     "vocab_id": 7,
     "vocab_body": "etlichen",
-    "explanation": "(mock) 词汇 etlichen 的占位解释",
-    "source": "mock",
+    "explanation": "etlichen 是一个德语形容词，意为“几个的”或“一些的”，通常用来表示不确定但数量较多的复数事物。它常用于口语和非正式语境中，强调数量虽然不精确但明显存在。词性为形容词，可与名词连用（如 etlichen Jahren 表示“好几年”）。此外，它还可以作为代词使用，表示“一些人”或“一些事物”，但较少见。注意，etlichen 是 etlich 的复数形式，主要用于修饰复数名词。",
+    "source": "auto",
     "is_starred": false,
     "examples": [
       {
-        "vocab_id": 19,
+        "vocab_id": 37,
         "text_id": 1,
-        "sentence_id": 1,
-        "context_explanation": "(mock) 上下文解释：",
+        "sentence_id": 9,
+        "context_explanation": "在这句话中，'etlichen' 的意思是 '许多的' 或 '好几个的'，它用来强调 'Jahren'（年），表示波特夫人和德思礼夫人已经很多年没有见面了。整个短语 'seit etlichen Jahren' 翻译为 '自从好几年以来'，突出了她们疏远的时间很长。",
         "token_indices": [
           32
         ]
@@ -164,17 +164,305 @@
   {
     "vocab_id": 10,
     "vocab_body": "herstellte",
-    "explanation": "(mock) 词汇 herstellte 的占位解释",
-    "source": "mock",
+    "explanation": "herstellte 是德语动词 herstellen 的过去时形式。\n\n基本含义：\n1. 制造、生产：指制造或生产物品\n2. 建立、确立：指建立联系、关系或确立事实\n3. 恢复：指恢复秩序、和平或健康状态\n\n词性：动词（过去时）\n\n用法：\n- 作为及物动词使用，需要接宾语\n- 可用于描述工业生产、手工制作等制造过程\n- 也可用于抽象概念，如建立关系或恢复状态\n- 是规则变化的弱动词，词干变化为 herstell-",
+    "source": "auto",
     "is_starred": false,
     "examples": [
       {
-        "vocab_id": 23,
+        "vocab_id": 27,
         "text_id": 1,
         "sentence_id": 1,
-        "context_explanation": "(mock) 上下文解释：",
+        "context_explanation": "在这句话中，“herstellte” 是动词“herstellen”的过去式，意思是“制造”或“生产”，表示过去某个时间点完成了制造的动作。",
         "token_indices": [
           22
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 11,
+    "vocab_body": "besaßen",
+    "explanation": "动词'besaßen'是德语动词'besitzen'的过去时复数形式（第三人称复数）。\n\n基本含义：\n1. 拥有，占有 - 表示对某物具有所有权或拥有权\n2. 具备，具有 - 表示拥有某种特性、能力或品质\n\n用法：\n- 这是一个不规则动词的过去时形式\n- 用于描述过去某个时间点拥有某物或具备某种特性\n- 主语必须是复数形式（如：sie besaßen, die Leute besaßen）\n\n词性：动词（Verb），过去时态（Präteritum）",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 24,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这句话中，'besaßen' 是动词 'besitzen'（拥有）的过去式形式，表示句子主语在过去的某个时间点拥有某物或某种特质。",
+        "token_indices": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 12,
+    "vocab_body": "Sinnestäuschung",
+    "explanation": "Sinnestäuschung 是一个德语复合名词，由 'Sinn'（感官）和 'Täuschung'（欺骗、幻觉）组成。它的基本含义是'感官错觉'或'感知欺骗'，指感官（如视觉、听觉、触觉等）接收到的信息与实际情况不符的现象。例如，光学幻觉（如海市蜃楼）或听觉幻觉（如听到不存在的声音）。在心理学和哲学中，它常用来描述感知错误或幻觉状态。该词为阴性名词（die Sinnestäuschung），使用时需注意德语冠词和格的变化。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 25,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这个句子中，Sinnestäuschung 指的是感官上的错觉或幻觉，即人的感官（如视觉或听觉）感知到的事物与实际情况不符，例如看到或听到不存在的东西。",
+        "token_indices": [
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 13,
+    "vocab_body": "darauf",
+    "explanation": "darauf 是一个德语副词，主要有以下含义和用法：\n1. 表示位置或方向：指在某个物体或位置的上面或上方，相当于英语的 \"on it\" 或 \"on that\"。\n2. 表示时间或顺序：指紧接着某个事件之后，相当于英语的 \"after that\" 或 \"thereupon\"。\n3. 表示目的或意图：指针对某个目标或事物，相当于英语的 \"on it\" 或 \"for that\"，常用于表达准备或计划做某事。\n4. 在固定搭配中：例如 \"darauf achten\"（注意某事）、\"darauf bestehen\"（坚持某事）。\n词性：副词，通常用于连接上下文，强调与前述内容的关联。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 26,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这个句子中，'darauf' 指代前面提到的内容，意思是'在那上面'或'关于那件事'，用于连接上下文，避免重复。",
+        "token_indices": [
+          21
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 14,
+    "vocab_body": "sogar",
+    "explanation": "sogar 是一个德语副词，表示“甚至”、“连...都”或“竟然”，用于强调某个情况超出预期或显得特别突出。它通常放在被强调的词或短语之前，用来加强语气，表示某事比预想的更极端或令人惊讶。例如，在句子中它可以强调程度、数量或情况的意外性。词性：副词。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 28,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这个句子中，'sogar' 用于强调程度，表示某事比预期的更极端或更令人惊讶，相当于中文的“甚至”。",
+        "token_indices": [
+          41
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 15,
+    "vocab_body": "solchem",
+    "explanation": "solchem 是德语中的指示代词，是 solch 的与格（Dativ）形式，用于男性或中性名词前。\n\n基本含义：\n1. 表示“这样的”、“那种的”，用于指代前面提到过的或双方都知道的事物\n2. 强调程度，相当于“如此”、“这么”\n\n词性：指示代词（Demonstrativpronomen）\n\n用法：\n- 必须与名词的性、数、格保持一致\n- 在句子中通常作定语，修饰名词\n- 与格形式用于表示间接宾语或某些介词后\n\n变格形式：\n阳性/中性与格：solchem\n阴性与格：solcher\n复数与格：solchen",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 30,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这句话中，'solchem' 是一个指示代词，指代前文提到的某个特定事物或情况，意思是'这样的'或'那种的'，用于强调或具体化所指对象。",
+        "token_indices": [
+          39
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 16,
+    "vocab_body": "wussten",
+    "explanation": "wussten 是德语动词 wissen 的过去时复数第一人称和第三人称形式。基本含义是“知道”，表示对事实、信息或情况的了解。作为不规则动词，wussten 用于描述过去已经知道的状态或事实。例如：wir wussten（我们知道），sie wussten（他们知道）。这个词通常用于陈述过去的知识状态，而不是学习过程。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 31,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这个句子中，“wussten” 是德语动词“wissen”（知道）的过去时复数形式，表示“他们知道”或“他们当时知道”。它用来描述过去某个时间点多人已经了解或掌握的信息。",
+        "token_indices": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 17,
+    "vocab_body": "schreienden",
+    "explanation": "形容词'schreienden'是德语动词'schreien'（意为“喊叫、尖叫”）的现在分词形式，用作形容词。它有以下含义和用法：\n1. 基本含义：描述大声喊叫或尖叫的状态，例如“一个正在尖叫的人”（ein schreiender Mensch）。\n2. 引申含义：在比喻中，可以表示非常明显、刺眼或夸张的事物，例如“刺眼的颜色”（schreiende Farben）或“明显的错误”（schreiender Fehler）。\n3. 词性：它是形容词，需要根据德语语法进行变格（如这里的形式是弱变化复数或与定冠词连用）。\n用法：通常修饰名词，表示持续或强烈的特征。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 32,
+        "text_id": 1,
+        "sentence_id": 1,
+        "context_explanation": "在这个句子中，“schreienden” 是形容词“schreiend”（意为“尖叫的”或“刺耳的”）的变格形式，用来描述某个名词的特征。由于句子不完整，无法确定它具体修饰哪个词，但它的作用是强调所描述事物的强烈或引人注目的特性。",
+        "token_indices": [
+          59
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 18,
+    "vocab_body": "Bohrmaschinen",
+    "explanation": "Bohrmaschinen 是德语名词，复数形式，单数为 Bohrmaschine。这个词的基本含义是：\n1. 钻孔机/钻床 - 一种用于在材料上钻孔的电动或手动工具\n2. 电钻 - 手持式的钻孔工具\n\n在工业和生产环境中，Bohrmaschinen 通常指各种类型的钻孔设备，包括台钻、手持电钻、冲击钻等。这个词由两部分组成：\"Bohr-\"（钻孔）和 \"-maschine\"（机器），字面意思就是\"钻孔机器\"。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 33,
+        "text_id": 1,
+        "sentence_id": 3,
+        "context_explanation": "在这个句子中，'Bohrmaschinen' 指的是 Mr Dursley 的公司 'Grunnings' 所生产的产品。具体来说，'die Bohrmaschinen herstellte' 意思是 '生产钻机'，所以它描述了这家公司的主要业务是制造钻机。",
+        "token_indices": [
+          20
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 19,
+    "vocab_body": "undursleyhaft",
+    "explanation": "undursleyhaft 是一个德语形容词，由前缀 'un-'（表示否定）和虚构姓氏 'Dursley' 结合后缀 '-haft'（表示具有某种特性）构成。这个词的基本含义是“不像 Dursley 家的”或“不符合 Dursley 家特征的”，通常用来描述与某个特定家庭或群体的典型行为、价值观或风格相反的事物。在一般用法中，它可以引申为表示“不典型的”、“不符合常规的”或“异类的”，强调与某种标准或期望的背离。这个词是虚构的，但结构上类似于德语中常见的形容词派生方式，用于表达否定或对比的特性。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 34,
+        "text_id": 1,
+        "sentence_id": 10,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'undursleyhaft' 描述了德思礼夫人（Mrs Dursley）的姐姐和姐夫（'diese und deren Nichtsnutz von einem Mann'，意思是'她和她的那个废物丈夫'）的行为或特征，表示他们与德思礼家的典型方式或标准完全相反。德思礼家可能以保守、正常或可预测著称，而'undursleyhaft'在这里强调他们'如此不像",
+        "token_indices": [
+          43
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 20,
+    "vocab_body": "schauderten",
+    "explanation": "schauderten 是德语动词 schaudern 的过去时复数形式（第三人称复数）。\n\n基本含义：\n1. 因寒冷、恐惧或厌恶而身体发抖、战栗\n2. 感到毛骨悚然或强烈的不适感\n\n用法特点：\n- 通常描述对某事物产生的生理或心理上的强烈反应\n- 常与介词 bei（在...时）或 vor（因...）连用\n- 既可以表示身体的实际颤抖，也可以表示心理上的厌恶反应\n\n词性：弱变化动词，规则变化",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 35,
+        "text_id": 1,
+        "sentence_id": 11,
+        "context_explanation": "在这句话中，'schauderten' 表示德思礼夫妇一想到邻居们可能会说什么就感到害怕或颤抖。具体来说，'beim Gedanken daran, was die Nachbarn sagen würden'（一想到邻居们会说什么）描述了让他们害怕的原因，所以 'schauderten' 在这里表达了他们因担忧而产生的身体或情绪反应。",
+        "token_indices": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 21,
+    "vocab_body": "prächtigeren",
+    "explanation": "prächtigeren 是形容词 prächtig 的比较级形式，用于表示\"更壮丽的、更华丽的、更出色的\"。\n\n基本含义：\n- 原级 prächtig 表示\"壮丽的、华丽的、出色的、极好的\"\n- 比较级 prächtigeren 表示\"更壮丽的、更华丽的、更出色的\"\n\n用法特点：\n- 这是一个形容词的比较级形式\n- 通常用来修饰名词，表示某事物比另一事物更加出色或华丽\n- 在德语中，形容词需要根据名词的性、数、格进行词尾变化\n\n常见搭配：\n- 可以用来形容人、事物或场景\n- 如：prächtigeren Palast（更华丽的宫殿）、prächtigeren Anblick（更壮丽的景象）",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 38,
+        "text_id": 1,
+        "sentence_id": 6,
+        "context_explanation": "在这句话中，'prächtigeren' 的意思是 '更出色的' 或 '更棒的'，用来形容 Dursleys 认为他们的儿子 Dudley 是世界上最优秀的男孩。句子 'in ihren Augen gab es nirgendwo einen prächtigeren Jungen' 翻译为 '在他们眼中，没有比这更出色的男孩了'，强调他们非常自豪和偏爱 Dudley。",
+        "token_indices": [
+          33
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 22,
+    "vocab_body": "nirgendwo",
+    "explanation": "nirgendwo 是一个德语副词，意思是“在任何地方都不”或“无处”。它用于否定性地表示某个地方不存在某物或某种情况。例如，它可以用来强调某物在世界上任何地方都找不到。这个词通常与否定词一起使用，但本身已经带有否定含义，因此在句子中不需要额外的否定词。常见用法包括描述事物不存在的位置或状态。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 39,
+        "text_id": 1,
+        "sentence_id": 6,
+        "context_explanation": "在这里，'nirgendwo' 的意思是“在任何地方都不”。它强调了德思礼夫妇认为他们的儿子达力是全世界最棒的男孩，'in ihren Augen gab es nirgendwo einen prächtigeren Jungen' 翻译为“在他们眼中，没有任何地方有比他更出色的男孩了”，突出了他们极端的自豪感。",
+        "token_indices": [
+          29
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 23,
+    "vocab_body": "summte",
+    "explanation": "summte 是德语动词 summen 的过去时形式，意思是“低声哼唱”或“发出嗡嗡声”。它通常描述人无意识地哼唱旋律，或物体（如蜜蜂、机器）发出持续的低频声音。作为不及物动词，常与“vor sich hin”连用，表示漫不经心的哼唱行为。词性：动词（弱变化，过去时）。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 40,
+        "text_id": 1,
+        "sentence_id": 15,
+        "context_explanation": "在这个句子中，'summte' 描述的是 Mr Dursley 在自言自语或低声哼唱的行为，结合 'vor sich hin'（对自己）表明他是在私下里发出声音，可能表示他心不在焉或沉浸在自己的思绪中。",
+        "token_indices": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 24,
+    "vocab_body": "aufdecken",
+    "explanation": "aufdecken 是一个德语动词，意思是：\n1. 基本含义：揭露、发现或揭示隐藏的事物，如秘密、真相或事实。\n2. 用法：常用于描述调查或意外发现的过程，强调将原本不为人知的事情公之于众。\n3. 词性：它是一个可分动词，在句子中可能以 aufdecken 或前缀 auf- 与动词 decken 分开的形式出现（例如：jemand deckt etwas auf）。\n4. 其他含义：在非正式语境中，它也可以指物理上揭开或掀开某物，比如揭开盖子或覆盖物，但更常见的是用于抽象概念如秘密的揭露。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 41,
+        "text_id": 1,
+        "sentence_id": 7,
+        "context_explanation": "在这句话中，'aufdecken' 的意思是'揭露'或'发现'，指的是有人可能会发现 Dursleys 家的秘密（'ein Geheimnis'），这让他们非常担心（'ihre größte Sorge'）。",
+        "token_indices": [
+          38
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 25,
+    "vocab_body": "sah",
+    "explanation": "动词 \"sah\" 是德语动词 \"sehen\"（看、看见）的过去时第一人称单数或第三人称单数形式。它表示在过去的某个时间点，某人用眼睛感知到某物或某人。常见用法包括描述视觉感知的动作，例如 \"Ich sah einen Vogel\"（我看见了一只鸟）。它是不规则动词，过去时形式为 \"sah\"，过去分词为 \"gesehen\"。这个词可以用于各种语境中，如日常对话、叙述故事或描述经历。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 42,
+        "text_id": 1,
+        "sentence_id": 16,
+        "context_explanation": "在这个句子中，\"sah\" 是动词 \"sehen\"（看）的过去时形式，意思是\"看见\"。它描述了句子中的人物（\"Keiner von ihnen\"，意思是\"他们中没有一个人\"）的动作：没有人看见一只巨大的猫头鹰从窗户飞过。",
+        "token_indices": [
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 26,
+    "vocab_body": "griff",
+    "explanation": "griff 是德语动词 greifen 的过去时第三人称单数形式，意思是：1. 抓取、拿取（如伸手拿东西）；2. 抓住、握住（物体）；3. 在音乐中指弹奏乐器；4. 在抽象意义上表示理解或采纳（如理解一个概念）。这个词是强变化动词，过去时形式为 griff，过去分词为 gegriffen。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 43,
+        "text_id": 1,
+        "sentence_id": 17,
+        "context_explanation": "在这句话中，'griff' 是动词 'greifen' 的过去时形式，意思是 '伸手去拿' 或 '抓住'。它描述了 Mr Dursley 的动作：他伸手去拿他的公文包（'nach der Aktentasche'）。所以，这里 'griff' 表示他准备离开时拿起公文包的行为。",
+        "token_indices": [
+          7
         ]
       }
     ]
