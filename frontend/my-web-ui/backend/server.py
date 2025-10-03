@@ -563,28 +563,50 @@ async def update_session_context(payload: dict):
                 current_sentence = session_state.current_sentence
                 
                 if current_sentence:
-                    # 构造 token_indices
-                    token_indices = []
-                    if token_data.get('sentence_token_id') is not None:
-                        token_indices = [token_data.get('sentence_token_id')]
+                    # 检查是否是多选token的情况
+                    if token_data.get('multiple_tokens') is not None:
+                        # 多选token的情况
+                        multiple_tokens = token_data.get('multiple_tokens', [])
+                        token_indices = token_data.get('token_indices', [])
+                        token_text = token_data.get('token_text', '')
+                        
+                        print(f"  ✓ multiple tokens detected: {len(multiple_tokens)} tokens")
+                        print(f"  ✓ token indices: {token_indices}")
+                        print(f"  ✓ combined text: {token_text}")
+                        
+                        selected_token = SelectedToken(
+                            token_indices=token_indices,
+                            token_text=token_text,
+                            sentence_body=current_sentence.sentence_body,
+                            sentence_id=current_sentence.sentence_id,
+                            text_id=current_sentence.text_id
+                        )
+                        session_state.set_current_selected_token(selected_token)
+                        updated_fields.append('token')
+                        print(f"  ✓ multiple tokens set: {token_text} (indices: {token_indices})")
                     else:
-                        # 没有 token_id，表示选择整句话
-                        token_indices = [-1]
-                    
-                    # 检查是否为空列表（防止错误）
-                    if not token_indices:
-                        token_indices = [-1]  # 默认为整句选择
-                    
-                    selected_token = SelectedToken(
-                        token_indices=token_indices,
-                        token_text=token_data.get('token_body', current_sentence.sentence_body),
-                        sentence_body=current_sentence.sentence_body,
-                        sentence_id=current_sentence.sentence_id,
-                        text_id=current_sentence.text_id
-                    )
-                    session_state.set_current_selected_token(selected_token)
-                    updated_fields.append('token')
-                    print(f"  ✓ token set: {token_data.get('token_body')} (indices: {token_indices})")
+                        # 单选token的情况（原有逻辑）
+                        token_indices = []
+                        if token_data.get('sentence_token_id') is not None:
+                            token_indices = [token_data.get('sentence_token_id')]
+                        else:
+                            # 没有 token_id，表示选择整句话
+                            token_indices = [-1]
+                        
+                        # 检查是否为空列表（防止错误）
+                        if not token_indices:
+                            token_indices = [-1]  # 默认为整句选择
+                        
+                        selected_token = SelectedToken(
+                            token_indices=token_indices,
+                            token_text=token_data.get('token_body', current_sentence.sentence_body),
+                            sentence_body=current_sentence.sentence_body,
+                            sentence_id=current_sentence.sentence_id,
+                            text_id=current_sentence.text_id
+                        )
+                        session_state.set_current_selected_token(selected_token)
+                        updated_fields.append('token')
+                        print(f"  ✓ single token set: {token_data.get('token_body')} (indices: {token_indices})")
         
         print(f"✅ [SessionState] Context updated: {', '.join(updated_fields)}")
         return {
@@ -801,6 +823,95 @@ async def chat_with_assistant(payload: dict):
             'error': str(e),
             'error_type': type(e).__name__,
             'traceback': traceback.format_exc()
+        }
+
+
+@app.get('/api/user/asked-tokens')
+async def get_asked_tokens(user_id: str = 'default_user', text_id: int = 1):
+    """获取用户已提问的token列表"""
+    try:
+        print(f"🔍 [AskedTokens] Getting asked tokens for user_id={user_id}, text_id={text_id}")
+        
+        # 导入AskedTokensManager
+        from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
+        
+        # 获取管理器实例
+        manager = get_asked_tokens_manager(use_database=False)
+        
+        # 获取已提问的token
+        asked_tokens = manager.get_asked_tokens_for_article(user_id, text_id)
+        
+        print(f"✅ [AskedTokens] Found {len(asked_tokens)} asked tokens")
+        print(f"📋 [AskedTokens] Asked tokens: {list(asked_tokens)}")
+        
+        return {
+            'success': True,
+            'data': {
+                'asked_tokens': list(asked_tokens)
+            }
+        }
+    except Exception as e:
+        print(f"❌ [AskedTokens] Error getting asked tokens: {e}")
+        import traceback
+        print(traceback.format_exc())
+        return {
+            'success': False,
+            'error': str(e),
+            'data': {
+                'asked_tokens': []
+            }
+        }
+
+
+@app.post('/api/user/asked-tokens')
+async def mark_token_asked(payload: dict):
+    """标记token为已提问"""
+    try:
+        user_id = payload.get('user_id', 'default_user')
+        text_id = payload.get('text_id')
+        sentence_id = payload.get('sentence_id')
+        sentence_token_id = payload.get('sentence_token_id')
+        
+        print(f"🏷️ [AskedTokens] Marking token as asked:")
+        print(f"  - user_id: {user_id}")
+        print(f"  - text_id: {text_id}")
+        print(f"  - sentence_id: {sentence_id}")
+        print(f"  - sentence_token_id: {sentence_token_id}")
+        
+        if text_id is None or sentence_id is None or sentence_token_id is None:
+            return {
+                'success': False,
+                'error': 'Missing required parameters: text_id, sentence_id, sentence_token_id'
+            }
+        
+        # 导入AskedTokensManager
+        from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
+        
+        # 获取管理器实例
+        manager = get_asked_tokens_manager(use_database=False)
+        
+        # 标记token为已提问
+        success = manager.mark_token_asked(user_id, text_id, sentence_id, sentence_token_id)
+        
+        if success:
+            print(f"✅ [AskedTokens] Token marked as asked successfully")
+            return {
+                'success': True,
+                'message': 'Token marked as asked'
+            }
+        else:
+            print(f"❌ [AskedTokens] Failed to mark token as asked")
+            return {
+                'success': False,
+                'error': 'Failed to mark token as asked'
+            }
+    except Exception as e:
+        print(f"❌ [AskedTokens] Error marking token as asked: {e}")
+        import traceback
+        print(traceback.format_exc())
+        return {
+            'success': False,
+            'error': str(e)
         }
 
 

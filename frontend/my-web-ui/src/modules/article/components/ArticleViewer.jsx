@@ -318,7 +318,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     
     try {
       setIsLoadingAskedTokens(true)
-      const url = `http://localhost:8001/api/user/asked-tokens?user_id=default_user&text_id=${textId}`
+      const url = `http://localhost:8000/api/user/asked-tokens?user_id=default_user&text_id=${textId}`
       console.log('📤 [Frontend] Sending GET request to:', url)
       
       const response = await fetch(url)
@@ -392,8 +392,8 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     console.log('🔍 [Frontend] sentences.length:', sentences.length)
     console.log('🔍 [Frontend] askedTokenKeys.size:', askedTokenKeys.size)
     
+    // 如果没有文章数据或句子数据，返回空Map，但不要打印警告
     if (!data?.data?.text_id || !sentences.length) {
-      console.log('⚠️ [Frontend] Missing required data for tokenAskedStatus')
       return new Map()
     }
     
@@ -412,13 +412,16 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
             const sentenceTokenId = token.sentence_token_id
             
             if (sentenceTokenId != null) {
-              const key = `${textId}:${sentenceId}:${sentenceTokenId}`
-              const isAsked = askedTokenKeys.has(key)
+              // 使用与askedTokenKeys相同的键格式（与后端一致）
+              const askedKey = `${textId}:${sentenceId}:${sentenceTokenId}`
+              const isAsked = askedTokenKeys.has(askedKey)
+              
+              // 使用与isTokenAsked函数相同的键格式
               const tokenKey = getTokenKey(sIdx, token, tIdx)
               statusMap.set(tokenKey, isAsked)
               
               if (isAsked) {
-                console.log('✅ [Frontend] Token is asked:', key)
+                console.log('✅ [Frontend] Token is asked:', askedKey, '->', tokenKey)
               }
             }
           }
@@ -428,7 +431,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     
     console.log('📊 [Frontend] Pre-calculated status for', statusMap.size, 'tokens')
     return statusMap
-  }, [data?.data?.text_id, sentences, askedTokenKeys])
+  }, [data?.data?.text_id, sentences.length, askedTokenKeys])
 
   // 修复 isTokenAsked 函数
   const isTokenAsked = (token, sIdx, tIdx) => {
@@ -549,6 +552,11 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
           })
             .then(response => {
               console.log('✅ [Frontend] Session context updated:', response)
+              // 添加session state调试信息
+              console.log('🔍 [SESSION STATE DEBUG] After single token selection:')
+              console.log('  - Current sentence:', sentenceData)
+              console.log('  - Current token:', tokenData)
+              console.log('  - Response:', response)
             })
             .catch(error => {
               console.error('❌ [Frontend] Failed to update session context:', error)
@@ -557,47 +565,66 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
       }
     } else if (set.size > 1) {
       console.log('➡️ [Frontend] Multiple tokens selection branch')
-      // 多选：使用最后添加的 token 更新到 session state
+      // 多选：获取所有选中的token信息
       setSelectedToken(null)
-      // 如果传入了 lastTokenObj，使用它；否则尝试获取
-      const tokenToUpdate = lastTokenObj || getSelectedTokenObject(set)
-      console.log('📍 [Frontend] tokenToUpdate:', tokenToUpdate)
       
-      if (tokenToUpdate) {
-        const sIdx = activeSentenceRef.current
-        const sentence = sentences[sIdx]
-        
-        if (sentence) {
-          const sentenceData = {
-            text_id: data?.data?.text_id || 1,
-            sentence_id: sentence.sentence_id || sIdx + 1,
-            sentence_body: sentence.sentence_body || ''
-          }
-          
-          const tokenData = {
-            token_body: tokenToUpdate.token_body || '',
-            global_token_id: tokenToUpdate.global_token_id,
-            sentence_token_id: tokenToUpdate.sentence_token_id,
-            token_type: tokenToUpdate.token_type || 'text',
-            difficulty_level: tokenToUpdate.difficulty_level
-          }
-          
-          console.log('🎯 [Frontend] Multiple tokens selected, updating context (batch):', {
-            sentence: sentenceData.sentence_id,
-            token: tokenData.token_body
-          })
-          
-          apiService.session.updateContext({
-            sentence: sentenceData,
-            token: tokenData
-          })
-            .then(response => {
-              console.log('✅ [Frontend] Session context updated:', response)
-            })
-            .catch(error => {
-              console.error('❌ [Frontend] Failed to update session context:', error)
-            })
+      const sIdx = activeSentenceRef.current
+      const sentence = sentences[sIdx]
+      
+      if (sentence) {
+        const sentenceData = {
+          text_id: data?.data?.text_id || 1,
+          sentence_id: sentence.sentence_id || sIdx + 1,
+          sentence_body: sentence.sentence_body || ''
         }
+        
+        // 获取所有选中的token信息
+        const selectedTokens = []
+        const tokens = sentence.tokens || []
+        
+        for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+          const token = tokens[tIdx]
+          const uid = getTokenId(token)
+          if (uid && set.has(uid)) {
+            selectedTokens.push({
+              token_body: token.token_body || '',
+              global_token_id: token.global_token_id,
+              sentence_token_id: token.sentence_token_id,
+              token_type: token.token_type || 'text',
+              difficulty_level: token.difficulty_level
+            })
+          }
+        }
+        
+        // 构建多选token的数据结构
+        const tokenData = {
+          multiple_tokens: selectedTokens,
+          token_indices: selectedTokens.map(t => t.sentence_token_id),
+          token_text: selectedTokens.map(t => t.token_body).join(' '),
+          token_count: selectedTokens.length
+        }
+        
+        console.log('🎯 [Frontend] Multiple tokens selected, updating context (batch):', {
+          sentence: sentenceData.sentence_id,
+          token_count: tokenData.token_count,
+          tokens: tokenData.token_text
+        })
+        
+        apiService.session.updateContext({
+          sentence: sentenceData,
+          token: tokenData
+        })
+          .then(response => {
+            console.log('✅ [Frontend] Session context updated:', response)
+            // 添加session state调试信息
+            console.log('🔍 [SESSION STATE DEBUG] After multiple token selection:')
+            console.log('  - Current sentence:', sentenceData)
+            console.log('  - Current tokens (multiple):', tokenData)
+            console.log('  - Response:', response)
+          })
+          .catch(error => {
+            console.error('❌ [Frontend] Failed to update session context:', error)
+          })
       }
     } else {
       console.log('➡️ [Frontend] No selection (cleared) branch')
@@ -848,7 +875,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
 
   return (
     <div
-      className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto"
+      className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-y-auto overflow-x-hidden min-h-0"
       onClick={handleBackgroundClick}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

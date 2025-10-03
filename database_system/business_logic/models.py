@@ -131,6 +131,25 @@ class Token(Base):
     sentence = relationship('Sentence', back_populates='tokens')
     linked_vocab = relationship('VocabExpression', back_populates='tokens')
 
+class AskedToken(Base):
+    __tablename__ = 'asked_tokens'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(255), nullable=False)
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
+    sentence_id = Column(Integer, nullable=False)
+    sentence_token_id = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['text_id', 'sentence_id'],
+            ['sentences.text_id', 'sentences.sentence_id'],
+            ondelete='CASCADE'
+        ),
+        UniqueConstraint('user_id', 'text_id', 'sentence_id', 'sentence_token_id', name='uq_asked_token_user_text_sentence_token')
+    )
+
 
 def create_database_engine(database_url: str):
     return create_engine(database_url, echo=False, future=True)

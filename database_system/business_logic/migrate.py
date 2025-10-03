@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, select
 from .models import (
     Base, VocabExpression, VocabExpressionExample, GrammarRule, GrammarExample,
-    OriginalText, Sentence, Token, DifficultyLevel, TokenType
+    OriginalText, Sentence, Token, AskedToken, DifficultyLevel, TokenType
 )
 from .crud import (
     get_or_create_vocab, create_vocab_example,

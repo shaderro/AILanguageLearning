@@ -6,16 +6,7 @@ import { useChatEvent } from '../contexts/ChatEventContext'
 export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false }) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
-    { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() },
-    { id: 2, text: "这是一条测试消息，用来测试滚动功能是否正常工作。", isUser: true, timestamp: new Date() },
-    { id: 3, text: "另一条测试消息，确保聊天框有足够的内容来测试滚动。", isUser: false, timestamp: new Date() },
-    { id: 4, text: "继续添加更多消息来测试滚动功能。", isUser: true, timestamp: new Date() },
-    { id: 5, text: "这是第五条消息，应该足够测试滚动功能了。", isUser: false, timestamp: new Date() },
-    { id: 6, text: "第六条消息，继续测试滚动。", isUser: true, timestamp: new Date() },
-    { id: 7, text: "第七条消息，确保有足够的内容。", isUser: false, timestamp: new Date() },
-    { id: 8, text: "第八条消息，测试滚动功能。", isUser: true, timestamp: new Date() },
-    { id: 9, text: "第九条消息，继续测试。", isUser: false, timestamp: new Date() },
-    { id: 10, text: "第十条消息，应该足够测试滚动功能了。", isUser: true, timestamp: new Date() }
+    { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
   ])
   const [inputText, setInputText] = useState('')
   const [showToast, setShowToast] = useState(false)
@@ -23,10 +14,13 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
   // 新增：多实例 toast 栈
   const [toasts, setToasts] = useState([]) // {id, message, slot}
   const messagesEndRef = useRef(null)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(false)
 
   // 新增：自动滚动到底部的函数
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (shouldAutoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   // 抽取：显示“知识点已加入”提示卡片
@@ -47,9 +41,13 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
     }, 0)
   }
 
-  // 新增：监听messages变化，自动滚动到底部
+  // 新增：监听messages变化，自动滚动到底部（只在有新消息时）
   useEffect(() => {
-    scrollToBottom()
+    // 只有在消息数量大于1时才自动滚动（避免初始化时滚动）
+    if (messages.length > 1) {
+      setShouldAutoScroll(true)
+      scrollToBottom()
+    }
   }, [messages])
 
   // 新增：监听待发送消息
@@ -105,15 +103,16 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
     })
   }
 
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if ((e.key || '').toLowerCase() === 's') {
-        triggerSequentialToasts()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  // 注释掉按s键触发Toast的测试功能（保留代码以备将来使用）
+  // useEffect(() => {
+  //   const onKeyDown = (e) => {
+  //     if ((e.key || '').toLowerCase() === 's') {
+  //       triggerSequentialToasts()
+  //     }
+  //   }
+  //   window.addEventListener('keydown', onKeyDown)
+  //   return () => window.removeEventListener('keydown', onKeyDown)
+  // }, [])
 
   const handleSendMessage = async () => {
     if (inputText.trim() === '') return
@@ -170,6 +169,13 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       
       console.log('✅ [Frontend] 步骤5: 收到响应')
       console.log('✅ [Frontend] 响应完整数据:', JSON.stringify(response, null, 2))
+      
+      // 添加session state调试信息
+      console.log('🔍 [SESSION STATE DEBUG] After sending message:')
+      console.log('  - Question text:', questionText)
+      console.log('  - Quoted text:', quotedText || 'None')
+      console.log('  - Update payload:', updatePayload)
+      console.log('  - Update response:', updateResponse)
       
       if (response.success && response.data) {
         const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data
@@ -300,6 +306,12 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       })
       
       console.log('✅ [Frontend] Chat response received:', response)
+      
+      // 添加session state调试信息
+      console.log('🔍 [SESSION STATE DEBUG] After suggested question selection:')
+      console.log('  - Question text:', question)
+      console.log('  - Quoted text:', quotedText || 'None')
+      console.log('  - Update payload:', { current_input: question, token: null })
       
       if (response.success && response.data) {
         const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data

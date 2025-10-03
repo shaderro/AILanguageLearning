@@ -1,37 +1,38 @@
 """
-数据访问层 (DAL) - 统一接口，支持 JSON → DB 逐步迁移
+数据访问层 (DAL) - 统一管理器模式，支持 JSON → DB 逐步迁移
 """
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from .models import VocabExpression, VocabExpressionExample, GrammarRule
+from .models import VocabExpression, GrammarRule
 from .crud import (
-    get_vocab_by_id, get_vocab_by_body, get_all_vocabs, create_vocab,
-    get_grammar_rule_by_id, get_grammar_rule_by_name, get_all_grammar_rules,
-    create_vocab_example
+    VocabCRUD, GrammarCRUD, TextCRUD, TokenCRUD, 
+    AskedTokenCRUD, StatsCRUD
 )
+
 
 class VocabDataAccessLayer:
     """词汇数据访问层"""
     
     def __init__(self, session: Session):
         self.session = session
+        self._crud = VocabCRUD(session)
     
     def get_vocab(self, vocab_id: int) -> Optional[VocabExpression]:
         """根据ID获取词汇"""
-        return get_vocab_by_id(self.session, vocab_id)
+        return self._crud.get_by_id(vocab_id)
     
     def find_vocab_by_body(self, vocab_body: str) -> Optional[VocabExpression]:
         """根据词汇内容查找"""
-        return get_vocab_by_body(self.session, vocab_body)
+        return self._crud.get_by_body(vocab_body)
     
     def list_all_vocabs(self, skip: int = 0, limit: int = 100) -> List[VocabExpression]:
         """列出所有词汇"""
-        return get_all_vocabs(self.session, skip, limit)
+        return self._crud.get_all(skip, limit)
     
     def add_vocab(self, vocab_body: str, explanation: str, 
                   source: str = "auto", is_starred: bool = False) -> VocabExpression:
         """添加新词汇"""
-        return create_vocab(self.session, vocab_body, explanation, source, is_starred)
+        return self._crud.create(vocab_body, explanation, source, is_starred)
     
     def get_vocab_with_examples(self, vocab_id: int) -> Optional[Dict[str, Any]]:
         """获取词汇及其例句"""
@@ -56,6 +57,22 @@ class VocabDataAccessLayer:
                 for ex in vocab.examples
             ]
         }
+    
+    def search_vocabs(self, keyword: str) -> List[VocabExpression]:
+        """搜索词汇"""
+        return self._crud.search(keyword)
+    
+    def get_starred_vocabs(self) -> List[VocabExpression]:
+        """获取收藏的词汇"""
+        return self._crud.get_starred()
+    
+    def update_vocab(self, vocab_id: int, **kwargs) -> Optional[VocabExpression]:
+        """更新词汇"""
+        return self._crud.update(vocab_id, **kwargs)
+    
+    def delete_vocab(self, vocab_id: int) -> bool:
+        """删除词汇"""
+        return self._crud.delete(vocab_id)
 
 
 class GrammarDataAccessLayer:
@@ -63,24 +80,175 @@ class GrammarDataAccessLayer:
     
     def __init__(self, session: Session):
         self.session = session
+        self._crud = GrammarCRUD(session)
     
     def get_grammar(self, rule_id: int) -> Optional[GrammarRule]:
-        return get_grammar_rule_by_id(self.session, rule_id)
+        """根据ID获取语法规则"""
+        return self._crud.get_by_id(rule_id)
     
     def find_grammar_by_name(self, rule_name: str) -> Optional[GrammarRule]:
-        return get_grammar_rule_by_name(self.session, rule_name)
+        """根据名称查找语法规则"""
+        return self._crud.get_by_name(rule_name)
     
     def list_all_grammar_rules(self, skip: int = 0, limit: int = 100) -> List[GrammarRule]:
-        return get_all_grammar_rules(self.session, skip, limit)
+        """列出所有语法规则"""
+        return self._crud.get_all(skip, limit)
+    
+    def add_grammar_rule(self, rule_name: str, rule_summary: str,
+                        source: str = "auto", is_starred: bool = False) -> GrammarRule:
+        """添加新语法规则"""
+        return self._crud.create(rule_name, rule_summary, source, is_starred)
+    
+    def search_grammar_rules(self, keyword: str) -> List[GrammarRule]:
+        """搜索语法规则"""
+        return self._crud.search(keyword)
+    
+    def get_starred_grammar_rules(self) -> List[GrammarRule]:
+        """获取收藏的语法规则"""
+        return self._crud.get_starred()
+    
+    def update_grammar_rule(self, rule_id: int, **kwargs) -> Optional[GrammarRule]:
+        """更新语法规则"""
+        return self._crud.update(rule_id, **kwargs)
+    
+    def delete_grammar_rule(self, rule_id: int) -> bool:
+        """删除语法规则"""
+        return self._crud.delete(rule_id)
+
+
+class TextDataAccessLayer:
+    """文章数据访问层"""
+    
+    def __init__(self, session: Session):
+        self.session = session
+        self._crud = TextCRUD(session)
+    
+    def create_text(self, text_title: str):
+        """创建文章"""
+        return self._crud.create_text(text_title)
+    
+    def get_text_by_id(self, text_id: int):
+        """根据ID获取文章"""
+        return self._crud.get_text_by_id(text_id)
+    
+    def get_all_texts(self):
+        """获取所有文章"""
+        return self._crud.get_all_texts()
+    
+    def search_texts(self, keyword: str):
+        """搜索文章"""
+        return self._crud.search_texts(keyword)
+    
+    def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
+                       difficulty_level: Optional[str] = None):
+        """创建句子"""
+        return self._crud.create_sentence(text_id, sentence_id, sentence_body, difficulty_level)
+    
+    def get_sentences_by_text(self, text_id: int):
+        """获取文章的所有句子"""
+        return self._crud.get_sentences_by_text(text_id)
+    
+    def get_sentence_by_id(self, text_id: int, sentence_id: int):
+        """根据ID获取句子"""
+        return self._crud.get_sentence_by_id(text_id, sentence_id)
+
+
+class TokenDataAccessLayer:
+    """词汇标记数据访问层"""
+    
+    def __init__(self, session: Session):
+        self.session = session
+        self._crud = TokenCRUD(session)
+    
+    def create_token(self, text_id: int, sentence_id: int, token_body: str,
+                    token_type: str, **kwargs):
+        """创建词汇标记"""
+        return self._crud.create(text_id, sentence_id, token_body, token_type, **kwargs)
+    
+    def get_tokens_by_sentence(self, text_id: int, sentence_id: int):
+        """获取句子的所有词汇标记"""
+        return self._crud.get_tokens_by_sentence(text_id, sentence_id)
+    
+    def get_tokens_by_vocab(self, vocab_id: int):
+        """获取关联到特定词汇的所有标记"""
+        return self._crud.get_tokens_by_vocab(vocab_id)
+
+
+class AskedTokenDataAccessLayer:
+    """已提问Token数据访问层"""
+    
+    def __init__(self, session: Session):
+        self.session = session
+        self._crud = AskedTokenCRUD(session)
+    
+    def create_asked_token(self, user_id: str, text_id: int, 
+                          sentence_id: int, sentence_token_id: int):
+        """创建已提问token记录"""
+        return self._crud.create(user_id, text_id, sentence_id, sentence_token_id)
+    
+    def get_asked_token(self, user_id: str, text_id: int, 
+                        sentence_id: int, sentence_token_id: int):
+        """获取指定的已提问token记录"""
+        return self._crud.get(user_id, text_id, sentence_id, sentence_token_id)
+    
+    def get_asked_tokens_for_article(self, text_id: int):
+        """获取指定文章的所有已提问token记录"""
+        return self._crud.get_for_article(text_id)
+    
+    def get_asked_tokens_for_user_article(self, user_id: str, text_id: int):
+        """获取指定用户在指定文章的已提问token记录"""
+        return self._crud.get_for_user_article(user_id, text_id)
+    
+    def delete_asked_token(self, user_id: str, text_id: int, 
+                           sentence_id: int, sentence_token_id: int) -> bool:
+        """删除已提问token记录"""
+        return self._crud.delete(user_id, text_id, sentence_id, sentence_token_id)
+
+
+class StatsDataAccessLayer:
+    """统计查询数据访问层"""
+    
+    def __init__(self, session: Session):
+        self.session = session
+        self._crud = StatsCRUD(session)
+    
+    def get_vocab_stats(self) -> Dict:
+        """获取词汇统计信息"""
+        return self._crud.get_vocab_stats()
+    
+    def get_grammar_stats(self) -> Dict:
+        """获取语法规则统计信息"""
+        return self._crud.get_grammar_stats()
+    
+    def get_learning_progress(self) -> Dict:
+        """获取学习进度统计"""
+        return self._crud.get_learning_progress()
+    
+    def get_asked_token_stats(self) -> Dict:
+        """获取已提问token统计信息"""
+        return self._crud.get_asked_token_stats()
 
 
 class DataAccessManager:
-    """数据访问管理器 - 统一入口"""
+    """数据访问管理器 - 统一入口，仿照 DatabaseManager 模式"""
     
     def __init__(self, session: Session):
         self.session = session
         self.vocab = VocabDataAccessLayer(session)
         self.grammar = GrammarDataAccessLayer(session)
+        self.text = TextDataAccessLayer(session)
+        self.token = TokenDataAccessLayer(session)
+        self.asked_token = AskedTokenDataAccessLayer(session)
+        self.stats = StatsDataAccessLayer(session)
     
     def close(self):
-        self.session.close() 
+        """关闭会话"""
+        self.session.close()
+    
+    def commit(self):
+        """提交事务"""
+        self.session.commit()
+    
+    def rollback(self):
+        """回滚事务"""
+        self.session.rollback()

@@ -3,7 +3,7 @@ from sqlalchemy import and_, or_
 from typing import List, Optional
 from .models import (
     VocabExpression, GrammarRule, OriginalText, Sentence, Token,
-    SourceType,
+    SourceType, AskedToken,
     VocabExpressionExample,
 )
 
@@ -307,4 +307,72 @@ def get_learning_progress(session: Session) -> dict:
         "grammar": grammar_stats,
         "texts": total_texts,
         "sentences": total_sentences,
+    }
+
+# ==================== AskedToken相关CRUD操作 ====================
+
+def create_asked_token(session: Session, user_id: str, text_id: int, 
+                      sentence_id: int, sentence_token_id: int) -> AskedToken:
+    """创建已提问token记录"""
+    asked_token = AskedToken(
+        user_id=user_id,
+        text_id=text_id,
+        sentence_id=sentence_id,
+        sentence_token_id=sentence_token_id
+    )
+    session.add(asked_token)
+    session.commit()
+    session.refresh(asked_token)
+    return asked_token
+
+
+def get_asked_token(session: Session, user_id: str, text_id: int, 
+                    sentence_id: int, sentence_token_id: int) -> Optional[AskedToken]:
+    """获取指定的已提问token记录"""
+    return session.query(AskedToken).filter(
+        and_(
+            AskedToken.user_id == user_id,
+            AskedToken.text_id == text_id,
+            AskedToken.sentence_id == sentence_id,
+            AskedToken.sentence_token_id == sentence_token_id
+        )
+    ).first()
+
+
+def get_asked_tokens_for_article(session: Session, text_id: int) -> List[AskedToken]:
+    """获取指定文章的所有已提问token记录"""
+    return session.query(AskedToken).filter(AskedToken.text_id == text_id).all()
+
+
+def get_asked_tokens_for_user_article(session: Session, user_id: str, text_id: int) -> List[AskedToken]:
+    """获取指定用户在指定文章的已提问token记录"""
+    return session.query(AskedToken).filter(
+        and_(
+            AskedToken.user_id == user_id,
+            AskedToken.text_id == text_id
+        )
+    ).all()
+
+
+def delete_asked_token(session: Session, user_id: str, text_id: int, 
+                      sentence_id: int, sentence_token_id: int) -> bool:
+    """删除已提问token记录"""
+    asked_token = get_asked_token(session, user_id, text_id, sentence_id, sentence_token_id)
+    if asked_token:
+        session.delete(asked_token)
+        session.commit()
+        return True
+    return False
+
+
+def get_asked_token_stats(session: Session) -> dict:
+    """获取已提问token统计信息"""
+    total_asked = session.query(AskedToken).count()
+    unique_users = session.query(AskedToken.user_id).distinct().count()
+    unique_articles = session.query(AskedToken.text_id).distinct().count()
+    
+    return {
+        "total_asked_tokens": total_asked,
+        "unique_users": unique_users,
+        "unique_articles": unique_articles
     } 

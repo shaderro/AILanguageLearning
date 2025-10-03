@@ -44,7 +44,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     <ChatEventProvider>
       <div className="h-full flex flex-col">
         {/* Header with Back Button */}
-        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-4">
             <button
               onClick={onBack}
@@ -61,8 +61,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           </div>
         </div>
 
-        {/* Main Content (slightly shorter than viewport to fully show both panels) */}
-        <div className="flex gap-8 flex-1 p-4 overflow-hidden">
+        {/* Main Content - Fixed height with no overflow */}
+        <div className="flex gap-8 flex-1 p-4 overflow-hidden min-h-0">
           {isUploadMode ? (
             showUploadProgress ? (
               <UploadProgress onComplete={handleUploadComplete} />
