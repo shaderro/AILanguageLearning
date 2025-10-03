@@ -1,6 +1,7 @@
 from typing import Optional, Literal
 from dataclasses import dataclass, field
 
+
 @dataclass(frozen=True)
 class Token:
     token_body: str
@@ -61,3 +62,11 @@ class VocabExpression:
     source: Literal["auto", "qa", "manual"] = "auto"
     is_starred: bool = False
     examples: list[VocabExpressionExample] = field(default_factory=list)
+
+@dataclass
+class AskedToken:
+    """已提问的 token 记录"""
+    user_id: str
+    text_id: int
+    sentence_id: int
+    sentence_token_id: int

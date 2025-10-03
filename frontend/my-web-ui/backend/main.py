@@ -30,6 +30,9 @@ except ImportError as e:
     process_article = None
     save_structured_data = None
 
+# 导入 asked tokens manager
+from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
+
 # 计算 backend/data/current/articles 目录（相对本文件位置）
 RESULT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "..", "backend", "data", "current", "articles")
@@ -467,6 +470,105 @@ async def upload_text(
             
     except Exception as e:
         return create_error_response(f"文字内容处理失败: {str(e)}")
+
+# ==================== Asked Tokens API ====================
+
+@app.get("/api/user/asked-tokens")
+async def get_asked_tokens(user_id: str = Query(..., description="用户ID"), 
+                          text_id: int = Query(..., description="文章ID")):
+    """获取用户在指定文章下已提问的 token 键集合"""
+    try:
+        print(f" [AskedTokens] Getting asked tokens for user={user_id}, text_id={text_id}")
+        
+        # 使用 JSON 文件模式（测试阶段）
+        manager = get_asked_tokens_manager(use_database=False)
+        asked_tokens = manager.get_asked_tokens_for_article(user_id, text_id)
+        
+        print(f" [AskedTokens] Found {len(asked_tokens)} asked tokens")
+        return create_success_response(
+            data={
+                "asked_tokens": list(asked_tokens),
+                "count": len(asked_tokens)
+            },
+            message=f"成功获取已提问的 tokens，共 {len(asked_tokens)} 个"
+        )
+    except Exception as e:
+        print(f" [AskedTokens] Error getting asked tokens: {e}")
+        return create_error_response(f"获取已提问 tokens 失败: {str(e)}")
+
+@app.post("/api/user/asked-tokens")
+async def mark_token_asked(payload: dict):
+    """标记 token 为已提问"""
+    try:
+        user_id = payload.get("user_id", "default_user")  # 默认用户ID
+        text_id = payload.get("text_id")
+        sentence_id = payload.get("sentence_id")
+        sentence_token_id = payload.get("sentence_token_id")
+        
+        print(f" [AskedTokens] Marking token as asked:")
+        print(f"  - user_id: {user_id}")
+        print(f"  - text_id: {text_id}")
+        print(f"  - sentence_id: {sentence_id}")
+        print(f"  - sentence_token_id: {sentence_token_id}")
+        
+        if not text_id or sentence_id is None or sentence_token_id is None:
+            return create_error_response("text_id, sentence_id, sentence_token_id 都是必需的")
+        
+        # 使用 JSON 文件模式（测试阶段）
+        manager = get_asked_tokens_manager(use_database=False)
+        success = manager.mark_token_asked(
+            user_id=user_id,
+            text_id=text_id,
+            sentence_id=sentence_id,
+            sentence_token_id=sentence_token_id
+        )
+        
+        if success:
+            print(f" [AskedTokens] Token marked as asked successfully")
+            return create_success_response(
+                data={
+                    "user_id": user_id,
+                    "text_id": text_id,
+                    "sentence_id": sentence_id,
+                    "sentence_token_id": sentence_token_id
+                },
+                message="Token 已标记为已提问"
+            )
+        else:
+            return create_error_response("标记 token 为已提问失败")
+    except Exception as e:
+        print(f" [AskedTokens] Error marking token as asked: {e}")
+        return create_error_response(f"标记 token 为已提问失败: {str(e)}")
+
+@app.delete("/api/user/asked-tokens")
+async def unmark_token_asked(payload: dict):
+    """取消标记 token 为已提问"""
+    try:
+        user_id = payload.get("user_id", "default_user")  # 默认用户ID
+        token_key = payload.get("token_key")
+        
+        print(f" [AskedTokens] Unmarking token: user={user_id}, key={token_key}")
+        
+        if not token_key:
+            return create_error_response("token_key 是必需的")
+        
+        # 使用 JSON 文件模式（测试阶段）
+        manager = get_asked_tokens_manager(use_database=False)
+        success = manager.unmark_token_asked(user_id, token_key)
+        
+        if success:
+            print(f" [AskedTokens] Token unmarked successfully")
+            return create_success_response(
+                data={"token_key": token_key},
+                message="Token 已取消标记"
+            )
+        else:
+            return create_error_response("取消标记 token 失败")
+    except Exception as e:
+        print(f" [AskedTokens] Error unmarking token: {e}")
+        return create_error_response(f"取消标记 token 失败: {str(e)}")
+
+# ==================== End Asked Tokens API ====================
 
 if __name__ == "__main__":
     import uvicorn

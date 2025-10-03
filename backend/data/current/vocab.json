@@ -466,5 +466,59 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 27,
+    "vocab_body": "hinüberspähen",
+    "explanation": "hinüberspähen 是一个德语动词，由前缀 'hinüber-' 和动词 'spähen' 组合而成。\n\n基本含义：\n- 'hinüber-' 表示'到另一边去'的方向\n- 'spähen' 意思是'窥视'、'偷看'或'仔细观察'\n- 合起来表示'向另一边窥视'、'偷看对面'或'越过某物向另一边张望'\n\n用法：\n- 描述偷偷地、好奇地或不引人注意地向某个障碍物的另一边看\n- 通常带有窥探、观察的意味\n- 可以用于描述越过围墙、篱笆、窗户等障碍物向另一边看的行为\n\n词性：\n- 动词，可分动词\n- 现在时变位：ich spähe hinüber, du spähst hinüber, er/sie/es späht hinüber\n- 过去时：spähte hinüber\n- 完成时：hat hinübergespäht",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 44,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'hinüberspähen' 的意思是'窥视过去'，描述德思礼夫人伸长脖子从花园篱笆上方向邻居家张望的动作。它结合了 'hinüber'（过去）和 'spähen'（窥视），强调她偷偷观察邻居的行为，与句子中 'den Hals über den Gartenzaun recken'（伸长脖子越过花园篱笆）的动作直接相关。\"",
+        "token_indices": [
+          74
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 28,
+    "vocab_body": "namens",
+    "explanation": "namens 是一个介词，意思是“名叫...的”或“名字叫...的”。它用于连接一个人或事物的名称，表示该名称所指的对象。在德语中，namens 通常放在名词前，用来指定某人或某物的具体名称。例如，在描述一个人时，可以用 namens 来引入其名字。这个词没有其他常见含义。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 45,
+        "text_id": 1,
+        "sentence_id": 6,
+        "context_explanation": "在这句话中，“namens” 的意思是“名叫”，用来介绍人物的名字。它连接了“einen kleinen Sohn”（一个小儿子）和“Dudley”（达力），表示这个儿子的名字是达力。因此，整个短语“einen kleinen Sohn namens Dudley”可以翻译为“一个名叫达力的小儿子”。",
+        "token_indices": [
+          13
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 29,
+    "vocab_body": "aufschlugen",
+    "explanation": "aufschlugen 是动词 aufschlagen 的过去时第三人称复数形式。这个词主要有以下几个意思：\n1. 打开、展开：指物理上打开某物，如打开书本、展开地图等。\n2. 睁开：指睁开眼睛，常用于描述从睡眠或休息状态中醒来时睁开眼睛的动作。\n3. 撞击、碰伤：指身体部位因碰撞而受伤，如碰伤膝盖。\n4. 建立、搭建：指临时搭建某物，如搭建帐篷或摊位。\n5. 涨价、上涨：指价格或成本增加。\n在语言学习中，这个词的用法取决于上下文，但最常见的是描述打开物体或睁开眼睛的动作。",
+    "source": "auto",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 46,
+        "text_id": 1,
+        "sentence_id": 14,
+        "context_explanation": "在这个句子中，'aufschlugen' 表示 Dursley 夫妇睁开眼睛的动作，即他们醒来时睁开了眼睛。句子描述 'Als Mr und Mrs Dursley ... die Augen aufschlugen' 意思是 '当 Dursley 夫妇睁开眼睛时'，这标志着故事开始的那一刻。",
+        "token_indices": [
+          39
+        ]
+      }
+    ]
   }
 ]

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -51,3 +51,12 @@ class OriginalText:
     text_id: int
     text_title: str
     text_by_sentence: list[Sentence]
+
+@dataclass
+class AskedToken:
+    """已提问的 token 记录"""
+    user_id: str
+    text_id: int
+    sentence_id: int
+    sentence_token_id: int
+    asked_at: Optional[int] = None

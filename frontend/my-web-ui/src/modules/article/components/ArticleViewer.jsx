@@ -4,7 +4,7 @@ import { apiService } from '../../../services/api'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
 // InlineExplanation 组件 - 用于显示hover时的解释
-function InlineExplanation({ explanation = "This is a quick explanation", token = null, sentenceBody = "", textId = 1, sentenceId = 1 }) {
+function InlineExplanation({ explanation = "This is a quick explanation", token = null, sentenceBody = "", textId = 1, sentenceId = 1, isAsked = false }) {
   const { sendMessageToChat, triggerKnowledgeToast } = useChatEvent()
   const [isConverting, setIsConverting] = useState(false)
 
@@ -143,6 +143,11 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
     <div className="absolute top-full left-0 z-10 mt-1">
       <div className="px-2 py-1 text-xs bg-gray-100 text-gray-500 border border-gray-300 rounded shadow-lg">
         <div className="mb-1">{explanation}</div>
+        {isAsked && (
+          <div className="mb-1 text-xs text-green-600 font-medium">
+            ✓ 已提问过
+          </div>
+        )}
         <button
           onClick={handleDetailClick}
           disabled={isConverting}
@@ -160,7 +165,7 @@ function InlineExplanation({ explanation = "This is a quick explanation", token 
 }
 
 // VocabExplanationButton 简化版 - 绝对定位覆盖
-function VocabExplanationButton({ token, onGetExplanation }) {
+function VocabExplanationButton({ token, onGetExplanation, isAsked = false, sIdx, tIdx }) {
   const [isClicked, setIsClicked] = useState(false)
 
   const handleClick = (e) => {
@@ -170,7 +175,7 @@ function VocabExplanationButton({ token, onGetExplanation }) {
     
     // 新增：调用回调函数来通知父组件
     if (onGetExplanation) {
-      onGetExplanation(token, null) // 传递null作为explanation
+      onGetExplanation(token, null, sIdx, tIdx) // 传递sIdx和tIdx参数
     }
   }
 
@@ -183,13 +188,18 @@ function VocabExplanationButton({ token, onGetExplanation }) {
           sentenceBody=""
           textId={1}
           sentenceId={1}
+          isAsked={isAsked}
         />
       ) : (
         <button
           onClick={handleClick}
-          className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded border border-blue-300 transition-colors duration-150 shadow-lg"
+          className={`px-2 py-1 text-xs rounded border transition-colors duration-150 shadow-lg ${
+            isAsked 
+              ? 'bg-green-100 hover:bg-green-200 text-green-800 border-green-300' 
+              : 'bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300'
+          }`}
         >
-          quick translation
+          {isAsked ? '✓ 已提问' : 'quick translation'}
         </button>
       )}
     </div>
@@ -239,6 +249,10 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
   // 新增：存储当前选中的token对象
   const [selectedToken, setSelectedToken] = useState(null)
 
+  // 新增：Asked Tokens 状态管理
+  const [askedTokenKeys, setAskedTokenKeys] = useState(() => new Set())
+  const [isLoadingAskedTokens, setIsLoadingAskedTokens] = useState(false)
+
   // selection / drag state
   const isDraggingRef = useRef(false)
   const wasDraggingRef = useRef(false)
@@ -258,9 +272,92 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     return Array.isArray(raw) ? raw : []
   }, [data])
 
-  // 当文章 ID 改变时，设置第一个句子为当前句子上下文
-  // 注意：只监听 articleId，不监听 data/sentences，避免数据刷新时重复设置
+  // 新增：Asked Tokens API 函数
+  const markTokenAsAsked = async (textId, sentenceId, sentenceTokenId) => {
+    console.log('🔧 [Frontend] markTokenAsAsked called:', { textId, sentenceId, sentenceTokenId })
+    
+    try {
+      const payload = {
+        text_id: textId,
+        sentence_id: sentenceId,
+        sentence_token_id: sentenceTokenId
+      }
+      
+      console.log('📤 [Frontend] Sending POST request to:', 'http://localhost:8001/api/user/asked-tokens')
+      console.log('📤 [Frontend] Request payload:', payload)
+      
+      const response = await fetch('http://localhost:8001/api/user/asked-tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      })
+
+      console.log('📡 [Frontend] Response status:', response.status)
+      console.log('📡 [Frontend] Response ok:', response.ok)
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('✅ [Frontend] Token marked as asked successfully:', result)
+        return true
+      } else {
+        const errorText = await response.text()
+        console.error('❌ [Frontend] Failed to mark token as asked:', response.status, errorText)
+        return false
+      }
+    } catch (error) {
+      console.error('💥 [Frontend] Error marking token as asked:', error)
+      return false
+    }
+  }
+
+  // 修复 fetchAskedTokens 函数
+  const fetchAskedTokens = async (textId) => {
+    console.log('🔧 [Frontend] fetchAskedTokens called for textId:', textId)
+    
+    try {
+      setIsLoadingAskedTokens(true)
+      const url = `http://localhost:8001/api/user/asked-tokens?user_id=default_user&text_id=${textId}`
+      console.log('📤 [Frontend] Sending GET request to:', url)
+      
+      const response = await fetch(url)
+      
+      console.log('📡 [Frontend] Response status:', response.status)
+      console.log('📡 [Frontend] Response ok:', response.ok)
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('📥 [Frontend] Raw response:', result)
+        
+        const askedTokens = result.data?.asked_tokens || []
+        const keys = new Set(askedTokens)
+        
+        setAskedTokenKeys(keys)
+        console.log('✅ [Frontend] Fetched asked tokens:', Array.from(keys))
+        console.log('📊 [Frontend] Asked tokens count:', keys.size)
+        console.log('🔄 [Frontend] State updated, should trigger tokenAskedStatus recalculation')
+        
+        return keys
+      } else {
+        const errorText = await response.text()
+        console.error('❌ [Frontend] Failed to fetch asked tokens:', response.status, errorText)
+        return new Set()
+      }
+    } catch (error) {
+      console.error('💥 [Frontend] Error fetching asked tokens:', error)
+      return new Set()
+    } finally {
+      setIsLoadingAskedTokens(false)
+    }
+  }
+
+  // 修复 useEffect - 添加正确的依赖数组
   useEffect(() => {
+    console.log('🔄 [Frontend] useEffect triggered, articleId:', articleId)
+    console.log('🔍 [Frontend] data?.data:', data?.data)
+    console.log('🔍 [Frontend] sentences.length:', sentences.length)
+    
     if (data?.data && sentences.length > 0) {
       const firstSentence = sentences[0]
       if (firstSentence) {
@@ -278,8 +375,112 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
             console.error('❌ [Frontend] Failed to set session sentence:', error)
           })
       }
+
+      // 获取已提问的 tokens
+      const textId = data.data.text_id
+      if (textId) {
+        console.log('🔄 [Frontend] Fetching asked tokens for article:', textId)
+        fetchAskedTokens(textId)
+      }
     }
-  }, [articleId])
+  }, [articleId, data?.data?.text_id, sentences.length]) // 添加正确的依赖
+
+  // 修复预计算逻辑 - 移除askedTokenKeys.size === 0的早期返回
+  const tokenAskedStatus = useMemo(() => {
+    console.log('🔧 [Frontend] tokenAskedStatus useMemo triggered')
+    console.log('🔍 [Frontend] data?.data?.text_id:', data?.data?.text_id)
+    console.log('🔍 [Frontend] sentences.length:', sentences.length)
+    console.log('🔍 [Frontend] askedTokenKeys.size:', askedTokenKeys.size)
+    
+    if (!data?.data?.text_id || !sentences.length) {
+      console.log('⚠️ [Frontend] Missing required data for tokenAskedStatus')
+      return new Map()
+    }
+    
+    const textId = data.data.text_id
+    const statusMap = new Map()
+    
+    console.log('🔧 [Frontend] Pre-calculating token asked status for textId:', textId)
+    console.log('🔍 [Frontend] Asked token keys:', Array.from(askedTokenKeys))
+    
+    // 即使askedTokenKeys为空，也要计算所有token的状态（为false）
+    sentences.forEach((sentence, sIdx) => {
+      if (sentence?.tokens) {
+        sentence.tokens.forEach((token, tIdx) => {
+          if (token && typeof token === 'object') {
+            const sentenceId = token.sentence_id || (sIdx + 1)
+            const sentenceTokenId = token.sentence_token_id
+            
+            if (sentenceTokenId != null) {
+              const key = `${textId}:${sentenceId}:${sentenceTokenId}`
+              const isAsked = askedTokenKeys.has(key)
+              const tokenKey = getTokenKey(sIdx, token, tIdx)
+              statusMap.set(tokenKey, isAsked)
+              
+              if (isAsked) {
+                console.log('✅ [Frontend] Token is asked:', key)
+              }
+            }
+          }
+        })
+      }
+    })
+    
+    console.log('📊 [Frontend] Pre-calculated status for', statusMap.size, 'tokens')
+    return statusMap
+  }, [data?.data?.text_id, sentences, askedTokenKeys])
+
+  // 修复 isTokenAsked 函数
+  const isTokenAsked = (token, sIdx, tIdx) => {
+    if (!token || typeof token !== 'object') return false
+    
+    const tokenKey = getTokenKey(sIdx, token, tIdx)
+    return tokenAskedStatus.get(tokenKey) || false
+  }
+
+  // 修复 handleGetExplanation 函数 - 传递sIdx和tIdx参数
+  const handleGetExplanation = async (token, explanation, sIdx, tIdx) => {
+    console.log('🔧 [Frontend] handleGetExplanation called:', { token, explanation, sIdx, tIdx })
+    
+    const tokenId = getTokenId(token)
+    console.log('🔍 [Frontend] Token ID:', tokenId)
+    
+    if (tokenId) {
+      setVocabExplanations(prev => new Map(prev).set(tokenId, explanation))
+      setClickedVocabTokenIds(prev => new Set(prev).add(tokenId))
+      
+      const textId = data?.data?.text_id
+      const sentenceId = sIdx + 1  // 修复：使用sIdx+1作为sentenceId
+      const sentenceTokenId = tIdx + 1  // 修复：使用tIdx+1作为sentenceTokenId
+      
+      console.log('🔍 [Frontend] Marking token details:', { textId, sentenceId, sentenceTokenId })
+      console.log('🔍 [Frontend] Token object:', token)
+      console.log('🔍 [Frontend] Token position:', { sIdx, tIdx })
+      
+      if (textId && sentenceTokenId != null) {
+        const key = `${textId}:${sentenceId}:${sentenceTokenId}`
+        
+        // 检查token是否已经被标记过
+        if (askedTokenKeys.has(key)) {
+          console.log('ℹ️ [Frontend] Token already marked as asked, skipping:', key)
+          return
+        }
+        
+        console.log('📝 [Frontend] Marking token as asked:', { textId, sentenceId, sentenceTokenId })
+        const success = await markTokenAsAsked(textId, sentenceId, sentenceTokenId)
+        if (success) {
+          setAskedTokenKeys(prev => new Set(prev).add(key))
+          console.log('✅ [Frontend] Token marked as asked successfully, key:', key)
+        } else {
+          console.error('❌ [Frontend] Failed to mark token as asked')
+        }
+      } else {
+        console.warn('⚠️ [Frontend] Missing required fields for marking:', { textId, sentenceTokenId })
+      }
+    } else {
+      console.warn('⚠️ [Frontend] No token ID found for token:', token)
+    }
+  }
 
   const buildSelectedTexts = (sIdx, idSet) => {
     if (sIdx == null) return []
@@ -438,16 +639,6 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     setActiveSentenceIndex(null)
     if (onTokenSelect) {
       onTokenSelect('', empty, [])
-    }
-  }
-
-  // 修改：处理词汇解释获取
-  const handleGetExplanation = (token, explanation) => {
-    const tokenId = getTokenId(token)
-    if (tokenId) {
-      setVocabExplanations(prev => new Map(prev).set(tokenId, explanation))
-      // 新增：标记该token已被点击
-      setClickedVocabTokenIds(prev => new Set(prev).add(tokenId))
     }
   }
 
@@ -639,23 +830,6 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     setHoveredTokenId(null)
   }
 
-  // 在ArticleViewer组件中添加一个函数来获取被选中的token
-  const getSelectedToken = () => {
-    if (selectedTokenIds.size !== 1) return null
-    
-    for (let sIdx = 0; sIdx < sentences.length; sIdx++) {
-      const tokens = sentences[sIdx]?.tokens || []
-      for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
-        const token = tokens[tIdx]
-        const uid = getTokenId(token)
-        if (uid && selectedTokenIds.has(uid)) {
-          return token
-        }
-      }
-    }
-    return null
-  }
-
   if (isLoading) {
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto">
@@ -702,12 +876,19 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
               // 新增：检查是否正在hover这个token
               const isHovered = uid === hoveredTokenId
               
+              // 新增：检查该token是否已被提问
+              const isAsked = isTokenAsked(t, sIdx, tIdx)
+              
               const bgClass = selected
                 ? 'bg-yellow-300'
                 : (hoverAllowed ? 'bg-transparent hover:bg-yellow-200' : 'bg-transparent')
               
-              // 新增：下划线样式
-              const underlineClass = isClickedVocab ? 'underline decoration-2 decoration-blue-500' : ''
+              // 新增：下划线样式 - 已提问的token显示绿色下划线
+              const underlineClass = isClickedVocab 
+                ? 'underline decoration-2 decoration-blue-500' 
+                : isAsked 
+                  ? 'underline decoration-2 decoration-green-500' 
+                  : ''
               
               // 判断是否为text类型token
               const isTextToken = typeof t === 'object' && t?.token_type === 'text'
@@ -741,6 +922,9 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
                     <VocabExplanationButton 
                       token={t} 
                       onGetExplanation={handleGetExplanation}
+                      isAsked={isAsked}
+                      sIdx={sIdx}
+                      tIdx={tIdx}
                     />
                   )}
                   
@@ -752,6 +936,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
                       sentenceBody={sentence?.sentence_body || ""}
                       textId={data?.data?.text_id ?? 1}
                       sentenceId={sentence?.sentence_id || sIdx + 1}
+                      isAsked={isAsked}
                     />
                   )}
                 </span>

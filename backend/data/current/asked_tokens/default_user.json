@@ -1,0 +1,38 @@
+[
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_token_id": 1
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_token_id": 3
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_token_id": 1
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 3,
+    "sentence_token_id": 1
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 51,
+    "sentence_token_id": 49
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 14,
+    "sentence_token_id": 39
+  }
+]
