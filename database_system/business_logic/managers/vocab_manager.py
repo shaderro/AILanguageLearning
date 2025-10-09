@@ -72,3 +72,29 @@ class VocabManager:
             "auto": auto,
             "manual": manual
         }
+    
+    def add_vocab_example(self, vocab_id: int, text_id: int, 
+                         sentence_id: int, context_explanation: str,
+                         token_indices: Optional[List[int]] = None):
+        """
+        添加词汇例句
+        
+        参数:
+            vocab_id: 词汇ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            context_explanation: 上下文解释
+            token_indices: 关联的token索引列表
+            
+        返回:
+            VocabExpressionExample: 新创建的例句
+        """
+        from ..crud import VocabCRUD
+        vocab_crud = VocabCRUD(self.session)
+        return vocab_crud.create_example(
+            vocab_id=vocab_id,
+            text_id=text_id,
+            sentence_id=sentence_id,
+            context_explanation=context_explanation,
+            token_indices=token_indices or []
+        )

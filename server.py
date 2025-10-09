@@ -20,11 +20,14 @@ if BACKEND_DIR not in sys.path:
 # 导入 AskedTokensManager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
 
+# 导入词汇API路由
+from backend.api import vocab_router
+
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="Asked Tokens API",
-    description="专门处理 asked tokens 的 API 服务",
-    version="1.0.0"
+    title="Language Learning API",
+    description="语言学习系统 API 服务（包含 Asked Tokens 和 Vocab 管理）",
+    version="2.0.0"
 )
 
 # 添加 CORS 中间件
@@ -36,13 +39,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 注册词汇API路由
+app.include_router(vocab_router)
+
 @app.get("/")
 async def root():
-    return {"message": "Asked Tokens API", "status": "running"}
+    return {
+        "message": "Language Learning API",
+        "status": "running",
+        "version": "2.0.0",
+        "endpoints": {
+            "asked_tokens": "/api/user/asked-tokens",
+            "vocab_v2": "/api/v2/vocab",
+            "docs": "/docs",
+            "health": "/api/health"
+        }
+    }
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "message": "Asked Tokens API is running"}
+    return {
+        "status": "healthy",
+        "message": "Language Learning API is running",
+        "services": {
+            "asked_tokens": "active",
+            "vocab_v2": "active (database)"
+        }
+    }
 
 @app.get("/api/user/asked-tokens")
 async def get_asked_tokens(user_id: str = Query(..., description="用户ID"), 

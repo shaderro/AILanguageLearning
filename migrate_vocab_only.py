@@ -42,12 +42,19 @@ def migrate_vocab():
     inserted_vocab = 0
     inserted_examples = 0
 
+    def safe_source_type(value):
+        """安全转换 source 类型，未知值默认为 auto"""
+        try:
+            return SourceType(value.lower() if value else "auto")
+        except (ValueError, AttributeError):
+            return SourceType.AUTO
+
     try:
         for r in rows:
             vocab = VocabExpression(
                 vocab_body=r["vocab_body"],
                 explanation=r["explanation"],
-                source=SourceType(r.get("source", "auto")),
+                source=safe_source_type(r.get("source", "auto")),
                 is_starred=bool(r.get("is_starred", False)),
             )
             session.add(vocab)
