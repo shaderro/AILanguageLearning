@@ -85,6 +85,22 @@ export const apiService = {
   // 切换语法规则收藏状态
   toggleGrammarStar: (id, isStarred) => api.put(`/api/grammar/${id}/star`, { is_starred: isStarred }),
 
+  // Asked Tokens 管理
+  getAskedTokens: (userId = 'default_user', textId) => {
+    console.log(`🔍 [Frontend] Getting asked tokens for user=${userId}, text=${textId}`);
+    return api.get(`/api/user/asked-tokens?user_id=${userId}&text_id=${textId}`);
+  },
+
+  markTokenAsked: (userId = 'default_user', textId, sentenceId, sentenceTokenId) => {
+    console.log(`🏷️ [Frontend] Marking token as asked: ${textId}:${sentenceId}:${sentenceTokenId}`);
+    return api.post('/api/user/asked-tokens', {
+      user_id: userId,
+      text_id: textId,
+      sentence_id: sentenceId,
+      sentence_token_id: sentenceTokenId
+    });
+  },
+
   // Session 管理
   session: {
     // 设置当前句子上下文
