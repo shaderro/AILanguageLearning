@@ -162,11 +162,34 @@ class MainAssistant:
     def answer_question_function(self, quoted_sentence: SentenceType, user_question: str, sentence_body: str) -> str:
         """
         使用AI回答用户问题。
+        
+        Args:
+            quoted_sentence: 完整的句子对象
+            user_question: 用户问题
+            sentence_body: 用户选择的文本（可能是完整句子或选中的部分）
         """
-        ai_response = self.answer_question_assistant.run(
-            sentence_body,
-            user_question
-        )
+        # 判断用户是选择了完整句子还是特定部分
+        full_sentence = quoted_sentence.sentence_body
+        
+        # 如果 sentence_body 不等于完整句子，说明用户选择了特定部分
+        if sentence_body != full_sentence:
+            # 用户选择了特定文本（如单词或短语）
+            quoted_part = sentence_body
+            print(f"🎯 [AnswerQuestion] 用户选择了特定文本: '{quoted_part}'")
+            print(f"📖 [AnswerQuestion] 完整句子: '{full_sentence}'")
+            ai_response = self.answer_question_assistant.run(
+                full_sentence=full_sentence,
+                user_question=user_question,
+                quoted_part=quoted_part
+            )
+        else:
+            # 用户选择了整句话
+            print(f"📖 [AnswerQuestion] 用户选择了整句话: '{full_sentence}'")
+            ai_response = self.answer_question_assistant.run(
+                full_sentence=full_sentence,
+                user_question=user_question
+            )
+        
         print("AI Response:", ai_response)
         if isinstance(ai_response, (dict, list)):
             ai_response = str(ai_response)

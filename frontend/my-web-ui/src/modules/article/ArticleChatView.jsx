@@ -4,6 +4,7 @@ import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
 import ChatView from './components/ChatView'
 import { ChatEventProvider } from './contexts/ChatEventContext'
+import { apiService } from '../../services/api'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
   const [selectedTokens, setSelectedTokens] = useState([])
@@ -11,20 +12,64 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [showUploadProgress, setShowUploadProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [hasSelectedToken, setHasSelectedToken] = useState(false)
+  const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   
   // Sample text for the ArticleViewer
   const sampleText = isUploadMode ? '' : 'Sample text for demo'
 
-  const handleTokenSelect = (tokenText, selectedSet, selectedTexts = []) => {
+  const handleTokenSelect = async (tokenText, selectedSet, selectedTexts = [], context = null) => {
     setSelectedTokens(selectedTexts)
     setQuotedText(selectedTexts.join(' '))
     setHasSelectedToken(selectedTexts.length > 0)
-    console.log('Selected token:', tokenText)
-    console.log('All selected tokens:', selectedTexts)
+    setCurrentContext(context)  // 保存完整的上下文信息
+    
+    console.log('🎯 [ArticleChatView] Token selection changed:')
+    console.log('  - Selected text:', tokenText)
+    console.log('  - All selected texts:', selectedTexts)
+    console.log('  - Context:', context)
+    
+    // Send selection context to backend session state
+    if (context && context.sentence && selectedTexts.length > 0) {
+      try {
+        console.log('📤 [ArticleChatView] Sending selection context to backend...')
+        
+        // Prepare the update payload
+        const updatePayload = {
+          sentence: context.sentence
+        }
+        
+        // Handle multiple tokens
+        if (context.tokens.length > 1) {
+          updatePayload.token = {
+            multiple_tokens: context.tokens,
+            token_indices: context.tokenIndices,
+            token_text: selectedTexts.join(' ')
+          }
+        } else if (context.tokens.length === 1) {
+          // Single token selection
+          const token = context.tokens[0]
+          updatePayload.token = {
+            token_body: token.token_body,
+            sentence_token_id: token.sentence_token_id,
+            global_token_id: token.global_token_id
+          }
+        }
+        
+        console.log('📤 [ArticleChatView] Update payload:', updatePayload)
+        const response = await apiService.session.updateContext(updatePayload)
+        console.log('✅ [ArticleChatView] Session context updated:', response)
+      } catch (error) {
+        console.error('❌ [ArticleChatView] Failed to update session context:', error)
+      }
+    } else if (selectedTexts.length === 0) {
+      // Clear selection - no tokens selected
+      console.log('🧹 [ArticleChatView] Clearing selection (no context to send)')
+    }
   }
 
   const handleClearQuote = () => {
     setQuotedText('')
+    setCurrentContext(null)  // 同时清除上下文
   }
 
   const handleUploadStart = () => {
@@ -80,6 +125,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             onClearQuote={handleClearQuote}
             disabled={isUploadMode && !uploadComplete}
             hasSelectedToken={hasSelectedToken}
+            selectedTokenCount={selectedTokens.length || 1}
+            selectionContext={currentContext}
           />
         </div>
       </div>

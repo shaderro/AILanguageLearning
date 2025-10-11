@@ -23,11 +23,46 @@ export function useTokenSelection({ sentences, onTokenSelect }) {
     return texts
   }
 
+  // Build detailed token and sentence info
+  const buildSelectionContext = (sIdx, idSet) => {
+    if (sIdx == null || !sentences[sIdx]) return null
+    
+    const sentence = sentences[sIdx]
+    const tokens = sentence.tokens || []
+    const selectedTokens = []
+    const selectedTexts = []
+    const tokenIndices = []
+    
+    for (let i = 0; i < tokens.length; i++) {
+      const tk = tokens[i]
+      if (tk && typeof tk === 'object') {
+        const id = getTokenId(tk)
+        if (id && idSet.has(id)) {
+          selectedTokens.push(tk)
+          selectedTexts.push(tk.token_body ?? '')
+          tokenIndices.push(tk.sentence_token_id ?? i)
+        }
+      }
+    }
+    
+    return {
+      sentence: {
+        text_id: sentence.text_id,
+        sentence_id: sentence.sentence_id,
+        sentence_body: sentence.sentence_body
+      },
+      tokens: selectedTokens,
+      selectedTexts,
+      tokenIndices
+    }
+  }
+
   const emitSelection = (set, lastTokenText = '') => {
     setSelectedTokenIds(set)
     if (onTokenSelect) {
       const selectedTexts = buildSelectedTexts(activeSentenceRef.current, set)
-      onTokenSelect(lastTokenText, set, selectedTexts)
+      const context = buildSelectionContext(activeSentenceRef.current, set)
+      onTokenSelect(lastTokenText, set, selectedTexts, context)
     }
   }
 

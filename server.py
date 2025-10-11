@@ -22,6 +22,7 @@ from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
 
 # 导入词汇API路由
 from backend.api import vocab_router
+from backend.api.vocab_routes_verbose import router as vocab_verbose_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -41,6 +42,7 @@ app.add_middleware(
 
 # 注册词汇API路由
 app.include_router(vocab_router)
+app.include_router(vocab_verbose_router)  # 详细日志版本
 
 @app.get("/")
 async def root():
@@ -51,9 +53,11 @@ async def root():
         "endpoints": {
             "asked_tokens": "/api/user/asked-tokens",
             "vocab_v2": "/api/v2/vocab",
+            "vocab_verbose": "/api/v2/vocab-verbose (详细日志版本)",
             "docs": "/docs",
             "health": "/api/health"
-        }
+        },
+        "note": "使用 /api/v2/vocab-verbose 端点可以看到详细的数据转换日志"
     }
 
 @app.get("/api/health")
@@ -187,8 +191,15 @@ async def unmark_token_asked(payload: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 启动 Asked Tokens API 服务器...")
-    print("📡 服务地址: http://localhost:8001")
-    print("📚 API 文档: http://localhost:8001/docs")
+    print("=" * 60)
+    print("Starting FastAPI Server...")
+    print("=" * 60)
+    print("")
+    print("Server Address: http://localhost:8001")
+    print("API Documentation: http://localhost:8001/docs")
+    print("Health Check: http://localhost:8001/api/health")
+    print("")
+    print("Press Ctrl+C to stop the server")
+    print("")
     uvicorn.run(app, host="0.0.0.0", port=8001)
 

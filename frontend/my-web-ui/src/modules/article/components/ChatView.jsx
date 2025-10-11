@@ -3,7 +3,7 @@ import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
-export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false }) {
+export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false, selectedTokenCount = 1, selectionContext = null }) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
@@ -118,6 +118,9 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
     if (inputText.trim() === '') return
 
     const questionText = inputText
+    // 保存当前的引用文本和上下文，因为后面会清空
+    const currentQuotedText = quotedText
+    const currentSelectionContext = selectionContext
     
     // Add user message with quote if exists
     const userMessage = {
@@ -125,41 +128,73 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       text: questionText,
       isUser: true,
       timestamp: new Date(),
-      quote: quotedText || null
+      quote: currentQuotedText || null
     }
     
     setMessages(prev => [...prev, userMessage])
     setInputText('')
-    
-    // Clear quote after sending
-    if (onClearQuote) {
-      onClearQuote()
-    }
 
     // 调用后端 chat API
     try {
-      console.log('💬 [Frontend] 步骤1: 开始调用 chat API...')
-      console.log('💬 [Frontend] 问题文本:', questionText)
-      console.log('💬 [Frontend] 是否有引用文本:', quotedText ? 'Yes' : 'No')
+      console.log('\n' + '='.repeat(80))
+      console.log('💬 [ChatView] ========== 发送消息 ==========')
+      console.log('📝 [ChatView] 问题文本:', questionText)
+      console.log('📌 [ChatView] 引用文本 (quotedText):', currentQuotedText || '无')
+      console.log('📋 [ChatView] 选择上下文 (selectionContext):')
+      if (currentSelectionContext) {
+        console.log('  - 句子 ID:', currentSelectionContext.sentence?.sentence_id)
+        console.log('  - 文章 ID:', currentSelectionContext.sentence?.text_id)
+        console.log('  - 句子原文:', currentSelectionContext.sentence?.sentence_body)
+        console.log('  - 选中的 tokens:', currentSelectionContext.selectedTexts)
+        console.log('  - Token 数量:', currentSelectionContext.tokens?.length)
+      } else {
+        console.log('  - 无上下文（未选择任何token）')
+      }
+      console.log('='.repeat(80) + '\n')
       
       const { apiService } = await import('../../../services/api')
-      console.log('💬 [Frontend] 步骤2: apiService 加载成功')
       
-      // 先设置 current_input
-      // 🔧 如果没有引用文本（quotedText），清除旧的 token 选择
-      console.log('💬 [Frontend] 步骤3: 设置 current_input...')
+      // 构建更新payload
       const updatePayload = {
         current_input: questionText
       }
       
-      // 如果没有引用文本，明确清除 token（表示对整句话提问）
-      if (!quotedText) {
-        console.log('💬 [Frontend] 没有引用文本，清除旧 token 选择')
+      // 如果有选择上下文，重新发送句子和token信息以确保后端有完整上下文
+      if (currentSelectionContext && currentSelectionContext.sentence) {
+        console.log('💬 [ChatView] 重新发送完整的句子和token上下文到后端...')
+        
+        // 添加句子信息
+        updatePayload.sentence = currentSelectionContext.sentence
+        
+        // 添加token信息
+        if (currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+          if (currentSelectionContext.tokens.length > 1) {
+            // 多个token
+            updatePayload.token = {
+              multiple_tokens: currentSelectionContext.tokens,
+              token_indices: currentSelectionContext.tokenIndices,
+              token_text: currentSelectionContext.selectedTexts.join(' ')
+            }
+          } else {
+            // 单个token
+            const token = currentSelectionContext.tokens[0]
+            updatePayload.token = {
+              token_body: token.token_body,
+              sentence_token_id: token.sentence_token_id,
+              global_token_id: token.global_token_id
+            }
+          }
+        }
+        
+        console.log('📤 [ChatView] 发送的完整payload:', JSON.stringify(updatePayload, null, 2))
+      } else if (!currentQuotedText) {
+        // 如果没有引用文本，清除旧的token选择
+        console.log('💬 [ChatView] 没有引用文本，清除旧 token 选择')
         updatePayload.token = null
       }
       
       const updateResponse = await apiService.session.updateContext(updatePayload)
-      console.log('💬 [Frontend] 步骤3完成:', updateResponse)
+      console.log('✅ [ChatView] Session context 更新完成:', updateResponse)
       
       // 调用 chat 接口
       console.log('💬 [Frontend] 步骤4: 调用 /api/chat 接口...')
@@ -235,6 +270,10 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         }
         setMessages(prev => [...prev, errorMessage])
       }
+      
+      // ✅ 不再自动清空引用 - 保持引用以便用户继续追问
+      // 引用会在用户选择新的 token 或点击文章空白处时自动更新/清空
+      console.log('✅ [ChatView] 消息发送完成，保持引用以便继续追问')
     } catch (error) {
       console.error('💥 [Frontend] ❌❌❌ Chat request 发生错误 (handleSendMessage) ❌❌❌')
       console.error('💥 [Frontend] 错误对象:', error)
@@ -253,6 +292,8 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         timestamp: new Date()
       }
       setMessages(prev => [...prev, errorMessage])
+      
+      // ✅ 即使出错也不清空引用，保持引用以便用户重试
     }
   }
 
@@ -269,36 +310,82 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
   }
 
   const handleSuggestedQuestionSelect = async (question) => {
+    // 保存当前的引用文本和上下文，因为后面会清空
+    const currentQuotedText = quotedText
+    const currentSelectionContext = selectionContext
+    
     // 自动发送已选择的问题
     const userMessage = {
       id: Date.now(),
       text: question,
       isUser: true,
       timestamp: new Date(),
-      quote: quotedText || null
+      quote: currentQuotedText || null
     }
     
     setMessages(prev => [...prev, userMessage])
-    
-    // 发送后清空引用
-    if (onClearQuote) {
-      onClearQuote()
-    }
 
     // 调用后端 chat API（与 handleSendMessage 相同的逻辑）
     try {
-      console.log('💬 [Frontend] Calling chat API for suggested question...')
+      console.log('\n' + '='.repeat(80))
+      console.log('💬 [ChatView] ========== 发送建议问题 ==========')
+      console.log('📝 [ChatView] 问题文本:', question)
+      console.log('📌 [ChatView] 引用文本 (quotedText):', currentQuotedText || '无')
+      console.log('📋 [ChatView] 选择上下文 (selectionContext):')
+      if (currentSelectionContext) {
+        console.log('  - 句子 ID:', currentSelectionContext.sentence?.sentence_id)
+        console.log('  - 文章 ID:', currentSelectionContext.sentence?.text_id)
+        console.log('  - 句子原文:', currentSelectionContext.sentence?.sentence_body)
+        console.log('  - 选中的 tokens:', currentSelectionContext.selectedTexts)
+        console.log('  - Token 数量:', currentSelectionContext.tokens?.length)
+      } else {
+        console.log('  - 无上下文（未选择任何token）')
+      }
+      console.log('='.repeat(80) + '\n')
+      
       const { apiService } = await import('../../../services/api')
       
-      // 🔧 重要：先清除旧的 token 选择，确保使用整句话
-      // 因为建议问题通常是对整句话提问，不是针对特定 token
-      console.log('🔄 [Frontend] Clearing old token selection and setting current_input...')
+      // 构建更新payload
+      const updatePayload = {
+        current_input: question
+      }
       
-      // 先设置 current_input，并明确清除 token 选择（传 null）
-      await apiService.session.updateContext({
-        current_input: question,
-        token: null  // 明确表示清除旧的 token 选择，使用整句话
-      })
+      // 如果有选择上下文，重新发送句子和token信息以确保后端有完整上下文
+      if (currentSelectionContext && currentSelectionContext.sentence) {
+        console.log('💬 [ChatView] 重新发送完整的句子和token上下文到后端...')
+        
+        // 添加句子信息
+        updatePayload.sentence = currentSelectionContext.sentence
+        
+        // 添加token信息
+        if (currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+          if (currentSelectionContext.tokens.length > 1) {
+            // 多个token
+            updatePayload.token = {
+              multiple_tokens: currentSelectionContext.tokens,
+              token_indices: currentSelectionContext.tokenIndices,
+              token_text: currentSelectionContext.selectedTexts.join(' ')
+            }
+          } else {
+            // 单个token
+            const token = currentSelectionContext.tokens[0]
+            updatePayload.token = {
+              token_body: token.token_body,
+              sentence_token_id: token.sentence_token_id,
+              global_token_id: token.global_token_id
+            }
+          }
+        }
+        
+        console.log('📤 [ChatView] 发送的完整payload:', JSON.stringify(updatePayload, null, 2))
+      } else if (!currentQuotedText) {
+        // 如果没有引用文本，清除旧的token选择
+        console.log('💬 [ChatView] 没有引用文本，清除旧 token 选择')
+        updatePayload.token = null
+      }
+      
+      const updateResponse = await apiService.session.updateContext(updatePayload)
+      console.log('✅ [ChatView] Session context 更新完成:', updateResponse)
       
       // 调用 chat 接口
       const response = await apiService.sendChat({
@@ -310,8 +397,8 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       // 添加session state调试信息
       console.log('🔍 [SESSION STATE DEBUG] After suggested question selection:')
       console.log('  - Question text:', question)
-      console.log('  - Quoted text:', quotedText || 'None')
-      console.log('  - Update payload:', { current_input: question, token: null })
+      console.log('  - Quoted text:', currentQuotedText || 'None')
+      console.log('  - Update payload:', updatePayload)
       
       if (response.success && response.data) {
         const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data
@@ -362,7 +449,18 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         })
       } else {
         console.error('❌ [Frontend] Chat request failed:', response.error)
+        // 显示错误消息
+        const errorMessage = {
+          id: Date.now() + 1,
+          text: `抱歉，处理您的问题时出现错误: ${response.error}`,
+          isUser: false,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, errorMessage])
       }
+      
+      // ✅ 不再自动清空引用 - 保持引用以便用户继续追问
+      console.log('✅ [ChatView] 建议问题发送完成，保持引用以便继续追问')
     } catch (error) {
       console.error('💥 [Frontend] ❌❌❌ Chat request 发生错误 (handleSuggestedQuestionSelect) ❌❌❌')
       console.error('💥 [Frontend] 错误对象:', error)
@@ -381,6 +479,8 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         timestamp: new Date()
       }
       setMessages(prev => [...prev, errorMessage])
+      
+      // ✅ 即使出错也不清空引用，保持引用以便用户重试
     }
   }
 
@@ -454,11 +554,20 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       {/* Quote Display */}
       {quotedText && (
         <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <div className="flex-1">
-              <div className="text-xs text-blue-600 font-medium mb-1">引用</div>
+              <div className="text-xs text-blue-600 font-medium mb-1">引用（继续提问将保持此引用）</div>
               <div className="text-sm text-blue-800 italic">"{quotedText}"</div>
             </div>
+            <button
+              onClick={onClearQuote}
+              className="flex-shrink-0 p-1.5 hover:bg-blue-100 rounded-lg transition-colors"
+              title="清空引用"
+            >
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       )}
@@ -470,6 +579,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         isVisible={!!quotedText}
         inputValue={inputText}
         onQuestionClick={handleQuestionClick}
+        tokenCount={selectedTokenCount}
       />
 
       {/* Input Area */}
