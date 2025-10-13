@@ -4,7 +4,7 @@ import { apiService } from '../../../services/api'
 /**
  * VocabExplanationButton - Button to fetch and display vocabulary explanation
  */
-export default function VocabExplanationButton({ token, onGetExplanation }) {
+export default function VocabExplanationButton({ token, onGetExplanation, markAsAsked = null, articleId = null, sentenceIdx = null }) {
   const [isLoading, setIsLoading] = useState(false)
   const [explanation, setExplanation] = useState(null)
   const [error, setError] = useState(null)
@@ -21,6 +21,24 @@ export default function VocabExplanationButton({ token, onGetExplanation }) {
       if (onGetExplanation) {
         onGetExplanation(token, result)
       }
+      
+      // 标记token为已提问
+      if (markAsAsked && articleId && sentenceIdx != null && token.sentence_token_id != null) {
+        console.log('🏷️ [VocabExplanationButton] Marking token as asked...')
+        const sentenceId = sentenceIdx + 1  // sentenceId从sentenceIdx计算得出
+        console.log(`🏷️ [VocabExplanationButton] Marking token: "${token.token_body}" (${articleId}:${sentenceId}:${token.sentence_token_id})`)
+        
+        try {
+          const success = await markAsAsked(articleId, sentenceId, token.sentence_token_id)
+          if (success) {
+            console.log('✅ [VocabExplanationButton] Token marked as asked successfully')
+          } else {
+            console.error('❌ [VocabExplanationButton] Failed to mark token as asked')
+          }
+        } catch (error) {
+          console.error('❌ [VocabExplanationButton] Error marking token as asked:', error)
+        }
+      }
     } catch (error) {
       console.error('Failed to get vocab explanation:', error)
       setError('Failed to load explanation')
@@ -30,11 +48,11 @@ export default function VocabExplanationButton({ token, onGetExplanation }) {
   }
 
   return (
-    <div className="mt-1">
+    <div className="absolute top-full left-0 z-50 mt-1">
       <button
         onClick={handleClick}
         disabled={isLoading}
-        className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded border border-blue-300 transition-colors duration-150 disabled:opacity-50"
+        className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded border border-blue-300 transition-colors duration-150 disabled:opacity-50 shadow-md"
       >
         {isLoading ? 'Loading...' : 'vocab explanation'}
       </button>
@@ -42,7 +60,7 @@ export default function VocabExplanationButton({ token, onGetExplanation }) {
         <div className="mt-1 text-xs text-red-600">{error}</div>
       )}
       {explanation && (
-        <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded text-sm max-w-md">
+        <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded text-sm max-w-md shadow-lg">
           <div className="font-semibold text-gray-800 text-base">{explanation.word}</div>
           {explanation.pronunciation && (
             <div className="text-gray-500 text-xs mt-1">{explanation.pronunciation}</div>

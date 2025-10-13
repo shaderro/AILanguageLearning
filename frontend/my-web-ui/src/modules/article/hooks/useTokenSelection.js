@@ -82,10 +82,15 @@ export function useTokenSelection({ sentences, onTokenSelect }) {
     if (!uid) return
     const next = new Set(selectedTokenIds)
     next.add(uid)
-    if (activeSentenceRef.current == null) {
+    
+    // 确保 activeSentenceIndex 状态与 activeSentenceRef 同步
+    if (activeSentenceRef.current !== sIdx) {
       activeSentenceRef.current = sIdx
       setActiveSentenceIndex(sIdx)
+    } else if (activeSentenceIndex !== sIdx) {
+      setActiveSentenceIndex(sIdx)
     }
+    
     emitSelection(next, token?.token_body ?? '')
   }
 

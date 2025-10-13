@@ -34,5 +34,11 @@
     "text_id": 1,
     "sentence_id": 14,
     "sentence_token_id": 39
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_token_id": 11
   }
 ]

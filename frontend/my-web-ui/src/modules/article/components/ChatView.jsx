@@ -3,7 +3,7 @@ import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
-export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false, selectedTokenCount = 1, selectionContext = null }) {
+export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false, selectedTokenCount = 1, selectionContext = null, markAsAsked = null, articleId = null }) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
@@ -205,6 +205,40 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('✅ [Frontend] 步骤5: 收到响应')
       console.log('✅ [Frontend] 响应完整数据:', JSON.stringify(response, null, 2))
       
+      // 标记选中的tokens为已提问
+      if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+        console.log('🏷️ [ChatView] Marking selected tokens as asked...')
+        
+        // 标记所有选中的tokens为已提问
+        const markPromises = currentSelectionContext.tokens.map(token => {
+          if (token.sentence_token_id != null) {
+            const sentenceId = currentSelectionContext.sentence?.sentence_id
+            const textId = currentSelectionContext.sentence?.text_id
+            
+            if (sentenceId && textId) {
+              console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${token.sentence_token_id})`)
+              return markAsAsked(textId, sentenceId, token.sentence_token_id)
+            }
+          }
+          return Promise.resolve(false)
+        })
+        
+        try {
+          const results = await Promise.all(markPromises)
+          const successCount = results.filter(r => r).length
+          console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens as asked`)
+          
+          // 如果标记成功，等待一小段时间让状态更新
+          if (successCount > 0) {
+            setTimeout(() => {
+              console.log('🔄 [ChatView] Token states should be updated now')
+            }, 100)
+          }
+        } catch (error) {
+          console.error('❌ [ChatView] Error marking tokens as asked:', error)
+        }
+      }
+      
       // 添加session state调试信息
       console.log('🔍 [SESSION STATE DEBUG] After sending message:')
       console.log('  - Question text:', questionText)
@@ -393,6 +427,40 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       })
       
       console.log('✅ [Frontend] Chat response received:', response)
+      
+      // 标记选中的tokens为已提问
+      if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+        console.log('🏷️ [ChatView] Marking selected tokens as asked (suggested question)...')
+        
+        // 标记所有选中的tokens为已提问
+        const markPromises = currentSelectionContext.tokens.map(token => {
+          if (token.sentence_token_id != null) {
+            const sentenceId = currentSelectionContext.sentence?.sentence_id
+            const textId = currentSelectionContext.sentence?.text_id
+            
+            if (sentenceId && textId) {
+              console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${token.sentence_token_id})`)
+              return markAsAsked(textId, sentenceId, token.sentence_token_id)
+            }
+          }
+          return Promise.resolve(false)
+        })
+        
+        try {
+          const results = await Promise.all(markPromises)
+          const successCount = results.filter(r => r).length
+          console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens as asked (suggested question)`)
+          
+          // 如果标记成功，等待一小段时间让状态更新
+          if (successCount > 0) {
+            setTimeout(() => {
+              console.log('🔄 [ChatView] Token states should be updated now (suggested question)')
+            }, 100)
+          }
+        } catch (error) {
+          console.error('❌ [ChatView] Error marking tokens as asked (suggested question):', error)
+        }
+      }
       
       // 添加session state调试信息
       console.log('🔍 [SESSION STATE DEBUG] After suggested question selection:')

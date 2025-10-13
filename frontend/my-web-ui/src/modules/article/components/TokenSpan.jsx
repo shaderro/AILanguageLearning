@@ -22,7 +22,8 @@ export default function TokenSpan({
   handleMouseDownToken,
   handleMouseEnterToken,
   addSingle,
-  isTokenAsked
+  isTokenAsked,
+  markAsAsked
 }) {
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
   const selectable = typeof token === 'object' ? !!token?.selectable : false
@@ -96,6 +97,9 @@ export default function TokenSpan({
         <VocabExplanationButton 
           token={token} 
           onGetExplanation={handleGetExplanation}
+          markAsAsked={markAsAsked}
+          articleId={articleId}
+          sentenceIdx={sentenceIdx}
         />
       )}
     </span>

@@ -82,7 +82,14 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     >
       <div className="space-y-[0.66rem] leading-[1.33] text-gray-900">
         {sentences.map((sentence, sIdx) => (
-          <div key={`s-${sIdx}`} className="select-none" data-sentence="1">
+          <div 
+            key={`s-${sIdx}`} 
+            className="select-none relative" 
+            data-sentence="1"
+          >
+            {activeSentenceIndex === sIdx && (
+              <div className="absolute inset-0 bg-gray-100 border border-gray-300 rounded-md z-0" />
+            )}
             {(sentence?.tokens || []).map((t, tIdx) => (
               <TokenSpan
                 key={`${sIdx}-${tIdx}`}
@@ -103,6 +110,7 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
                 handleMouseEnterToken={handleMouseEnterToken}
                 addSingle={addSingle}
                 isTokenAsked={isTokenAsked}
+                markAsAsked={markAsAsked}
               />
             ))}
           </div>
