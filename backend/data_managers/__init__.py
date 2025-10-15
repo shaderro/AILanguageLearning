@@ -1,40 +1,36 @@
 """
 数据管理器模块
 
-提供两种 VocabManager 实现：
-1. VocabManagerJSON (旧版本) - 基于 JSON 文件存储
+提供多个Manager的两种实现：
+1. JSON版本 (旧版本) - 基于 JSON 文件存储
    - 适用于：现有前端、旧接口
    - 逐步淘汰中
    
-2. VocabManagerDB (新版本) - 基于数据库存储
+2. DB版本 (新版本) - 基于数据库存储
    - 适用于：新接口、AI Assistants（需要数据库）
    - 推荐使用
 
 使用示例：
 
-    # 方式1：使用默认版本（目前是旧版本，保持兼容）
-    from backend.data_managers import VocabManager
-    vocab_manager = VocabManager(use_new_structure=True)  # JSON 版本
-    
-    # 方式2：显式使用旧版本
-    from backend.data_managers import VocabManagerJSON
-    vocab_manager = VocabManagerJSON()
-    
-    # 方式3：显式使用新版本（推荐）
+    # Vocab Manager
     from backend.data_managers import VocabManagerDB
     from database_system.database_manager import DatabaseManager
     
     db_manager = DatabaseManager('development')
     session = db_manager.get_session()
-    vocab_manager = VocabManagerDB(session)  # 数据库版本
+    vocab_manager = VocabManagerDB(session)
+    
+    # Grammar Manager
+    from backend.data_managers import GrammarRuleManagerDB
+    grammar_manager = GrammarRuleManagerDB(session)
 
 迁移计划：
-    阶段1（当前）：默认 = VocabManagerJSON，可选 VocabManagerDB
-    阶段2：默认 = VocabManagerDB，保留 VocabManagerJSON
-    阶段3：只保留 VocabManagerDB
+    阶段1（当前）：默认 = JSON，可选 DB
+    阶段2：默认 = DB，保留 JSON
+    阶段3：只保留 DB
 """
 
-# ==================== 导入两个版本 ====================
+# ==================== Vocab Manager ====================
 
 # 旧版本：基于 JSON 文件
 from .vocab_manager import VocabManager as VocabManagerJSON
@@ -42,23 +38,51 @@ from .vocab_manager import VocabManager as VocabManagerJSON
 # 新版本：基于数据库
 from .vocab_manager_db import VocabManager as VocabManagerDB
 
+# 默认使用旧版本（保持向后兼容）
+VocabManager = VocabManagerJSON
 
-# ==================== 默认导出 ====================
+
+# ==================== Grammar Manager ====================
+
+# 旧版本：基于 JSON 文件
+from .grammar_rule_manager import GrammarRuleManager as GrammarRuleManagerJSON
+
+# 新版本：基于数据库
+from .grammar_rule_manager_db import GrammarRuleManager as GrammarRuleManagerDB
 
 # 默认使用旧版本（保持向后兼容）
-# 前端和现有代码可以继续使用 VocabManager，不会受影响
-VocabManager = VocabManagerJSON
+GrammarRuleManager = GrammarRuleManagerJSON
+
+
+# ==================== OriginalText Manager ====================
+
+# 旧版本：基于 JSON 文件
+from .original_text_manager import OriginalTextManager as OriginalTextManagerJSON
+
+# 新版本：基于数据库
+from .original_text_manager_db import OriginalTextManager as OriginalTextManagerDB
+
+# 默认使用旧版本（保持向后兼容）
+OriginalTextManager = OriginalTextManagerJSON
 
 
 # ==================== 公开接口 ====================
 
 __all__ = [
-    # 默认版本（当前是旧版本）
-    'VocabManager',
-    
-    # 显式版本（可以明确选择）
+    # Vocab Managers
+    'VocabManager',        # 默认版本（JSON）
     'VocabManagerJSON',    # 旧版本：JSON 文件存储
     'VocabManagerDB',      # 新版本：数据库存储（推荐）
+    
+    # Grammar Managers
+    'GrammarRuleManager',     # 默认版本（JSON）
+    'GrammarRuleManagerJSON', # 旧版本：JSON 文件存储
+    'GrammarRuleManagerDB',   # 新版本：数据库存储（推荐）
+    
+    # OriginalText Managers
+    'OriginalTextManager',      # 默认版本（JSON）
+    'OriginalTextManagerJSON',  # 旧版本：JSON 文件存储
+    'OriginalTextManagerDB',    # 新版本：数据库存储（推荐）
 ]
 
 

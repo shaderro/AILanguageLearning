@@ -4,7 +4,7 @@ import { getTokenId } from '../utils/tokenUtils'
 /**
  * Custom hook to manage token selection state
  */
-export function useTokenSelection({ sentences, onTokenSelect }) {
+export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
   const [selectedTokenIds, setSelectedTokenIds] = useState(() => new Set())
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(null)
   const activeSentenceRef = useRef(null)
@@ -40,15 +40,15 @@ export function useTokenSelection({ sentences, onTokenSelect }) {
         if (id && idSet.has(id)) {
           selectedTokens.push(tk)
           selectedTexts.push(tk.token_body ?? '')
-          tokenIndices.push(tk.sentence_token_id ?? i)
+          tokenIndices.push(tk.sentence_token_id ?? (i + 1))
         }
       }
     }
     
     return {
       sentence: {
-        text_id: sentence.text_id,
-        sentence_id: sentence.sentence_id,
+        text_id: sentence.text_id ?? articleId,  // ← 添加fallback
+        sentence_id: sentence.sentence_id ?? (sIdx + 1),  // ← 添加fallback
         sentence_body: sentence.sentence_body
       },
       tokens: selectedTokens,

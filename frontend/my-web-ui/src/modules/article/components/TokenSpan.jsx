@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { getTokenKey, getTokenId } from '../utils/tokenUtils'
 import VocabExplanationButton from './VocabExplanationButton'
 import VocabTooltip from './VocabTooltip'
+import TokenNotation from './TokenNotation'
 
 /**
  * TokenSpan - Renders individual token with selection and vocab explanation features
@@ -23,7 +25,9 @@ export default function TokenSpan({
   handleMouseEnterToken,
   addSingle,
   isTokenAsked,
-  markAsAsked
+  markAsAsked,
+  getNotationContent,
+  setNotationContent
 }) {
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
   const selectable = typeof token === 'object' ? !!token?.selectable : false
@@ -49,6 +53,14 @@ export default function TokenSpan({
   const tokenHasExplanation = isTextToken && hasExplanation(token)
   const tokenExplanation = isTextToken ? getExplanation(token) : null
   const isHovered = hoveredTokenId === uid
+  
+  // 管理TokenNotation的显示状态（针对已提问的token）
+  const [showNotation, setShowNotation] = useState(false)
+  
+  // 获取该token的notation内容
+  const notationContent = isAsked && getNotationContent 
+    ? getNotationContent(articleId, tokenSentenceId, tokenSentenceTokenId)
+    : null
 
   return (
     <span
@@ -66,11 +78,19 @@ export default function TokenSpan({
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
+          // 如果是已提问的token，显示notation
+          if (isAsked) {
+            setShowNotation(true)
+          }
           handleMouseEnterToken(sentenceIdx, tokenIdx, token)
         }}
         onMouseLeave={() => {
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(null)
+          }
+          // 隐藏notation
+          if (isAsked) {
+            setShowNotation(false)
           }
         }}
         onClick={(e) => { if (!isDraggingRef.current && selectable) { e.preventDefault(); addSingle(sentenceIdx, token) } }}
@@ -100,6 +120,14 @@ export default function TokenSpan({
           markAsAsked={markAsAsked}
           articleId={articleId}
           sentenceIdx={sentenceIdx}
+        />
+      )}
+      
+      {/* TokenNotation - 显示在已提问token下方 */}
+      {isAsked && showNotation && (
+        <TokenNotation 
+          isVisible={showNotation}
+          note={notationContent || "This is a test note"}
         />
       )}
     </span>

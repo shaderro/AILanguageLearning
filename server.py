@@ -20,14 +20,14 @@ if BACKEND_DIR not in sys.path:
 # 导入 AskedTokensManager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
 
-# 导入词汇API路由
-from backend.api import vocab_router
+# 导入API路由
+from backend.api import vocab_router, grammar_router, text_router
 from backend.api.vocab_routes_verbose import router as vocab_verbose_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
     title="Language Learning API",
-    description="语言学习系统 API 服务（包含 Asked Tokens 和 Vocab 管理）",
+    description="语言学习系统 API 服务（包含 Asked Tokens、Vocab、Grammar 和 Text 管理）",
     version="2.0.0"
 )
 
@@ -40,9 +40,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 注册词汇API路由
+# 注册API路由
 app.include_router(vocab_router)
 app.include_router(vocab_verbose_router)  # 详细日志版本
+app.include_router(grammar_router)
+app.include_router(text_router)
 
 @app.get("/")
 async def root():
@@ -54,6 +56,8 @@ async def root():
             "asked_tokens": "/api/user/asked-tokens",
             "vocab_v2": "/api/v2/vocab",
             "vocab_verbose": "/api/v2/vocab-verbose (详细日志版本)",
+            "grammar_v2": "/api/v2/grammar",
+            "texts_v2": "/api/v2/texts",
             "docs": "/docs",
             "health": "/api/health"
         },
@@ -67,7 +71,9 @@ async def health_check():
         "message": "Language Learning API is running",
         "services": {
             "asked_tokens": "active",
-            "vocab_v2": "active (database)"
+            "vocab_v2": "active (database)",
+            "grammar_v2": "active (database)",
+            "texts_v2": "active (database)"
         }
     }
 

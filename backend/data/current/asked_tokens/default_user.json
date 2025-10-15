@@ -40,5 +40,35 @@
     "text_id": 1,
     "sentence_id": 1,
     "sentence_token_id": 11
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 3,
+    "sentence_token_id": 3
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 4,
+    "sentence_token_id": 22
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 3,
+    "sentence_token_id": 7
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 46,
+    "sentence_token_id": 20
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 46,
+    "sentence_token_id": 52
   }
 ]

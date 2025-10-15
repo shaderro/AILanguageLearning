@@ -206,21 +206,39 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('✅ [Frontend] 响应完整数据:', JSON.stringify(response, null, 2))
       
       // 标记选中的tokens为已提问
+      console.log('🔍 [DEBUG] 检查标记条件:', {
+        hasMarkAsAsked: !!markAsAsked,
+        hasContext: !!currentSelectionContext,
+        hasTokens: !!(currentSelectionContext?.tokens),
+        tokenCount: currentSelectionContext?.tokens?.length,
+        articleId: articleId
+      })
+      
       if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+        console.log('✅ [ChatView] 进入标记逻辑')
         console.log('🏷️ [ChatView] Marking selected tokens as asked...')
         
         // 标记所有选中的tokens为已提问
-        const markPromises = currentSelectionContext.tokens.map(token => {
-          if (token.sentence_token_id != null) {
-            const sentenceId = currentSelectionContext.sentence?.sentence_id
-            const textId = currentSelectionContext.sentence?.text_id
-            
-            if (sentenceId && textId) {
-              console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${token.sentence_token_id})`)
-              return markAsAsked(textId, sentenceId, token.sentence_token_id)
-            }
+        const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
+          // 使用fallback确保字段存在
+          const sentenceTokenId = token.sentence_token_id ?? (tokenIdx + 1)
+          const sentenceId = currentSelectionContext.sentence?.sentence_id
+          const textId = currentSelectionContext.sentence?.text_id ?? articleId  // ← 使用articleId作为fallback
+          
+          console.log(`🔍 [DEBUG] Token ${tokenIdx}:`, {
+            token_body: token.token_body,
+            textId,
+            sentenceId,
+            sentenceTokenId
+          })
+          
+          if (sentenceId && textId && sentenceTokenId != null) {
+            console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId})`)
+            return markAsAsked(textId, sentenceId, sentenceTokenId)
+          } else {
+            console.error(`❌ [ChatView] 缺少必需字段:`, { sentenceId, textId, sentenceTokenId })
+            return Promise.resolve(false)
           }
-          return Promise.resolve(false)
         })
         
         try {
@@ -233,10 +251,14 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
             setTimeout(() => {
               console.log('🔄 [ChatView] Token states should be updated now')
             }, 100)
+          } else {
+            console.warn('⚠️ [ChatView] 没有token被成功标记')
           }
         } catch (error) {
           console.error('❌ [ChatView] Error marking tokens as asked:', error)
         }
+      } else {
+        console.warn('⚠️ [ChatView] 标记条件不满足（未进入标记逻辑）')
       }
       
       // 添加session state调试信息
@@ -429,21 +451,39 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('✅ [Frontend] Chat response received:', response)
       
       // 标记选中的tokens为已提问
+      console.log('🔍 [DEBUG] 检查标记条件（建议问题）:', {
+        hasMarkAsAsked: !!markAsAsked,
+        hasContext: !!currentSelectionContext,
+        hasTokens: !!(currentSelectionContext?.tokens),
+        tokenCount: currentSelectionContext?.tokens?.length,
+        articleId: articleId
+      })
+      
       if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+        console.log('✅ [ChatView] 进入标记逻辑（建议问题）')
         console.log('🏷️ [ChatView] Marking selected tokens as asked (suggested question)...')
         
         // 标记所有选中的tokens为已提问
-        const markPromises = currentSelectionContext.tokens.map(token => {
-          if (token.sentence_token_id != null) {
-            const sentenceId = currentSelectionContext.sentence?.sentence_id
-            const textId = currentSelectionContext.sentence?.text_id
-            
-            if (sentenceId && textId) {
-              console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${token.sentence_token_id})`)
-              return markAsAsked(textId, sentenceId, token.sentence_token_id)
-            }
+        const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
+          // 使用fallback确保字段存在
+          const sentenceTokenId = token.sentence_token_id ?? (tokenIdx + 1)
+          const sentenceId = currentSelectionContext.sentence?.sentence_id
+          const textId = currentSelectionContext.sentence?.text_id ?? articleId  // ← 使用articleId作为fallback
+          
+          console.log(`🔍 [DEBUG] Token ${tokenIdx} (建议问题):`, {
+            token_body: token.token_body,
+            textId,
+            sentenceId,
+            sentenceTokenId
+          })
+          
+          if (sentenceId && textId && sentenceTokenId != null) {
+            console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId})`)
+            return markAsAsked(textId, sentenceId, sentenceTokenId)
+          } else {
+            console.error(`❌ [ChatView] 缺少必需字段（建议问题）:`, { sentenceId, textId, sentenceTokenId })
+            return Promise.resolve(false)
           }
-          return Promise.resolve(false)
         })
         
         try {
@@ -456,10 +496,14 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
             setTimeout(() => {
               console.log('🔄 [ChatView] Token states should be updated now (suggested question)')
             }, 100)
+          } else {
+            console.warn('⚠️ [ChatView] 没有token被成功标记（建议问题）')
           }
         } catch (error) {
           console.error('❌ [ChatView] Error marking tokens as asked (suggested question):', error)
         }
+      } else {
+        console.warn('⚠️ [ChatView] 标记条件不满足（建议问题，未进入标记逻辑）')
       }
       
       // 添加session state调试信息

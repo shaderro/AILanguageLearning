@@ -5,6 +5,7 @@ import UploadProgress from './components/UploadProgress'
 import ChatView from './components/ChatView'
 import { ChatEventProvider } from './contexts/ChatEventContext'
 import { useAskedTokens } from './hooks/useAskedTokens'
+import { useTokenNotations } from './hooks/useTokenNotations'
 import { apiService } from '../../services/api'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
@@ -15,8 +16,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [hasSelectedToken, setHasSelectedToken] = useState(false)
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   
-  // 获取asked tokens功能
-  const { markAsAsked } = useAskedTokens(articleId, 'default_user')
+  // 获取asked tokens功能（统一在这里管理，避免多次调用）
+  const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId, 'default_user')
+  
+  // 获取token notations功能
+  const { getNotationContent, setNotationContent, clearNotationContent } = useTokenNotations()
   
   // Sample text for the ArticleViewer
   const sampleText = isUploadMode ? '' : 'Sample text for demo'
@@ -122,6 +126,10 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             <ArticleViewer 
               articleId={articleId} 
               onTokenSelect={handleTokenSelect}
+              isTokenAsked={isTokenAsked}
+              markAsAsked={markAsAsked}
+              getNotationContent={getNotationContent}
+              setNotationContent={setNotationContent}
             />
           )}
           <ChatView 
