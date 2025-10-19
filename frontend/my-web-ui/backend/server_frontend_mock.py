@@ -708,6 +708,57 @@ async def chat_with_assistant(payload: dict):
         try:
             dc = data_controller.DataController(max_turns=100)
             print("🤖 [Chat] 步骤2完成: DataController 创建成功")
+            
+            # 加载数据文件
+            print("🤖 [Chat] 步骤2.1: 加载数据文件...")
+            try:
+                # 设置数据文件路径
+                # 从 frontend/my-web-ui/backend 到 backend/data/current
+                current_dir = os.path.dirname(os.path.dirname(__file__))  # frontend/my-web-ui
+                project_root = os.path.dirname(current_dir)  # 项目根目录
+                backend_dir = os.path.join(project_root, "backend")  # backend目录
+                data_dir = os.path.join(backend_dir, "data", "current")
+                
+                # 使用正确的文件名（根据README.md中的说明）
+                grammar_path = os.path.join(data_dir, "grammar.json")  # 不是grammar_rules.json
+                vocab_path = os.path.join(data_dir, "vocab.json")      # 不是vocab_expressions.json
+                text_path = os.path.join(data_dir, "original_texts.json")
+                dialogue_record_path = os.path.join(data_dir, "dialogue_record.json")
+                dialogue_history_path = os.path.join(data_dir, "dialogue_history.json")
+                
+                print(f"🔍 [Chat] 数据文件路径:")
+                print(f"  - grammar_path: {grammar_path}")
+                print(f"  - vocab_path: {vocab_path}")
+                print(f"  - text_path: {text_path}")
+                print(f"  - dialogue_record_path: {dialogue_record_path}")
+                print(f"  - dialogue_history_path: {dialogue_history_path}")
+                
+                # 加载数据
+                dc.load_data(
+                    grammar_path=grammar_path,
+                    vocab_path=vocab_path,
+                    text_path=text_path,
+                    dialogue_record_path=dialogue_record_path,
+                    dialogue_history_path=dialogue_history_path
+                )
+                print("✅ [Chat] 数据加载成功")
+                
+                # 打印加载的文本数据信息
+                if hasattr(dc.text_manager, 'original_texts'):
+                    text_count = len(dc.text_manager.original_texts)
+                    print(f"📚 [Chat] 加载了 {text_count} 个文本记录")
+                    if text_count > 0:
+                        text_ids = list(dc.text_manager.original_texts.keys())
+                        print(f"📚 [Chat] 可用的 text_ids: {text_ids}")
+                    else:
+                        print("⚠️ [Chat] 没有加载任何文本数据，vocab_example 添加可能会失败")
+                else:
+                    print("⚠️ [Chat] text_manager 没有 original_texts 属性")
+                    
+            except Exception as load_error:
+                print(f"⚠️ [Chat] 数据加载失败: {load_error}")
+                print("⚠️ [Chat] 继续执行，但 vocab_example 添加可能会失败")
+                
         except Exception as e:
             print(f"❌ [Chat] 步骤2失败: DataController 创建失败: {e}")
             import traceback

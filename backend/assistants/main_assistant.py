@@ -343,13 +343,28 @@ class MainAssistant:
         print("grammar to add：", self.session_state.grammar_to_add)
         #add to data
         
+        # 调试信息：打印summarized_results的内容
+        print("🔍 [DEBUG] summarized_results 内容:")
+        for i, result in enumerate(self.session_state.summarized_results):
+            print(f"  {i}: {type(result)} - {result}")
+        
         current_vocab_list = self.data_controller.vocab_manager.get_all_vocab_body()
+        print(f"🔍 [DEBUG] 当前词汇列表: {current_vocab_list}")
+        
         new_vocab = []
         for result in self.session_state.summarized_results:
+            print(f"🔍 [DEBUG] 处理结果: {type(result)} - {result}")
+            print(f"🔍 [DEBUG] isinstance(result, VocabSummary): {isinstance(result, VocabSummary)}")
+            print(f"🔍 [DEBUG] result.__class__.__name__: {result.__class__.__name__}")
+            print(f"🔍 [DEBUG] VocabSummary.__name__: {VocabSummary.__name__}")
             has_similar = False
-            for vocab in current_vocab_list:
-                if isinstance(result, VocabSummary):
-                    compare_result = self.fuzzy_match_expressions(vocab,result.vocab)
+            
+            # 使用更宽松的检查方式
+            if hasattr(result, 'vocab') and result.__class__.__name__ == 'VocabSummary':
+                print(f"🔍 [DEBUG] 找到VocabSummary: {result.vocab}")
+                for vocab in current_vocab_list:
+                    compare_result = self.fuzzy_match_expressions(vocab, result.vocab)
+                    print(f"🔍 [DEBUG] 比较 '{vocab}' 与 '{result.vocab}': {compare_result}")
                     if compare_result:
                         print(f"✅ 词汇 '{vocab}' 与现有词汇 '{result.vocab}' 相似")
                         has_similar = True
@@ -357,27 +372,41 @@ class MainAssistant:
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
                         # 验证句子完整性
                         self._ensure_sentence_integrity(current_sentence, "Vocab Explanation 调用")
+                        print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab}'")
                         example_explanation = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
                             vocab=vocab
                         )
-                        self.data_controller.add_vocab_example(
-                            vocab_id=existing_vocab_id,
-                            text_id=current_sentence.text_id,
-                            sentence_id=current_sentence.sentence_id,
-                            context_explanation=example_explanation
-                        )
+                        print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
+                        
+                        # 检查text_id是否存在，如果不存在则跳过添加example
+                        try:
+                            print(f"🔍 [DEBUG] 尝试添加现有词汇的vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={existing_vocab_id}")
+                            self.data_controller.add_vocab_example(
+                                vocab_id=existing_vocab_id,
+                                text_id=current_sentence.text_id,
+                                sentence_id=current_sentence.sentence_id,
+                                context_explanation=example_explanation
+                            )
+                            print(f"✅ [DEBUG] 现有词汇的vocab_example添加成功")
+                        except ValueError as e:
+                            print(f"⚠️ [DEBUG] 跳过添加现有词汇的vocab_example，因为: {e}")
+                            print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                        except Exception as e:
+                            print(f"❌ [DEBUG] 添加现有词汇的vocab_example时发生错误: {e}")
                         break
-            if not has_similar and isinstance(result, VocabSummary):
-                print(f"🆕 新词汇知识点：'{result.vocab}'，将添加到已有规则中")
-                new_vocab.append(result)
+                if not has_similar:
+                    print(f"🆕 新词汇知识点：'{result.vocab}'，将添加到已有规则中")
+                    new_vocab.append(result)
+            else:
+                print(f"🔍 [DEBUG] 跳过非VocabSummary结果: {type(result)}")
+        
         print("新单词列表：", new_vocab) 
         for vocab in new_vocab:
-            self.session_state.add_vocab_to_add(
-                #VocabToAdd(
-                    vocab=vocab.vocab
-                #)
-            )
+            print(f"🔍 [DEBUG] 添加新词汇到vocab_to_add: {vocab.vocab}")
+            self.session_state.add_vocab_to_add(vocab=vocab.vocab)
+        
+        print(f"🔍 [DEBUG] 最终vocab_to_add: {self.session_state.vocab_to_add}")
 
     def add_new_to_data(self):
         """
@@ -405,16 +434,20 @@ class MainAssistant:
                 )
 
         if self.session_state.vocab_to_add:
+            print(f"🔍 [DEBUG] 处理vocab_to_add: {len(self.session_state.vocab_to_add)} 个词汇")
             for vocab in self.session_state.vocab_to_add:
+                print(f"🔍 [DEBUG] 处理新词汇: {vocab.vocab}")
                 # 生成词汇解释
                 current_sentence = self.session_state.current_sentence
                 if current_sentence:
                     # 验证句子完整性
                     self._ensure_sentence_integrity(current_sentence, "新词汇 Explanation 调用")
+                    print(f"🔍 [DEBUG] 调用vocab_explanation_assistant for '{vocab.vocab}'")
                     vocab_explanation = self.vocab_explanation_assistant.run(
                         sentence=current_sentence,
                         vocab=vocab.vocab
                     )
+                    print(f"🔍 [DEBUG] vocab_explanation结果: {vocab_explanation}")
                     # 解析JSON响应
                     if isinstance(vocab_explanation, str):
                         try:
@@ -428,21 +461,37 @@ class MainAssistant:
                 else:
                     explanation_text = "No explanation provided"
                 
+                print(f"🔍 [DEBUG] 添加新词汇到数据库: {vocab.vocab}")
                 # 添加新词汇
                 self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation=explanation_text)
                 
                 # 生成词汇例句解释
                 if current_sentence:
+                    print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab.vocab}'")
                     example_explanation = self.vocab_example_explanation_assistant.run(
                         sentence=current_sentence,
                         vocab=vocab.vocab
                     )
-                    self.data_controller.add_vocab_example(
-                        vocab_id=self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab),
-                        text_id=current_sentence.text_id,
-                        sentence_id=current_sentence.sentence_id,
-                        context_explanation=example_explanation
-                    )
+                    print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
+                    
+                    # 检查text_id是否存在，如果不存在则跳过添加example
+                    try:
+                        vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab)
+                        print(f"🔍 [DEBUG] 尝试添加vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={vocab_id}")
+                        self.data_controller.add_vocab_example(
+                            vocab_id=vocab_id,
+                            text_id=current_sentence.text_id,
+                            sentence_id=current_sentence.sentence_id,
+                            context_explanation=example_explanation
+                        )
+                        print(f"✅ [DEBUG] vocab_example添加成功")
+                    except ValueError as e:
+                        print(f"⚠️ [DEBUG] 跳过添加vocab_example，因为: {e}")
+                        print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                    except Exception as e:
+                        print(f"❌ [DEBUG] 添加vocab_example时发生错误: {e}")
+        else:
+            print("🔍 [DEBUG] vocab_to_add为空，跳过新词汇处理")
 
     def _log_sentence_capabilities(self, sentence: SentenceType):
         """只读：打印句子层能力（tokens/难度等），不影响任何分支"""

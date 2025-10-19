@@ -9,7 +9,8 @@ import TokenSpan from './TokenSpan'
 /**
  * ArticleViewer - Main component for displaying and interacting with article content
  */
-export default function ArticleViewer({ articleId, onTokenSelect, isTokenAsked, markAsAsked, getNotationContent, setNotationContent }) {
+export default function ArticleViewer({ articleId, onTokenSelect }) {
+  console.log('🔍 [ArticleViewer] Received articleId:', articleId)
   const { data, isLoading, isError, error } = useArticle(articleId)
 
   // Asked tokens management - 改为从props接收，避免重复调用useAskedTokens

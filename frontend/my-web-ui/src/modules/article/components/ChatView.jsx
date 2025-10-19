@@ -269,7 +269,73 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('  - Update response:', updateResponse)
       
       if (response.success && response.data) {
-        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response.data
+        
+        // 详细打印session state中的vocab/grammar/example状态
+        console.log('\n' + '='.repeat(80))
+        console.log('📊 [SESSION STATE] 本轮对话生成的知识点状态：')
+        console.log('='.repeat(80))
+        
+        // 新增语法
+        if (grammar_to_add && grammar_to_add.length > 0) {
+          console.log('🆕 新增语法 (grammar_to_add):', grammar_to_add.length, '个')
+          grammar_to_add.forEach((g, idx) => {
+            console.log(`  ${idx + 1}. ${g.name}`)
+            console.log(`     - 总结: ${g.summary || '无'}`)
+            console.log(`     - 详情: ${g.explanation || '无'}`)
+          })
+        } else {
+          console.log('🆕 新增语法 (grammar_to_add): 无')
+        }
+        
+        // 新增词汇
+        if (vocab_to_add && vocab_to_add.length > 0) {
+          console.log('🆕 新增词汇 (vocab_to_add):', vocab_to_add.length, '个')
+          vocab_to_add.forEach((v, idx) => {
+            console.log(`  ${idx + 1}. ${v.vocab}`)
+            console.log(`     - 翻译: ${v.translation || '无'}`)
+            console.log(`     - 用法: ${v.usage || '无'}`)
+          })
+        } else {
+          console.log('🆕 新增词汇 (vocab_to_add): 无')
+        }
+        
+        // 相关语法总结
+        if (grammar_summaries && grammar_summaries.length > 0) {
+          console.log('📚 相关语法总结 (grammar_summaries):', grammar_summaries.length, '个')
+          grammar_summaries.forEach((g, idx) => {
+            console.log(`  ${idx + 1}. ${g.name}`)
+            console.log(`     - 总结: ${g.summary || '无'}`)
+          })
+        } else {
+          console.log('📚 相关语法总结 (grammar_summaries): 无')
+        }
+        
+        // 相关词汇总结
+        if (vocab_summaries && vocab_summaries.length > 0) {
+          console.log('📖 相关词汇总结 (vocab_summaries):', vocab_summaries.length, '个')
+          vocab_summaries.forEach((v, idx) => {
+            console.log(`  ${idx + 1}. ${v.vocab}`)
+            console.log(`     - 翻译: ${v.translation || '无'}`)
+          })
+        } else {
+          console.log('📖 相关词汇总结 (vocab_summaries): 无')
+        }
+        
+        // 例句
+        if (examples && examples.length > 0) {
+          console.log('📝 例句 (examples):', examples.length, '个')
+          examples.forEach((ex, idx) => {
+            console.log(`  ${idx + 1}. ${ex.example || ex.sentence || ex}`)
+            if (ex.translation) {
+              console.log(`     译文: ${ex.translation}`)
+            }
+          })
+        } else {
+          console.log('📝 例句 (examples): 无')
+        }
+        
+        console.log('='.repeat(80) + '\n')
         
         // 显示 AI 响应
         if (ai_response) {
@@ -513,7 +579,73 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('  - Update payload:', updatePayload)
       
       if (response.success && response.data) {
-        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add } = response.data
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response.data
+        
+        // 详细打印session state中的vocab/grammar/example状态
+        console.log('\n' + '='.repeat(80))
+        console.log('📊 [SESSION STATE] 本轮对话生成的知识点状态（建议问题）：')
+        console.log('='.repeat(80))
+        
+        // 新增语法
+        if (grammar_to_add && grammar_to_add.length > 0) {
+          console.log('🆕 新增语法 (grammar_to_add):', grammar_to_add.length, '个')
+          grammar_to_add.forEach((g, idx) => {
+            console.log(`  ${idx + 1}. ${g.name}`)
+            console.log(`     - 总结: ${g.summary || '无'}`)
+            console.log(`     - 详情: ${g.explanation || '无'}`)
+          })
+        } else {
+          console.log('🆕 新增语法 (grammar_to_add): 无')
+        }
+        
+        // 新增词汇
+        if (vocab_to_add && vocab_to_add.length > 0) {
+          console.log('🆕 新增词汇 (vocab_to_add):', vocab_to_add.length, '个')
+          vocab_to_add.forEach((v, idx) => {
+            console.log(`  ${idx + 1}. ${v.vocab}`)
+            console.log(`     - 翻译: ${v.translation || '无'}`)
+            console.log(`     - 用法: ${v.usage || '无'}`)
+          })
+        } else {
+          console.log('🆕 新增词汇 (vocab_to_add): 无')
+        }
+        
+        // 相关语法总结
+        if (grammar_summaries && grammar_summaries.length > 0) {
+          console.log('📚 相关语法总结 (grammar_summaries):', grammar_summaries.length, '个')
+          grammar_summaries.forEach((g, idx) => {
+            console.log(`  ${idx + 1}. ${g.name}`)
+            console.log(`     - 总结: ${g.summary || '无'}`)
+          })
+        } else {
+          console.log('📚 相关语法总结 (grammar_summaries): 无')
+        }
+        
+        // 相关词汇总结
+        if (vocab_summaries && vocab_summaries.length > 0) {
+          console.log('📖 相关词汇总结 (vocab_summaries):', vocab_summaries.length, '个')
+          vocab_summaries.forEach((v, idx) => {
+            console.log(`  ${idx + 1}. ${v.vocab}`)
+            console.log(`     - 翻译: ${v.translation || '无'}`)
+          })
+        } else {
+          console.log('📖 相关词汇总结 (vocab_summaries): 无')
+        }
+        
+        // 例句
+        if (examples && examples.length > 0) {
+          console.log('📝 例句 (examples):', examples.length, '个')
+          examples.forEach((ex, idx) => {
+            console.log(`  ${idx + 1}. ${ex.example || ex.sentence || ex}`)
+            if (ex.translation) {
+              console.log(`     译文: ${ex.translation}`)
+            }
+          })
+        } else {
+          console.log('📝 例句 (examples): 无')
+        }
+        
+        console.log('='.repeat(80) + '\n')
         
         // 显示 AI 响应
         if (ai_response) {

@@ -45,11 +45,23 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
       }
     }
     
+    // 确保text_id和sentence_id有正确的值
+    // 优先使用传入的articleId，然后尝试从句子对象获取，最后使用默认值
+    const textId = articleId || sentence.text_id || sentence.textId || 1
+    const sentenceId = sentence.sentence_id || sentence.sentenceId || (sIdx + 1)  // 使用索引+1作为默认值
+    
+    console.log('🔍 [useTokenSelection] Building selection context:')
+    console.log('  - articleId (from props):', articleId)
+    console.log('  - Original sentence.text_id:', sentence.text_id)
+    console.log('  - Original sentence.sentence_id:', sentence.sentence_id)
+    console.log('  - Final textId:', textId)
+    console.log('  - Final sentenceId:', sentenceId)
+    
     return {
       sentence: {
-        text_id: sentence.text_id ?? articleId,  // ← 添加fallback
-        sentence_id: sentence.sentence_id ?? (sIdx + 1),  // ← 添加fallback
-        sentence_body: sentence.sentence_body
+        text_id: textId,
+        sentence_id: sentenceId,
+        sentence_body: sentence.sentence_body || sentence.sentenceBody || sentence.text || ''
       },
       tokens: selectedTokens,
       selectedTexts,
