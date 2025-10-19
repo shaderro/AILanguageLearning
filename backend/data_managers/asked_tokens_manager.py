@@ -63,20 +63,38 @@ class AskedTokensManager:
         """获取用户的 JSON 文件路径"""
         return os.path.join(self.json_dir, f"{user_id}.json")
     
-    def mark_token_asked(self, user_id: str, text_id: int, sentence_id: int, sentence_token_id: int) -> bool:
-        """标记 token 为已提问"""
+    def mark_token_asked(self, user_id: str, text_id: int, sentence_id: int, 
+                        sentence_token_id: int = None, type: str = "token") -> bool:
+        """
+        标记 token 或 sentence 为已提问
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型，'token' 或 'sentence'，默认 'token'
+        
+        向后兼容：如果 type 未指定但 sentence_token_id 不为空，默认为 'token'
+        """
+        # 向后兼容逻辑
+        if type is None and sentence_token_id is not None:
+            type = "token"
+        
         print(f"🔧 [AskedTokens] mark_token_asked called:")
         print(f"  - user_id: {user_id}")
         print(f"  - text_id: {text_id}")
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - sentence_token_id: {sentence_token_id}")
+        print(f"  - type: {type}")
         
         try:
             asked_token = AskedToken(
                 user_id=user_id,
                 text_id=text_id,
                 sentence_id=sentence_id,
-                sentence_token_id=sentence_token_id
+                sentence_token_id=sentence_token_id,
+                type=type
             )
             
             if self.use_database:
@@ -94,16 +112,17 @@ class AskedTokensManager:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT OR REPLACE INTO asked_tokens 
-                    (user_id, text_id, sentence_id, sentence_token_id)
-                    VALUES (?, ?, ?, ?)
+                    (user_id, text_id, sentence_id, sentence_token_id, type)
+                    VALUES (?, ?, ?, ?, ?)
                 """, (
                     asked_token.user_id,
                     asked_token.text_id,
                     asked_token.sentence_id,
-                    asked_token.sentence_token_id
+                    asked_token.sentence_token_id,
+                    asked_token.type
                 ))
                 conn.commit()
-                print(f"✅ [AskedTokens] Token marked as asked in database: {asked_token.text_id}:{asked_token.sentence_id}:{asked_token.sentence_token_id}")
+                print(f"✅ [AskedTokens] Marked as asked in database: {asked_token.text_id}:{asked_token.sentence_id}:{asked_token.sentence_token_id} (type={asked_token.type})")
                 return True
         except Exception as e:
             print(f"❌ [AskedTokens] Database mark failed: {e}")
@@ -126,18 +145,20 @@ class AskedTokensManager:
                 print(f"📝 [AskedTokens] Creating new file: {file_path}")
             
             # 检查是否已存在
-            token_key = f"{asked_token.text_id}:{asked_token.sentence_id}:{asked_token.sentence_token_id}"
+            token_key = f"{asked_token.text_id}:{asked_token.sentence_id}:{asked_token.sentence_token_id}:{asked_token.type}"
             existing = False
             for token_data in asked_tokens:
+                # 比较时需要考虑 type 字段
                 if (token_data.get("text_id") == asked_token.text_id and
                     token_data.get("sentence_id") == asked_token.sentence_id and
-                    token_data.get("sentence_token_id") == asked_token.sentence_token_id):
+                    token_data.get("sentence_token_id") == asked_token.sentence_token_id and
+                    token_data.get("type", "token") == asked_token.type):  # 向后兼容：默认为 token
                     existing = True
-                    print(f"⚠️ [AskedTokens] Token already exists: {token_key}")
+                    print(f"⚠️ [AskedTokens] Already exists: {token_key}")
                     break
             
             if not existing:
-                print(f"➕ [AskedTokens] Adding new token: {token_key}")
+                print(f"➕ [AskedTokens] Adding new entry: {token_key}")
                 asked_tokens.append(asdict(asked_token))
                 
                 # 写回文件

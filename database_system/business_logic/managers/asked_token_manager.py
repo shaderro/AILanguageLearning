@@ -15,14 +15,34 @@ class AskedTokenManager:
         self.dal = AskedTokenDataAccessLayer(session)
     
     def mark_token_as_asked(self, user_id: str, text_id: int, 
-                           sentence_id: int, sentence_token_id: int) -> AskedToken:
-        """标记token为已提问"""
-        return self.dal.create_asked_token(user_id, text_id, sentence_id, sentence_token_id)
+                           sentence_id: int, sentence_token_id: Optional[int] = None,
+                           type: str = 'token') -> AskedToken:
+        """
+        标记token或sentence为已提问
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型，'token' 或 'sentence'，默认 'token'
+        """
+        return self.dal.create_asked_token(user_id, text_id, sentence_id, sentence_token_id, type)
     
     def is_token_asked(self, user_id: str, text_id: int, 
-                      sentence_id: int, sentence_token_id: int) -> bool:
-        """检查token是否已被提问"""
-        return self.dal.get_asked_token(user_id, text_id, sentence_id, sentence_token_id) is not None
+                      sentence_id: int, sentence_token_id: Optional[int] = None,
+                      type: Optional[str] = None) -> bool:
+        """
+        检查token或sentence是否已被提问
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型（可选）
+        """
+        return self.dal.get_asked_token(user_id, text_id, sentence_id, sentence_token_id, type) is not None
     
     def get_asked_tokens_for_article(self, text_id: int) -> List[AskedToken]:
         """获取文章的所有已提问token"""
@@ -33,9 +53,19 @@ class AskedTokenManager:
         return self.dal.get_asked_tokens_for_user_article(user_id, text_id)
     
     def unmark_token_as_asked(self, user_id: str, text_id: int, 
-                             sentence_id: int, sentence_token_id: int) -> bool:
-        """取消标记token为已提问"""
-        return self.dal.delete_asked_token(user_id, text_id, sentence_id, sentence_token_id)
+                             sentence_id: int, sentence_token_id: Optional[int] = None,
+                             type: Optional[str] = None) -> bool:
+        """
+        取消标记token或sentence为已提问
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型（可选）
+        """
+        return self.dal.delete_asked_token(user_id, text_id, sentence_id, sentence_token_id, type)
     
     def get_user_progress(self, user_id: str) -> Dict[str, Any]:
         """获取用户学习进度"""

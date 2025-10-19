@@ -3,10 +3,10 @@
 """
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from .models import VocabExpression, GrammarRule
+from .models import VocabExpression, GrammarRule, User
 from .crud import (
     VocabCRUD, GrammarCRUD, TextCRUD, TokenCRUD, 
-    AskedTokenCRUD, StatsCRUD
+    AskedTokenCRUD, StatsCRUD, UserCRUD
 )
 
 
@@ -182,14 +182,34 @@ class AskedTokenDataAccessLayer:
         self._crud = AskedTokenCRUD(session)
     
     def create_asked_token(self, user_id: str, text_id: int, 
-                          sentence_id: int, sentence_token_id: int):
-        """创建已提问token记录"""
-        return self._crud.create(user_id, text_id, sentence_id, sentence_token_id)
+                          sentence_id: int, sentence_token_id: Optional[int] = None,
+                          type: str = 'token'):
+        """
+        创建已提问token记录
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型，'token' 或 'sentence'，默认 'token'
+        """
+        return self._crud.create(user_id, text_id, sentence_id, sentence_token_id, type)
     
     def get_asked_token(self, user_id: str, text_id: int, 
-                        sentence_id: int, sentence_token_id: int):
-        """获取指定的已提问token记录"""
-        return self._crud.get(user_id, text_id, sentence_id, sentence_token_id)
+                        sentence_id: int, sentence_token_id: Optional[int] = None,
+                        type: Optional[str] = None):
+        """
+        获取指定的已提问token记录
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型（可选）
+        """
+        return self._crud.get(user_id, text_id, sentence_id, sentence_token_id, type)
     
     def get_asked_tokens_for_article(self, text_id: int):
         """获取指定文章的所有已提问token记录"""
@@ -200,9 +220,19 @@ class AskedTokenDataAccessLayer:
         return self._crud.get_for_user_article(user_id, text_id)
     
     def delete_asked_token(self, user_id: str, text_id: int, 
-                           sentence_id: int, sentence_token_id: int) -> bool:
-        """删除已提问token记录"""
-        return self._crud.delete(user_id, text_id, sentence_id, sentence_token_id)
+                           sentence_id: int, sentence_token_id: Optional[int] = None,
+                           type: Optional[str] = None) -> bool:
+        """
+        删除已提问token记录
+        
+        Args:
+            user_id: 用户ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            sentence_token_id: Token ID（可选）
+            type: 标记类型（可选）
+        """
+        return self._crud.delete(user_id, text_id, sentence_id, sentence_token_id, type)
 
 
 class StatsDataAccessLayer:
@@ -252,3 +282,31 @@ class DataAccessManager:
     def rollback(self):
         """回滚事务"""
         self.session.rollback()
+
+
+class UserDataAccessLayer:
+    """用户数据访问层"""
+    
+    def __init__(self, session: Session):
+        self.session = session
+        self._crud = UserCRUD(session)
+    
+    def get_user(self, user_id: int) -> Optional[User]:
+        """根据ID获取用户"""
+        return self._crud.get_by_id(user_id)
+    
+    def create_user(self, password: str) -> User:
+        """创建新用户"""
+        return self._crud.create(password)
+    
+    def list_users(self, skip: int = 0, limit: int = 100) -> List[User]:
+        """列出所有用户"""
+        return self._crud.get_all(skip, limit)
+    
+    def update_user(self, user_id: int, **kwargs) -> Optional[User]:
+        """更新用户"""
+        return self._crud.update(user_id, **kwargs)
+    
+    def delete_user(self, user_id: int) -> bool:
+        """删除用户"""
+        return self._crud.delete(user_id)

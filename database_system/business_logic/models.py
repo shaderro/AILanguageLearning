@@ -22,6 +22,10 @@ class TokenType(enum.Enum):
     PUNCTUATION = 'punctuation'
     SPACE = 'space'
 
+class AskedTokenType(enum.Enum):
+    TOKEN = 'token'      # 标记的是单词（需要 sentence_token_id）
+    SENTENCE = 'sentence'  # 标记的是句子（sentence_token_id 可为空）
+
 class VocabExpression(Base):
     __tablename__ = 'vocab_expressions'
 
@@ -138,7 +142,8 @@ class AskedToken(Base):
     user_id = Column(String(255), nullable=False)
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
-    sentence_token_id = Column(Integer, nullable=False)
+    sentence_token_id = Column(Integer, nullable=True)  # 改为可空：当 type='sentence' 时可以为空
+    type = Column(Enum(AskedTokenType), default=AskedTokenType.TOKEN, nullable=False)  # 新增：标记类型
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     __table_args__ = (
@@ -147,8 +152,21 @@ class AskedToken(Base):
             ['sentences.text_id', 'sentences.sentence_id'],
             ondelete='CASCADE'
         ),
-        UniqueConstraint('user_id', 'text_id', 'sentence_id', 'sentence_token_id', name='uq_asked_token_user_text_sentence_token')
+        # 修改唯一约束：对于 sentence 类型，sentence_token_id 可以为 NULL
+        # SQLite 中 NULL != NULL，所以同一句子可以有多个 NULL 的 sentence_token_id
+        # 我们需要确保：对于 token 类型，同一用户的同一 token 只能标记一次
+        # 对于 sentence 类型，同一用户的同一句子只能标记一次（但 sentence_token_id 为 NULL）
+        UniqueConstraint('user_id', 'text_id', 'sentence_id', 'sentence_token_id', 'type', name='uq_asked_token_user_text_sentence_token_type')
     )
+
+class User(Base):
+    __tablename__ = 'users'
+    
+    user_id = Column(Integer, primary_key=True, autoincrement=True)
+    password = Column(String(255), nullable=False)  # 存储哈希后的密码
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    
+    # 暂不需要关联关系，开发阶段数据共享
 
 
 def create_database_engine(database_url: str):

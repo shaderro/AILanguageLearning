@@ -23,6 +23,7 @@ from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
 # 导入API路由
 from backend.api import vocab_router, grammar_router, text_router
 from backend.api.vocab_routes_verbose import router as vocab_verbose_router
+from backend.api.user_routes import router as user_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -45,6 +46,7 @@ app.include_router(vocab_router)
 app.include_router(vocab_verbose_router)  # 详细日志版本
 app.include_router(grammar_router)
 app.include_router(text_router)
+app.include_router(user_router)  # 用户管理路由
 
 @app.get("/")
 async def root():
@@ -58,6 +60,7 @@ async def root():
             "vocab_verbose": "/api/v2/vocab-verbose (详细日志版本)",
             "grammar_v2": "/api/v2/grammar",
             "texts_v2": "/api/v2/texts",
+            "users_v2": "/api/v2/users",
             "docs": "/docs",
             "health": "/api/health"
         },
@@ -73,7 +76,8 @@ async def health_check():
             "asked_tokens": "active",
             "vocab_v2": "active (database)",
             "grammar_v2": "active (database)",
-            "texts_v2": "active (database)"
+            "texts_v2": "active (database)",
+            "users_v2": "active (database)"
         }
     }
 
@@ -105,23 +109,48 @@ async def get_asked_tokens(user_id: str = Query(..., description="用户ID"),
 
 @app.post("/api/user/asked-tokens")
 async def mark_token_asked(payload: dict):
-    """标记 token 为已提问"""
+    """
+    标记 token 或 sentence 为已提问
+    
+    支持两种类型的标记：
+    1. type='token': 标记单词（需要 sentence_token_id）
+    2. type='sentence': 标记句子（sentence_token_id 可选）
+    
+    向后兼容：如果 type 未指定但 sentence_token_id 存在，默认为 'token'
+    """
     try:
         user_id = payload.get("user_id", "default_user")  # 默认用户ID
         text_id = payload.get("text_id")
         sentence_id = payload.get("sentence_id")
         sentence_token_id = payload.get("sentence_token_id")
+        type_param = payload.get("type", None)  # 新增：标记类型
         
-        print(f" [AskedTokens] Marking token as asked:")
+        # 向后兼容逻辑：如果 type 未指定但 sentence_token_id 不为空，默认为 'token'
+        if type_param is None:
+            if sentence_token_id is not None:
+                type_param = "token"
+            else:
+                type_param = "sentence"
+        
+        print(f"🏷️ [AskedTokens] Marking as asked:")
         print(f"  - user_id: {user_id}")
         print(f"  - text_id: {text_id}")
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - sentence_token_id: {sentence_token_id}")
+        print(f"  - type: {type_param}")
         
-        if not text_id or sentence_id is None or sentence_token_id is None:
+        # 验证必需参数
+        if not text_id or sentence_id is None:
             return {
                 "success": False,
-                "error": "text_id, sentence_id, sentence_token_id 都是必需的"
+                "error": "text_id 和 sentence_id 是必需的"
+            }
+        
+        # 如果是 token 类型，sentence_token_id 必须提供
+        if type_param == "token" and sentence_token_id is None:
+            return {
+                "success": False,
+                "error": "type='token' 时，sentence_token_id 是必需的"
             }
         
         # 使用 JSON 文件模式（测试阶段）
@@ -134,24 +163,27 @@ async def mark_token_asked(payload: dict):
         )
         
         if success:
-            print(f" [AskedTokens] Token marked as asked successfully")
+            print(f"✅ [AskedTokens] Marked as asked successfully (type={type_param})")
             return {
                 "success": True,
-                "message": "Token 已标记为已提问",
+                "message": f"{'Token' if type_param == 'token' else 'Sentence'} 已标记为已提问",
                 "data": {
                     "user_id": user_id,
                     "text_id": text_id,
                     "sentence_id": sentence_id,
-                    "sentence_token_id": sentence_token_id
+                    "sentence_token_id": sentence_token_id,
+                    "type": type_param
                 }
             }
         else:
             return {
                 "success": False,
-                "error": "标记 token 为已提问失败"
+                "error": "标记为已提问失败"
             }
     except Exception as e:
-        print(f" [AskedTokens] Error marking token as asked: {e}")
+        print(f"❌ [AskedTokens] Error marking as asked: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "error": str(e)

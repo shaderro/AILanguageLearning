@@ -7,6 +7,7 @@ from .text_crud import TextCRUD
 from .token_crud import TokenCRUD
 from .asked_token_crud import AskedTokenCRUD
 from .stats_crud import StatsCRUD
+from .user_crud import UserCRUD
 
 __all__ = [
     'VocabCRUD',
@@ -14,5 +15,6 @@ __all__ = [
     'TextCRUD',
     'TokenCRUD',
     'AskedTokenCRUD',
-    'StatsCRUD'
+    'StatsCRUD',
+    'UserCRUD'
 ]

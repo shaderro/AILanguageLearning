@@ -69,4 +69,14 @@ class AskedToken:
     user_id: str
     text_id: int
     sentence_id: int
-    sentence_token_id: int
+    sentence_token_id: Optional[int] = None  # 改为可选：当 type='sentence' 时可以为空
+    type: Literal["token", "sentence"] = "token"  # 新增：标记类型，默认为 token
+
+
+@dataclass
+class User:
+    """用户DTO - 最简版本"""
+    user_id: int          # 唯一标识
+    password: str         # 密码（实际应存储哈希值）
+    created_at: Optional[datetime] = None  # 创建时间
+    

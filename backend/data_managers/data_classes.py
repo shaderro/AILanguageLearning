@@ -58,5 +58,6 @@ class AskedToken:
     user_id: str
     text_id: int
     sentence_id: int
-    sentence_token_id: int
+    sentence_token_id: Optional[int] = None  # 改为可选：当 type='sentence' 时可以为空
+    type: str = "token"  # 新增：标记类型，默认为 token（'token' 或 'sentence'）
     asked_at: Optional[int] = None
