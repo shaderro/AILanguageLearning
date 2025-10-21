@@ -39,7 +39,8 @@ export function useTokenDrag({
       activeSentenceRef.current = sIdx
     }
     dragStartPointRef.current = { x: e.clientX, y: e.clientY }
-    const startUid = getTokenId(token)
+    const startUid = getTokenId(token, sIdx)
+    console.debug('[useTokenDrag.mouseDown] sIdx=', sIdx, 'startUid=', startUid, 'token=', token?.token_body)
     if (startUid) {
       const next = new Set(selectionBeforeDragRef.current)
       next.add(startUid)
@@ -68,7 +69,7 @@ export function useTokenDrag({
     for (let i = from; i <= to; i++) {
       const tk = tokens[i]
       if (tk && typeof tk === 'object' && tk.selectable) {
-        const id = getTokenId(tk)
+        const id = getTokenId(tk, sIdx)
         if (id) rangeSet.add(id)
       }
     }
@@ -114,7 +115,7 @@ export function useTokenDrag({
       for (let i = minIdx; i <= maxIdx; i++) {
         const tk = tokens[i]
         if (tk && typeof tk === 'object' && tk.selectable) {
-          const id = getTokenId(tk)
+          const id = getTokenId(tk, sIdx)
           if (id) rangeSet.add(id)
           lastText = tk?.token_body ?? lastText
         }

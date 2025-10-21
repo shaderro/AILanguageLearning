@@ -8,20 +8,21 @@ export function useVocabExplanations() {
   const [vocabExplanations, setVocabExplanations] = useState(() => new Map())
   const [hoveredTokenId, setHoveredTokenId] = useState(null)
 
-  const handleGetExplanation = (token, explanation) => {
-    const tokenId = getTokenId(token)
+  const handleGetExplanation = (token, explanation, sentenceIdx) => {
+    const tokenId = getTokenId(token, sentenceIdx)
+    console.debug('[useVocabExplanations.set] sentenceIdx=', sentenceIdx, 'uid=', tokenId)
     if (tokenId) {
       setVocabExplanations(prev => new Map(prev).set(tokenId, explanation))
     }
   }
 
-  const hasExplanation = (token) => {
-    const tokenId = getTokenId(token)
+  const hasExplanation = (token, sentenceIdx) => {
+    const tokenId = getTokenId(token, sentenceIdx)
     return tokenId ? vocabExplanations.has(tokenId) : false
   }
 
-  const getExplanation = (token) => {
-    const tokenId = getTokenId(token)
+  const getExplanation = (token, sentenceIdx) => {
+    const tokenId = getTokenId(token, sentenceIdx)
     return tokenId ? vocabExplanations.get(tokenId) : null
   }
 

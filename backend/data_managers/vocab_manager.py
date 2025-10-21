@@ -51,9 +51,13 @@ class VocabManager:
         
         return new_vocab_id
 
-    def add_vocab_example(self, text_manager: OriginalTextManager, vocab_id: int, text_id: int, sentence_id: int, context_explanation: str):
+    def add_vocab_example(self, text_manager: OriginalTextManager, vocab_id: int, text_id: int, sentence_id: int, context_explanation: str, token_indices: list = None):
         if vocab_id not in self.vocab_bundles:
             raise ValueError(f"Vocab ID {vocab_id} does not exist.")
+        
+        # 🔧 修复：使用传入的 token_indices，默认为空列表
+        if token_indices is None:
+            token_indices = []
         
         if self.use_new_structure:
             # 新结构：直接添加到词汇的examples列表
@@ -69,8 +73,9 @@ class VocabManager:
                 text_id=text_id,
                 sentence_id=sentence_id,
                 context_explanation=context_explanation,
-                token_indices=[]  # 新结构包含token_indices字段
+                token_indices=token_indices  # ✅ 使用传入的实际值
             )
+            print(f"🔍 [VocabManager] 添加例句，token_indices={token_indices}")
             vocab.examples.append(new_example)
         else:
             # 旧结构：使用Bundle包装
@@ -180,15 +185,15 @@ class VocabManager:
     
     def save_to_new_format(self, path: str):
         """
-        保存数据为新结构格式（包含 source、is_starred、token_indices 等新字段）
+        保存数据为新结构格式（数组格式，包含 source、is_starred、token_indices 等新字段）
         """
         if not self.use_new_structure:
             print("⚠️ 当前未使用新结构，无法保存为新格式")
             return
             
-        export_data = {}
-        for vocab_id, vocab in self.vocab_bundles.items():
-            # 新结构：直接保存所有字段
+        export_data = []
+        for vocab_id, vocab in sorted(self.vocab_bundles.items()):
+            # 新结构：保存为数组格式（更简洁）
             vocab_data = {
                 'vocab_id': vocab.vocab_id,
                 'vocab_body': vocab.vocab_body,
@@ -203,14 +208,14 @@ class VocabManager:
                         'context_explanation': ex.context_explanation,
                         'token_indices': getattr(ex, 'token_indices', [])
                     } for ex in vocab.examples
-                ]
+                ] if vocab.examples else []
             }
-            export_data[vocab_id] = vocab_data
+            export_data.append(vocab_data)
         
         with open(path, 'w', encoding='utf-8') as f:
-            json.dump(export_data, f, indent=4, ensure_ascii=False)
+            json.dump(export_data, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ 已保存 {len(export_data)} 个词汇表达到新格式文件: {path}")
+        print(f"✅ 已保存 {len(export_data)} 个词汇表达到文件（数组格式）: {path}")
     
     def load_from_file(self, path: str):
         """
@@ -241,33 +246,71 @@ class VocabManager:
         self.vocab_bundles = {}  # 清空当前状态
         
         try:
-            for vocab_id, bundle_data in data.items():
+            # 支持两种格式：数组格式（简化）和字典格式（Bundle）
+            if isinstance(data, list):
+                # 数组格式：[{"vocab_id": 1, "vocab_body": "...", ...}, ...]
+                items_to_process = [(item.get('vocab_id'), item) for item in data]
+            elif isinstance(data, dict):
+                # 字典格式：{"1": {"vocab": {...}, "example": [...]}, ...}
+                items_to_process = list(data.items())
+            else:
+                raise ValueError(f"Unexpected data format: {type(data)}")
+            
+            for vocab_id, bundle_data in items_to_process:
                 if self.use_new_structure:
                     # 新结构：直接创建词汇对象
-                    vocab_data = bundle_data['vocab']
-                    examples_data = bundle_data.get('example', [])
+                    # 判断是数组格式还是Bundle格式
+                    if 'vocab' in bundle_data:
+                        # Bundle格式：{"vocab": {...}, "example": [...]}
+                        vocab_data = bundle_data['vocab']
+                        examples_data = bundle_data.get('example', [])
+                    else:
+                        # 数组格式：直接是词汇数据（简化格式，用于Mock server）
+                        vocab_data = bundle_data
+                        examples_data = bundle_data.get('examples', [])  # 注意：简化格式使用'examples'而不是'example'
                     
                     vocab = NewVocabExpression(
                         vocab_id=vocab_data['vocab_id'],
                         vocab_body=vocab_data['vocab_body'],
                         explanation=vocab_data['explanation'],
-                        source="qa",  # 默认值
-                        is_starred=False,  # 默认值
+                        source=vocab_data.get('source', 'qa'),  # 使用文件中的source，默认为qa
+                        is_starred=vocab_data.get('is_starred', False),  # 使用文件中的is_starred，默认为False
                         examples=[
                             NewVocabExpressionExample(
                                 vocab_id=ex['vocab_id'],
                                 text_id=ex['text_id'],
                                 sentence_id=ex['sentence_id'],
                                 context_explanation=ex['context_explanation'],
-                                token_indices=[]  # 默认空列表
+                                token_indices=ex.get('token_indices', [])  # 从文件读取，默认空列表
                             ) for ex in examples_data
                         ]
                     )
                     self.vocab_bundles[int(vocab_id)] = vocab
                 else:
                     # 旧结构：使用Bundle包装
-                    vocab = VocabExpression(**bundle_data['vocab'])
-                    examples = [VocabExpressionExample(**ex) for ex in bundle_data['example']]
+                    # 判断是数组格式还是Bundle格式
+                    if 'vocab' in bundle_data:
+                        # Bundle格式
+                        vocab = VocabExpression(**bundle_data['vocab'])
+                        examples = [VocabExpressionExample(**ex) for ex in bundle_data['example']]
+                    else:
+                        # 数组格式：转换为Bundle格式
+                        vocab = VocabExpression(
+                            vocab_id=bundle_data['vocab_id'],
+                            vocab_body=bundle_data['vocab_body'],
+                            explanation=bundle_data['explanation']
+                        )
+                        # 简化格式中的examples是字典列表，需要转换为VocabExpressionExample
+                        examples = []
+                        for ex in bundle_data.get('examples', []):
+                            if isinstance(ex, dict):
+                                examples.append(VocabExpressionExample(
+                                    vocab_id=ex.get('vocab_id', bundle_data['vocab_id']),
+                                    text_id=ex.get('text_id', 0),
+                                    sentence_id=ex.get('sentence_id', 0),
+                                    context_explanation=ex.get('context_explanation', ''),
+                                    token_indices=ex.get('token_indices', [])
+                                ))
                     self.vocab_bundles[int(vocab_id)] = VocabExpressionBundle(vocab=vocab, example=examples)
             
             print(f"✅ 成功加载 {len(self.vocab_bundles)} 个词汇表达")
@@ -333,3 +376,55 @@ class VocabManager:
             str: "new" 或 "old"
         """
         return "new" if self.use_new_structure else "old"
+
+    def get_vocab_example_by_location(self, text_id: int, sentence_id: int = None, token_index: int = None):
+        """
+        按层级查找词汇例句：优先按 text_id 查找唯一结果，否则按 sentence_id，最后按 token_index
+        
+        Args:
+            text_id: 文章ID（必需）
+            sentence_id: 句子ID（可选）
+            token_index: Token索引（可选）
+            
+        Returns:
+            VocabExpressionExample 或 None
+        """
+        matching_examples = []
+        
+        # 遍历所有词汇的所有例句
+        for vocab_id, vocab_bundle in self.vocab_bundles.items():
+            if self.use_new_structure:
+                # 新结构：直接从 vocab.examples 获取
+                examples = vocab_bundle.examples if hasattr(vocab_bundle, 'examples') else []
+            else:
+                # 旧结构：从 bundle.example 获取
+                examples = vocab_bundle.example if hasattr(vocab_bundle, 'example') else []
+            
+            for example in examples:
+                # 首先检查 text_id 是否匹配
+                if example.text_id == text_id:
+                    # 如果只提供了 text_id，且这是该 text_id 的唯一例句，直接返回
+                    if sentence_id is None and token_index is None:
+                        matching_examples.append(example)
+                    # 如果提供了 sentence_id，检查是否匹配
+                    elif sentence_id is not None and example.sentence_id == sentence_id:
+                        # 如果只提供了 sentence_id，且这是该 sentence_id 的唯一例句，直接返回
+                        if token_index is None:
+                            matching_examples.append(example)
+                        # 如果提供了 token_index，检查是否在 token_indices 中
+                        elif token_index is not None and hasattr(example, 'token_indices'):
+                            if token_index in example.token_indices:
+                                matching_examples.append(example)
+                        # 旧结构没有 token_indices，按 sentence_id 匹配
+                        elif token_index is not None and not hasattr(example, 'token_indices'):
+                            matching_examples.append(example)
+        
+        # 返回唯一结果
+        if len(matching_examples) == 1:
+            return matching_examples[0]
+        elif len(matching_examples) > 1:
+            print(f"⚠️ [VocabManager] 找到多个匹配的例句: {len(matching_examples)} 个")
+            return matching_examples[0]  # 返回第一个
+        else:
+            print(f"🔍 [VocabManager] 未找到匹配的例句: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
+            return None

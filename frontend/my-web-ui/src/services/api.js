@@ -254,13 +254,15 @@ export const apiService = {
     return api.get(`/api/user/asked-tokens?user_id=${userId}&text_id=${textId}`);
   },
 
-  markTokenAsked: (userId = 'default_user', textId, sentenceId, sentenceTokenId) => {
-    console.log(`🏷️ [Frontend] Marking token as asked: ${textId}:${sentenceId}:${sentenceTokenId}`);
+  markTokenAsked: (userId = 'default_user', textId, sentenceId, sentenceTokenId, vocabId = null, grammarId = null) => {
+    console.log(`🏷️ [Frontend] Marking token as asked: ${textId}:${sentenceId}:${sentenceTokenId}`, { vocabId, grammarId });
     return api.post('/api/user/asked-tokens', {
       user_id: userId,
       text_id: textId,
       sentence_id: sentenceId,
-      sentence_token_id: sentenceTokenId
+      sentence_token_id: sentenceTokenId,
+      vocab_id: vocabId,
+      grammar_id: grammarId
     });
   },
 
@@ -300,6 +302,15 @@ export const apiService = {
   sendChat: (payload = {}) => {
     console.log('💬 [Frontend] Sending chat request:', payload);
     return api.post("/api/chat", payload);
+  },
+
+  // 按位置查找词汇例句
+  getVocabExampleByLocation: (textId, sentenceId = null, tokenIndex = null) => {
+    console.log('🔍 [Frontend] Getting vocab example by location:', { textId, sentenceId, tokenIndex });
+    const params = { text_id: textId };
+    if (sentenceId !== null) params.sentence_id = sentenceId;
+    if (tokenIndex !== null) params.token_index = tokenIndex;
+    return api.get("/api/vocab-example-by-location", { params });
   }
 };
 

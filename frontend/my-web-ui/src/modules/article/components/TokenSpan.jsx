@@ -31,7 +31,7 @@ export default function TokenSpan({
 }) {
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
   const selectable = typeof token === 'object' ? !!token?.selectable : false
-  const uid = getTokenId(token)
+  const uid = getTokenId(token, sentenceIdx)
   const selected = uid ? selectedTokenIds.has(uid) : false
   const hasSelection = selectedTokenIds && selectedTokenIds.size > 0
   const hoverAllowed = selectable && (!hasSelection ? (activeSentenceIndex == null || activeSentenceIndex === sentenceIdx) : activeSentenceIndex === sentenceIdx)
@@ -78,6 +78,7 @@ export default function TokenSpan({
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
+          console.debug('[TokenSpan.mouseEnter] sentenceIdx=', sentenceIdx, 'uid=', uid, 'text=', displayText)
           // 如果是已提问的token，显示notation
           if (isAsked) {
             setShowNotation(true)
@@ -128,6 +129,9 @@ export default function TokenSpan({
         <TokenNotation 
           isVisible={showNotation}
           note={notationContent || "This is a test note"}
+          textId={articleId}
+          sentenceId={tokenSentenceId}
+          tokenIndex={tokenSentenceTokenId}
         />
       )}
     </span>

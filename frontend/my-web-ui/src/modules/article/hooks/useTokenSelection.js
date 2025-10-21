@@ -16,7 +16,7 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
     for (let i = 0; i < tokens.length; i++) {
       const tk = tokens[i]
       if (tk && typeof tk === 'object') {
-        const id = getTokenId(tk)
+        const id = getTokenId(tk, sIdx)
         if (id && idSet.has(id)) texts.push(tk.token_body ?? '')
       }
     }
@@ -36,7 +36,7 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
     for (let i = 0; i < tokens.length; i++) {
       const tk = tokens[i]
       if (tk && typeof tk === 'object') {
-        const id = getTokenId(tk)
+        const id = getTokenId(tk, sIdx)
         if (id && idSet.has(id)) {
           selectedTokens.push(tk)
           selectedTexts.push(tk.token_body ?? '')
@@ -74,6 +74,7 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
     if (onTokenSelect) {
       const selectedTexts = buildSelectedTexts(activeSentenceRef.current, set)
       const context = buildSelectionContext(activeSentenceRef.current, set)
+      console.debug('[useTokenSelection.emitSelection] sentenceIdx=', activeSentenceRef.current, 'selectedIds=', Array.from(set))
       onTokenSelect(lastTokenText, set, selectedTexts, context)
     }
   }
@@ -90,7 +91,8 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
       clearSelection()
       return
     }
-    const uid = getTokenId(token)
+    const uid = getTokenId(token, sIdx)
+    console.debug('[useTokenSelection.addSingle] sIdx=', sIdx, 'uid=', uid, 'token=', token?.token_body)
     if (!uid) return
     const next = new Set(selectedTokenIds)
     next.add(uid)

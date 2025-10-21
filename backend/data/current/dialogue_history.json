@@ -15,7 +15,8 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2024-01-01T10:00:00Z"
+          "timestamp": "2025-10-21T13:26:38.591559",
+          "data_type": "old"
         },
         {
           "user": "这个德语句子中的语法结构是什么？",
@@ -28,7 +29,8 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2024-01-01T10:00:00Z"
+          "timestamp": "2025-10-21T13:26:38.591580",
+          "data_type": "old"
         },
         {
           "user": "为何这句话个主谓宾，dabei在这种情况下是什么意思，如何使用？",
@@ -41,10 +43,210 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2024-01-01T10:00:00Z"
+          "timestamp": "2025-10-21T13:26:38.591586",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'herauskommen 在这里的意思是“被揭露”或“泄露出来”。在句子中指“关于Potters的事情被公开/泄露”。这是一个德语动词，由heraus（出来）+ kommen（来）组成，表示某事从隐藏状态变为公开。'}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 8,
+            "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591591",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Aktentasche 是德语词，意思是公文包。在这个句子里，Mr Dursley 在八点半时拿了他的公文包。'}",
+          "sentence_id": 17,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 17,
+            "sentence_body": "Um halb neun griff Mr Dursley nach der Aktentasche, gab seiner Frau einen \nSchmatz auf die Wange und versuchte es auch bei Dudley mit einem Abschiedskuss.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591595",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Laune 是德语名词，意思是“心情”或“情绪”。在句子中，“glänzender Laune”是一个固定搭配，意思是“心情极好”或“情绪高涨”，形容他上午心情非常好。'}",
+          "sentence_id": 51,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 51,
+            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591600",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'verschiedene 是德语形容词，意思是“不同的、各种各样的”。在这个句子里，它修饰 Leute（人们），表示“五个不同的人”。'}",
+          "sentence_id": 49,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 49,
+            "sentence_body": "Er machte fünf verschiedene Leute zur Schnecke.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591605",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'solchem 是德语中 solch（这样的、这种的）的与格形式，在这里修饰 Unsinn（胡闹、荒唐事），意思是“这种胡闹”。整个短语 solchem Unsinn 表示“这种荒唐事”。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591608",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这句话是一个包含多个从句的复合句。主句是‘Mrs Dursley war dünn und blond und besaß doppelt so viel Hals’（德思礼夫人很瘦，金发，脖子长度是需要的两倍）。后面跟着：1) 比较从句‘wie notwendig gewesen wäre’（比需要的长度），2) 关系从句‘was allerdings sehr nützlich war’（这实际上很有用），3) 原因从句‘denn so konnte sie...’（因为这样她就能...）。这种结构在德语中很常见，通过逗号和连接词将多个信息连接在一起。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591613",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这是一个复合句，主要结构是：主句（Mrs Dursley war...und besaß...）+ 比较从句（wie notwendig...）+ 关系从句（was allerdings...）+ 原因从句（denn so konnte...）。简单来说就是：描述Mrs Dursley的外貌特征，然后用比较说明她的脖子有多长，接着解释这个特征很有用，最后说明为什么有用。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591617",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这句话由三个并列分句组成：1. \"Die Dursleys besaßen alles, was sie wollten\"（德思礼夫妇拥有他们想要的一切）包含一个关系从句；2. \"doch sie hatten auch ein Geheimnis\"（但他们也有一个秘密）是转折句；3. \"und dass es jemand aufdecken könnte, war ihre größte Sorge\"（而这个秘密可能被人发现是他们最大的担忧）中\"dass\"引导的主语从句作主语。整个句子用逗号和连词连接多个信息。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591621",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这是一个由多个从句组成的复合句。主要结构是：\"Die Dursleys besaßen alles... doch sie hatten auch ein Geheimnis, und dass... war ihre größte Sorge.\" 包含一个关系从句\"was sie wollten\"修饰alles，和一个主语从句\"dass es jemand aufdecken könnte\"作war的主语。doch表示转折，连接前后两个主句。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591625",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Schnecke 在德语中是“蜗牛”的意思。在这个句子中，zur Schnecke machen 是一个固定搭配，意思是“严厉斥责”或“痛骂”。整句话的意思是：他严厉斥责了五个不同的人。'}",
+          "sentence_id": 49,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 49,
+            "sentence_body": "Er machte fünf verschiedene Leute zur Schnecke.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591629",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'glänzender 在这里是形容词，意思是“极好的、出色的”。在句子中修饰 Laune（心情），glänzender Laune 表示“心情极好、兴致勃勃”。'}",
+          "sentence_id": 51,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 51,
+            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-21T13:26:38.591633",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'herstellte 是德语动词 herstellen 的过去式，意思是“制造、生产”。在这个句子里，描述德思礼先生的公司制造钻机。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 3,
+            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-10-21T13:26:38.591643",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Laune 是德语名词，意思是“心情”或“情绪”。在句子中，“glänzender Laune”是一个固定搭配，意思是“心情极好”或“情绪高涨”。整个短语描述他午饭休息前心情非常好。'}",
+          "sentence_id": 51,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 51,
+            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-10-21T13:26:38.591651",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "{'answer': 'dafür 是一个德语副词，由 da- 和 für 组成。da- 在这里指代前文提到的内容（几乎没有脖子），für 表示“为了、代替”。整个词意思是“作为补偿/替代”，相当于英语的 for that/in return。它用来连接前后对比的情况：没有脖子，但是有大胡子。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-10-21T13:26:38.591657",
+          "data_type": "new"
         }
       ],
-      "max_turns": 3
+      "max_turns": 100
     }
   }
 }

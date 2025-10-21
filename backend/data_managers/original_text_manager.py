@@ -169,15 +169,15 @@ class OriginalTextManager:
     
     def save_to_new_format(self, path: str):
         """
-        保存数据为新结构格式（包含 sentence_difficulty_level、tokens 等新字段）
+        保存数据为新结构格式（数组格式，包含 sentence_difficulty_level、tokens 等新字段）
         """
         if not self.use_new_structure:
             print("⚠️ 当前未使用新结构，无法保存为新格式")
             return
             
-        export_data = {}
-        for tid, text in self.original_texts.items():
-            # 新结构：保存所有字段
+        export_data = []
+        for tid, text in sorted(self.original_texts.items()):
+            # 新结构：保存为数组格式（更简洁）
             text_data = {
                 'text_id': text.text_id,
                 'text_title': text.text_title,
@@ -190,18 +190,24 @@ class OriginalTextManager:
                     'sentence_id': sentence.sentence_id,
                     'sentence_body': sentence.sentence_body,
                     'grammar_annotations': sentence.grammar_annotations or [],
-                    'vocab_annotations': sentence.vocab_annotations or [],
-                    'sentence_difficulty_level': getattr(sentence, 'sentence_difficulty_level', None),
-                    'tokens': getattr(sentence, 'tokens', None)
+                    'vocab_annotations': sentence.vocab_annotations or []
                 }
+                
+                # 只在有值时才添加这些字段，保持文件简洁
+                if hasattr(sentence, 'sentence_difficulty_level') and sentence.sentence_difficulty_level is not None:
+                    sentence_data['sentence_difficulty_level'] = sentence.sentence_difficulty_level
+                
+                if hasattr(sentence, 'tokens') and sentence.tokens is not None:
+                    sentence_data['tokens'] = sentence.tokens
+                
                 text_data['text_by_sentence'].append(sentence_data)
             
-            export_data[tid] = text_data
+            export_data.append(text_data)
         
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(export_data, f, ensure_ascii=False, indent=2)
         
-        print(f"✅ 已保存 {len(export_data)} 个文本到新格式文件: {path}")
+        print(f"✅ 已保存 {len(export_data)} 个文本到文件（数组格式）: {path}")
 
     def add_grammar_example_to_sentence(self, text_id: int, sentence_id: int, rule_id: int):
         text = self.original_texts.get(text_id)
@@ -256,7 +262,17 @@ class OriginalTextManager:
         self.original_texts = {}  # 清空当前状态
         
         try:
-            for tid, text_data in data.items():
+            # 支持两种格式：数组格式和字典格式
+            if isinstance(data, list):
+                # 数组格式：[{"text_id": 1, "text_title": "...", ...}, ...]
+                items_to_process = [(item.get('text_id'), item) for item in data]
+            elif isinstance(data, dict):
+                # 字典格式：{"1": {"text_id": 1, ...}, ...}
+                items_to_process = list(data.items())
+            else:
+                raise ValueError(f"Unexpected data format: {type(data)}")
+            
+            for tid, text_data in items_to_process:
                 if self.use_new_structure:
                     # 使用新结构加载，tokens先留空
                     text = NewOriginalText(

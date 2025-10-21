@@ -140,11 +140,22 @@ def create_selected_token_from_text(sentence: SentenceType, selected_text: str) 
     words = sentence.sentence_body.split()
     selected_words = selected_text.split()
     
+    # 辅助函数：去除标点符号
+    def strip_punctuation(text: str) -> str:
+        """去除文本首尾的标点符号"""
+        import string
+        return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+    
     # 找到选择的词在句子中的位置
     token_indices = []
     for i, word in enumerate(words):
-        if word in selected_words:
-            token_indices.append(i)
+        # 去除标点后比较
+        word_clean = strip_punctuation(word)
+        for selected_word in selected_words:
+            selected_word_clean = strip_punctuation(selected_word)
+            if word_clean == selected_word_clean:
+                token_indices.append(i)
+                break
     
     # 🔧 如果找不到 token 位置（可能是句子变了），回退到整句选择
     if not token_indices:

@@ -3,33 +3,33 @@ import json
 print("✅ 当前运行文件：", __file__)
 print("✅ 当前工作目录：", os.getcwd())
 import re
-from assistants.chat_info.dialogue_history import DialogueHistory
-from assistants.chat_info.session_state import SessionState, CheckRelevantDecision, GrammarSummary, VocabSummary, GrammarToAdd, VocabToAdd
-from assistants.chat_info.selected_token import SelectedToken, create_selected_token_from_text
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.check_if_grammar_relevant_assistant import CheckIfGrammarRelevantAssistant
-from assistants.sub_assistants.check_if_vocab_relevant_assistant import CheckIfVocabRelevantAssistant
-from assistants.sub_assistants.summarize_grammar_rule import SummarizeGrammarRuleAssistant
-from assistants.sub_assistants.check_if_relevant import CheckIfRelevant
-from assistants.sub_assistants.answer_question import AnswerQuestionAssistant
-from assistants.sub_assistants.summarize_vocab import SummarizeVocabAssistant
-# 测试阶段暂时关闭语法比较功能
-# from assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
-from assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
-from assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
-from assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
-from data_managers.data_classes import Sentence
+from backend.assistants.chat_info.dialogue_history import DialogueHistory
+from backend.assistants.chat_info.session_state import SessionState, CheckRelevantDecision, GrammarSummary, VocabSummary, GrammarToAdd, VocabToAdd
+from backend.assistants.chat_info.selected_token import SelectedToken, create_selected_token_from_text
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.check_if_grammar_relevant_assistant import CheckIfGrammarRelevantAssistant
+from backend.assistants.sub_assistants.check_if_vocab_relevant_assistant import CheckIfVocabRelevantAssistant
+from backend.assistants.sub_assistants.summarize_grammar_rule import SummarizeGrammarRuleAssistant
+from backend.assistants.sub_assistants.check_if_relevant import CheckIfRelevant
+from backend.assistants.sub_assistants.answer_question import AnswerQuestionAssistant
+from backend.assistants.sub_assistants.summarize_vocab import SummarizeVocabAssistant
+# CompareGrammarRuleAssistant（语法相似度比较，已启用）
+from backend.assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
+from backend.assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
+from backend.assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
+from backend.assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
+from backend.data_managers.data_classes import Sentence
 # 导入新数据结构类
 try:
-    from data_managers.data_classes_new import Sentence as NewSentence, Token
+    from backend.data_managers.data_classes_new import Sentence as NewSentence, Token
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False
     print("⚠️ 新数据结构类不可用，将使用旧结构")
-from data_managers import data_controller
-from data_managers.dialogue_record import DialogueRecordBySentence
+from backend.data_managers import data_controller
+from backend.data_managers.dialogue_record import DialogueRecordBySentence
 # 只读能力探测适配层（不改变业务逻辑）
-from assistants.adapters import CapabilityDetector, DataAdapter, GrammarRuleAdapter, VocabAdapter
+from backend.assistants.adapters import CapabilityDetector, DataAdapter, GrammarRuleAdapter, VocabAdapter
 
 # 定义联合类型，支持新旧两种 Sentence 类型
 from typing import Union
@@ -46,8 +46,8 @@ class MainAssistant:
         self.answer_question_assistant = AnswerQuestionAssistant()
         self.summarize_grammar_rule_assistant = SummarizeGrammarRuleAssistant()
         self.summarize_vocab_rule_assistant = SummarizeVocabAssistant()
-        # 测试阶段暂时关闭语法比较功能
-        # self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
+        # 语法比较功能（已启用）
+        self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
         self.grammar_example_explanation_assistant = GrammarExampleExplanationAssistant()
         self.vocab_example_explanation_assistant = VocabExampleExplanationAssistant()
         self.vocab_explanation_assistant = VocabExplanationAssistant()
@@ -68,36 +68,55 @@ class MainAssistant:
             user_question: 用户问题
             selected_text: 用户选择的特定文本（可选），如果为None则使用完整句子
         """
-        self.session_state.reset()  # 重置会话状态
+        # 🔧 优化：只重置处理结果，保留上下文（避免重复设置）
+        # 上下文（sentence、input、token）已由 Mock Server 通过 session API 设置
+        self.session_state.reset_processing_results()
         
-        # 创建SelectedToken对象
-        if selected_text:
-            # 用户选择了特定文本
-            selected_token = create_selected_token_from_text(quoted_sentence, selected_text)
-            effective_sentence_body = selected_text
-            print(f"🎯 用户选择了特定文本: '{selected_text}'")
+        # 📋 使用已设置的上下文，或者从参数设置（兼容直接调用）
+        # 如果 session_state 中没有上下文，说明是直接调用（非 Mock Server），需要设置
+        if not self.session_state.current_sentence:
+            print("📝 [MainAssistant] Session state 为空，从参数设置上下文")
+            
+            # 创建SelectedToken对象
+            if selected_text:
+                selected_token = create_selected_token_from_text(quoted_sentence, selected_text)
+                effective_sentence_body = selected_text
+                print(f"🎯 用户选择了特定文本: '{selected_text}'")
+            else:
+                selected_token = SelectedToken.from_full_sentence(quoted_sentence)
+                effective_sentence_body = quoted_sentence.sentence_body
+                print(f"📖 用户选择了整句话: '{quoted_sentence.sentence_body}'")
+            
+            # 设置会话状态
+            self.session_state.set_current_sentence(quoted_sentence)
+            self.session_state.set_current_selected_token(selected_token)
+            self.session_state.set_current_input(user_question)
         else:
-            # 用户选择整句话
-            selected_token = SelectedToken.from_full_sentence(quoted_sentence)
-            effective_sentence_body = quoted_sentence.sentence_body
-            print(f"📖 用户选择了整句话: '{quoted_sentence.sentence_body}'")
-        
-        # 设置会话状态
-        self.session_state.set_current_sentence(quoted_sentence)
-        self.session_state.set_current_selected_token(selected_token)
-        self.session_state.set_current_input(user_question)
+            print("✅ [MainAssistant] 使用 session_state 中的上下文（已由 Mock Server 设置）")
+            # 从 session_state 读取已设置的值
+            effective_sentence_body = selected_text if selected_text else (
+                self.session_state.current_selected_token.token_text 
+                if self.session_state.current_selected_token 
+                else quoted_sentence.sentence_body
+            )
         
         # 只读演示：能力探测与打印（不改业务逻辑）
         self._log_sentence_capabilities(quoted_sentence)
         
         # 记录用户消息（包含selected_token信息）
-        self.dialogue_record.add_user_message(quoted_sentence, user_question, selected_token)
+        # 使用 session_state 中的 selected_token
+        current_selected_token = self.session_state.current_selected_token
+        if current_selected_token:
+            self.dialogue_record.add_user_message(quoted_sentence, user_question, current_selected_token)
+        else:
+            # 兜底：如果 session_state 中没有，创建一个整句选择的 token
+            fallback_token = SelectedToken.from_full_sentence(quoted_sentence)
+            self.dialogue_record.add_user_message(quoted_sentence, user_question, fallback_token)
         
         print("The question is relevant to language learning, proceeding with processing...")
         
-        # 回答问题
+        # 回答问题（会在内部设置 current_response）
         ai_response = self.answer_question_function(quoted_sentence, user_question, effective_sentence_body)
-        self.session_state.set_current_response(ai_response)
         
         # 记录AI响应（包含selected_token信息）
         self.dialogue_record.add_ai_response(quoted_sentence, ai_response)
@@ -150,12 +169,8 @@ class MainAssistant:
         if isinstance(result, str):
             result = {"is_relevant": False}
         
-        # 总是设置 session state，确保后续处理有完整信息
-        self.session_state.set_current_input(user_question)
-        self.session_state.set_current_sentence(quoted_sentence)
-        
         # 验证句子完整性
-        self._ensure_sentence_integrity(quoted_sentence, "Session State 设置")
+        self._ensure_sentence_integrity(quoted_sentence, "Check Relevant")
         
         return result.get("is_relevant", False)
 
@@ -193,6 +208,7 @@ class MainAssistant:
         print("AI Response:", ai_response)
         if isinstance(ai_response, (dict, list)):
             ai_response = str(ai_response)
+        # ✅ 设置响应（这里是唯一设置 current_response 的地方）
         self.session_state.set_current_response(ai_response)
         self.dialogue_history.add_message(user_input=user_question, ai_response=ai_response, quoted_sentence=quoted_sentence)
 
@@ -289,55 +305,80 @@ class MainAssistant:
                         vocab=vocab.get("vocab", "Unknown")
                     )
 
-        # 测试阶段：暂时关闭语法比较和新语法添加功能
-        print("🧪 测试阶段：跳过语法比较和新语法添加逻辑")
+        # 语法处理：检查相似度，为现有规则添加例句或添加新规则
+        print("🔍 处理语法规则：检查相似度...")
+        
+        current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
+        print(f"📚 当前已有 {len(current_grammar_rule_names)} 个语法规则")
         new_grammar_summaries = []
-        # 注释掉原有的语法比较逻辑
-        # current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
-        # for result in self.session_state.summarized_results:
-        #     has_similar = False
-        #     for existing_rule in current_grammar_rule_names:
-        #         if isinstance(result, GrammarSummary):
-        #             compare_result = self.compare_grammar_rule_assistant.run(
-        #                 existing_rule,
-        #                 result.grammar_rule_name,
-        #                 verbose=True
-        #             )
-        #             # 确保 compare_result 是字典类型
-        #             if isinstance(compare_result, str):
-        #                 compare_result = {"is_similar": False}
-        #             elif isinstance(compare_result, list) and len(compare_result) > 0:
-        #                 compare_result = compare_result[0] if isinstance(compare_result[0], dict) else {"is_similar": False}
-        #             elif not isinstance(compare_result, dict):
-        #                 compare_result = {"is_similar": False}
-        #             
-        #             if compare_result.get("is_similar", False):
-        #                 print(f"✅ 语法规则 '{existing_rule}' 与现有规则 '{result.grammar_rule_name}' 相似")
-        #                 has_similar = True
-        #                 existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
-        #             current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
-        #             # 验证句子完整性
-        #             self._ensure_sentence_integrity(current_sentence, "Grammar Explanation 调用")
-        #             example_explanation = self.grammar_example_explanation_assistant.run(
-        #                 sentence=current_sentence,
-        #                 grammar=self.data_controller.grammar_manager.get_rule_by_id(existing_rule_id).name)
-        #             self.data_controller.add_grammar_example(
-        #                 rule_id=existing_rule_id,
-        #                 text_id=current_sentence.text_id,
-        #                 sentence_id=current_sentence.sentence_id,
-        #                 explanation_context=example_explanation
-        #             )
-        #             break  # 跳出内层循环
-        #     if not has_similar and isinstance(result, GrammarSummary):
-        #         print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加到已有规则中")
-        #         new_grammar_summaries.append(result)
-
+        
+        for result in self.session_state.summarized_results:
+            if isinstance(result, GrammarSummary):
+                print(f"🔍 检查语法规则: {result.grammar_rule_name}")
+                has_similar = False
+                
+                # 检查是否与现有语法相似
+                for existing_rule in current_grammar_rule_names:
+                    compare_result = self.compare_grammar_rule_assistant.run(
+                        existing_rule,
+                        result.grammar_rule_name,
+                        verbose=False
+                    )
+                    
+                    # 确保 compare_result 是字典类型
+                    if isinstance(compare_result, str):
+                        try:
+                            compare_result = json.loads(compare_result)
+                        except:
+                            compare_result = {"is_similar": False}
+                    elif isinstance(compare_result, list) and len(compare_result) > 0:
+                        compare_result = compare_result[0] if isinstance(compare_result[0], dict) else {"is_similar": False}
+                    elif not isinstance(compare_result, dict):
+                        compare_result = {"is_similar": False}
+                    
+                    if compare_result.get("is_similar", False):
+                        print(f"✅ 语法规则 '{result.grammar_rule_name}' 与现有规则 '{existing_rule}' 相似")
+                        has_similar = True
+                        existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
+                        
+                        # 为现有语法规则添加新例句
+                        current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
+                        if current_sentence:
+                            # 验证句子完整性
+                            self._ensure_sentence_integrity(current_sentence, "现有语法 Example 调用")
+                            print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{existing_rule}'")
+                            example_explanation = self.grammar_example_explanation_assistant.run(
+                                sentence=current_sentence,
+                                grammar=existing_rule
+                            )
+                            print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
+                            
+                            try:
+                                print(f"🔍 [DEBUG] 尝试添加现有语法的grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={existing_rule_id}")
+                                self.data_controller.add_grammar_example(
+                                    rule_id=existing_rule_id,
+                                    text_id=current_sentence.text_id,
+                                    sentence_id=current_sentence.sentence_id,
+                                    explanation_context=example_explanation
+                                )
+                                print(f"✅ [DEBUG] 现有语法的grammar_example添加成功")
+                            except ValueError as e:
+                                print(f"⚠️ [DEBUG] 跳过添加现有语法的grammar_example，因为: {e}")
+                            except Exception as e:
+                                print(f"❌ [DEBUG] 添加现有语法的grammar_example时发生错误: {e}")
+                        break
+                
+                # 如果没有相似的，添加为新语法
+                if not has_similar:
+                    print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加为新规则")
+                    new_grammar_summaries.append(result)
+        
+        # 将新语法添加到 grammar_to_add
         for grammar in new_grammar_summaries:
+            print(f"🆕 添加新语法: {grammar.grammar_rule_name}")
             self.session_state.add_grammar_to_add(
-                #GrammarToAdd(
-                    rule_name=grammar.grammar_rule_name,
-                    rule_explanation=grammar.grammar_rule_summary
-                #)
+                rule_name=grammar.grammar_rule_name,
+                rule_explanation=grammar.grammar_rule_summary
             )
 
         print("grammar to add：", self.session_state.grammar_to_add)
@@ -381,12 +422,15 @@ class MainAssistant:
                         
                         # 检查text_id是否存在，如果不存在则跳过添加example
                         try:
-                            print(f"🔍 [DEBUG] 尝试添加现有词汇的vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={existing_vocab_id}")
+                            # 🔧 获取 token_indices（从 session_state 中的 selected_token）
+                            token_indices = self._get_token_indices_from_selection(current_sentence)
+                            print(f"🔍 [DEBUG] 尝试添加现有词汇的vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={existing_vocab_id}, token_indices={token_indices}")
                             self.data_controller.add_vocab_example(
                                 vocab_id=existing_vocab_id,
                                 text_id=current_sentence.text_id,
                                 sentence_id=current_sentence.sentence_id,
-                                context_explanation=example_explanation
+                                context_explanation=example_explanation,
+                                token_indices=token_indices
                             )
                             print(f"✅ [DEBUG] 现有词汇的vocab_example添加成功")
                         except ValueError as e:
@@ -413,25 +457,47 @@ class MainAssistant:
         将新语法和词汇添加到数据管理器中。
         """
         if self.session_state.grammar_to_add:
+            print(f"🔍 [DEBUG] 处理grammar_to_add: {len(self.session_state.grammar_to_add)} 个语法规则")
             for grammar in self.session_state.grammar_to_add:
+                print(f"🔍 [DEBUG] 处理新语法: {grammar.rule_name}")
+                
+                # 添加新语法规则
                 self.data_controller.add_new_grammar_rule(
                     rule_name=grammar.rule_name,
                     rule_explanation=grammar.rule_explanation
                 )
-            current_sentence = self.session_state.current_sentence
-            if current_sentence:
-                # 验证句子完整性
-                self._ensure_sentence_integrity(current_sentence, "新语法 Explanation 调用")
-                example_explanation = self.grammar_example_explanation_assistant.run(
-                                sentence=current_sentence,
-                                grammar=grammar.rule_name)
-                            
-                self.data_controller.add_grammar_example(
-                    rule_id=self.data_controller.grammar_manager.get_id_by_rule_name(grammar.rule_name),
-                    text_id=current_sentence.text_id,
-                    sentence_id=current_sentence.sentence_id,
-                    explanation_context=example_explanation
-                )
+                print(f"✅ [DEBUG] 新语法规则已添加")
+                
+                # 为这个语法规则生成例句
+                current_sentence = self.session_state.current_sentence
+                if current_sentence:
+                    # 验证句子完整性
+                    self._ensure_sentence_integrity(current_sentence, "新语法 Explanation 调用")
+                    print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{grammar.rule_name}'")
+                    example_explanation = self.grammar_example_explanation_assistant.run(
+                        sentence=current_sentence,
+                        grammar=grammar.rule_name
+                    )
+                    print(f"🔍 [DEBUG] grammar_example_explanation结果: {example_explanation}")
+                    
+                    # 添加语法例句
+                    try:
+                        grammar_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(grammar.rule_name)
+                        print(f"🔍 [DEBUG] 尝试添加grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={grammar_rule_id}")
+                        self.data_controller.add_grammar_example(
+                            rule_id=grammar_rule_id,
+                            text_id=current_sentence.text_id,
+                            sentence_id=current_sentence.sentence_id,
+                            explanation_context=example_explanation
+                        )
+                        print(f"✅ [DEBUG] grammar_example添加成功")
+                    except ValueError as e:
+                        print(f"⚠️ [DEBUG] 跳过添加grammar_example，因为: {e}")
+                        print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                    except Exception as e:
+                        print(f"❌ [DEBUG] 添加grammar_example时发生错误: {e}")
+        else:
+            print("🔍 [DEBUG] grammar_to_add为空，跳过新语法处理")
 
         if self.session_state.vocab_to_add:
             print(f"🔍 [DEBUG] 处理vocab_to_add: {len(self.session_state.vocab_to_add)} 个词汇")
@@ -477,12 +543,15 @@ class MainAssistant:
                     # 检查text_id是否存在，如果不存在则跳过添加example
                     try:
                         vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab)
-                        print(f"🔍 [DEBUG] 尝试添加vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={vocab_id}")
+                        # 🔧 获取 token_indices（从 session_state 中的 selected_token）
+                        token_indices = self._get_token_indices_from_selection(current_sentence)
+                        print(f"🔍 [DEBUG] 尝试添加vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={vocab_id}, token_indices={token_indices}")
                         self.data_controller.add_vocab_example(
                             vocab_id=vocab_id,
                             text_id=current_sentence.text_id,
                             sentence_id=current_sentence.sentence_id,
-                            context_explanation=example_explanation
+                            context_explanation=example_explanation,
+                            token_indices=token_indices
                         )
                         print(f"✅ [DEBUG] vocab_example添加成功")
                     except ValueError as e:
@@ -493,6 +562,63 @@ class MainAssistant:
         else:
             print("🔍 [DEBUG] vocab_to_add为空，跳过新词汇处理")
 
+    def _get_token_indices_from_selection(self, sentence: SentenceType) -> list:
+        """
+        从 session_state 中的 selected_token 提取 sentence_token_id 列表
+        
+        Args:
+            sentence: 当前句子对象
+            
+        Returns:
+            list[int]: sentence_token_id 列表（如 [3, 4, 5]）
+        """
+        token_indices = []
+        
+        # 从 session_state 获取选中的 token
+        selected_token = self.session_state.current_selected_token
+        if not selected_token:
+            print("⚠️ [TokenIndices] 没有选中的 token，返回空列表")
+            return []
+
+        # 1) 优先使用 session 中已存在的 token_indices（来自前端/MockServer），且不是整句 [-1]
+        if hasattr(selected_token, 'token_indices') and isinstance(selected_token.token_indices, list):
+            incoming_indices = [int(i) for i in selected_token.token_indices if isinstance(i, (int, float, str)) and str(i).lstrip('-').isdigit()]
+            if incoming_indices and not (len(incoming_indices) == 1 and incoming_indices[0] == -1):
+                print(f"✅ [TokenIndices] 使用 session_state.token_indices: {incoming_indices}")
+                return incoming_indices
+        
+        # 检查句子是否有 tokens 列表（新数据结构）
+        if not hasattr(sentence, 'tokens') or not sentence.tokens:
+            print("⚠️ [TokenIndices] 句子没有 tokens 列表，返回空列表")
+            return []
+        
+        # 获取选中的文本
+        selected_text = selected_token.token_text
+        print(f"🔍 [TokenIndices] 查找选中文本: '{selected_text}'")
+        
+        # 辅助函数：去除标点符号
+        import string
+        def strip_punctuation(text: str) -> str:
+            return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+        
+        selected_clean = strip_punctuation(selected_text)
+        
+        # 2) 回退：根据选中文本在句子的 tokens 中查找匹配的 token
+        for token in sentence.tokens:
+            if token.token_type == 'text':  # 只考虑文本 token
+                token_clean = strip_punctuation(token.token_body)
+                if token_clean.lower() == selected_clean.lower():
+                    if token.sentence_token_id is not None:
+                        token_indices.append(token.sentence_token_id)
+                        print(f"  ✅ 找到匹配 token: '{token.token_body}' → sentence_token_id={token.sentence_token_id}")
+        
+        if not token_indices:
+            print(f"⚠️ [TokenIndices] 未找到匹配的 token，返回空列表")
+        else:
+            print(f"✅ [TokenIndices] 提取到 token_indices: {token_indices}")
+        
+        return token_indices
+    
     def _log_sentence_capabilities(self, sentence: SentenceType):
         """只读：打印句子层能力（tokens/难度等），不影响任何分支"""
         try:

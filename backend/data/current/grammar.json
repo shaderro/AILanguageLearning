@@ -1,98 +1,62 @@
 [
   {
     "rule_id": 1,
-    "rule_name": "德语定冠词变化",
-    "rule_summary": "德语定冠词根据名词的性、数、格发生变化。阳性名词用der，阴性名词用die，中性名词用das。复数形式统一用die。",
+    "rule_name": "关系从句",
+    "rule_summary": "关系从句用于修饰名词，如'was sie wollten'修饰'alles'，表示'他们想要的一切'",
     "examples": [
-      "Der Stein der Weisen ist ein magischer Gegenstand.",
-      "Die Frau ist sehr intelligent.",
-      "Das Kind spielt im Garten."
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 7,
+        "explanation_context": "{\"explanation\": \"在这个句子中，关系从句是“was sie wollten”，它作为“alles”的修饰语，具体说明“Dursleys 拥有他们想要的一切”。关系从句通过“was”引导，连接主句和从句，使句子更完整地表达意思。\"}"
+      }
     ],
-    "source": "auto",
-    "is_starred": true
+    "source": "qa",
+    "is_starred": false
   },
   {
     "rule_id": 2,
-    "rule_name": "德语动词变位",
-    "rule_summary": "德语动词根据人称、数、时态进行变位。规则动词在现在时中，第一人称单数加-e，第二人称单数加-st，第三人称单数加-t。",
+    "rule_name": "主语从句",
+    "rule_summary": "主语从句作为句子的主语，如'dass es jemand aufdecken könnte'作'war'的主语，表示'有人可能揭露它'",
     "examples": [
-      "Ich bin ein Schüler.",
-      "Du bist sehr klug.",
-      "Er ist mein Freund."
+      {
+        "rule_id": 2,
+        "text_id": 1,
+        "sentence_id": 7,
+        "explanation_context": "{\"explanation\": \"在这句话中，'dass es jemand aufdecken könnte' 是一个主语从句，它作为整个句子的主语，意思是‘有人可能会揭露它’，这个从句描述了 Dursleys 最大的担忧是什么。\"}"
+      }
     ],
-    "source": "auto",
+    "source": "qa",
     "is_starred": false
   },
   {
     "rule_id": 3,
-    "rule_name": "德语形容词词尾变化",
-    "rule_summary": "德语形容词在名词前需要根据名词的性、数、格以及前面是否有定冠词、不定冠词或无数词来变化词尾。",
+    "rule_name": "转折连词doch",
+    "rule_summary": "doch用于连接两个主句，表示转折关系，相当于'但是'或'然而'",
     "examples": [
-      "Ein großer Mann kommt.",
-      "Die schöne Frau lächelt.",
-      "Ein kleines Kind spielt."
+      {
+        "rule_id": 3,
+        "text_id": 1,
+        "sentence_id": 7,
+        "explanation_context": "{\"explanation\": \"在这句话中，'doch' 连接了两个对比的句子：前半句说德思礼夫妇拥有他们想要的一切，后半句说他们有一个秘密。'doch' 强调了这种转折，表示尽管他们物质上很富有，但内心却有一个担忧，突出了前后情况的矛盾。\"}"
+      }
     ],
-    "source": "manual",
-    "is_starred": true
+    "source": "qa",
+    "is_starred": false
   },
   {
     "rule_id": 4,
-    "rule_name": "德语介词搭配",
-    "rule_summary": "德语介词与名词搭配时，名词需要根据介词的语法要求变化格。有些介词要求第三格，有些要求第四格，有些两者皆可。",
+    "rule_name": "德语副词构词法",
+    "rule_summary": "dafür 由 da- 和 für 组成，da- 指代前文内容，für 表示‘为了、代替’，整体意为‘作为补偿/替代’，用于连接对比情况",
     "examples": [
-      "Ich gehe in die Schule.",
-      "Das Buch liegt auf dem Tisch.",
-      "Er kommt aus Deutschland."
+      {
+        "rule_id": 4,
+        "text_id": 1,
+        "sentence_id": 4,
+        "explanation_context": "{\"explanation\": \"在这句话中，'dafür' 是一个由介词 'für' 和代副词 'da-' 组合而成的副词，用来替代前文提到的 'fast keinen Hals'（几乎没有脖子），并引出转折后的内容 'einen sehr großen Schnurrbart'（一个非常大的胡子），表达'取而代之'的意思。\"}"
+      }
     ],
     "source": "qa",
-    "is_starred": false
-  },
-  {
-    "rule_id": 5,
-    "rule_name": "德语从句语序",
-    "rule_summary": "德语从句中，动词通常放在句末。主句和从句之间用逗号分隔，从句的语序与主句不同。",
-    "examples": [
-      "Ich weiß, dass er kommt.",
-      "Wenn es regnet, bleibe ich zu Hause.",
-      "Obwohl es spät ist, arbeitet er noch."
-    ],
-    "source": "auto",
-    "is_starred": true
-  },
-  {
-    "rule_id": 6,
-    "rule_name": "德语名词复数形式",
-    "rule_summary": "德语名词复数形式有多种变化规则：有些加-en，有些加-er，有些加-e，有些不变，还有些有特殊变化。需要记忆每个名词的复数形式。",
-    "examples": [
-      "Der Mann - die Männer",
-      "Die Frau - die Frauen",
-      "Das Kind - die Kinder"
-    ],
-    "source": "manual",
-    "is_starred": false
-  },
-  {
-    "rule_id": 7,
-    "rule_name": "德语情态动词",
-    "rule_summary": "德语情态动词（können, müssen, sollen, wollen, dürfen, mögen）在现在时中有特殊的变位形式，并且后面跟的动词用原形。",
-    "examples": [
-      "Ich kann Deutsch sprechen.",
-      "Du musst fleißig lernen.",
-      "Er will nach Hause gehen."
-    ],
-    "source": "qa",
-    "is_starred": true
-  },
-  {
-    "rule_id": 8,
-    "rule_name": "德语可分动词",
-    "rule_summary": "德语可分动词由前缀和动词根组成，在现在时和过去时中，前缀与动词根分离，前缀放在句末。",
-    "examples": [
-      "Ich komme morgen an.",
-      "Er geht jeden Tag aus.",
-      "Sie steht früh auf."
-    ],
-    "source": "auto",
     "is_starred": false
   }
 ]

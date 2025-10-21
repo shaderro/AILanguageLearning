@@ -1,5 +1,6 @@
 from typing import Optional, Literal
 from dataclasses import dataclass, field
+from datetime import datetime
 
 
 @dataclass(frozen=True)
@@ -71,7 +72,9 @@ class AskedToken:
     sentence_id: int
     sentence_token_id: Optional[int] = None  # 改为可选：当 type='sentence' 时可以为空
     type: Literal["token", "sentence"] = "token"  # 新增：标记类型，默认为 token
-
+    # 约定：当 type='token' 时填写 vocab_id；当 type='sentence' 时填写 grammar_id；其余保持 None
+    vocab_id: Optional[int] = None
+    grammar_id: Optional[int] = None
 
 @dataclass
 class User:

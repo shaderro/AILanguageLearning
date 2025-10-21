@@ -2,67 +2,28 @@
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 1,
-    "sentence_token_id": 1
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 1,
-    "sentence_token_id": 3
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 2,
-    "sentence_token_id": 1
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
     "sentence_id": 3,
-    "sentence_token_id": 1
+    "sentence_token_id": 22,
+    "type": "token",
+    "vocab_id": null,
+    "grammar_id": null
   },
   {
     "user_id": "default_user",
     "text_id": 1,
     "sentence_id": 51,
-    "sentence_token_id": 49
+    "sentence_token_id": 13,
+    "type": "token",
+    "vocab_id": null,
+    "grammar_id": null
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 14,
-    "sentence_token_id": 39
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 1,
-    "sentence_token_id": 11
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 5,
-    "sentence_token_id": 15
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 7,
-    "sentence_token_id": 38
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 9,
-    "sentence_token_id": 32
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 2,
-    "sentence_token_id": 39
+    "sentence_id": 4,
+    "sentence_token_id": 22,
+    "type": "token",
+    "vocab_id": null,
+    "grammar_id": null
   }
 ]

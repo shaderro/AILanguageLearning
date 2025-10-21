@@ -180,8 +180,8 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
             const token = currentSelectionContext.tokens[0]
             updatePayload.token = {
               token_body: token.token_body,
-              sentence_token_id: token.sentence_token_id,
-              global_token_id: token.global_token_id
+              sentence_token_id: token.sentence_token_id
+              // 🔧 移除 global_token_id：后端只使用 sentence_token_id
             }
           }
         }
@@ -218,6 +218,17 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         console.log('✅ [ChatView] 进入标记逻辑')
         console.log('🏷️ [ChatView] Marking selected tokens as asked...')
         
+        // 从响应中提取 vocab_id（如果有新词汇）
+        const vocabIdMap = new Map()
+        if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
+          response.vocab_to_add.forEach(v => {
+            if (v.vocab && v.vocab_id) {
+              vocabIdMap.set(v.vocab.toLowerCase(), v.vocab_id)
+            }
+          })
+          console.log('📝 [ChatView] Vocab ID map:', Object.fromEntries(vocabIdMap))
+        }
+        
         // 标记所有选中的tokens为已提问
         const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
           // 使用fallback确保字段存在
@@ -225,16 +236,21 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           const sentenceId = currentSelectionContext.sentence?.sentence_id
           const textId = currentSelectionContext.sentence?.text_id ?? articleId  // ← 使用articleId作为fallback
           
+          // 尝试查找 vocab_id
+          const tokenBody = token.token_body?.toLowerCase() || ''
+          const vocabId = vocabIdMap.get(tokenBody) || null
+          
           console.log(`🔍 [DEBUG] Token ${tokenIdx}:`, {
             token_body: token.token_body,
             textId,
             sentenceId,
-            sentenceTokenId
+            sentenceTokenId,
+            vocabId
           })
           
           if (sentenceId && textId && sentenceTokenId != null) {
-            console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId})`)
-            return markAsAsked(textId, sentenceId, sentenceTokenId)
+            console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId}) with vocabId=${vocabId}`)
+            return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
           } else {
             console.error(`❌ [ChatView] 缺少必需字段:`, { sentenceId, textId, sentenceTokenId })
             return Promise.resolve(false)
@@ -268,8 +284,9 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('  - Update payload:', updatePayload)
       console.log('  - Update response:', updateResponse)
       
-      if (response.success && response.data) {
-        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response.data
+      // 响应拦截器已经提取了 innerData，所以 response 直接就是 data
+      if (response && response.ai_response !== undefined) {
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response
         
         // 详细打印session state中的vocab/grammar/example状态
         console.log('\n' + '='.repeat(80))
@@ -382,11 +399,12 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           }, idx * 600)
         })
       } else {
-        console.error('❌ [Frontend] Chat request failed:', response.error)
+        console.error('❌ [Frontend] Chat request failed or returned empty response')
+        console.error('  Response:', response)
         // 显示错误消息
         const errorMessage = {
           id: Date.now() + 1,
-          text: `抱歉，处理您的问题时出现错误: ${response.error}`,
+          text: `抱歉，处理您的问题时出现错误或返回了空响应`,
           isUser: false,
           timestamp: new Date()
         }
@@ -493,8 +511,8 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
             const token = currentSelectionContext.tokens[0]
             updatePayload.token = {
               token_body: token.token_body,
-              sentence_token_id: token.sentence_token_id,
-              global_token_id: token.global_token_id
+              sentence_token_id: token.sentence_token_id
+              // 🔧 移除 global_token_id：后端只使用 sentence_token_id
             }
           }
         }
@@ -529,6 +547,17 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         console.log('✅ [ChatView] 进入标记逻辑（建议问题）')
         console.log('🏷️ [ChatView] Marking selected tokens as asked (suggested question)...')
         
+        // 从响应中提取 vocab_id（如果有新词汇）
+        const vocabIdMap = new Map()
+        if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
+          response.vocab_to_add.forEach(v => {
+            if (v.vocab && v.vocab_id) {
+              vocabIdMap.set(v.vocab.toLowerCase(), v.vocab_id)
+            }
+          })
+          console.log('📝 [ChatView] Vocab ID map (建议问题):', Object.fromEntries(vocabIdMap))
+        }
+        
         // 标记所有选中的tokens为已提问
         const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
           // 使用fallback确保字段存在
@@ -536,16 +565,21 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           const sentenceId = currentSelectionContext.sentence?.sentence_id
           const textId = currentSelectionContext.sentence?.text_id ?? articleId  // ← 使用articleId作为fallback
           
+          // 尝试查找 vocab_id
+          const tokenBody = token.token_body?.toLowerCase() || ''
+          const vocabId = vocabIdMap.get(tokenBody) || null
+          
           console.log(`🔍 [DEBUG] Token ${tokenIdx} (建议问题):`, {
             token_body: token.token_body,
             textId,
             sentenceId,
-            sentenceTokenId
+            sentenceTokenId,
+            vocabId
           })
           
           if (sentenceId && textId && sentenceTokenId != null) {
-            console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId})`)
-            return markAsAsked(textId, sentenceId, sentenceTokenId)
+            console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId}) with vocabId=${vocabId}`)
+            return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
           } else {
             console.error(`❌ [ChatView] 缺少必需字段（建议问题）:`, { sentenceId, textId, sentenceTokenId })
             return Promise.resolve(false)
@@ -578,8 +612,9 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       console.log('  - Quoted text:', currentQuotedText || 'None')
       console.log('  - Update payload:', updatePayload)
       
-      if (response.success && response.data) {
-        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response.data
+      // 响应拦截器已经提取了 innerData，所以 response 直接就是 data
+      if (response && response.ai_response !== undefined) {
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response
         
         // 详细打印session state中的vocab/grammar/example状态
         console.log('\n' + '='.repeat(80))
@@ -692,11 +727,12 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           }, idx * 600)
         })
       } else {
-        console.error('❌ [Frontend] Chat request failed:', response.error)
+        console.error('❌ [Frontend] Chat request failed or returned empty response')
+        console.error('  Response:', response)
         // 显示错误消息
         const errorMessage = {
           id: Date.now() + 1,
-          text: `抱歉，处理您的问题时出现错误: ${response.error}`,
+          text: `抱歉，处理您的问题时出现错误或返回了空响应`,
           isUser: false,
           timestamp: new Date()
         }

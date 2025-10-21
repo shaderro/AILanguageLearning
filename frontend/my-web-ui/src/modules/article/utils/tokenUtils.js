@@ -19,12 +19,18 @@ export const getTokenKey = (sentIdx, token, tokenIdx) => {
 
 /**
  * Get unique identifier for a token object
+ * 使用 句子维度复合键：`${sentenceIdx}-${sentence_token_id}`
  */
-export const getTokenId = (token) => {
+export const getTokenId = (token, sentenceIdx) => {
   if (!token || typeof token !== 'object') return undefined
-  const gid = token?.global_token_id
   const sid = token?.sentence_token_id
-  return (gid != null && sid != null) ? `${gid}-${sid}` : undefined
+  if (sid == null) return undefined
+  // 如果提供了句子索引，则返回复合键，避免跨句冲突
+  if (sentenceIdx != null) return `${sentenceIdx}-${sid}`
+  // 向后兼容（不推荐）：仅返回 sentence_token_id
+  const fallback = String(sid)
+  console.debug('[tokenUtils.getTokenId] Missing sentenceIdx, fallback to sid only:', fallback)
+  return fallback
 }
 
 /**

@@ -87,6 +87,7 @@ class SessionState:
         self.vocab_to_add.append(VocabToAdd(vocab=vocab))
 
     def reset(self):
+        """完全重置所有状态（上下文 + 处理结果）"""
         self.current_sentence = None
         self.current_selected_token = None
         self.current_input = None
@@ -95,6 +96,15 @@ class SessionState:
         self.summarized_results.clear()
         self.grammar_to_add.clear()
         self.vocab_to_add.clear()
+    
+    def reset_processing_results(self):
+        """只重置处理结果，保留上下文（避免重复设置）"""
+        self.current_response = None
+        self.check_relevant_decision = None
+        self.summarized_results.clear()
+        self.grammar_to_add.clear()
+        self.vocab_to_add.clear()
+        # 保留：current_sentence、current_selected_token、current_input
 
     def get_current_sentence_info(self) -> dict:
         """获取当前句子的详细信息，适配新旧数据结构"""

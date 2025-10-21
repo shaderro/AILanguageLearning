@@ -134,17 +134,14 @@ class DataController:
     def _save_data_to_new_format(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """保存数据为新结构格式"""
         try:
-            # 生成新格式的文件路径
-            new_grammar_path = grammar_path.replace('.json', '_new_new.json')
-            new_vocab_path = vocab_path.replace('.json', '_new_new.json')
-            new_text_path = text_path.replace('.json', '_new_new.json')
+            # 🔧 修改：直接保存到原文件（不创建 _new_new.json 备份）
+            # 因为加载器已经支持数组格式和Bundle格式，可以安全覆盖
+            print(f"🔄 保存新结构数据到原文件: {grammar_path}, {vocab_path}, {text_path}")
             
-            print(f"🔄 保存新结构数据到: {new_grammar_path}, {new_vocab_path}, {new_text_path}")
-            
-            # 保存新结构数据
-            self.grammar_manager.save_to_new_format(new_grammar_path)
-            self.vocab_manager.save_to_new_format(new_vocab_path)
-            self.text_manager.save_to_new_format(new_text_path)
+            # 保存新结构数据到原文件
+            self.grammar_manager.save_to_new_format(grammar_path)
+            self.vocab_manager.save_to_new_format(vocab_path)
+            self.text_manager.save_to_new_format(text_path)
             
             # 对话记录和历史仍使用旧格式（因为结构没有变化）
             self.dialogue_record.save_all_to_file(dialogue_record_path)
@@ -187,11 +184,18 @@ class DataController:
         """
         self.grammar_manager.add_grammar_example(self.text_manager, rule_id, text_id, sentence_id, explanation_context)
 
-    def add_vocab_example(self, vocab_id: int, text_id: int, sentence_id: int, context_explanation: str):
+    def add_vocab_example(self, vocab_id: int, text_id: int, sentence_id: int, context_explanation: str, token_indices: list = None):
         """
         Add a vocabulary example to the specified vocab and sentence.
+        
+        Args:
+            vocab_id: 词汇ID
+            text_id: 文章ID
+            sentence_id: 句子ID
+            context_explanation: 上下文解释
+            token_indices: Token索引列表（sentence_token_id）
         """
-        self.vocab_manager.add_vocab_example(self.text_manager, vocab_id, text_id, sentence_id, context_explanation)
+        self.vocab_manager.add_vocab_example(self.text_manager, vocab_id, text_id, sentence_id, context_explanation, token_indices)
 
     def get_grammar_examples_by_rule_id(self, rule_id: int) -> List[GrammarExample]:
         """

@@ -3,73 +3,65 @@
     "vocab_id": 1,
     "vocab_body": "challenging",
     "explanation": "形容词，表示具有挑战性的、困难的。常用于描述需要努力、技能或决心才能完成的任务或活动。",
+    "source": "auto",
+    "is_starred": true,
     "examples": [
       {
         "vocab_id": 1,
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'challenging' 指的是学习一门新语言可能会遇到困难，需要付出努力和耐心。\"}\n```",
-        "token_indices": [
-          11
-        ]
+        "token_indices": []
       }
-    ],
-    "source": "auto",
-    "is_starred": true
+    ]
   },
   {
     "vocab_id": 2,
     "vocab_body": "rewarding",
     "explanation": "形容词，表示有回报的、值得的、令人满意的。用于描述能带来满足感、成就感或好处的事物或经历。",
+    "source": "auto",
+    "is_starred": true,
     "examples": [
       {
         "vocab_id": 2,
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "```json\n{\"explanation\": \"在这句话中，'rewarding' 的意思是学习新语言虽然具有挑战性，但最终会带来满足感和好处，比如掌握一门新技能、能够与更多人交流等。\"}\n```",
-        "token_indices": [
-          15
-        ]
+        "token_indices": []
       }
-    ],
-    "source": "auto",
-    "is_starred": true
+    ]
   },
   {
     "vocab_id": 3,
     "vocab_body": "component",
     "explanation": "名词，表示组成部分、要素、组件。指构成整体系统的单个部分或元素，每个部分都有其特定的功能和作用。",
+    "source": "auto",
+    "is_starred": false,
     "examples": [
       {
         "vocab_id": 3,
         "text_id": 2,
         "sentence_id": 1,
         "context_explanation": "```json\n{\"explanation\": \"在这句话中，'component'指的是语言学习中必不可少的部分或要素，即语法和词汇是语言学习的重要组成部分。\"}\n```",
-        "token_indices": [
-          11
-        ]
+        "token_indices": []
       }
-    ],
-    "source": "auto",
-    "is_starred": false
+    ]
   },
   {
     "vocab_id": 4,
     "vocab_body": "revolutionized",
     "explanation": "动词过去式，表示彻底改变、革命性地改变。指对某个领域或系统带来根本性的、巨大的变化，通常指技术或方法的重大革新。",
+    "source": "auto",
+    "is_starred": false,
     "examples": [
       {
         "vocab_id": 4,
         "text_id": 3,
         "sentence_id": 1,
         "context_explanation": "```json\n{\"explanation\": \"在这句话中，'revolutionized' 的意思是互联网彻底改变了我们学习语言的方式，带来了巨大的、根本性的变化。\"}\n```",
-        "token_indices": [
-          7
-        ]
+        "token_indices": []
       }
-    ],
-    "source": "auto",
-    "is_starred": false
+    ]
   },
   {
     "vocab_id": 5,
@@ -83,9 +75,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "(mock) 上下文解释：",
-        "token_indices": [
-          39
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -101,9 +91,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "(mock) 上下文解释：",
-        "token_indices": [
-          32
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -119,9 +107,7 @@
         "text_id": 1,
         "sentence_id": 9,
         "context_explanation": "在这句话中，'etlichen' 的意思是 '许多的' 或 '好几个的'，它用来强调 'Jahren'（年），表示波特夫人和德思礼夫人已经很多年没有见面了。整个短语 'seit etlichen Jahren' 翻译为 '自从好几年以来'，突出了她们疏远的时间很长。",
-        "token_indices": [
-          32
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -137,9 +123,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "(mock) 上下文解释：",
-        "token_indices": [
-          13
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -155,9 +139,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "(mock) 上下文解释：",
-        "token_indices": [
-          32
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -173,9 +155,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这句话中，“herstellte” 是动词“herstellen”的过去式，意思是“制造”或“生产”，表示过去某个时间点完成了制造的动作。",
-        "token_indices": [
-          22
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -191,9 +171,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这句话中，'besaßen' 是动词 'besitzen'（拥有）的过去式形式，表示句子主语在过去的某个时间点拥有某物或某种特质。",
-        "token_indices": [
-          5
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -209,9 +187,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这个句子中，Sinnestäuschung 指的是感官上的错觉或幻觉，即人的感官（如视觉或听觉）感知到的事物与实际情况不符，例如看到或听到不存在的东西。",
-        "token_indices": [
-          7
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -227,9 +203,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这个句子中，'darauf' 指代前面提到的内容，意思是'在那上面'或'关于那件事'，用于连接上下文，避免重复。",
-        "token_indices": [
-          21
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -245,9 +219,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这个句子中，'sogar' 用于强调程度，表示某事比预期的更极端或更令人惊讶，相当于中文的“甚至”。",
-        "token_indices": [
-          41
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -263,9 +235,14 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这句话中，'solchem' 是一个指示代词，指代前文提到的某个特定事物或情况，意思是'这样的'或'那种的'，用于强调或具体化所指对象。",
-        "token_indices": [
-          39
-        ]
+        "token_indices": []
+      },
+      {
+        "vocab_id": 15,
+        "text_id": 1,
+        "sentence_id": 2,
+        "context_explanation": "{\"explanation\": \"在这句话中，“solchem”指的是前面提到的“eine merkwürdige und geheimnisvolle Geschichte”（一个奇怪而神秘的故事）。它在这里表示“这种”或“这类”，具体指代那种他们不想与之有任何关系的荒唐事。\"}",
+        "token_indices": []
       }
     ]
   },
@@ -281,9 +258,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这个句子中，“wussten” 是德语动词“wissen”（知道）的过去时复数形式，表示“他们知道”或“他们当时知道”。它用来描述过去某个时间点多人已经了解或掌握的信息。",
-        "token_indices": [
-          5
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -299,9 +274,7 @@
         "text_id": 1,
         "sentence_id": 1,
         "context_explanation": "在这个句子中，“schreienden” 是形容词“schreiend”（意为“尖叫的”或“刺耳的”）的变格形式，用来描述某个名词的特征。由于句子不完整，无法确定它具体修饰哪个词，但它的作用是强调所描述事物的强烈或引人注目的特性。",
-        "token_indices": [
-          59
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -317,9 +290,7 @@
         "text_id": 1,
         "sentence_id": 3,
         "context_explanation": "在这个句子中，'Bohrmaschinen' 指的是 Mr Dursley 的公司 'Grunnings' 所生产的产品。具体来说，'die Bohrmaschinen herstellte' 意思是 '生产钻机'，所以它描述了这家公司的主要业务是制造钻机。",
-        "token_indices": [
-          20
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -335,9 +306,7 @@
         "text_id": 1,
         "sentence_id": 10,
         "context_explanation": "{\"explanation\": \"在这个句子中，'undursleyhaft' 描述了德思礼夫人（Mrs Dursley）的姐姐和姐夫（'diese und deren Nichtsnutz von einem Mann'，意思是'她和她的那个废物丈夫'）的行为或特征，表示他们与德思礼家的典型方式或标准完全相反。德思礼家可能以保守、正常或可预测著称，而'undursleyhaft'在这里强调他们'如此不像",
-        "token_indices": [
-          43
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -353,9 +322,7 @@
         "text_id": 1,
         "sentence_id": 11,
         "context_explanation": "在这句话中，'schauderten' 表示德思礼夫妇一想到邻居们可能会说什么就感到害怕或颤抖。具体来说，'beim Gedanken daran, was die Nachbarn sagen würden'（一想到邻居们会说什么）描述了让他们害怕的原因，所以 'schauderten' 在这里表达了他们因担忧而产生的身体或情绪反应。",
-        "token_indices": [
-          5
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -371,9 +338,7 @@
         "text_id": 1,
         "sentence_id": 6,
         "context_explanation": "在这句话中，'prächtigeren' 的意思是 '更出色的' 或 '更棒的'，用来形容 Dursleys 认为他们的儿子 Dudley 是世界上最优秀的男孩。句子 'in ihren Augen gab es nirgendwo einen prächtigeren Jungen' 翻译为 '在他们眼中，没有比这更出色的男孩了'，强调他们非常自豪和偏爱 Dudley。",
-        "token_indices": [
-          33
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -389,9 +354,7 @@
         "text_id": 1,
         "sentence_id": 6,
         "context_explanation": "在这里，'nirgendwo' 的意思是“在任何地方都不”。它强调了德思礼夫妇认为他们的儿子达力是全世界最棒的男孩，'in ihren Augen gab es nirgendwo einen prächtigeren Jungen' 翻译为“在他们眼中，没有任何地方有比他更出色的男孩了”，突出了他们极端的自豪感。",
-        "token_indices": [
-          29
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -407,9 +370,7 @@
         "text_id": 1,
         "sentence_id": 15,
         "context_explanation": "在这个句子中，'summte' 描述的是 Mr Dursley 在自言自语或低声哼唱的行为，结合 'vor sich hin'（对自己）表明他是在私下里发出声音，可能表示他心不在焉或沉浸在自己的思绪中。",
-        "token_indices": [
-          5
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -425,9 +386,7 @@
         "text_id": 1,
         "sentence_id": 7,
         "context_explanation": "在这句话中，'aufdecken' 的意思是'揭露'或'发现'，指的是有人可能会发现 Dursleys 家的秘密（'ein Geheimnis'），这让他们非常担心（'ihre größte Sorge'）。",
-        "token_indices": [
-          38
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -443,9 +402,7 @@
         "text_id": 1,
         "sentence_id": 16,
         "context_explanation": "在这个句子中，\"sah\" 是动词 \"sehen\"（看）的过去时形式，意思是\"看见\"。它描述了句子中的人物（\"Keiner von ihnen\"，意思是\"他们中没有一个人\"）的动作：没有人看见一只巨大的猫头鹰从窗户飞过。",
-        "token_indices": [
-          7
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -461,9 +418,7 @@
         "text_id": 1,
         "sentence_id": 17,
         "context_explanation": "在这句话中，'griff' 是动词 'greifen' 的过去时形式，意思是 '伸手去拿' 或 '抓住'。它描述了 Mr Dursley 的动作：他伸手去拿他的公文包（'nach der Aktentasche'）。所以，这里 'griff' 表示他准备离开时拿起公文包的行为。",
-        "token_indices": [
-          7
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -479,9 +434,7 @@
         "text_id": 1,
         "sentence_id": 5,
         "context_explanation": "{\"explanation\": \"在这个句子中，'hinüberspähen' 的意思是'窥视过去'，描述德思礼夫人伸长脖子从花园篱笆上方向邻居家张望的动作。它结合了 'hinüber'（过去）和 'spähen'（窥视），强调她偷偷观察邻居的行为，与句子中 'den Hals über den Gartenzaun recken'（伸长脖子越过花园篱笆）的动作直接相关。\"",
-        "token_indices": [
-          74
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -497,9 +450,7 @@
         "text_id": 1,
         "sentence_id": 6,
         "context_explanation": "在这句话中，“namens” 的意思是“名叫”，用来介绍人物的名字。它连接了“einen kleinen Sohn”（一个小儿子）和“Dudley”（达力），表示这个儿子的名字是达力。因此，整个短语“einen kleinen Sohn namens Dudley”可以翻译为“一个名叫达力的小儿子”。",
-        "token_indices": [
-          13
-        ]
+        "token_indices": []
       }
     ]
   },
@@ -515,8 +466,110 @@
         "text_id": 1,
         "sentence_id": 14,
         "context_explanation": "在这个句子中，'aufschlugen' 表示 Dursley 夫妇睁开眼睛的动作，即他们醒来时睁开了眼睛。句子描述 'Als Mr und Mrs Dursley ... die Augen aufschlugen' 意思是 '当 Dursley 夫妇睁开眼睛时'，这标志着故事开始的那一刻。",
+        "token_indices": []
+      }
+    ]
+  },
+  {
+    "vocab_id": 30,
+    "vocab_body": "verschiedene",
+    "explanation": "{'explanation': 'verschiedene 是德语形容词，意思是“不同的”、“各种各样的”或“多个的”。它用来描述多个事物之间存在差异或多样性。这个词是形容词 verschieden 的复数形式，通常用于修饰复数名词，表示这些名词所指的人或物在种类、类型或特征上有所区别。例如，它可以用来表示不同的人、不同的物品或不同的选择。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 30,
+        "text_id": 1,
+        "sentence_id": 49,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'verschiedene' 的意思是 '不同的'，用来描述 'fünf verschiedene Leute'（五个不同的人）。它强调这些人不是同一个人，而是多个不同的个体，使句子表达出他针对了多个不同类型的人。\"}",
+        "token_indices": []
+      }
+    ]
+  },
+  {
+    "vocab_id": 31,
+    "vocab_body": "zur Schnecke machen",
+    "explanation": "{'explanation': \"zur Schnecke machen 是一个德语习语表达，意思是严厉批评、羞辱或贬低某人，使其感到难堪或失去尊严。这个表达通常用于描述在公开或私下场合中，通过言语或行为使对方感到羞愧或自卑。词性上，这是一个动词短语，由介词短语 'zur Schnecke'（字面意思是“变成蜗牛”）和动词 'machen'（意为“使成为”）组成。用法上，它常用于非正式语境，强调对某人的强烈指责或贬低，例如在争吵或批评中。注意，这个表达是比喻性的，不涉及实际的蜗牛。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 31,
+        "text_id": 1,
+        "sentence_id": 49,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'zur Schnecke machen' 是一个固定表达，意思是严厉批评或羞辱某人。句子 'Er machte fünf verschiedene Leute zur Schnecke' 翻译为 '他严厉批评了五个不同的人'。这里，它强调了他对这些人进行了公开或强烈的指责，使他们感到难堪。\"}",
+        "token_indices": []
+      }
+    ]
+  },
+  {
+    "vocab_id": 32,
+    "vocab_body": "glänzender",
+    "explanation": "{'explanation': 'glänzender 是形容词 glänzend 的比较级形式，意为“极好的、出色的、闪耀的”。它用来形容某人或某物处于非常积极、明亮或卓越的状态。在描述情绪时，表示心情非常愉快或精神焕发。词性为形容词，可修饰名词（如 Laune 情绪）。其他常见用法包括描述物理光泽（如 glänzendes Metall 闪亮的金属）或比喻性的优秀表现（如 glänzende Leistung 出色的成绩）。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 32,
+        "text_id": 1,
+        "sentence_id": 51,
+        "context_explanation": "{\"explanation\": \"在这句话中，“glänzender Laune” 意思是“心情极好”或“情绪高涨”。它描述了“他”在午休前一直处于非常愉快和积极的状态。\"}",
         "token_indices": [
-          39
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 33,
+    "vocab_body": "herstellen",
+    "explanation": "{'explanation': 'herstellen 是一个德语动词，意思是制造、生产或制作。它通常用于描述通过工业或手工过程创造产品的行为，例如制造机器、食品或其他物品。此外，herstellen 还可以表示建立或恢复某种状态，例如建立联系或恢复和平。在词性上，它是及物动词，需要与宾语一起使用，例如 etwas herstellen（制造某物）。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 33,
+        "text_id": 1,
+        "sentence_id": 3,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'herstellen' 的意思是 '制造' 或 '生产'。它描述了公司 Grunnings 的主要活动，即制造钻机（Bohrmaschinen）。所以，整句话的意思是：'Dursley 先生是一家名为 Grunnings 的公司的总监，这家公司制造钻机。'\"}",
+        "token_indices": [
+          22
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 34,
+    "vocab_body": "laune",
+    "explanation": "{'explanation': 'Laune 是一个德语阴性名词，意思是\"心情\"或\"情绪\"。它描述一个人当前的心理状态或情感倾向。常见用法包括：gute Laune（好心情）、schlechte Laune（坏心情）、bei guter Laune sein（心情很好）。这个词通常用来描述短暂的情绪状态，而不是持久的人格特质。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 34,
+        "text_id": 1,
+        "sentence_id": 51,
+        "context_explanation": "{\"explanation\": \"在这句话中，“Laune”指的是他的情绪或心情。句子说“Bis zur Mittagspause war er glänzender Laune”，意思是“直到午休前，他的心情都非常好”，这里“glänzender Laune”描述了他愉快、开朗的情绪状态。\"}",
+        "token_indices": [
+          13
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 35,
+    "vocab_body": "dafür",
+    "explanation": "{'explanation': \"dafür 是一个德语副词，主要用作连接词或替代词，表示对比或补偿关系。它有以下几个常见含义：\\n1. 表示替代或补偿：意为'为此'、'作为补偿'或'取而代之'，用于说明某事物被另一事物替代或弥补。例如，在描述一个缺点时，用 dafür 引出优点。\\n2. 表示支持或赞成：意为'为此'或'支持这个'，常用于表达对某事的同意或拥护。\\n3. 在固定表达中：如 'dafür sein' 表示'赞成某事'。\\n词性：副词。用法灵活，常连接两个对比或相关的部分，使句子逻辑更清晰。适合初学者通过上下文理解其补偿或对比功能。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 35,
+        "text_id": 1,
+        "sentence_id": 4,
+        "context_explanation": "{\"explanation\": \"在这句话中，'dafür' 表示一种补偿或替代关系，意思是 '虽然他没有脖子，但取而代之的是他有一个非常大的胡子'。它连接了 'hatte fast keinen Hals'（几乎没有脖子）和 'einen sehr großen Schnurrbart'（一个非常大的胡子），强调后者弥补了前者的不足。\"}",
+        "token_indices": [
+          22
         ]
       }
     ]

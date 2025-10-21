@@ -47,14 +47,14 @@ export function useAskedTokens(articleId, userId = 'default_user') {
   }
 
   // 标记token为已提问
-  const markAsAsked = async (textId, sentenceId, sentenceTokenId) => {
+  const markAsAsked = async (textId, sentenceId, sentenceTokenId, vocabId = null, grammarId = null) => {
     try {
-      const response = await apiService.markTokenAsked(userId, textId, sentenceId, sentenceTokenId)
+      const response = await apiService.markTokenAsked(userId, textId, sentenceId, sentenceTokenId, vocabId, grammarId)
       
       if (response.success) {
         const key = `${textId}:${sentenceId}:${sentenceTokenId}`
         setAskedTokenKeys(prev => new Set([...prev, key]))
-        console.log('✅ [AskedTokens] Token marked:', key)
+        console.log('✅ [AskedTokens] Token marked:', key, { vocabId, grammarId })
         return true
       } else {
         console.error('❌ [AskedTokens] Failed to mark token:', response.error)

@@ -1,0 +1,383 @@
+[
+  {
+    "text_id": 1,
+    "text_title": "Harry Potter und der Stein der Weisen - Kapitel 1",
+    "text_by_sentence": [
+      {
+        "text_id": 1,
+        "sentence_id": 1,
+        "sentence_body": "Mr und Mrs Dursley im Ligusterweg Nummer 4 waren stolz darauf, ganz und gar \nnormal zu sein, sehr stolz sogar.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 2,
+        "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+        "grammar_annotations": [],
+        "vocab_annotations": [
+          15
+        ]
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 3,
+        "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+        "grammar_annotations": [],
+        "vocab_annotations": [
+          33
+        ]
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 4,
+        "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+        "grammar_annotations": [
+          4
+        ],
+        "vocab_annotations": [
+          35
+        ]
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 5,
+        "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 6,
+        "sentence_body": "Die Dursleys hatten einen kleinen Sohn namens Dudley und in \nihren Augen gab es nirgendwo einen prächtigeren Jungen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 7,
+        "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+        "grammar_annotations": [
+          1,
+          2,
+          3
+        ],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 8,
+        "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 9,
+        "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 10,
+        "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 11,
+        "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 12,
+        "sentence_body": "Die Dursleys wussten, dass auch die Potters einen kleinen Sohn \nhatten, doch den hatten sie nie gesehen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 13,
+        "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 14,
+        "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 15,
+        "sentence_body": "Mr Dursley summte vor sich \nhin und suchte sich für die Arbeit seine langweiligste Krawatte aus, und Mrs \nDursley schwatzte munter vor sich hin, während sie mit dem schreienden Dudley \nrangelte und ihn in seinen Hochstuhl zwängte.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 16,
+        "sentence_body": "Keiner von ihnen sah den riesigen Waldkauz am Fenster vorbeifliegen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 17,
+        "sentence_body": "Um halb neun griff Mr Dursley nach der Aktentasche, gab seiner Frau einen \nSchmatz auf die Wange und versuchte es auch bei Dudley mit einem Abschiedskuss.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 18,
+        "sentence_body": "Der ging jedoch daneben, weil Dudley gerade einen Wutanfall hatte und die Wände \nmit seinem Haferbrei bewarf.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 19,
+        "sentence_body": "»Kleiner Schlingel«, gluckste Mr Dursley, während er \nnach draußen ging.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 20,
+        "sentence_body": "Er setzte sich in den Wagen und fuhr rückwärts die Einfahrt zu \nNummer 4 hinaus.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 21,
+        "sentence_body": "An der Straßenecke fiel ihm zum ersten Mal etwas Merkwürdiges auf – eine \nKatze, die eine Straßenkarte studierte.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 22,
+        "sentence_body": "Einen Moment war Mr Dursley nicht klar, \nwas er gesehen hatte – dann wandte er rasch den Kopf zurück, um noch einmal \nhinzuschauen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 23,
+        "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 24,
+        "sentence_body": "Woran er nur wieder gedacht hatte!",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 25,
+        "sentence_body": "Das \nmusste eine Sinnestäuschung gewesen sein.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 26,
+        "sentence_body": "Mr Dursley blinzelte und starrte die \nKatze an.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 27,
+        "sentence_body": "Die Katze starrte zurück.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 28,
+        "sentence_body": "Während Mr Dursley um die Ecke bog und die \nStraße entlangfuhr, beobachtete er die Katze im Rückspiegel.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 29,
+        "sentence_body": "Jetzt las sie das Schild \nmit dem Namen Ligusterweg – nein, sie blickte auf das Schild.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 30,
+        "sentence_body": "Katzen konnten \nweder Karten nochSchilder lesen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 31,
+        "sentence_body": "Mr Dursley gab sich einen kleinen Ruck und \nverjagte die Katze aus seinen Gedanken.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 32,
+        "sentence_body": "Während er in Richtung Stadt fuhr, hatte \ner nur noch den großen Auftrag für Bohrmaschinen im Sinn, der heute hoffentlich \neintreffen würde.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 33,
+        "sentence_body": "Doch am Stadtrand wurden die Bohrmaschinen von etwas anderem aus seinen \nGedanken verdrängt.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 34,
+        "sentence_body": "Er saß im üblichen morgendlichen Stau fest und konnte nicht \numhin zu bemerken, dass offenbar eine Menge seltsam gekleideter Menschen \nunterwegs waren.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 35,
+        "sentence_body": "Menschen in langen und weiten Umhängen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 36,
+        "sentence_body": "Mr Dursley konnte \nLeute nicht ausstehen, die sich komisch anzogen – wie sich die jungen Leute \nSeite 3 von 3 \nHARRY POTTER und der Stein der Weisen    \nherausputzten!",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 37,
+        "sentence_body": "Das musste wohl irgendeine dumme neue Mode sein.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 38,
+        "sentence_body": "Er trommelte \nmit den Fingern auf das Lenkrad und sein Blick fiel auf eine Ansammlung dieser \nmerkwürdigen Gestalten nicht weit von ihm.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 39,
+        "sentence_body": "Ganz aufgeregt flüsterten sie \nmiteinander.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 40,
+        "sentence_body": "Erzürnt stellte Mr Dursley fest, dass einige von ihnen überhaupt nicht \njung waren; nanu, dieser Mann dort musste älter sein als er und trug einen \nsmaragdgrünen Umhang!",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 41,
+        "sentence_body": "Der hatte vielleicht Nerven!",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 42,
+        "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 43,
+        "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 44,
+        "sentence_body": "In seinem Büro im neunten Stock saß Mr Dursley immer mit dem Rücken zum \nFenster.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 45,
+        "sentence_body": "Andernfalls wäre es ihm an diesem Morgen schwergefallen, sich auf die \nBohrer zu konzentrieren.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 46,
+        "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 47,
+        "sentence_body": "Die meisten von ihnen hatten überhaupt noch nie eine gesehen, nicht \neinmal nachts.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 48,
+        "sentence_body": "Mr Dursley jedoch verbrachte einen ganz gewöhnlichen, eulenfreien \nMorgen.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 49,
+        "sentence_body": "Er machte fünf verschiedene Leute zur Schnecke.",
+        "grammar_annotations": [],
+        "vocab_annotations": [
+          30,
+          31
+        ]
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 50,
+        "sentence_body": "Er führte mehrere \nwichtige Telefongespräche und schrie dabei noch ein wenig lauter.",
+        "grammar_annotations": [],
+        "vocab_annotations": []
+      },
+      {
+        "text_id": 1,
+        "sentence_id": 51,
+        "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+        "grammar_annotations": [],
+        "vocab_annotations": [
+          32,
+          34
+        ]
+      }
+    ]
+  }
+]

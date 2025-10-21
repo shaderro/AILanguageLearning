@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 import json
 import os
 import sys
@@ -48,6 +49,41 @@ app.add_middleware(
 session_state = SessionState()
 print("✅ SessionState singleton initialized")
 
+# Initialize global DataController singleton
+# 路径设置
+CURRENT_FILE_DIR = os.path.dirname(__file__)  # frontend/my-web-ui/backend
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_FILE_DIR, '..', '..', '..'))  # 项目根目录
+BACKEND_DIR = os.path.join(PROJECT_ROOT, "backend")  # backend目录
+DATA_DIR = os.path.join(BACKEND_DIR, "data", "current")
+
+GRAMMAR_PATH = os.path.join(DATA_DIR, "grammar.json")
+VOCAB_PATH = os.path.join(DATA_DIR, "vocab.json")
+TEXT_PATH = os.path.join(DATA_DIR, "original_texts.json")
+DIALOGUE_RECORD_PATH = os.path.join(DATA_DIR, "dialogue_record.json")
+DIALOGUE_HISTORY_PATH = os.path.join(DATA_DIR, "dialogue_history.json")
+
+# 导入并初始化全局 DataController
+from backend.data_managers import data_controller
+global_dc = data_controller.DataController(max_turns=100)
+print("✅ DataController singleton created")
+
+# 加载数据
+try:
+    global_dc.load_data(
+        grammar_path=GRAMMAR_PATH,
+        vocab_path=VOCAB_PATH,
+        text_path=TEXT_PATH,
+        dialogue_record_path=DIALOGUE_RECORD_PATH,
+        dialogue_history_path=DIALOGUE_HISTORY_PATH
+    )
+    print("✅ Global data loaded successfully")
+    print(f"  - Grammar rules: {len(global_dc.grammar_manager.grammar_bundles)}")
+    print(f"  - Vocab items: {len(global_dc.vocab_manager.vocab_bundles)}")
+    print(f"  - Texts: {len(global_dc.text_manager.original_texts)}")
+except Exception as e:
+    print(f"⚠️ Global data loading failed: {e}")
+    print("⚠️ Continuing with empty data")
+
 # Build data paths relative to repository root to avoid user-dependent absolute paths
 DATA_CURRENT_DIR = os.path.join(BACKEND_DIR, 'data', 'current')
 vocab_file = os.path.join(DATA_CURRENT_DIR, 'vocab.json')
@@ -59,6 +95,35 @@ print(f"Grammar file path: {grammar_file}")
 print(f"Grammar file exists: {os.path.exists(grammar_file)}")
 print(f"Result dir path: {result_dir}")
 print(f"Result dir exists: {os.path.exists(result_dir)}")
+
+
+# 异步保存数据的辅助函数
+def save_data_async(dc, grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path):
+    """
+    后台异步保存数据（总是执行，确保例句更新被持久化）
+    
+    Args:
+        dc: DataController 实例
+        grammar_path: 语法数据路径
+        vocab_path: 词汇数据路径
+        text_path: 文本数据路径
+        dialogue_record_path: 对话记录路径
+        dialogue_history_path: 对话历史路径
+    """
+    try:
+        print("\n💾 [Background] ========== 开始异步保存数据 ==========")
+        dc.save_data(
+            grammar_path=grammar_path,
+            vocab_path=vocab_path,
+            text_path=text_path,
+            dialogue_record_path=dialogue_record_path,
+            dialogue_history_path=dialogue_history_path
+        )
+        print("✅ [Background] 数据保存成功")
+    except Exception as e:
+        print(f"❌ [Background] 数据保存失败: {e}")
+        import traceback
+        print(traceback.format_exc())
 
 
 def _safe_read_json(path: str, default):
@@ -98,7 +163,66 @@ async def debug_paths():
 @app.get('/api/health')
 async def health():
     print("Health endpoint called")
-    return {'status': 'ok'}
+    from datetime import datetime
+    return {
+        'data': {
+            'status': 'ok',
+            'timestamp': datetime.now().isoformat()
+        }
+    }
+
+
+@app.get('/api/vocab-example-by-location')
+async def get_vocab_example_by_location(request: Request):
+    """按位置查找词汇例句"""
+    try:
+        # 从查询参数中获取值
+        query_params = request.query_params
+        text_id = int(query_params.get('text_id', 0))
+        sentence_id = query_params.get('sentence_id')
+        token_index = query_params.get('token_index')
+        
+        # 转换可选参数
+        if sentence_id is not None:
+            sentence_id = int(sentence_id)
+        if token_index is not None:
+            token_index = int(token_index)
+            
+        print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
+        
+        # 使用全局 DataController 查找例句
+        example = global_dc.vocab_manager.get_vocab_example_by_location(text_id, sentence_id, token_index)
+        
+        if example:
+            print(f"✅ [VocabExample] Found example: {example}")
+            
+            # 转换为字典格式返回
+            example_dict = {
+                'vocab_id': example.vocab_id,
+                'text_id': example.text_id,
+                'sentence_id': example.sentence_id,
+                'context_explanation': example.context_explanation,
+                'token_indices': getattr(example, 'token_indices', [])
+            }
+            
+            return {
+                'success': True,
+                'data': example_dict,
+                'message': f'Found vocab example for text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}'
+            }
+        else:
+            print(f"❌ [VocabExample] No example found")
+            return {
+                'success': False,
+                'data': None,
+                'message': f'No vocab example found for text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}'
+            }
+            
+    except Exception as e:
+        print(f"❌ [VocabExample] Error searching vocab example: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
 
 
 @app.get('/api/vocab')
@@ -236,10 +360,21 @@ async def get_stats():
             article_count = len([f for f in os.listdir(result_dir) if '_processed_' in f and f.endswith('.json')])
         except Exception:
             article_count = 0
+    
+    # 计算收藏的数量
+    vocab_starred = sum(1 for v in vocab_data if isinstance(v, dict) and v.get('is_starred', False))
+    grammar_starred = sum(1 for g in grammar_data if isinstance(g, dict) and g.get('is_starred', False))
+    
     return {
         'data': {
-            'vocab_count': len(vocab_data),
-            'grammar_count': len(grammar_data),
+            'vocab': {
+                'total': len(vocab_data),
+                'starred': vocab_starred
+            },
+            'grammar': {
+                'total': len(grammar_data),
+                'starred': grammar_starred
+            },
             'article_count': article_count
         }
     }
@@ -622,7 +757,7 @@ async def update_session_context(payload: dict):
 
 
 @app.post('/api/chat')
-async def chat_with_assistant(payload: dict):
+async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
     """处理用户聊天请求，调用 MainAssistant 进行问答和自动总结"""
     try:
         print("\n" + "="*80)
@@ -686,9 +821,9 @@ async def chat_with_assistant(payload: dict):
         else:
             print(f"📖 [Chat] User is asking about the full sentence (no token selected)")
         
-        # 初始化 MainAssistant
+        # 使用全局 DataController（复用实例，保持数据持久性）
         print("\n" + "-"*80)
-        print("🤖 [Chat] 步骤1: 开始初始化 MainAssistant...")
+        print("🤖 [Chat] 步骤1: 使用全局 DataController 实例...")
         try:
             from backend.assistants.main_assistant import MainAssistant
             print("🤖 [Chat] 步骤1.1: MainAssistant 导入成功")
@@ -696,84 +831,22 @@ async def chat_with_assistant(payload: dict):
             print(f"❌ [Chat] 步骤1.1失败: MainAssistant 导入失败: {e}")
             raise
         
-        try:
-            from backend.data_managers import data_controller
-            print("🤖 [Chat] 步骤1.2: data_controller 导入成功")
-        except Exception as e:
-            print(f"❌ [Chat] 步骤1.2失败: data_controller 导入失败: {e}")
-            raise
-        
-        # 使用 data_controller 实例
-        print("🤖 [Chat] 步骤2: 创建 DataController 实例...")
-        try:
-            dc = data_controller.DataController(max_turns=100)
-            print("🤖 [Chat] 步骤2完成: DataController 创建成功")
-            
-            # 加载数据文件
-            print("🤖 [Chat] 步骤2.1: 加载数据文件...")
-            try:
-                # 设置数据文件路径
-                # 从 frontend/my-web-ui/backend 到 backend/data/current
-                current_dir = os.path.dirname(os.path.dirname(__file__))  # frontend/my-web-ui
-                project_root = os.path.dirname(current_dir)  # 项目根目录
-                backend_dir = os.path.join(project_root, "backend")  # backend目录
-                data_dir = os.path.join(backend_dir, "data", "current")
-                
-                # 使用正确的文件名（根据README.md中的说明）
-                grammar_path = os.path.join(data_dir, "grammar.json")  # 不是grammar_rules.json
-                vocab_path = os.path.join(data_dir, "vocab.json")      # 不是vocab_expressions.json
-                text_path = os.path.join(data_dir, "original_texts.json")
-                dialogue_record_path = os.path.join(data_dir, "dialogue_record.json")
-                dialogue_history_path = os.path.join(data_dir, "dialogue_history.json")
-                
-                print(f"🔍 [Chat] 数据文件路径:")
-                print(f"  - grammar_path: {grammar_path}")
-                print(f"  - vocab_path: {vocab_path}")
-                print(f"  - text_path: {text_path}")
-                print(f"  - dialogue_record_path: {dialogue_record_path}")
-                print(f"  - dialogue_history_path: {dialogue_history_path}")
-                
-                # 加载数据
-                dc.load_data(
-                    grammar_path=grammar_path,
-                    vocab_path=vocab_path,
-                    text_path=text_path,
-                    dialogue_record_path=dialogue_record_path,
-                    dialogue_history_path=dialogue_history_path
-                )
-                print("✅ [Chat] 数据加载成功")
-                
-                # 打印加载的文本数据信息
-                if hasattr(dc.text_manager, 'original_texts'):
-                    text_count = len(dc.text_manager.original_texts)
-                    print(f"📚 [Chat] 加载了 {text_count} 个文本记录")
-                    if text_count > 0:
-                        text_ids = list(dc.text_manager.original_texts.keys())
-                        print(f"📚 [Chat] 可用的 text_ids: {text_ids}")
-                    else:
-                        print("⚠️ [Chat] 没有加载任何文本数据，vocab_example 添加可能会失败")
-                else:
-                    print("⚠️ [Chat] text_manager 没有 original_texts 属性")
-                    
-            except Exception as load_error:
-                print(f"⚠️ [Chat] 数据加载失败: {load_error}")
-                print("⚠️ [Chat] 继续执行，但 vocab_example 添加可能会失败")
-                
-        except Exception as e:
-            print(f"❌ [Chat] 步骤2失败: DataController 创建失败: {e}")
-            import traceback
-            print(traceback.format_exc())
-            raise
+        # 使用全局 DataController 实例（不再每次创建新实例）
+        dc = global_dc
+        print(f"🤖 [Chat] 步骤2: 使用全局 DataController")
+        print(f"  - Grammar rules: {len(dc.grammar_manager.grammar_bundles)}")
+        print(f"  - Vocab items: {len(dc.vocab_manager.vocab_bundles)}")
+        print(f"  - Texts: {len(dc.text_manager.original_texts)}")
         
         print("🤖 [Chat] 步骤3: 创建 MainAssistant 实例...")
         try:
-            # 🔧 重要：传入同一个 session_state 实例，确保状态共享
+            # 🔧 重要：传入全局 dc 和 session_state 实例，确保状态共享
             main_assistant = MainAssistant(
                 data_controller_instance=dc,
                 session_state_instance=session_state
             )
             print("🤖 [Chat] 步骤3完成: MainAssistant 创建成功")
-            print("  - 使用共享的 session_state 实例")
+            print("  - 使用共享的 dc 和 session_state 实例")
         except Exception as e:
             print(f"❌ [Chat] 步骤3失败: MainAssistant 创建失败: {e}")
             import traceback
@@ -841,13 +914,38 @@ async def chat_with_assistant(payload: dict):
         
         if session_state.vocab_to_add:
             for vocab in session_state.vocab_to_add:
+                # 尝试从 global_dc 中获取新添加的 vocab_id
+                vocab_id = None
+                if hasattr(vocab, 'vocab_id'):
+                    vocab_id = vocab.vocab_id
+                else:
+                    # 如果没有 vocab_id，尝试从 vocab_manager 中查找
+                    for vid, vbundle in global_dc.vocab_manager.vocab_bundles.items():
+                        if vbundle.vocab_body == vocab.vocab:
+                            vocab_id = vid
+                            break
+                
                 vocab_to_add.append({
-                    'vocab': vocab.vocab
+                    'vocab': vocab.vocab,
+                    'vocab_id': vocab_id
                 })
         
         print(f"🆕 [Chat] New items to add:")
         print(f"  - Grammar: {len(grammar_to_add)} items")
         print(f"  - Vocab: {len(vocab_to_add)} items")
+        
+        # 🔧 修改：总是保存数据，因为可能有例句更新（不在 *_to_add 列表中）
+        # 例如：用户提问已有词汇时，会添加新的 vocab_example，但 vocab_to_add 为空
+        print(f"💾 [Chat] 添加后台保存任务（可能有例句更新）")
+        background_tasks.add_task(
+            save_data_async,
+            dc=dc,
+            grammar_path=GRAMMAR_PATH,
+            vocab_path=VOCAB_PATH,
+            text_path=TEXT_PATH,
+            dialogue_record_path=DIALOGUE_RECORD_PATH,
+            dialogue_history_path=DIALOGUE_HISTORY_PATH
+        )
         
         return {
             'success': True,
@@ -922,12 +1020,16 @@ async def mark_token_asked(payload: dict):
         text_id = payload.get('text_id')
         sentence_id = payload.get('sentence_id')
         sentence_token_id = payload.get('sentence_token_id')
+        vocab_id = payload.get('vocab_id')
+        grammar_id = payload.get('grammar_id')
         
         print(f"🏷️ [AskedTokens] Marking token as asked:")
         print(f"  - user_id: {user_id}")
         print(f"  - text_id: {text_id}")
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - sentence_token_id: {sentence_token_id}")
+        print(f"  - vocab_id: {vocab_id}")
+        print(f"  - grammar_id: {grammar_id}")
         
         if text_id is None or sentence_id is None or sentence_token_id is None:
             return {
@@ -942,7 +1044,7 @@ async def mark_token_asked(payload: dict):
         manager = get_asked_tokens_manager(use_database=False)
         
         # 标记token为已提问
-        success = manager.mark_token_asked(user_id, text_id, sentence_id, sentence_token_id)
+        success = manager.mark_token_asked(user_id, text_id, sentence_id, sentence_token_id, vocab_id, grammar_id)
         
         if success:
             print(f"✅ [AskedTokens] Token marked as asked successfully")
@@ -977,6 +1079,7 @@ async def reset_session():
     except Exception as e:
         print(f"❌ [SessionState] Error resetting session: {e}")
         return {'success': False, 'error': str(e)}
+
 
 
 if __name__ == '__main__':

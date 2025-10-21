@@ -64,7 +64,7 @@ class AskedTokensManager:
         return os.path.join(self.json_dir, f"{user_id}.json")
     
     def mark_token_asked(self, user_id: str, text_id: int, sentence_id: int, 
-                        sentence_token_id: int = None, type: str = "token") -> bool:
+                        sentence_token_id: int = None, vocab_id: int = None, grammar_id: int = None, type: str = "token") -> bool:
         """
         标记 token 或 sentence 为已提问
         
@@ -73,6 +73,8 @@ class AskedTokensManager:
             text_id: 文章ID
             sentence_id: 句子ID
             sentence_token_id: Token ID（可选）
+            vocab_id: 词汇ID（可选）
+            grammar_id: 语法ID（可选）
             type: 标记类型，'token' 或 'sentence'，默认 'token'
         
         向后兼容：如果 type 未指定但 sentence_token_id 不为空，默认为 'token'
@@ -86,6 +88,8 @@ class AskedTokensManager:
         print(f"  - text_id: {text_id}")
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - sentence_token_id: {sentence_token_id}")
+        print(f"  - vocab_id: {vocab_id}")
+        print(f"  - grammar_id: {grammar_id}")
         print(f"  - type: {type}")
         
         try:
@@ -94,7 +98,9 @@ class AskedTokensManager:
                 text_id=text_id,
                 sentence_id=sentence_id,
                 sentence_token_id=sentence_token_id,
-                type=type
+                type=type,
+                vocab_id=vocab_id,
+                grammar_id=grammar_id
             )
             
             if self.use_database:

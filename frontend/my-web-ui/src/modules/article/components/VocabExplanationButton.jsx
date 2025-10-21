@@ -19,7 +19,8 @@ export default function VocabExplanationButton({ token, onGetExplanation, markAs
       
       setExplanation(result)
       if (onGetExplanation) {
-        onGetExplanation(token, result)
+        // 传入 sentenceIdx 以便按 `${sentenceIdx}-${sentence_token_id}` 存储解释
+        onGetExplanation(token, result, sentenceIdx)
       }
       
       // 标记token为已提问
