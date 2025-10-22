@@ -15,7 +15,7 @@ function getApiTarget() {
   if (saved === 'mock' || saved === 'db') return saved;
   const envVal = (import.meta?.env?.VITE_API_TARGET || '').toLowerCase();
   if (envVal === 'mock' || envVal === 'db') return envVal;
-  return 'db';
+  return 'mock';
 }
 const API_TARGET = getApiTarget();
 const BASE_URL = API_TARGET === "mock" ? "http://localhost:8000" : "http://localhost:8001";
@@ -311,6 +311,12 @@ export const apiService = {
     if (sentenceId !== null) params.sentence_id = sentenceId;
     if (tokenIndex !== null) params.token_index = tokenIndex;
     return api.get("/api/vocab-example-by-location", { params });
+  },
+
+  // 刷新词汇数据（从JSON文件重新加载）
+  refreshVocab: () => {
+    console.log('🔄 [Frontend] Refreshing vocab data');
+    return api.post("/api/vocab/refresh");
   }
 };
 

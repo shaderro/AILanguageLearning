@@ -66,12 +66,34 @@ export function useAskedTokens(articleId, userId = 'default_user') {
     }
   }
 
+  // 刷新asked tokens（从服务器重新获取）
+  const refreshAskedTokens = async () => {
+    try {
+      console.log('🔄 [AskedTokens] Refreshing asked tokens...')
+      const response = await apiService.getAskedTokens(userId, articleId)
+      
+      if (response.success && response.data?.asked_tokens) {
+        const tokens = new Set(response.data.asked_tokens)
+        console.log('✅ [AskedTokens] Refreshed', tokens.size, 'asked tokens for article', articleId)
+        setAskedTokenKeys(tokens)
+        return true
+      } else {
+        console.warn('⚠️ [AskedTokens] No asked tokens found during refresh')
+        return false
+      }
+    } catch (err) {
+      console.error('❌ [AskedTokens] Failed to refresh asked tokens:', err)
+      return false
+    }
+  }
+
   return {
     askedTokenKeys,
     isLoading,
     error,
     isTokenAsked,
-    markAsAsked
+    markAsAsked,
+    refreshAskedTokens
   }
 }
 

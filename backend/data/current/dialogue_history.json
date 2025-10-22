@@ -15,7 +15,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591559",
+          "timestamp": "2025-10-22T15:54:04.242730",
           "data_type": "old"
         },
         {
@@ -29,7 +29,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591580",
+          "timestamp": "2025-10-22T15:54:04.242735",
           "data_type": "old"
         },
         {
@@ -43,7 +43,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591586",
+          "timestamp": "2025-10-22T15:54:04.242737",
           "data_type": "old"
         },
         {
@@ -57,7 +57,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591591",
+          "timestamp": "2025-10-22T15:54:04.242739",
           "data_type": "old"
         },
         {
@@ -71,7 +71,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591595",
+          "timestamp": "2025-10-22T15:54:04.242740",
           "data_type": "old"
         },
         {
@@ -85,7 +85,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591600",
+          "timestamp": "2025-10-22T15:54:04.242741",
           "data_type": "old"
         },
         {
@@ -99,7 +99,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591605",
+          "timestamp": "2025-10-22T15:54:04.242743",
           "data_type": "old"
         },
         {
@@ -113,7 +113,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591608",
+          "timestamp": "2025-10-22T15:54:04.242744",
           "data_type": "old"
         },
         {
@@ -127,7 +127,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591613",
+          "timestamp": "2025-10-22T15:54:04.242746",
           "data_type": "old"
         },
         {
@@ -141,7 +141,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591617",
+          "timestamp": "2025-10-22T15:54:04.242747",
           "data_type": "old"
         },
         {
@@ -155,7 +155,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591621",
+          "timestamp": "2025-10-22T15:54:04.242748",
           "data_type": "old"
         },
         {
@@ -169,7 +169,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591625",
+          "timestamp": "2025-10-22T15:54:04.242750",
           "data_type": "old"
         },
         {
@@ -183,7 +183,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591629",
+          "timestamp": "2025-10-22T15:54:04.242751",
           "data_type": "old"
         },
         {
@@ -197,7 +197,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591633",
+          "timestamp": "2025-10-22T15:54:04.242752",
           "data_type": "old"
         },
         {
@@ -209,11 +209,10 @@
             "sentence_id": 3,
             "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591643",
-          "data_type": "new"
+          "timestamp": "2025-10-22T15:54:04.242754",
+          "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
@@ -224,11 +223,10 @@
             "sentence_id": 51,
             "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-10-21T13:26:38.591651",
-          "data_type": "new"
+          "timestamp": "2025-10-22T15:54:04.242755",
+          "data_type": "old"
         },
         {
           "user": "这个词有什么词根词缀吗？",
@@ -239,10 +237,83 @@
             "sentence_id": 4,
             "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
             "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-22T15:54:04.242756",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'herstellte 是德语动词 herstellen 的过去式，意思是“制造、生产”。在这个句子里，描述德思礼先生的公司是制造钻孔机的。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 3,
+            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-22T15:54:04.242757",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'nützlich 是德语形容词，意思是“有用的”。在这个句子里，它描述德思礼太太的长脖子很有用，因为她可以伸长脖子偷看邻居。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-10-21T13:26:38.591657",
+          "timestamp": "2025-10-22T15:54:04.242760",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Straßenkarte 是德语复合词，Straße 是“街道”，Karte 是“地图”，合起来就是“街道地图”或“城市地图”的意思。在句子里，一只猫正在研究街道地图。'}",
+          "sentence_id": 21,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 21,
+            "sentence_body": "An der Straßenecke fiel ihm zum ersten Mal etwas Merkwürdiges auf – eine \nKatze, die eine Straßenkarte studierte.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-10-22T15:54:04.242763",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Sinnestäuschung 是一个德语复合名词，意思是“感官错觉”或“幻觉”。在句子中意思是“这一定是一种感官错觉”。这是一个专有名词，可以作为一个整体理解。'}",
+          "sentence_id": 25,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 25,
+            "sentence_body": "Das \nmusste eine Sinnestäuschung gewesen sein.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-10-22T15:54:04.242764",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘blinzelte’是德语动词‘blinzeln’的过去式，意思是‘眨眼’。这句话是说：Dursley先生眨了眨眼，盯着那只猫看。'}",
+          "sentence_id": 26,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 26,
+            "sentence_body": "Mr Dursley blinzelte und starrte die \nKatze an.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-10-22T15:54:04.242766",
           "data_type": "new"
         }
       ],

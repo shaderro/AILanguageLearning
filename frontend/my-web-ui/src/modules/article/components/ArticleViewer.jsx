@@ -3,19 +3,26 @@ import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
-import { useAskedTokens } from '../hooks/useAskedTokens'
-import { useTokenNotations } from '../hooks/useTokenNotations'
+// import { useAskedTokens } from '../hooks/useAskedTokens' // 不再在这里创建hook实例，从props接收
+// import { useTokenNotations } from '../hooks/useTokenNotations' // 不再在这里创建hook实例，从props接收
 import TokenSpan from './TokenSpan'
 
 /**
  * ArticleViewer - Main component for displaying and interacting with article content
  */
-export default function ArticleViewer({ articleId, onTokenSelect }) {
+export default function ArticleViewer({ 
+  articleId, 
+  onTokenSelect, 
+  isTokenAsked, 
+  markAsAsked,
+  getNotationContent,
+  setNotationContent 
+}) {
   console.log('🔍 [ArticleViewer] Received articleId:', articleId)
   const { data, isLoading, isError, error } = useArticle(articleId)
 
-  // Asked tokens management
-  const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId)
+  // Asked tokens management - 现在从props接收，不再创建新的hook实例
+  // const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId)
 
   const sentences = useMemo(() => {
     const raw = data?.data?.sentences
@@ -58,8 +65,8 @@ export default function ArticleViewer({ articleId, onTokenSelect }) {
     clearSelection
   })
 
-  // Token notations management
-  const { getNotationContent, setNotationContent } = useTokenNotations()
+  // Token notations management - 现在从props接收，不再创建新的hook实例
+  // const { getNotationContent, setNotationContent } = useTokenNotations()
 
   if (isLoading) {
     return (

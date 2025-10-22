@@ -25,7 +25,8 @@
         "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
         "grammar_annotations": [],
         "vocab_annotations": [
-          33
+          33,
+          1
         ]
       },
       {
@@ -44,7 +45,9 @@
         "sentence_id": 5,
         "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          2
+        ]
       },
       {
         "text_id": 1,
@@ -160,7 +163,9 @@
         "sentence_id": 21,
         "sentence_body": "An der Straßenecke fiel ihm zum ersten Mal etwas Merkwürdiges auf – eine \nKatze, die eine Straßenkarte studierte.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          3
+        ]
       },
       {
         "text_id": 1,
@@ -188,14 +193,18 @@
         "sentence_id": 25,
         "sentence_body": "Das \nmusste eine Sinnestäuschung gewesen sein.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          4
+        ]
       },
       {
         "text_id": 1,
         "sentence_id": 26,
         "sentence_body": "Mr Dursley blinzelte und starrte die \nKatze an.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          5
+        ]
       },
       {
         "text_id": 1,

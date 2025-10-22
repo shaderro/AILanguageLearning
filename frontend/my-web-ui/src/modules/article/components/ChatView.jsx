@@ -3,7 +3,7 @@ import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
-export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false, selectedTokenCount = 1, selectionContext = null, markAsAsked = null, articleId = null }) {
+export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false, selectedTokenCount = 1, selectionContext = null, markAsAsked = null, refreshAskedTokens = null, articleId = null }) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
@@ -262,11 +262,30 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           const successCount = results.filter(r => r).length
           console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens as asked`)
           
-          // 如果标记成功，等待一小段时间让状态更新
+          // 如果标记成功，等待后端保存完成，然后刷新vocab数据
           if (successCount > 0) {
-            setTimeout(() => {
-              console.log('🔄 [ChatView] Token states should be updated now')
-            }, 100)
+            console.log('⏳ [ChatView] Waiting for backend to save vocab data...')
+            
+            // 等待500ms确保后端异步保存完成
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            // 刷新vocab数据和asked tokens，确保能立即查询到新增的vocab example和显示绿色下划线
+            try {
+              console.log('🔄 [ChatView] Refreshing vocab data and asked tokens...')
+              await apiService.refreshVocab()
+              console.log('✅ [ChatView] Vocab data refreshed successfully')
+              
+              // 同时刷新asked tokens状态
+              if (refreshAskedTokens) {
+                await refreshAskedTokens()
+                console.log('✅ [ChatView] Asked tokens refreshed successfully')
+              }
+              
+              console.log('🎉 [ChatView] Token states updated - green underlines should be visible now')
+            } catch (refreshError) {
+              console.error('❌ [ChatView] Failed to refresh vocab data:', refreshError)
+              console.warn('⚠️ [ChatView] You may need to refresh the page to see vocab examples')
+            }
           } else {
             console.warn('⚠️ [ChatView] 没有token被成功标记')
           }
@@ -591,11 +610,30 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           const successCount = results.filter(r => r).length
           console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens as asked (suggested question)`)
           
-          // 如果标记成功，等待一小段时间让状态更新
+          // 如果标记成功，等待后端保存完成，然后刷新vocab数据
           if (successCount > 0) {
-            setTimeout(() => {
-              console.log('🔄 [ChatView] Token states should be updated now (suggested question)')
-            }, 100)
+            console.log('⏳ [ChatView] Waiting for backend to save vocab data (suggested question)...')
+            
+            // 等待500ms确保后端异步保存完成
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            // 刷新vocab数据和asked tokens，确保能立即查询到新增的vocab example和显示绿色下划线
+            try {
+              console.log('🔄 [ChatView] Refreshing vocab data and asked tokens (suggested question)...')
+              await apiService.refreshVocab()
+              console.log('✅ [ChatView] Vocab data refreshed successfully (suggested question)')
+              
+              // 同时刷新asked tokens状态
+              if (refreshAskedTokens) {
+                await refreshAskedTokens()
+                console.log('✅ [ChatView] Asked tokens refreshed successfully (suggested question)')
+              }
+              
+              console.log('🎉 [ChatView] Token states updated - green underlines should be visible now (suggested question)')
+            } catch (refreshError) {
+              console.error('❌ [ChatView] Failed to refresh vocab data (suggested question):', refreshError)
+              console.warn('⚠️ [ChatView] You may need to refresh the page to see vocab examples')
+            }
           } else {
             console.warn('⚠️ [ChatView] 没有token被成功标记（建议问题）')
           }

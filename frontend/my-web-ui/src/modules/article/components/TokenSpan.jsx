@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { getTokenKey, getTokenId } from '../utils/tokenUtils'
-import VocabExplanationButton from './VocabExplanationButton'
+// import VocabExplanationButton from './VocabExplanationButton' // 暂时注释掉 - 以后可能会用到
 import VocabTooltip from './VocabTooltip'
 import TokenNotation from './TokenNotation'
 
@@ -56,11 +56,43 @@ export default function TokenSpan({
   
   // 管理TokenNotation的显示状态（针对已提问的token）
   const [showNotation, setShowNotation] = useState(false)
+  const hideNotationTimerRef = useRef(null)
   
   // 获取该token的notation内容
   const notationContent = isAsked && getNotationContent 
     ? getNotationContent(articleId, tokenSentenceId, tokenSentenceTokenId)
     : null
+  
+  // 延迟隐藏 notation
+  const scheduleHideNotation = () => {
+    // 清除之前的延迟隐藏
+    if (hideNotationTimerRef.current) {
+      clearTimeout(hideNotationTimerRef.current)
+    }
+    // 设置新的延迟隐藏（200ms后隐藏）
+    hideNotationTimerRef.current = setTimeout(() => {
+      setShowNotation(false)
+    }, 200)
+  }
+  
+  // 取消延迟隐藏（保持显示）
+  const cancelHideNotation = () => {
+    if (hideNotationTimerRef.current) {
+      clearTimeout(hideNotationTimerRef.current)
+      hideNotationTimerRef.current = null
+    }
+  }
+  
+  // 处理 notation 的 mouse enter（鼠标进入卡片）
+  const handleNotationMouseEnter = () => {
+    cancelHideNotation()  // 取消隐藏
+    setShowNotation(true)  // 确保显示
+  }
+  
+  // 处理 notation 的 mouse leave（鼠标离开卡片）
+  const handleNotationMouseLeave = () => {
+    scheduleHideNotation()  // 延迟隐藏
+  }
 
   return (
     <span
@@ -81,6 +113,7 @@ export default function TokenSpan({
           console.debug('[TokenSpan.mouseEnter] sentenceIdx=', sentenceIdx, 'uid=', uid, 'text=', displayText)
           // 如果是已提问的token，显示notation
           if (isAsked) {
+            cancelHideNotation()  // 取消任何待处理的隐藏
             setShowNotation(true)
           }
           handleMouseEnterToken(sentenceIdx, tokenIdx, token)
@@ -89,9 +122,9 @@ export default function TokenSpan({
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(null)
           }
-          // 隐藏notation
+          // 延迟隐藏notation（而不是立即隐藏）
           if (isAsked) {
-            setShowNotation(false)
+            scheduleHideNotation()
           }
         }}
         onClick={(e) => { if (!isDraggingRef.current && selectable) { e.preventDefault(); addSingle(sentenceIdx, token) } }}
@@ -114,7 +147,8 @@ export default function TokenSpan({
         />
       )}
       
-      {isTextToken && selected && selectedTokenIds.size === 1 && (
+      {/* 暂时注释掉 VocabExplanationButton - 以后可能会用到 */}
+      {/* {isTextToken && selected && selectedTokenIds.size === 1 && (
         <VocabExplanationButton 
           token={token} 
           onGetExplanation={handleGetExplanation}
@@ -122,7 +156,7 @@ export default function TokenSpan({
           articleId={articleId}
           sentenceIdx={sentenceIdx}
         />
-      )}
+      )} */}
       
       {/* TokenNotation - 显示在已提问token下方 */}
       {isAsked && showNotation && (
@@ -132,6 +166,8 @@ export default function TokenSpan({
           textId={articleId}
           sentenceId={tokenSentenceId}
           tokenIndex={tokenSentenceTokenId}
+          onMouseEnter={handleNotationMouseEnter}
+          onMouseLeave={handleNotationMouseLeave}
         />
       )}
     </span>

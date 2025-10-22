@@ -11,8 +11,26 @@
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 51,
-    "sentence_token_id": 13,
+    "sentence_id": 5,
+    "sentence_token_id": 41,
+    "type": "token",
+    "vocab_id": 2,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 21,
+    "sentence_token_id": 34,
+    "type": "token",
+    "vocab_id": 3,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 25,
+    "sentence_token_id": 7,
     "type": "token",
     "vocab_id": null,
     "grammar_id": null
@@ -20,8 +38,8 @@
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 4,
-    "sentence_token_id": 22,
+    "sentence_id": 26,
+    "sentence_token_id": 5,
     "type": "token",
     "vocab_id": null,
     "grammar_id": null

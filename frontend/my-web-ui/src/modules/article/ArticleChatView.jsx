@@ -17,7 +17,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   
   // 获取asked tokens功能（统一在这里管理，避免多次调用）
-  const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId, 'default_user')
+  const { askedTokenKeys, isTokenAsked, markAsAsked, refreshAskedTokens } = useAskedTokens(articleId, 'default_user')
   
   // 获取token notations功能
   const { getNotationContent, setNotationContent, clearNotationContent } = useTokenNotations()
@@ -140,6 +140,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             selectedTokenCount={selectedTokens.length || 1}
             selectionContext={currentContext}
             markAsAsked={markAsAsked}
+            refreshAskedTokens={refreshAskedTokens}
             articleId={articleId}
           />
         </div>
