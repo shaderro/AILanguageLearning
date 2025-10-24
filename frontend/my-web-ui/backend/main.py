@@ -24,7 +24,7 @@ for p in [REPO_ROOT, BACKEND_DIR]:
 # 导入预处理模块
 try:
     from backend.preprocessing.article_processor import process_article, save_structured_data
-    print("✅ 使用简单文章处理器 (无AI依赖)")
+    print("[OK] 使用简单文章处理器 (无AI依赖)")
 except ImportError as e:
     print(f"Warning: Could not import article_processor: {e}")
     process_article = None
@@ -32,6 +32,14 @@ except ImportError as e:
 
 # 导入 asked tokens manager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
+
+# 导入新的标注API路由
+try:
+    from backend.api.notation_routes import router as notation_router
+    print("[OK] 加载新的标注API路由")
+except ImportError as e:
+    print(f"Warning: Could not import notation_routes: {e}")
+    notation_router = None
 
 # 计算 backend/data/current/articles 目录（相对本文件位置）
 RESULT_DIR = os.path.abspath(
@@ -225,6 +233,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 注册新的标注API路由
+if notation_router:
+    app.include_router(notation_router)
+    print("[OK] 注册新的标注API路由: /api/v2/notations")
+
 @app.get("/")
 async def root():
     return {"message": "AI Language Learning API"}
@@ -232,6 +245,129 @@ async def root():
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "message": "API is running"}
+
+# ==================== Session Management API ====================
+# 这些API原本在server_frontend_mock.py中，现在添加到主服务器以支持前端功能
+
+# 简单的会话状态存储（内存中）
+session_state = {
+    "current_sentence": None,
+    "current_selected_token": None,
+    "current_input": None
+}
+
+@app.post("/api/session/set_sentence")
+async def set_session_sentence(payload: dict):
+    """设置当前句子上下文"""
+    try:
+        print(f"[Session] Setting session sentence: {payload}")
+        session_state["current_sentence"] = payload
+        return {"success": True, "message": "Sentence context set"}
+    except Exception as e:
+        print(f"[Session] Error setting sentence: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/session/select_token")
+async def set_session_selected_token(payload: dict):
+    """设置选中的token"""
+    try:
+        print(f"[Session] Setting selected token: {payload}")
+        session_state["current_selected_token"] = payload
+        return {"success": True, "message": "Token context set"}
+    except Exception as e:
+        print(f"[Session] Error setting token: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/session/update_context")
+async def update_session_context(payload: dict):
+    """一次性更新会话上下文（批量更新）"""
+    try:
+        print(f"[Session] Updating session context (batch): {payload}")
+        
+        updated_fields = []
+        
+        # 更新 current_input
+        if 'current_input' in payload:
+            session_state["current_input"] = payload['current_input']
+            updated_fields.append('current_input')
+            print(f"  ✓ current_input set")
+        
+        # 更新句子信息
+        if 'sentence' in payload:
+            session_state["current_sentence"] = payload['sentence']
+            updated_fields.append('sentence')
+            print(f"  ✓ sentence set")
+        
+        # 更新选中的 token
+        if 'token' in payload:
+            session_state["current_selected_token"] = payload['token']
+            updated_fields.append('token')
+            print(f"  ✓ token set")
+        
+        print(f"[Session] Context updated: {', '.join(updated_fields)}")
+        return {
+            "success": True,
+            "message": "Session context updated",
+            "updated_fields": updated_fields
+        }
+    except Exception as e:
+        print(f"[Session] Error updating context: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/session/reset")
+async def reset_session_state(payload: dict):
+    """重置会话状态"""
+    try:
+        print(f"[Session] Resetting session state")
+        session_state["current_sentence"] = None
+        session_state["current_selected_token"] = None
+        session_state["current_input"] = None
+        return {"success": True, "message": "Session state reset"}
+    except Exception as e:
+        print(f"[Session] Error resetting session: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/chat")
+async def chat_with_assistant(payload: dict):
+    """聊天功能（简化版）"""
+    try:
+        print(f"[Chat] Chat endpoint called: {payload}")
+        
+        # 从会话状态获取上下文
+        current_sentence = session_state.get("current_sentence")
+        current_selected_token = session_state.get("current_selected_token")
+        current_input = session_state.get("current_input")
+        
+        print(f"[Chat] Session State Info:")
+        print(f"  - current_input: {current_input}")
+        print(f"  - current_sentence: {current_sentence}")
+        print(f"  - current_selected_token: {current_selected_token}")
+        
+        # 获取用户问题
+        user_question = payload.get('user_question', '')
+        if not user_question:
+            return {
+                'success': False,
+                'error': 'No user question provided'
+            }
+        
+        # 这里应该调用AI服务，现在返回模拟响应
+        response_text = f"这是对问题 '{user_question}' 的模拟回答。"
+        
+        return {
+            'success': True,
+            'data': {
+                'response': response_text,
+                'context': {
+                    'sentence': current_sentence,
+                    'selected_token': current_selected_token
+                }
+            },
+            'message': 'Chat response generated'
+        }
+    except Exception as e:
+        print(f"[Chat] Error in chat: {e}")
+        return {"success": False, "error": str(e)}
 
 @app.get("/api/vocab", response_model=ApiResponse)
 async def get_vocab_list():
@@ -475,53 +611,151 @@ async def upload_text(
 
 @app.get("/api/user/asked-tokens")
 async def get_asked_tokens(user_id: str = Query(..., description="用户ID"), 
-                          text_id: int = Query(..., description="文章ID")):
-    """获取用户在指定文章下已提问的 token 键集合"""
+                          text_id: int = Query(..., description="文章ID"),
+                          include_new_system: bool = Query(False, description="是否包含新系统数据")):
+    """
+    获取用户在指定文章下已提问的 token 键集合
+    
+    支持两种模式：
+    1. 传统模式（include_new_system=False）：只返回旧系统数据
+    2. 兼容模式（include_new_system=True）：合并新旧系统数据
+    """
     try:
-        print(f" [AskedTokens] Getting asked tokens for user={user_id}, text_id={text_id}")
+        print(f"[AskedTokens] Getting asked tokens for user={user_id}, text_id={text_id}, include_new_system={include_new_system}")
         
         # 使用 JSON 文件模式（测试阶段）
         manager = get_asked_tokens_manager(use_database=False)
         asked_tokens = manager.get_asked_tokens_for_article(user_id, text_id)
         
-        print(f" [AskedTokens] Found {len(asked_tokens)} asked tokens")
+        result_data = {
+            "asked_tokens": list(asked_tokens),
+            "count": len(asked_tokens),
+            "source": "legacy_system"
+        }
+        
+        # 如果请求包含新系统数据，合并结果
+        if include_new_system:
+            try:
+                from data_managers.unified_notation_manager import get_unified_notation_manager
+                unified_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=False)
+                
+                # 获取新系统的所有标注
+                new_notations = unified_manager.get_notations("all", text_id, user_id)
+                
+                # 合并数据（去重）
+                all_notations = set(asked_tokens)
+                all_notations.update(new_notations)
+                
+                result_data.update({
+                    "asked_tokens": list(all_notations),
+                    "count": len(all_notations),
+                    "legacy_count": len(asked_tokens),
+                    "new_system_count": len(new_notations),
+                    "source": "merged_systems"
+                })
+                
+                print(f"[AskedTokens] Merged data: {len(asked_tokens)} legacy + {len(new_notations)} new = {len(all_notations)} total")
+                
+            except Exception as e:
+                print(f"[WARN] Failed to get new system data: {e}")
+                # 继续使用旧系统数据
+        
+        print(f"[AskedTokens] Found {result_data['count']} total tokens")
         return create_success_response(
-            data={
-                "asked_tokens": list(asked_tokens),
-                "count": len(asked_tokens)
-            },
-            message=f"成功获取已提问的 tokens，共 {len(asked_tokens)} 个"
+            data=result_data,
+            message=f"成功获取已提问的 tokens，共 {result_data['count']} 个"
         )
     except Exception as e:
-        print(f" [AskedTokens] Error getting asked tokens: {e}")
+        print(f"[AskedTokens] Error getting asked tokens: {e}")
         return create_error_response(f"获取已提问 tokens 失败: {str(e)}")
 
 @app.post("/api/user/asked-tokens")
 async def mark_token_asked(payload: dict):
-    """标记 token 为已提问"""
+    """
+    标记 token 或 sentence 为已提问
+    
+    支持两种类型的标记：
+    1. type='token': 标记单词（需要 sentence_token_id）
+    2. type='sentence': 标记句子（sentence_token_id 可选）
+    
+    向后兼容：如果 type 未指定但 sentence_token_id 存在，默认为 'token'
+    新系统集成：同时创建 VocabNotation 或 GrammarNotation
+    """
     try:
         user_id = payload.get("user_id", "default_user")  # 默认用户ID
         text_id = payload.get("text_id")
         sentence_id = payload.get("sentence_id")
         sentence_token_id = payload.get("sentence_token_id")
+        type_param = payload.get("type", None)  # 新增：标记类型
+        vocab_id = payload.get("vocab_id", None)  # 新增：词汇ID
+        grammar_id = payload.get("grammar_id", None)  # 新增：语法ID
         
-        print(f" [AskedTokens] Marking token as asked:")
+        # 向后兼容逻辑：如果 type 未指定但 sentence_token_id 不为空，默认为 'token'
+        if type_param is None:
+            if sentence_token_id is not None:
+                type_param = "token"
+            else:
+                type_param = "sentence"
+        
+        print(f"[AskedTokens] Marking as asked:")
         print(f"  - user_id: {user_id}")
         print(f"  - text_id: {text_id}")
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - sentence_token_id: {sentence_token_id}")
+        print(f"  - type: {type_param}")
+        print(f"  - vocab_id: {vocab_id}")
+        print(f"  - grammar_id: {grammar_id}")
         
-        if not text_id or sentence_id is None or sentence_token_id is None:
-            return create_error_response("text_id, sentence_id, sentence_token_id 都是必需的")
+        # 验证必需参数
+        if not text_id or sentence_id is None:
+            return create_error_response("text_id 和 sentence_id 是必需的")
         
-        # 使用 JSON 文件模式（测试阶段）
+        # 如果是 token 类型，sentence_token_id 必须提供
+        if type_param == "token" and sentence_token_id is None:
+            return create_error_response("type='token' 时，sentence_token_id 是必需的")
+        
+        # 使用旧系统（向后兼容）
         manager = get_asked_tokens_manager(use_database=False)
         success = manager.mark_token_asked(
             user_id=user_id,
             text_id=text_id,
             sentence_id=sentence_id,
-            sentence_token_id=sentence_token_id
+            sentence_token_id=sentence_token_id,
+            type=type_param,
+            vocab_id=vocab_id,
+            grammar_id=grammar_id
         )
+        
+        # 同时使用新系统（向前兼容）
+        if success:
+            try:
+                from data_managers.unified_notation_manager import get_unified_notation_manager
+                unified_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=False)
+                
+                if type_param == "token":
+                    # 创建词汇标注
+                    unified_manager.mark_notation(
+                        notation_type="vocab",
+                        user_id=user_id,
+                        text_id=text_id,
+                        sentence_id=sentence_id,
+                        token_id=sentence_token_id,
+                        vocab_id=vocab_id
+                    )
+                elif type_param == "sentence":
+                    # 创建语法标注
+                    unified_manager.mark_notation(
+                        notation_type="grammar",
+                        user_id=user_id,
+                        text_id=text_id,
+                        sentence_id=sentence_id,
+                        grammar_id=grammar_id,
+                        marked_token_ids=[]
+                    )
+                print(f"[AskedTokens] Also created new system notation")
+            except Exception as e:
+                print(f"[WARN] Failed to create new system notation: {e}")
+                # 不阻止旧系统操作成功
         
         if success:
             print(f" [AskedTokens] Token marked as asked successfully")

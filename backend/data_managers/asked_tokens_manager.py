@@ -8,7 +8,7 @@ Asked Tokens 数据管理器
 import json
 import os
 import sqlite3
-from typing import Set
+from typing import Set, List, Optional
 from dataclasses import asdict
 
 # 从 data_classes_new 导入 AskedToken
@@ -37,7 +37,7 @@ class AskedTokensManager:
             
             self.json_dir = json_dir
             os.makedirs(self.json_dir, exist_ok=True)
-            print(f"🔧 [AskedTokens] JSON 目录: {self.json_dir}")
+            print(f"[INFO] [AskedTokens] JSON 目录: {self.json_dir}")
     
     def _init_database(self):
         """初始化数据库表"""
@@ -54,9 +54,9 @@ class AskedTokensManager:
                     )
                 """)
                 conn.commit()
-                print("✅ [AskedTokens] Database table initialized")
+                print("[OK] [AskedTokens] Database table initialized")
         except Exception as e:
-            print(f"❌ [AskedTokens] Database initialization failed: {e}")
+            print(f"[ERROR] [AskedTokens] Database initialization failed: {e}")
             raise
     
     def _get_json_file_path(self, user_id: str) -> str:
@@ -341,6 +341,86 @@ class AskedTokensManager:
             return True
         except Exception as e:
             print(f"❌ [AskedTokens] JSON unmark failed: {e}")
+            return False
+
+
+    # ===== 向后兼容方法 =====
+    
+    def mark_as_vocab_notation(self, user_id: str, text_id: int, sentence_id: int, 
+                              token_id: int, vocab_id: Optional[int] = None) -> bool:
+        """
+        向后兼容方法：标记为词汇标注
+        这个方法是为了与新系统兼容而添加的
+        """
+        print(f"[INFO] [AskedTokens] mark_as_vocab_notation called (legacy compatibility)")
+        return self.mark_token_asked(
+            user_id=user_id,
+            text_id=text_id,
+            sentence_id=sentence_id,
+            sentence_token_id=token_id,
+            type="token",
+            vocab_id=vocab_id,
+            grammar_id=None
+        )
+    
+    def mark_as_grammar_notation(self, user_id: str, text_id: int, sentence_id: int,
+                                grammar_id: Optional[int] = None, marked_token_ids: List[int] = None) -> bool:
+        """
+        向后兼容方法：标记为语法标注
+        这个方法是为了与新系统兼容而添加的
+        """
+        print(f"[INFO] [AskedTokens] mark_as_grammar_notation called (legacy compatibility)")
+        return self.mark_token_asked(
+            user_id=user_id,
+            text_id=text_id,
+            sentence_id=sentence_id,
+            sentence_token_id=None,
+            type="sentence",
+            vocab_id=None,
+            grammar_id=grammar_id
+        )
+    
+    def is_vocab_notation_exists(self, user_id: str, text_id: int, sentence_id: int, token_id: int) -> bool:
+        """
+        向后兼容方法：检查词汇标注是否存在
+        """
+        print(f"[INFO] [AskedTokens] is_vocab_notation_exists called (legacy compatibility)")
+        asked_tokens = self.get_asked_tokens_for_article(text_id, user_id)
+        key = f"{text_id}:{sentence_id}:{token_id}"
+        return key in asked_tokens
+    
+    def is_grammar_notation_exists(self, user_id: str, text_id: int, sentence_id: int) -> bool:
+        """
+        向后兼容方法：检查语法标注是否存在
+        """
+        print(f"[INFO] [AskedTokens] is_grammar_notation_exists called (legacy compatibility)")
+        # 检查是否有 sentence 类型的标注
+        try:
+            if self.use_database:
+                with sqlite3.connect(self.db_path) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM asked_tokens 
+                        WHERE user_id = ? AND text_id = ? AND sentence_id = ? AND type = 'sentence'
+                    """, (user_id, text_id, sentence_id))
+                    count = cursor.fetchone()[0]
+                    return count > 0
+            else:
+                file_path = self._get_json_file_path(user_id)
+                if not os.path.exists(file_path):
+                    return False
+                
+                with open(file_path, "r", encoding="utf-8") as f:
+                    asked_tokens = json.load(f)
+                
+                for token_data in asked_tokens:
+                    if (token_data.get("text_id") == text_id and
+                        token_data.get("sentence_id") == sentence_id and
+                        token_data.get("type") == "sentence"):
+                        return True
+                return False
+        except Exception as e:
+            print(f"[ERROR] [AskedTokens] Failed to check grammar notation: {e}")
             return False
 
 

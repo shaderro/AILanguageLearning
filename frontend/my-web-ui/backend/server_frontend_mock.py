@@ -47,7 +47,7 @@ app.add_middleware(
 
 # Initialize global SessionState singleton
 session_state = SessionState()
-print("✅ SessionState singleton initialized")
+print("[OK] SessionState singleton initialized")
 
 # Initialize global DataController singleton
 # 路径设置

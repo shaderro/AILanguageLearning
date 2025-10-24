@@ -88,5 +88,23 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 6,
+    "vocab_body": "bog",
+    "explanation": "{'explanation': \"动词 'bog' 是德语动词 'biegen' 的过去式形式，意为 '转弯' 或 '拐弯'。它描述改变方向的动作，通常用于车辆或人在道路上的移动。例如，在驾驶时，'bog um die Ecke' 表示 '拐过角落'。这个词是规则动词，过去式形式用于叙述过去事件。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 6,
+        "text_id": 1,
+        "sentence_id": 28,
+        "context_explanation": "{\"explanation\": \"在这句话中，'bog' 是动词 'biegen'（转弯）的过去式，意思是 '拐弯'。它描述了 Mr Dursley 的动作：'um die Ecke bog' 表示 '他拐过街角'，即他从一条路转向另一条路。\"}",
+        "token_indices": [
+          13
+        ]
+      }
+    ]
   }
 ]

@@ -218,7 +218,9 @@
         "sentence_id": 28,
         "sentence_body": "Während Mr Dursley um die Ecke bog und die \nStraße entlangfuhr, beobachtete er die Katze im Rückspiegel.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          6
+        ]
       },
       {
         "text_id": 1,

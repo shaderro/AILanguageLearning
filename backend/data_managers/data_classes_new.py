@@ -77,9 +77,28 @@ class AskedToken:
     grammar_id: Optional[int] = None
 
 @dataclass
+class VocabNotation:
+    """词汇标注"""
+    user_id: str
+    text_id: int
+    sentence_id: int
+    token_id: int               # 当前句子中哪个 token
+    vocab_id: Optional[int]     # 对应词汇表中的词汇
+    created_at: Optional[str] = None  # 时间戳（可选）
+
+@dataclass
+class GrammarNotation:
+    """语法标注"""
+    user_id: str
+    text_id: int
+    sentence_id: int
+    grammar_id: Optional[int]   # 对应 grammar_rules 表
+    marked_token_ids: list[int] # 句中重点语法成分的 token id 列表
+    created_at: Optional[str] = None
+
+@dataclass
 class User:
     """用户DTO - 最简版本"""
     user_id: int          # 唯一标识
     password: str         # 密码（实际应存储哈希值）
     created_at: Optional[datetime] = None  # 创建时间
-    

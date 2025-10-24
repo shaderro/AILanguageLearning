@@ -15,7 +15,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242730",
+          "timestamp": "2025-10-23T18:31:07.829193",
           "data_type": "old"
         },
         {
@@ -29,7 +29,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242735",
+          "timestamp": "2025-10-23T18:31:07.829200",
           "data_type": "old"
         },
         {
@@ -43,7 +43,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242737",
+          "timestamp": "2025-10-23T18:31:07.829203",
           "data_type": "old"
         },
         {
@@ -57,7 +57,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242739",
+          "timestamp": "2025-10-23T18:31:07.829204",
           "data_type": "old"
         },
         {
@@ -71,7 +71,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242740",
+          "timestamp": "2025-10-23T18:31:07.829206",
           "data_type": "old"
         },
         {
@@ -85,7 +85,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242741",
+          "timestamp": "2025-10-23T18:31:07.829208",
           "data_type": "old"
         },
         {
@@ -99,7 +99,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242743",
+          "timestamp": "2025-10-23T18:31:07.829209",
           "data_type": "old"
         },
         {
@@ -113,7 +113,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242744",
+          "timestamp": "2025-10-23T18:31:07.829210",
           "data_type": "old"
         },
         {
@@ -127,7 +127,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242746",
+          "timestamp": "2025-10-23T18:31:07.829211",
           "data_type": "old"
         },
         {
@@ -141,7 +141,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242747",
+          "timestamp": "2025-10-23T18:31:07.829213",
           "data_type": "old"
         },
         {
@@ -155,7 +155,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242748",
+          "timestamp": "2025-10-23T18:31:07.829214",
           "data_type": "old"
         },
         {
@@ -169,7 +169,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242750",
+          "timestamp": "2025-10-23T18:31:07.829215",
           "data_type": "old"
         },
         {
@@ -183,7 +183,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242751",
+          "timestamp": "2025-10-23T18:31:07.829220",
           "data_type": "old"
         },
         {
@@ -197,7 +197,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242752",
+          "timestamp": "2025-10-23T18:31:07.829221",
           "data_type": "old"
         },
         {
@@ -211,7 +211,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242754",
+          "timestamp": "2025-10-23T18:31:07.829223",
           "data_type": "old"
         },
         {
@@ -225,7 +225,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242755",
+          "timestamp": "2025-10-23T18:31:07.829224",
           "data_type": "old"
         },
         {
@@ -239,7 +239,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242756",
+          "timestamp": "2025-10-23T18:31:07.829225",
           "data_type": "old"
         },
         {
@@ -253,7 +253,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242757",
+          "timestamp": "2025-10-23T18:31:07.829227",
           "data_type": "old"
         },
         {
@@ -265,11 +265,10 @@
             "sentence_id": 5,
             "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242760",
-          "data_type": "new"
+          "timestamp": "2025-10-23T18:31:07.829228",
+          "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
@@ -280,11 +279,10 @@
             "sentence_id": 21,
             "sentence_body": "An der Straßenecke fiel ihm zum ersten Mal etwas Merkwürdiges auf – eine \nKatze, die eine Straßenkarte studierte.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242763",
-          "data_type": "new"
+          "timestamp": "2025-10-23T18:31:07.829229",
+          "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
@@ -295,11 +293,10 @@
             "sentence_id": 25,
             "sentence_body": "Das \nmusste eine Sinnestäuschung gewesen sein.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-10-22T15:54:04.242764",
-          "data_type": "new"
+          "timestamp": "2025-10-23T18:31:07.829230",
+          "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
@@ -310,10 +307,24 @@
             "sentence_id": 26,
             "sentence_body": "Mr Dursley blinzelte und starrte die \nKatze an.",
             "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-10-23T18:31:07.829232",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'bog 是德语动词 biegen 的过去式，意思是“转弯”。在句子中 um die Ecke bog 表示“在拐角处转弯”。这是一个不规则动词的变化形式。'}",
+          "sentence_id": 28,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 28,
+            "sentence_body": "Während Mr Dursley um die Ecke bog und die \nStraße entlangfuhr, beobachtete er die Katze im Rückspiegel.",
+            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-10-22T15:54:04.242766",
+          "timestamp": "2025-10-23T18:31:07.829236",
           "data_type": "new"
         }
       ],
