@@ -27,7 +27,10 @@ export default function TokenSpan({
   isTokenAsked,
   markAsAsked,
   getNotationContent,
-  setNotationContent
+  setNotationContent,
+  // Grammar notation props
+  hasGrammarNotation,
+  getGrammarNotationsForSentence
 }) {
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
   const selectable = typeof token === 'object' ? !!token?.selectable : false
@@ -46,6 +49,21 @@ export default function TokenSpan({
   const isAsked = isTextToken && tokenSentenceTokenId != null
     ? isTokenAsked(articleId, tokenSentenceId, tokenSentenceTokenId)
     : false
+
+  // 检查是否有grammar notation
+  const sentenceId = sentenceIdx + 1
+  const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
+  const hasGrammar = grammarNotations.length > 0
+  
+  // 检查当前token是否在grammar notation的marked_token_ids中
+  // 如果marked_token_ids为空，则整个句子都有grammar notation
+  const isInGrammarNotation = hasGrammar && grammarNotations.some(notation => {
+    if (!notation.marked_token_ids || notation.marked_token_ids.length === 0) {
+      // 如果marked_token_ids为空，整个句子都有grammar notation
+      return true
+    }
+    return notation.marked_token_ids.includes(tokenSentenceTokenId)
+  })
 
   const bgClass = selected
     ? 'bg-yellow-300'
@@ -127,12 +145,19 @@ export default function TokenSpan({
             scheduleHideNotation()
           }
         }}
-        onClick={(e) => { if (!isDraggingRef.current && selectable) { e.preventDefault(); addSingle(sentenceIdx, token) } }}
+        onClick={(e) => { 
+          if (!isDraggingRef.current && selectable) { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            addSingle(sentenceIdx, token) 
+          } 
+        }}
         className={[
           'px-0.5 rounded-sm transition-colors duration-150 select-none',
           cursorClass,
           bgClass,
-          isAsked ? 'border-b-2 border-green-500' : ''
+          isAsked ? 'border-b-2 border-green-500' : '',
+          isInGrammarNotation ? 'border-b-2 border-gray-400' : ''
         ].join(' ')}
         style={{ color: '#111827' }}
       >

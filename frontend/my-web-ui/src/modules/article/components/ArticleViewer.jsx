@@ -3,9 +3,11 @@ import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
+import { useSentenceInteraction } from '../hooks/useSentenceInteraction'
+import { useGrammarNotations } from '../hooks/useGrammarNotations'
 // import { useAskedTokens } from '../hooks/useAskedTokens' // 不再在这里创建hook实例，从props接收
 // import { useTokenNotations } from '../hooks/useTokenNotations' // 不再在这里创建hook实例，从props接收
-import TokenSpan from './TokenSpan'
+import SentenceContainer from './SentenceContainer'
 
 /**
  * ArticleViewer - Main component for displaying and interacting with article content
@@ -65,6 +67,30 @@ export default function ArticleViewer({
     clearSelection
   })
 
+  // Sentence interaction management
+  const {
+    hoveredSentenceIndex,
+    clickedSentenceIndex,
+    sentenceRefs,
+    handleSentenceMouseEnter,
+    handleSentenceMouseLeave,
+    handleSentenceClick,
+    clearSentenceInteraction,
+    getSentenceBackgroundStyle,
+    isSentenceInteracting
+  } = useSentenceInteraction()
+
+  // Grammar notations management
+  const {
+    grammarNotations,
+    isLoading: grammarNotationsLoading,
+    error: grammarNotationsError,
+    hasGrammarNotation,
+    getGrammarNotation,
+    getGrammarNotationsForSentence,
+    reload: reloadGrammarNotations
+  } = useGrammarNotations(articleId)
+
   // Token notations management - 现在从props接收，不再创建新的hook实例
   // const { getNotationContent, setNotationContent } = useTokenNotations()
 
@@ -94,40 +120,35 @@ export default function ArticleViewer({
     >
       <div className="space-y-[0.66rem] leading-[1.33] text-gray-900">
         {sentences.map((sentence, sIdx) => (
-          <div 
-            key={`s-${sIdx}`} 
-            className="select-none relative" 
-            data-sentence="1"
-          >
-            {activeSentenceIndex === sIdx && (
-              <div className="absolute inset-0 bg-gray-100 border border-gray-300 rounded-md z-0" />
-            )}
-            {(sentence?.tokens || []).map((t, tIdx) => (
-              <TokenSpan
-                key={`${sIdx}-${tIdx}`}
-                token={t}
-                tokenIdx={tIdx}
-                sentenceIdx={sIdx}
-                articleId={articleId}
-                selectedTokenIds={selectedTokenIds}
-                activeSentenceIndex={activeSentenceIndex}
-                isDraggingRef={isDraggingRef}
-                tokenRefsRef={tokenRefsRef}
-                hasExplanation={hasExplanation}
-                getExplanation={getExplanation}
-                hoveredTokenId={hoveredTokenId}
-                setHoveredTokenId={setHoveredTokenId}
-                handleGetExplanation={handleGetExplanation}
-                handleMouseDownToken={handleMouseDownToken}
-                handleMouseEnterToken={handleMouseEnterToken}
-                addSingle={addSingle}
-                isTokenAsked={isTokenAsked}
-                markAsAsked={markAsAsked}
-                getNotationContent={getNotationContent}
-                setNotationContent={setNotationContent}
-              />
-            ))}
-          </div>
+          <SentenceContainer
+            key={`s-${sIdx}`}
+            sentence={sentence}
+            sentenceIndex={sIdx}
+            articleId={articleId}
+            selectedTokenIds={selectedTokenIds}
+            activeSentenceIndex={activeSentenceIndex}
+            isDraggingRef={isDraggingRef}
+            tokenRefsRef={tokenRefsRef}
+            hasExplanation={hasExplanation}
+            getExplanation={getExplanation}
+            hoveredTokenId={hoveredTokenId}
+            setHoveredTokenId={setHoveredTokenId}
+            handleGetExplanation={handleGetExplanation}
+            handleMouseDownToken={handleMouseDownToken}
+            handleMouseEnterToken={handleMouseEnterToken}
+            addSingle={addSingle}
+            isTokenAsked={isTokenAsked}
+            markAsAsked={markAsAsked}
+            getNotationContent={getNotationContent}
+            setNotationContent={setNotationContent}
+            onSentenceMouseEnter={handleSentenceMouseEnter}
+            onSentenceMouseLeave={handleSentenceMouseLeave}
+            onSentenceClick={handleSentenceClick}
+            getSentenceBackgroundStyle={getSentenceBackgroundStyle}
+            isSentenceInteracting={isSentenceInteracting}
+            hasGrammarNotation={hasGrammarNotation}
+            getGrammarNotationsForSentence={getGrammarNotationsForSentence}
+          />
         ))}
       </div>
     </div>

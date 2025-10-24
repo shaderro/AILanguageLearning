@@ -288,9 +288,68 @@ async def get_grammar_list():
 async def get_grammar_by_id(grammar_id: int):
     data = _safe_read_json(grammar_file, [])
     for item in data:
-        if isinstance(item, dict) and int(item.get('grammar_id', -1)) == int(grammar_id):
+        if isinstance(item, dict) and int(item.get('rule_id', -1)) == int(grammar_id):
             return {'data': item}
     raise HTTPException(status_code=404, detail='grammar not found')
+
+
+@app.get('/api/grammar_notations/{text_id}')
+async def get_grammar_notations(text_id: int):
+    """获取语法注释列表"""
+    # 使用绝对路径确保能找到文件
+    grammar_notations_file = os.path.join(BACKEND_DIR, 'data', 'current', 'grammar_notations', 'default_user.json')
+    print(f"🔍 [get_grammar_notations] Looking for file: {grammar_notations_file}")
+    print(f"🔍 [get_grammar_notations] File exists: {os.path.exists(grammar_notations_file)}")
+    
+    data = _safe_read_json(grammar_notations_file, [])
+    print(f"🔍 [get_grammar_notations] Loaded data: {len(data)} items")
+    
+    # 过滤出指定text_id的注释
+    filtered_data = [item for item in data if item.get('text_id') == text_id]
+    print(f"🔍 [get_grammar_notations] Filtered data for text_id={text_id}: {len(filtered_data)} items")
+    
+    return {'data': filtered_data}
+
+
+@app.get('/api/grammar_examples/{text_id}/{sentence_id}')
+async def get_grammar_examples_by_sentence(text_id: int, sentence_id: int):
+    """获取指定句子的所有语法例子"""
+    try:
+        print(f"🔍 [get_grammar_examples_by_sentence] text_id={text_id}, sentence_id={sentence_id}")
+        
+        # 使用全局的DataController来获取grammar examples
+        grammar_examples = []
+        
+        # 遍历所有语法规则，查找匹配的例句
+        grammar_data = _safe_read_json(grammar_file, [])
+        
+        for rule in grammar_data:
+            if 'examples' in rule:
+                for example in rule['examples']:
+                    if example.get('text_id') == text_id and example.get('sentence_id') == sentence_id:
+                        grammar_examples.append({
+                            'rule_id': rule.get('rule_id'),
+                            'rule_name': rule.get('rule_name'),
+                            'rule_summary': rule.get('rule_summary'),
+                            'example': example
+                        })
+        
+        print(f"📚 [get_grammar_examples_by_sentence] Found {len(grammar_examples)} grammar examples")
+        
+        return {
+            'success': True,
+            'data': grammar_examples,
+            'text_id': text_id,
+            'sentence_id': sentence_id
+        }
+        
+    except Exception as e:
+        print(f"❌ [get_grammar_examples_by_sentence] Error: {e}")
+        return {
+            'success': False,
+            'error': str(e),
+            'data': []
+        }
 
 
 @app.get('/api/articles')

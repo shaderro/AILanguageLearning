@@ -194,6 +194,9 @@ export const apiService = {
   // 删除语法规则
   deleteGrammar: (id) => api.delete(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}/`),
 
+  // 获取语法注释列表
+  getGrammarNotations: (textId) => api.get(API_TARGET === 'mock' ? `/api/grammar_notations/${textId}` : `/api/v2/notations/grammar?text_id=${textId}`),
+
   // ==================== Text/Article API（数据库版本）====================
   
   // 获取文章列表
