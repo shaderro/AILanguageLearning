@@ -197,6 +197,12 @@ export const apiService = {
   // 获取语法注释列表
   getGrammarNotations: (textId) => api.get(API_TARGET === 'mock' ? `/api/grammar_notations/${textId}` : `/api/v2/notations/grammar?text_id=${textId}`),
 
+  // 获取句子的语法规则
+  getSentenceGrammarRules: (textId, sentenceId) => 
+    api.get(API_TARGET === 'mock' 
+      ? `/api/grammar_notations/${textId}/${sentenceId}` 
+      : `/api/v2/notations/grammar/${textId}/${sentenceId}`),
+
   // ==================== Text/Article API（数据库版本）====================
   
   // 获取文章列表

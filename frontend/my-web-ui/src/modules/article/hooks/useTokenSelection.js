@@ -4,7 +4,7 @@ import { getTokenId } from '../utils/tokenUtils'
 /**
  * Custom hook to manage token selection state
  */
-export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
+export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceInteraction }) {
   const [selectedTokenIds, setSelectedTokenIds] = useState(() => new Set())
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(null)
   const activeSentenceRef = useRef(null)
@@ -84,13 +84,28 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId }) {
     emitSelection(empty, '')
     activeSentenceRef.current = null
     setActiveSentenceIndex(null)
+    // 清除句子交互状态
+    if (clearSentenceInteraction) {
+      clearSentenceInteraction()
+    }
   }
 
   const addSingle = (sIdx, token) => {
+    // 如果选择了其他句子的token，先清除当前选择，然后设置新句子为活跃状态
     if (activeSentenceRef.current != null && activeSentenceRef.current !== sIdx) {
       clearSelection()
+      // 设置新的活跃句子
+      activeSentenceRef.current = sIdx
+      setActiveSentenceIndex(sIdx)
+      // 重新开始选择，只选择当前token
+      const uid = getTokenId(token, sIdx)
+      console.debug('[useTokenSelection.addSingle] sIdx=', sIdx, 'uid=', uid, 'token=', token?.token_body, 'new sentence')
+      if (!uid) return
+      const next = new Set([uid])
+      emitSelection(next, token?.token_body ?? '')
       return
     }
+    
     const uid = getTokenId(token, sIdx)
     console.debug('[useTokenSelection.addSingle] sIdx=', sIdx, 'uid=', uid, 'token=', token?.token_body)
     if (!uid) return

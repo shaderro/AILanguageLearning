@@ -26,26 +26,36 @@ export function useTokenDrag({
     if (activeSentenceRef.current != null && activeSentenceRef.current !== sIdx) {
       e.preventDefault()
       clearSelection()
-      return
-    }
-    e.preventDefault()
-    isDraggingRef.current = true
-    wasDraggingRef.current = true
-    hasMovedRef.current = false
-    dragSentenceIndexRef.current = sIdx
-    dragStartIndexRef.current = tIdx
-    selectionBeforeDragRef.current = new Set(selectedTokenIds)
-    if (activeSentenceRef.current == null) {
+      // 设置新的活跃句子
       activeSentenceRef.current = sIdx
-    }
-    dragStartPointRef.current = { x: e.clientX, y: e.clientY }
-    const startUid = getTokenId(token, sIdx)
-    console.debug('[useTokenDrag.mouseDown] sIdx=', sIdx, 'startUid=', startUid, 'token=', token?.token_body)
-    if (startUid) {
-      const next = new Set(selectionBeforeDragRef.current)
-      next.add(startUid)
-      selectionBeforeDragRef.current = new Set(next)
-      emitSelection(next, token?.token_body ?? '')
+      // 重新开始选择，只选择当前token
+      const startUid = getTokenId(token, sIdx)
+      console.debug('[useTokenDrag.mouseDown] sIdx=', sIdx, 'startUid=', startUid, 'token=', token?.token_body, 'new sentence')
+      if (startUid) {
+        const next = new Set([startUid])
+        selectionBeforeDragRef.current = new Set(next)
+        emitSelection(next, token?.token_body ?? '')
+      }
+    } else {
+      e.preventDefault()
+      isDraggingRef.current = true
+      wasDraggingRef.current = true
+      hasMovedRef.current = false
+      dragSentenceIndexRef.current = sIdx
+      dragStartIndexRef.current = tIdx
+      selectionBeforeDragRef.current = new Set(selectedTokenIds)
+      if (activeSentenceRef.current == null) {
+        activeSentenceRef.current = sIdx
+      }
+      dragStartPointRef.current = { x: e.clientX, y: e.clientY }
+      const startUid = getTokenId(token, sIdx)
+      console.debug('[useTokenDrag.mouseDown] sIdx=', sIdx, 'startUid=', startUid, 'token=', token?.token_body)
+      if (startUid) {
+        const next = new Set(selectionBeforeDragRef.current)
+        next.add(startUid)
+        selectionBeforeDragRef.current = new Set(next)
+        emitSelection(next, token?.token_body ?? '')
+      }
     }
     suppressNextClickRef.current = true
     setTimeout(() => { suppressNextClickRef.current = false }, 0)

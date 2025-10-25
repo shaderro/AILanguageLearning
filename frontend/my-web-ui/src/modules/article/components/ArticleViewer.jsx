@@ -40,6 +40,19 @@ export default function ArticleViewer({
     getExplanation
   } = useVocabExplanations()
 
+  // Sentence interaction management
+  const {
+    hoveredSentenceIndex,
+    clickedSentenceIndex,
+    sentenceRefs,
+    handleSentenceMouseEnter,
+    handleSentenceMouseLeave,
+    handleSentenceClick,
+    clearSentenceInteraction,
+    getSentenceBackgroundStyle,
+    isSentenceInteracting
+  } = useSentenceInteraction()
+
   // Token selection management
   const {
     selectedTokenIds,
@@ -48,7 +61,7 @@ export default function ArticleViewer({
     clearSelection,
     addSingle,
     emitSelection
-  } = useTokenSelection({ sentences, onTokenSelect, articleId })
+  } = useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceInteraction })
 
   // Token drag selection management
   const {
@@ -66,19 +79,6 @@ export default function ArticleViewer({
     emitSelection,
     clearSelection
   })
-
-  // Sentence interaction management
-  const {
-    hoveredSentenceIndex,
-    clickedSentenceIndex,
-    sentenceRefs,
-    handleSentenceMouseEnter,
-    handleSentenceMouseLeave,
-    handleSentenceClick,
-    clearSentenceInteraction,
-    getSentenceBackgroundStyle,
-    isSentenceInteracting
-  } = useSentenceInteraction()
 
   // Grammar notations management
   const {

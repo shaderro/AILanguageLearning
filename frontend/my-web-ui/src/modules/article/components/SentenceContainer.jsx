@@ -1,4 +1,6 @@
+import { useState, useRef } from 'react'
 import TokenSpan from './TokenSpan'
+import GrammarNotationCard from './GrammarNotationCard'
 
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
@@ -33,14 +35,57 @@ export default function SentenceContainer({
   hasGrammarNotation,
   getGrammarNotationsForSentence
 }) {
+  // Grammar notation hover state
+  const [showGrammarCard, setShowGrammarCard] = useState(false)
+  const [grammarCardPosition, setGrammarCardPosition] = useState({ top: 0, left: 0, right: 'auto' })
+  const sentenceRef = useRef(null)
+  const hideCardTimerRef = useRef(null)
   const handleSentenceMouseEnter = (e) => {
     // Trigger when entering the sentence container
     onSentenceMouseEnter(sentenceIndex)
+    
+    // Show grammar card if this sentence has grammar notations
+    console.log(`🔍 [SentenceContainer] Mouse enter sentence ${sentenceId}:`, {
+      hasGrammar,
+      grammarNotations: grammarNotations.length,
+      sentenceIndex
+    })
+    
+    if (hasGrammar && grammarNotations.length > 0) {
+      const rect = sentenceRef.current?.getBoundingClientRect()
+      if (rect) {
+        console.log(`📍 [SentenceContainer] Showing grammar card for sentence ${sentenceId}`)
+        setGrammarCardPosition({
+          top: rect.bottom + 8,
+          left: rect.left,
+          right: 'auto'
+        })
+        setShowGrammarCard(true)
+      }
+    }
   }
 
   const handleSentenceMouseLeave = (e) => {
     // Trigger when leaving the sentence container
     onSentenceMouseLeave()
+    
+    // Hide grammar card with delay
+    hideCardTimerRef.current = setTimeout(() => {
+      setShowGrammarCard(false)
+    }, 100)
+  }
+  
+  // Handle card mouse enter - cancel hiding
+  const handleCardMouseEnter = () => {
+    if (hideCardTimerRef.current) {
+      clearTimeout(hideCardTimerRef.current)
+      hideCardTimerRef.current = null
+    }
+  }
+  
+  // Handle card mouse leave - hide card
+  const handleCardMouseLeave = () => {
+    setShowGrammarCard(false)
   }
 
   const handleSentenceClick = async (e) => {
@@ -110,6 +155,7 @@ export default function SentenceContainer({
 
   return (
     <div 
+      ref={sentenceRef}
       key={`s-${sentenceIndex}`} 
       className={`select-none relative transition-all duration-200`}
       data-sentence="1"
@@ -155,7 +201,18 @@ export default function SentenceContainer({
         />
       ))}
       
-      {/* Grammar notation underlines are now handled directly in TokenSpan components */}
+      {/* Grammar notation card - shown when hovering over the entire sentence */}
+      {hasGrammar && grammarNotations.length > 0 && (
+        <GrammarNotationCard
+          isVisible={showGrammarCard}
+          textId={articleId}
+          sentenceId={sentenceId}
+          position={grammarCardPosition}
+          onClose={() => setShowGrammarCard(false)}
+          onMouseEnter={handleCardMouseEnter}
+          onMouseLeave={handleCardMouseLeave}
+        />
+      )}
     </div>
   )
 }

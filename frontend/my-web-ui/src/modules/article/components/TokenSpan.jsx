@@ -3,6 +3,7 @@ import { getTokenKey, getTokenId } from '../utils/tokenUtils'
 // import VocabExplanationButton from './VocabExplanationButton' // 暂时注释掉 - 以后可能会用到
 import VocabTooltip from './VocabTooltip'
 import TokenNotation from './TokenNotation'
+import GrammarNotation from './GrammarNotation'
 
 /**
  * TokenSpan - Renders individual token with selection and vocab explanation features
@@ -156,8 +157,8 @@ export default function TokenSpan({
           'px-0.5 rounded-sm transition-colors duration-150 select-none',
           cursorClass,
           bgClass,
-          isAsked ? 'border-b-2 border-green-500' : '',
-          isInGrammarNotation ? 'border-b-2 border-gray-400' : ''
+          // 优先级：已提问的token > 语法标记
+          isAsked ? 'border-b-2 border-green-500' : (isInGrammarNotation ? 'border-b-2 border-gray-400' : '')
         ].join(' ')}
         style={{ color: '#111827' }}
       >
@@ -195,6 +196,8 @@ export default function TokenSpan({
           onMouseLeave={handleNotationMouseLeave}
         />
       )}
+      
+      {/* GrammarNotation is now handled at sentence level in SentenceContainer */}
     </span>
   )
 }
