@@ -74,7 +74,7 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
     if (onTokenSelect) {
       const selectedTexts = buildSelectedTexts(activeSentenceRef.current, set)
       const context = buildSelectionContext(activeSentenceRef.current, set)
-      console.debug('[useTokenSelection.emitSelection] sentenceIdx=', activeSentenceRef.current, 'selectedIds=', Array.from(set))
+      // Debug logging removed for performance
       onTokenSelect(lastTokenText, set, selectedTexts, context)
     }
   }

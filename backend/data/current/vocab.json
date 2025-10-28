@@ -106,5 +106,131 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 7,
+    "vocab_body": "vorbeischießen",
+    "explanation": "{'explanation': 'vorbeischießen 是一个德语动词，由前缀 vorbei-（意为“经过”或“越过”）和词根 schießen（意为“射击”或“快速移动”）组成。它的基本含义是“快速飞过或掠过”，通常用来描述物体（如鸟类、车辆或子弹）以高速从某处经过。这个词强调动作的迅速和突然性，常用于描述自然现象或运动场景。作为可分动词，在句子中前缀 vorbei- 可能分离到句末（例如：Sie schießen vorbei）。此外，它也可以引申为“错过”或“擦肩而过”，但较少使用。词性为动词，常用于口语和文学语境中。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 7,
+        "text_id": 1,
+        "sentence_id": 46,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'vorbeischießen' 描述猫头鹰在光天化日下快速飞过的动作。结合上下文 'die Eulen ... vorbeischossen'（猫头鹰快速飞过），它强调猫头鹰飞行的速度和突然性，就像射箭一样一闪而过，与后面描述人们惊讶地张着嘴观看的场景相呼应。\"}",
+        "token_indices": [
+          20
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 8,
+    "vocab_body": "daran",
+    "explanation": "{'explanation': 'daran是一个德语副词，主要有以下含义和用法：\\n1. 基本含义：表示“关于这个”、“对此”，指代前面提到的事物或情况\\n2. 语法功能：常用作代副词，替代介词短语，常与动词或形容词搭配使用\\n3. 常见搭配：与 denken an（想到）、glauben an（相信）、sich erinnern an（记得）等动词连用\\n4. 词性：副词，有时也用作代副词\\n5. 用法说明：用于避免重复，使表达更加简洁流畅，通常指代前文已经提及的内容'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 8,
+        "text_id": 1,
+        "sentence_id": 11,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'daran' 指的是前面提到的 'beim Gedanken'（一想到...），它连接了想法和具体内容。具体来说，'daran' 在这里代表 '一想到邻居们会说什么'，即 'was die Nachbarn sagen würden'（邻居们会说什么）。\"}",
+        "token_indices": [
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 9,
+    "vocab_body": "einfahrt",
+    "explanation": "{'explanation': 'Einfahrt 是一个德语名词，意思是“入口”或“车道”，通常指车辆进入某个区域（如建筑物、停车场或私人车道）的通道。它也可以指“驶入”的动作，例如在交通中表示车辆进入道路或高速公路。这个词常用于描述车辆通行的路径，没有复数形式，在句子中通常作为主语或宾语使用。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 9,
+        "text_id": 1,
+        "sentence_id": 20,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Einfahrt' 指的是车辆进入某个地点的入口或车道。结合句子 'die Einfahrt zu Nummer 4 hinaus'，意思是 '他倒车从通往4号的车道出去'，这里 'Einfahrt' 具体指代进入4号地址的车道。\"}",
+        "token_indices": [
+          21
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 10,
+    "vocab_body": "zur schnecke machen",
+    "explanation": "{'explanation': '这是一个德语固定表达，意思是\"严厉批评、斥责或羞辱某人\"。\\n\\n词性：动词短语\\n\\n基本含义：\\n- 字面意思是\"把某人变成蜗牛\"，但实际使用时表示严厉地批评或责骂某人\\n- 相当于英语中的\"to give someone a dressing-down\"或\"to tell someone off\"\\n- 表达某人受到严厉的指责或羞辱\\n\\n用法：\\n- 通常用于描述某人受到严厉批评的情况\\n- 可以用于正式和非正式场合\\n- 是一个比较生动的口语表达\\n\\n注意：这个表达带有贬义，表示批评的程度很强烈，通常会让被批评者感到难堪或羞愧。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 10,
+        "text_id": 1,
+        "sentence_id": 49,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'zur Schnecke machen' 是一个固定表达，意思是严厉批评或羞辱某人。整句话 'Er machte fünf verschiedene Leute zur Schnecke' 可以理解为 '他严厉批评了五个不同的人'，表示说话者（他）对这些人进行了强烈的指责或羞辱。\"}",
+        "token_indices": [
+          13
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 11,
+    "vocab_body": "vertreten",
+    "explanation": "{'explanation': 'vertreten 是一个德语动词，具有多个含义：\\n1. 基本含义：伸展或活动身体部位（如腿或脚），通常用于缓解长时间坐或站立后的不适，例如在句子中表示“活动一下腿”。\\n2. 其他常见含义：\\n   - 代表或代理：指代替某人履行职责或角色，例如在会议中代表他人。\\n   - 主张或维护：指支持某种观点或立场，例如在辩论中维护自己的意见。\\n   - 扭伤或损伤：指身体部位（如脚踝）受伤，例如“sich den Fuß vertreten”表示扭伤脚。\\n词性：动词（不规则变化，过去式为 vertrat，过去分词为 vertreten）。用法上，它通常与反身代词（如 sich）连用，表示对自己身体的动作，或在其他语境中直接带宾语。注意，具体含义取决于上下文，但这里主要强调活动身体以放松。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 11,
+        "text_id": 1,
+        "sentence_id": 51,
+        "context_explanation": "{\"explanation\": \"在这句话中，'vertreten' 的意思是 '伸展或活动一下'，具体指 'die Beine vertreten'（活动一下腿脚），用来描述他想在午休前散步放松一下。\"}",
+        "token_indices": [
+          31
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 12,
+    "vocab_body": "verbringen",
+    "explanation": "{'explanation': 'verbringen 是一个德语动词，意思是“度过”或“花费（时间）”。它通常用于描述如何度过一段时间，例如假期、周末或日常活动。这个词是规则动词，过去式为 verbrachte，过去分词为 verbracht。常见用法包括与时间相关的短语，如 Zeit verbringen（度过时间）。它没有其他主要含义，主要用于时间相关的语境中。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 12,
+        "text_id": 1,
+        "sentence_id": 48,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'verbringen' 的意思是 '度过'，它描述了 Dursley 先生如何度过了一个早晨。具体来说，句子说 'verbrachte einen ganz gewöhnlichen, eulenfreien Morgen'，翻译为 '度过了一个完全普通、没有猫头鹰的早晨'，所以 'verbringen' 在这里表示他经历或花费时间的方式。\"}",
+        "token_indices": [
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 13,
+    "vocab_body": "führen",
+    "explanation": "{'explanation': \"动词'führen'在德语中有多个含义：1. 带领、引导，指带领某人去某处或引导某个过程；2. 进行、实施，指执行某个行动或活动；3. 管理、经营，指负责管理企业或组织；4. 导致、引起，表示某种原因产生特定结果；5. 持有、携带，指随身携带某物。这个词是规则动词，在不同语境下可以搭配不同的宾语。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 13,
+        "text_id": 1,
+        "sentence_id": 50,
+        "context_explanation": "{\"explanation\": \"在这句话中，'führen' 的意思是 '进行' 或 '主持'。它描述了主语 'Er' 正在 '进行多个重要的电话通话'（Er führte mehrere wichtige Telefongespräche）。\"}",
+        "token_indices": [
+          3
+        ]
+      }
+    ]
   }
 ]

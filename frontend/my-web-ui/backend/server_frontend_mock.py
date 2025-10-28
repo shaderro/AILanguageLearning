@@ -311,6 +311,75 @@ async def get_grammar_notations(text_id: int):
     return {'data': filtered_data}
 
 
+@app.get('/api/grammar_notations/{text_id}/{sentence_id}')
+async def get_grammar_notation_by_sentence(text_id: int, sentence_id: int):
+    """获取特定句子的语法标注详情"""
+    # 使用绝对路径确保能找到文件
+    grammar_notations_file = os.path.join(BACKEND_DIR, 'data', 'current', 'grammar_notations', 'default_user.json')
+    print(f"🔍 [get_grammar_notation_by_sentence] Looking for file: {grammar_notations_file}")
+    print(f"🔍 [get_grammar_notation_by_sentence] File exists: {os.path.exists(grammar_notations_file)}")
+    
+    data = _safe_read_json(grammar_notations_file, [])
+    print(f"🔍 [get_grammar_notation_by_sentence] Loaded data: {len(data)} items")
+    
+    # 查找匹配的语法标注
+    matching_notation = None
+    for item in data:
+        if item.get('text_id') == text_id and item.get('sentence_id') == sentence_id:
+            matching_notation = item
+            break
+    
+    print(f"🔍 [get_grammar_notation_by_sentence] Found notation for {text_id}:{sentence_id}: {matching_notation is not None}")
+    
+    if matching_notation:
+        return {'data': matching_notation}
+    else:
+        return {'data': None, 'message': f'No grammar notation found for text_id={text_id}, sentence_id={sentence_id}'}
+
+
+@app.get('/api/vocab_notations/{text_id}')
+async def get_vocab_notations(text_id: int):
+    """获取词汇注释列表"""
+    # 使用绝对路径确保能找到文件
+    vocab_notations_file = os.path.join(BACKEND_DIR, 'data', 'current', 'vocab_notations', 'default_user.json')
+    print(f"🔍 [get_vocab_notations] Looking for file: {vocab_notations_file}")
+    print(f"🔍 [get_vocab_notations] File exists: {os.path.exists(vocab_notations_file)}")
+    
+    data = _safe_read_json(vocab_notations_file, [])
+    print(f"🔍 [get_vocab_notations] Loaded data: {len(data)} items")
+    
+    # 过滤出指定text_id的注释
+    filtered_data = [item for item in data if item.get('text_id') == text_id]
+    print(f"🔍 [get_vocab_notations] Filtered data for text_id={text_id}: {len(filtered_data)} items")
+    
+    return {'data': filtered_data}
+
+
+@app.get('/api/vocab_notations/{text_id}/{sentence_id}')
+async def get_vocab_notation_by_sentence(text_id: int, sentence_id: int):
+    """获取特定句子的词汇标注详情"""
+    # 使用绝对路径确保能找到文件
+    vocab_notations_file = os.path.join(BACKEND_DIR, 'data', 'current', 'vocab_notations', 'default_user.json')
+    print(f"🔍 [get_vocab_notation_by_sentence] Looking for file: {vocab_notations_file}")
+    print(f"🔍 [get_vocab_notation_by_sentence] File exists: {os.path.exists(vocab_notations_file)}")
+    
+    data = _safe_read_json(vocab_notations_file, [])
+    print(f"🔍 [get_vocab_notation_by_sentence] Loaded data: {len(data)} items")
+    
+    # 查找匹配的词汇标注
+    matching_notations = []
+    for item in data:
+        if item.get('text_id') == text_id and item.get('sentence_id') == sentence_id:
+            matching_notations.append(item)
+    
+    print(f"🔍 [get_vocab_notation_by_sentence] Found notations for {text_id}:{sentence_id}: {len(matching_notations)} items")
+    
+    if matching_notations:
+        return {'data': matching_notations}
+    else:
+        return {'data': [], 'message': f'No vocab notations found for text_id={text_id}, sentence_id={sentence_id}'}
+
+
 @app.get('/api/grammar_examples/{text_id}/{sentence_id}')
 async def get_grammar_examples_by_sentence(text_id: int, sentence_id: int):
     """获取指定句子的所有语法例子"""

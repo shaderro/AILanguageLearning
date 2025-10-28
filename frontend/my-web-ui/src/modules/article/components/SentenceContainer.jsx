@@ -33,7 +33,10 @@ export default function SentenceContainer({
   isSentenceInteracting,
   // Grammar notation props
   hasGrammarNotation,
-  getGrammarNotationsForSentence
+  getGrammarNotationsForSentence,
+  getGrammarRuleById,
+  // Vocab notation props
+  getVocabExampleForToken
 }) {
   // Grammar notation hover state
   const [showGrammarCard, setShowGrammarCard] = useState(false)
@@ -45,16 +48,11 @@ export default function SentenceContainer({
     onSentenceMouseEnter(sentenceIndex)
     
     // Show grammar card if this sentence has grammar notations
-    console.log(`🔍 [SentenceContainer] Mouse enter sentence ${sentenceId}:`, {
-      hasGrammar,
-      grammarNotations: grammarNotations.length,
-      sentenceIndex
-    })
     
     if (hasGrammar && grammarNotations.length > 0) {
       const rect = sentenceRef.current?.getBoundingClientRect()
       if (rect) {
-        console.log(`📍 [SentenceContainer] Showing grammar card for sentence ${sentenceId}`)
+        // Showing grammar card for sentence
         setGrammarCardPosition({
           top: rect.bottom + 8,
           left: rect.left,
@@ -92,46 +90,8 @@ export default function SentenceContainer({
     // Always trigger sentence click for now - we'll let the token components handle their own clicks
     e.stopPropagation()
     
-    // 调用grammar rule manager获取grammar examples
-    try {
-      console.log(`🔍 [SentenceContainer] Clicking sentence ${sentenceId}, calling grammar rule manager...`)
-      
-      // 这里需要调用后端的API来获取grammar examples
-      const apiUrl = `http://localhost:8000/api/grammar_examples/${articleId}/${sentenceId}`
-      console.log(`🔍 [SentenceContainer] Calling API: ${apiUrl}`)
-      
-      const response = await fetch(apiUrl)
-      console.log(`🔍 [SentenceContainer] API response status: ${response.status}`)
-      console.log(`🔍 [SentenceContainer] API response headers:`, response.headers)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log(`📚 [SentenceContainer] Grammar examples for sentence ${sentenceId}:`, data)
-        
-        // 打印每个grammar example的详细信息
-        if (data.success && data.data && data.data.length > 0) {
-          console.log(`\n🔍 [SentenceContainer] Detailed Grammar Examples for Sentence ${sentenceId}:`)
-          data.data.forEach((example, index) => {
-            console.log(`\n--- Grammar Example ${index + 1} ---`)
-            console.log(`Rule ID: ${example.rule_id}`)
-            console.log(`Rule Name: ${example.rule_name}`)
-            console.log(`Rule Summary: ${example.rule_summary}`)
-            console.log(`Rule Explanation: ${example.rule_summary}`) // 使用rule_summary作为explanation
-            console.log(`Context Explanation: ${example.example.explanation_context}`)
-            console.log(`Text ID: ${example.example.text_id}`)
-            console.log(`Sentence ID: ${example.example.sentence_id}`)
-          })
-        } else {
-          console.log(`📝 [SentenceContainer] No grammar examples found for sentence ${sentenceId}`)
-        }
-      } else {
-        const text = await response.text()
-        console.log(`❌ [SentenceContainer] Failed to fetch grammar examples: ${response.status}`)
-        console.log(`❌ [SentenceContainer] Response text:`, text.substring(0, 200)) // 只显示前200个字符
-      }
-    } catch (error) {
-      console.error(`❌ [SentenceContainer] Error fetching grammar examples:`, error)
-    }
+    // 移除多余的API调用 - 语法例句数据已通过GrammarNotationCard在hover时获取
+    console.log(`🔍 [SentenceContainer] Clicking sentence ${sentenceId} - no API call needed`)
     
     onSentenceClick(sentenceIndex)
   }
@@ -144,14 +104,7 @@ export default function SentenceContainer({
   const hasGrammar = hasGrammarNotation ? hasGrammarNotation(sentenceId) : false
   const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
   
-  // Debug logging
-  if (sentenceId === 4 || sentenceId === 7) {
-    console.log(`🔍 [SentenceContainer] Sentence ${sentenceId}:`, {
-      hasGrammar,
-      grammarNotations,
-      sentenceIndex
-    })
-  }
+  // Debug logging removed to improve performance
 
   return (
     <div 
@@ -198,6 +151,7 @@ export default function SentenceContainer({
           setNotationContent={setNotationContent}
           hasGrammarNotation={hasGrammarNotation}
           getGrammarNotationsForSentence={getGrammarNotationsForSentence}
+          getVocabExampleForToken={getVocabExampleForToken}
         />
       ))}
       
@@ -211,6 +165,8 @@ export default function SentenceContainer({
           onClose={() => setShowGrammarCard(false)}
           onMouseEnter={handleCardMouseEnter}
           onMouseLeave={handleCardMouseLeave}
+          cachedGrammarRules={grammarNotations}
+          getGrammarRuleById={getGrammarRuleById}
         />
       )}
     </div>

@@ -24,6 +24,7 @@ from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
 from backend.api import vocab_router, grammar_router, text_router
 from backend.api.vocab_routes_verbose import router as vocab_verbose_router
 from backend.api.user_routes import router as user_router
+from backend.api.notation_routes import router as notation_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -47,6 +48,7 @@ app.include_router(vocab_verbose_router)  # 详细日志版本
 app.include_router(grammar_router)
 app.include_router(text_router)
 app.include_router(user_router)  # 用户管理路由
+app.include_router(notation_router)  # 标注管理路由
 
 @app.get("/")
 async def root():
@@ -61,6 +63,7 @@ async def root():
             "grammar_v2": "/api/v2/grammar",
             "texts_v2": "/api/v2/texts",
             "users_v2": "/api/v2/users",
+            "notations_v2": "/api/v2/notations",
             "docs": "/docs",
             "health": "/api/health"
         },
@@ -77,7 +80,8 @@ async def health_check():
             "vocab_v2": "active (database)",
             "grammar_v2": "active (database)",
             "texts_v2": "active (database)",
-            "users_v2": "active (database)"
+            "users_v2": "active (database)",
+            "notations_v2": "active (json/database)"
         }
     }
 

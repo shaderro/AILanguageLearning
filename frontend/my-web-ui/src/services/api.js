@@ -203,6 +203,15 @@ export const apiService = {
       ? `/api/grammar_notations/${textId}/${sentenceId}` 
       : `/api/v2/notations/grammar/${textId}/${sentenceId}`),
 
+  // 获取词汇注释列表
+  getVocabNotations: (textId) => api.get(API_TARGET === 'mock' ? `/api/vocab_notations/${textId}` : `/api/v2/notations/vocab?text_id=${textId}`),
+
+  // 获取句子的词汇注释
+  getSentenceVocabNotations: (textId, sentenceId) => 
+    api.get(API_TARGET === 'mock' 
+      ? `/api/vocab_notations/${textId}/${sentenceId}` 
+      : `/api/v2/notations/vocab/${textId}/${sentenceId}`),
+
   // ==================== Text/Article API（数据库版本）====================
   
   // 获取文章列表

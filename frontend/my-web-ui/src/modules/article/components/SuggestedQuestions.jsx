@@ -6,41 +6,44 @@ const SuggestedQuestions = ({
   isVisible = false,
   inputValue = '',
   onQuestionClick,
-  tokenCount = 1  // 新增：选中的token数量，默认为1
+  tokenCount = 1,  // 新增：选中的token数量，默认为1
+  hasSelectedSentence = false  // 新增：是否选择了整句
 }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null)
 
   // 单个token的建议问题
   const singleTokenQuestions = [
     "这个词是什么意思？",
-    "这个词在这句话中是什么意思？",
     "这个词有什么词根词缀吗？"
   ]
 
   // 多个token（短语）的建议问题
   const multipleTokensQuestions = [
-    "这个短语是什么意思？",
-    "这个短语怎么使用？",
-    "这是固定搭配吗？",
-    "这几个词是什么意思？"
+    "这些词是什么意思？",
+    "这部分的语法结构是什么？"
   ]
 
   // 整句话的建议问题
   const sentenceQuestions = [
     "这句话是什么意思？",
-    "这句话的语法结构是什么？",
-    "这句话的主谓宾是什么？",
+    "这句话的语法结构是什么？"
   ]
 
-  // 根据token数量选择对应的问题列表
+  // 根据选择类型和token数量选择对应的问题列表
   const getSuggestedQuestions = () => {
+    // 如果选择了整句，优先使用句子问题
+    if (hasSelectedSentence) {
+      return sentenceQuestions
+    }
+    
+    // 否则根据token数量选择
     if (tokenCount === 1) {
       return singleTokenQuestions
     } else if (tokenCount > 1 && tokenCount < 10) {
       // 假设小于10个token为短语
       return multipleTokensQuestions
     } else {
-      // 10个及以上token或整句话
+      // 10个及以上token
       return sentenceQuestions
     }
   }

@@ -9,6 +9,24 @@
         "text_id": 1,
         "sentence_id": 7,
         "explanation_context": "{\"explanation\": \"在这个句子中，关系从句是“was sie wollten”，它作为“alles”的修饰语，具体说明“Dursleys 拥有他们想要的一切”。关系从句通过“was”引导，连接主句和从句，使句子更完整地表达意思。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 0,
+        "sentence_id": 14,
+        "explanation_context": "{\"explanation\": \"在这个句子中，关系从句是 'die bald überall im Land geschehen sollten'，它修饰前面的名词 'Dinge'，说明这些奇怪而神秘的事情很快将在全国各地发生。关系从句通过关系代词 'die' 与主句连接，提供关于 'Dinge' 的额外信息。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 46,
+        "explanation_context": "{\"explanation\": \"在这个句子中，关系从句“die am helllichten Tage vorbeischossen”用来修饰前面的名词“Eulen”，说明这些猫头鹰是在大白天飞过的。它提供了关于猫头鹰的额外信息，使描述更加具体。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 11,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'was die Nachbarn sagen würden' 是一个关系从句，它修饰前面的 'daran'，具体说明德思礼夫妇所担心的内容——即邻居们可能会说什么。\"}"
       }
     ],
     "source": "qa",
@@ -39,6 +57,12 @@
         "text_id": 1,
         "sentence_id": 7,
         "explanation_context": "{\"explanation\": \"在这句话中，'doch' 连接了两个对比的句子：前半句说德思礼夫妇拥有他们想要的一切，后半句说他们有一个秘密。'doch' 强调了这种转折，表示尽管他们物质上很富有，但内心却有一个担忧，突出了前后情况的矛盾。\"}"
+      },
+      {
+        "rule_id": 3,
+        "text_id": 1,
+        "sentence_id": 2,
+        "explanation_context": "{\"explanation\": \"在这个句子中，虽然没有直接使用 'doch'，但 'denn' 作为转折连词表达了类似的转折关系。它连接了前半句（没人想到他们会卷入奇怪神秘的故事）和后半句（他们不想和这种胡闹有任何关系），强调了尽管前半句描述了潜在的可能性，但后半句却给出了相反的理由或解释，从而形成逻辑上的转折。\"}"
       }
     ],
     "source": "qa",
@@ -54,6 +78,150 @@
         "text_id": 1,
         "sentence_id": 4,
         "explanation_context": "{\"explanation\": \"在这句话中，'dafür' 是一个由介词 'für' 和代副词 'da-' 组合而成的副词，用来替代前文提到的 'fast keinen Hals'（几乎没有脖子），并引出转折后的内容 'einen sehr großen Schnurrbart'（一个非常大的胡子），表达'取而代之'的意思。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 5,
+    "rule_name": "无人称被动结构",
+    "rule_summary": "德语中表示无人称被动，结构为'sein + 名词 + zu + 动词不定式'，表示'没有...可以被...'，如'war kein Vorzeichen zu erkennen'意为'没有任何征兆可以被察觉'",
+    "examples": [
+      {
+        "rule_id": 5,
+        "text_id": 0,
+        "sentence_id": 14,
+        "explanation_context": "{\"explanation\": \"在这句话中，'war ... zu erkennen' 构成了无人称被动结构。它描述了一个客观状态（没有预兆可以被察觉），而非特定人物的行为，主语是抽象概念 'kein Vorzeichen'（没有预兆），强调事情的自然发生而非人为动作。\"}"
+      },
+      {
+        "rule_id": 5,
+        "text_id": 1,
+        "sentence_id": 14,
+        "explanation_context": "{\"explanation\": \"在这句话中，'war ... zu erkennen' 构成了无人称被动结构。它不强调动作的执行者（谁在识别），而是客观描述'没有迹象可以被识别'这一状态，增强了句子的中立性和叙述感。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 6,
+    "rule_name": "dass引导的宾语从句结构",
+    "rule_summary": "dass作为连词引导宾语从句，句子结构为：dass + 副词 + 主语 + 定语 + 谓语，用于表达一个完整的陈述内容。",
+    "examples": [
+      {
+        "rule_id": 6,
+        "text_id": 1,
+        "sentence_id": 34,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'dass'引导的宾语从句'offenbar eine Menge seltsam gekleideter Menschen unterwegs waren'作为主句动词'bemerken'的宾语，说明他注意到的事情是'显然有很多穿着奇怪的人在路上'。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 7,
+    "rule_name": "德语可分动词结构",
+    "rule_summary": "可分动词由动词词干和可分前缀组成，在句子中前缀可能分离；本句中'holen'是动词词干，'über der Straße'是地点状语，'einen Krapfen'是宾语。",
+    "examples": [
+      {
+        "rule_id": 7,
+        "text_id": 1,
+        "sentence_id": 51,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'vertreten' 是可分动词 'sich die Beine vertreten' 的一部分，意思是 '活动活动腿脚'。前缀 'ver-' 在这里与动词根 'treten' 分离，并移动到句子的末尾，形成了可分动词结构，这是德语句子中常见的语序规则。\"}"
+      },
+      {
+        "rule_id": 7,
+        "text_id": 1,
+        "sentence_id": 46,
+        "explanation_context": "{\"explanation\": \"在这句话中，'vorbeischossen' 和 'hinwegflog' 是可分动词结构。'vorbeischossen' 由可分前缀 'vorbei-' 和动词词干 '-schossen' 组成，描述猫头鹰在白天快速飞过的动作；'hinwegflog' 由可分前缀 'hinweg-' 和动词词干 '-flog' 组成，表示猫头鹰从人们头顶飞"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 8,
+    "rule_name": "德语并列句结构",
+    "rule_summary": "由连词und连接两个独立句子构成并列复合句，每个分句保持完整的主谓宾结构",
+    "examples": [
+      {
+        "rule_id": 8,
+        "text_id": 1,
+        "sentence_id": 38,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'Er trommelte mit den Fingern auf das Lenkrad' 和 'sein Blick fiel auf eine Ansammlung dieser merkwürdigen Gestalten nicht weit von ihm' 是两个独立的句子，通过连词 'und' 连接起来。'und' 表示两个动作同时发生或紧密相关，描述了人物一边用手指敲打方向盘，一边目光落在奇怪的人物群上，体现了并列句的平衡结构"
+      },
+      {
+        "rule_id": 8,
+        "text_id": 1,
+        "sentence_id": 2,
+        "explanation_context": "{\"explanation\": \"这句话中，'denn'连接了两个并列的独立句子：前半句'Niemand wäre...verstricken'和后半句'mit solchem Unsinn...haben'。'denn'在这里表示因果关系，说明前半句的'没人想到会卷入奇怪故事'是因为后半句的'他们不想和这种胡闹扯上关系'，两个句子在语法上平等，没有主从之分。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 9,
+    "rule_name": "德语第二虚拟式",
+    "rule_summary": "用于表示假设或可能性的动词形式，如'wäre...gekommen'表示'会想到'的假设情况。",
+    "examples": [
+      {
+        "rule_id": 9,
+        "text_id": 1,
+        "sentence_id": 2,
+        "explanation_context": "{\"explanation\": \"在这句话中，第二虚拟式'wäre gekommen'用于表达一个假设或非现实的情况，强调'没有人会想到'这个想法在现实中并未发生，而是作者在描述一个虚构的场景。\"}"
+      },
+      {
+        "rule_id": 9,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这个句子中，第二虚拟式用于表达一个假设或非现实的情况。'wie notwendig gewesen wäre' 表示‘本应需要的’，暗示实际上并不需要这么多脖子，但作者用虚拟语气来强调这是一种夸张的想象。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 10,
+    "rule_name": "比较从句结构",
+    "rule_summary": "由 'wie' 引导的比较从句，用于表示'正如...那样'，强调前文描述的程度，常包含泛指代词 'man' 和反身动词结构。",
+    "examples": [
+      {
+        "rule_id": 10,
+        "text_id": 1,
+        "sentence_id": 10,
+        "explanation_context": "{\"explanation\": \"在这个句子中，比较从句结构通过 'so undursleyhaft, wie man es sich nur denken konnte' 来体现。它使用 'so...wie...' 的框架，将德思礼夫妇的行为（'undursleyhaft'）与一个想象中最极端的情况（'wie man es sich nur denken konnte'）进行比较，强调他们的行为极其不符合德思礼家的标准。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 11,
+    "rule_name": "原因状语从句与并列动作结构",
+    "rule_summary": "denn引导原因状语从句，从句中so表示'这样'，情态动词konnte后跟两个并列动作，用und连接",
+    "examples": [
+      {
+        "rule_id": 11,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这句话中，'denn so konnte sie...' 是一个原因状语从句，它解释了为什么德思礼太太的长脖子很有用——因为她可以伸长脖子窥视邻居。同时，'denn so konnte sie den Hals über den Gartenzaun recken und zu den Nachbarn hinüberspähen' 使用了并列动作结构，通过 'und' 连接了两个动作 'recken'（伸长）和 'spähen"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 12,
+    "rule_name": "不定式结构",
+    "rule_summary": "由连词'und'连接两个动作，包含地点状语和第四格宾语",
+    "examples": [
+      {
+        "rule_id": 12,
+        "text_id": 1,
+        "sentence_id": 51,
+        "explanation_context": "{\"explanation\": \"在这句话中，'wollte sich nun ein wenig die Beine vertreten und ... einen Krapfen holen' 使用了不定式结构。动词 'wollte'（想要）后面直接跟了两个不定式短语 'die Beine vertreten'（散步）和 'einen Krapfen holen'（买一个甜甜圈），省略了 'zu'，表示他想要做的两个连续动作。这种结构使句子更简洁流畅"
       }
     ],
     "source": "qa",

@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 export function useSentenceInteraction() {
   const [hoveredSentenceIndex, setHoveredSentenceIndex] = useState(null)
   const [clickedSentenceIndex, setClickedSentenceIndex] = useState(null)
+  const [selectedSentenceIndex, setSelectedSentenceIndex] = useState(null)
   const sentenceRefs = useRef({})
 
   /**
@@ -29,6 +30,12 @@ export function useSentenceInteraction() {
    */
   const handleSentenceClick = (sentenceIndex) => {
     setClickedSentenceIndex(sentenceIndex)
+    // 切换句子选择状态
+    if (selectedSentenceIndex === sentenceIndex) {
+      setSelectedSentenceIndex(null) // 取消选择
+    } else {
+      setSelectedSentenceIndex(sentenceIndex) // 选择句子
+    }
   }
 
   /**
@@ -37,6 +44,14 @@ export function useSentenceInteraction() {
   const clearSentenceInteraction = () => {
     setHoveredSentenceIndex(null)
     setClickedSentenceIndex(null)
+    setSelectedSentenceIndex(null)
+  }
+
+  /**
+   * Clear only sentence selection (keep hover/click states)
+   */
+  const clearSentenceSelection = () => {
+    setSelectedSentenceIndex(null)
   }
 
   /**
@@ -47,8 +62,11 @@ export function useSentenceInteraction() {
   const getSentenceBackgroundStyle = (sentenceIndex) => {
     const isHovered = hoveredSentenceIndex === sentenceIndex
     const isClicked = clickedSentenceIndex === sentenceIndex
+    const isSelected = selectedSentenceIndex === sentenceIndex
 
-    if (isClicked) {
+    if (isSelected) {
+      return 'bg-blue-100 border border-blue-300 rounded-md' // 选中的句子用蓝色背景
+    } else if (isClicked) {
       return 'bg-gray-200 border border-gray-400 rounded-md'
     } else if (isHovered) {
       return 'bg-gray-100 rounded-md'
@@ -60,21 +78,33 @@ export function useSentenceInteraction() {
   /**
    * Check if a sentence is in any interaction state
    * @param {number} sentenceIndex - Index of the sentence
-   * @returns {boolean} Whether the sentence is hovered or clicked
+   * @returns {boolean} Whether the sentence is hovered, clicked, or selected
    */
   const isSentenceInteracting = (sentenceIndex) => {
-    return hoveredSentenceIndex === sentenceIndex || clickedSentenceIndex === sentenceIndex
+    return hoveredSentenceIndex === sentenceIndex || clickedSentenceIndex === sentenceIndex || selectedSentenceIndex === sentenceIndex
+  }
+
+  /**
+   * Check if a sentence is selected
+   * @param {number} sentenceIndex - Index of the sentence
+   * @returns {boolean} Whether the sentence is selected
+   */
+  const isSentenceSelected = (sentenceIndex) => {
+    return selectedSentenceIndex === sentenceIndex
   }
 
   return {
     hoveredSentenceIndex,
     clickedSentenceIndex,
+    selectedSentenceIndex,
     sentenceRefs,
     handleSentenceMouseEnter,
     handleSentenceMouseLeave,
     handleSentenceClick,
     clearSentenceInteraction,
+    clearSentenceSelection,
     getSentenceBackgroundStyle,
-    isSentenceInteracting
+    isSentenceInteracting,
+    isSentenceSelected
   }
 }

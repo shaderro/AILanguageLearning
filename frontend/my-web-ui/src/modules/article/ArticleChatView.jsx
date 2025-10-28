@@ -6,6 +6,7 @@ import ChatView from './components/ChatView'
 import { ChatEventProvider } from './contexts/ChatEventContext'
 import { useAskedTokens } from './hooks/useAskedTokens'
 import { useTokenNotations } from './hooks/useTokenNotations'
+import { useNotationCache } from './hooks/useNotationCache'
 import { apiService } from '../../services/api'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
@@ -15,26 +16,66 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [uploadComplete, setUploadComplete] = useState(false)
   const [hasSelectedToken, setHasSelectedToken] = useState(false)
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
+  const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
+  const [hasSelectedSentence, setHasSelectedSentence] = useState(false)  // 新增：是否有选中的句子
   
   // 获取asked tokens功能（统一在这里管理，避免多次调用）
   const { askedTokenKeys, isTokenAsked, markAsAsked, refreshAskedTokens } = useAskedTokens(articleId, 'default_user')
   
+  // 调试日志已关闭以提升性能
+  
   // 获取token notations功能
   const { getNotationContent, setNotationContent, clearNotationContent } = useTokenNotations()
+  
+  // 获取统一的notation缓存功能
+  const {
+    isLoading: isNotationLoading,
+    error: notationError,
+    isInitialized: isNotationInitialized,
+    grammarNotations,
+    getGrammarNotationsForSentence,
+    getGrammarRuleById,
+    hasGrammarNotation,
+    vocabNotations,
+    getVocabNotationsForSentence,
+    getVocabExampleForToken,
+    hasVocabNotation,
+    refreshCache: refreshNotationCache,
+    // 实时缓存更新函数
+    addGrammarNotationToCache,
+    addVocabNotationToCache,
+    addGrammarRuleToCache,
+    addVocabExampleToCache
+  } = useNotationCache(articleId)
+  
+  // 调试日志已关闭以提升性能
   
   // Sample text for the ArticleViewer
   const sampleText = isUploadMode ? '' : 'Sample text for demo'
 
   const handleTokenSelect = async (tokenText, selectedSet, selectedTexts = [], context = null) => {
+    console.log('🎯 [ArticleChatView] Token selection triggered:')
+    console.log('  - Token text:', tokenText)
+    console.log('  - Selected texts:', selectedTexts)
+    console.log('  - Context:', context)
+    console.log('  - Current hasSelectedSentence:', hasSelectedSentence)
+    console.log('  - Current selectedSentence:', selectedSentence)
+    
+    // Token选择优先：总是清除句子选择
+    if (hasSelectedSentence) {
+      console.log('🧹 [ArticleChatView] Token selection takes priority - clearing sentence selection')
+      setSelectedSentence(null)
+      setHasSelectedSentence(false)
+    }
+    
     setSelectedTokens(selectedTexts)
     setQuotedText(selectedTexts.join(' '))
     setHasSelectedToken(selectedTexts.length > 0)
     setCurrentContext(context)  // 保存完整的上下文信息
     
-    console.log('🎯 [ArticleChatView] Token selection changed:')
-    console.log('  - Selected text:', tokenText)
-    console.log('  - All selected texts:', selectedTexts)
-    console.log('  - Context:', context)
+    console.log('✅ [ArticleChatView] Token selection state updated:')
+    console.log('  - hasSelectedToken:', selectedTexts.length > 0)
+    console.log('  - quotedText:', selectedTexts.join(' '))
     
     // Send selection context to backend session state
     if (context && context.sentence && selectedTexts.length > 0) {
@@ -76,8 +117,62 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   }
 
   const handleClearQuote = () => {
+    console.log('🧹 [ArticleChatView] Clearing all selections and quotes')
     setQuotedText('')
+    setSelectedTokens([])
+    setHasSelectedToken(false)
     setCurrentContext(null)  // 同时清除上下文
+    setSelectedSentence(null)  // 清除句子选择
+    setHasSelectedSentence(false)
+  }
+
+  const handleSentenceSelect = async (sentenceIndex, sentenceText, sentenceData) => {
+    console.log('📝 [ArticleChatView] Sentence selection triggered:')
+    console.log('  - Sentence index:', sentenceIndex)
+    console.log('  - Sentence text:', sentenceText)
+    console.log('  - Sentence data:', sentenceData)
+    console.log('  - Current hasSelectedToken:', hasSelectedToken)
+    console.log('  - Current selectedTokens:', selectedTokens)
+    
+    if (sentenceIndex !== null && sentenceText) {
+      // 如果当前有token选择，优先保持token选择，不处理句子选择
+      if (hasSelectedToken) {
+        console.log('⚠️ [ArticleChatView] Token selection has priority - ignoring sentence selection')
+        return
+      }
+      
+      // 选择句子（只有在没有token选择时）
+      setSelectedSentence({
+        index: sentenceIndex,
+        text: sentenceText,
+        data: sentenceData
+      })
+      setHasSelectedSentence(true)
+      setQuotedText(sentenceText)
+      
+      console.log('✅ [ArticleChatView] Sentence selection state updated:')
+      console.log('  - hasSelectedSentence:', true)
+      console.log('  - quotedText:', sentenceText)
+      
+      // 发送句子上下文到后端session state
+      try {
+        const updatePayload = {
+          sentence: sentenceData
+        }
+        
+        console.log('📤 [ArticleChatView] Sending sentence context to backend...')
+        console.log('📤 [ArticleChatView] Update payload:', updatePayload)
+        const response = await apiService.session.updateContext(updatePayload)
+        console.log('✅ [ArticleChatView] Session context updated:', response)
+      } catch (error) {
+        console.error('❌ [ArticleChatView] Failed to update session context:', error)
+      }
+    } else {
+      // 清除句子选择
+      setSelectedSentence(null)
+      setHasSelectedSentence(false)
+      setQuotedText('')
+    }
   }
 
   const handleUploadStart = () => {
@@ -130,6 +225,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
               markAsAsked={markAsAsked}
               getNotationContent={getNotationContent}
               setNotationContent={setNotationContent}
+              onSentenceSelect={handleSentenceSelect}
+              hasGrammarNotation={hasGrammarNotation}
+              getGrammarNotationsForSentence={getGrammarNotationsForSentence}
+              getGrammarRuleById={getGrammarRuleById}
+              getVocabExampleForToken={getVocabExampleForToken}
             />
           )}
           <ChatView 
@@ -140,8 +240,16 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             selectedTokenCount={selectedTokens.length || 1}
             selectionContext={currentContext}
             markAsAsked={markAsAsked}
+            hasSelectedSentence={hasSelectedSentence}
+            selectedSentence={selectedSentence}
             refreshAskedTokens={refreshAskedTokens}
+            refreshGrammarNotations={refreshNotationCache}
             articleId={articleId}
+            // 实时缓存更新函数
+            addGrammarNotationToCache={addGrammarNotationToCache}
+            addVocabNotationToCache={addVocabNotationToCache}
+            addGrammarRuleToCache={addGrammarRuleToCache}
+            addVocabExampleToCache={addVocabExampleToCache}
           />
         </div>
       </div>

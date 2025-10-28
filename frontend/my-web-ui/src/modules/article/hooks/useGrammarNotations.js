@@ -20,15 +20,11 @@ export function useGrammarNotations(articleId) {
     setError(null)
     
     try {
-      console.log('🔍 [useGrammarNotations] Loading grammar notations for textId:', textId)
       const response = await apiService.getGrammarNotations(textId)
-      console.log('🔍 [useGrammarNotations] API response:', response)
       
       if (response && response.data) {
-        console.log('🔍 [useGrammarNotations] Setting grammar notations:', response.data)
         setGrammarNotations(response.data)
       } else {
-        console.log('🔍 [useGrammarNotations] No data received, setting empty array')
         setGrammarNotations([])
       }
     } catch (err) {

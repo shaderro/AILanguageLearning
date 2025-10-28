@@ -18,14 +18,19 @@ export function useAskedTokens(articleId, userId = 'default_user') {
       setError(null)
       
       try {
+        console.log('🚀 [useAskedTokens] Fetching asked tokens for:', { userId, articleId })
         const response = await apiService.getAskedTokens(userId, articleId)
+        console.log('📥 [useAskedTokens] API response:', response)
         
         if (response.success && response.data?.asked_tokens) {
           const tokens = new Set(response.data.asked_tokens)
-          console.log('✅ [AskedTokens] Loaded', tokens.size, 'asked tokens for article', articleId)
+          console.log('✅ [useAskedTokens] Loaded asked tokens:', {
+            count: tokens.size,
+            tokens: Array.from(tokens)
+          })
           setAskedTokenKeys(tokens)
         } else {
-          console.warn('⚠️ [useAskedTokens] No asked tokens found')
+          console.log('❌ [useAskedTokens] No asked tokens found')
           setAskedTokenKeys(new Set())
         }
       } catch (err) {

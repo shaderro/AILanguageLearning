@@ -30,7 +30,7 @@ export function useTokenDrag({
       activeSentenceRef.current = sIdx
       // 重新开始选择，只选择当前token
       const startUid = getTokenId(token, sIdx)
-      console.debug('[useTokenDrag.mouseDown] sIdx=', sIdx, 'startUid=', startUid, 'token=', token?.token_body, 'new sentence')
+      // Debug logging removed for performance
       if (startUid) {
         const next = new Set([startUid])
         selectionBeforeDragRef.current = new Set(next)

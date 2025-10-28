@@ -1,10 +1,10 @@
-﻿import { useMemo } from 'react'
+﻿import { useMemo, useEffect } from 'react'
 import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
 import { useSentenceInteraction } from '../hooks/useSentenceInteraction'
-import { useGrammarNotations } from '../hooks/useGrammarNotations'
+// import { useGrammarNotations } from '../hooks/useGrammarNotations' // 不再在这里创建hook实例，从props接收
 // import { useAskedTokens } from '../hooks/useAskedTokens' // 不再在这里创建hook实例，从props接收
 // import { useTokenNotations } from '../hooks/useTokenNotations' // 不再在这里创建hook实例，从props接收
 import SentenceContainer from './SentenceContainer'
@@ -18,9 +18,14 @@ export default function ArticleViewer({
   isTokenAsked, 
   markAsAsked,
   getNotationContent,
-  setNotationContent 
+  setNotationContent,
+  onSentenceSelect,
+  hasGrammarNotation,
+  getGrammarNotationsForSentence,
+  getGrammarRuleById,
+  getVocabExampleForToken
 }) {
-  console.log('🔍 [ArticleViewer] Received articleId:', articleId)
+  // Debug logging removed to improve performance
   const { data, isLoading, isError, error } = useArticle(articleId)
 
   // Asked tokens management - 现在从props接收，不再创建新的hook实例
@@ -44,13 +49,16 @@ export default function ArticleViewer({
   const {
     hoveredSentenceIndex,
     clickedSentenceIndex,
+    selectedSentenceIndex,
     sentenceRefs,
     handleSentenceMouseEnter,
     handleSentenceMouseLeave,
     handleSentenceClick,
     clearSentenceInteraction,
+    clearSentenceSelection,
     getSentenceBackgroundStyle,
-    isSentenceInteracting
+    isSentenceInteracting,
+    isSentenceSelected
   } = useSentenceInteraction()
 
   // Token selection management
@@ -80,19 +88,42 @@ export default function ArticleViewer({
     clearSelection
   })
 
-  // Grammar notations management
-  const {
-    grammarNotations,
-    isLoading: grammarNotationsLoading,
-    error: grammarNotationsError,
-    hasGrammarNotation,
-    getGrammarNotation,
-    getGrammarNotationsForSentence,
-    reload: reloadGrammarNotations
-  } = useGrammarNotations(articleId)
+  // Grammar notations management - 现在从props接收，不再创建新的hook实例
+  // const {
+  //   grammarNotations,
+  //   isLoading: grammarNotationsLoading,
+  //   error: grammarNotationsError,
+  //   hasGrammarNotation,
+  //   getGrammarNotation,
+  //   getGrammarNotationsForSentence,
+  //   reload: reloadGrammarNotations
+  // } = useGrammarNotations(articleId)
 
   // Token notations management - 现在从props接收，不再创建新的hook实例
   // const { getNotationContent, setNotationContent } = useTokenNotations()
+
+  // Handle sentence selection changes
+  useEffect(() => {
+    console.log('🔄 [ArticleViewer] selectedSentenceIndex changed:', selectedSentenceIndex)
+    console.log('🔄 [ArticleViewer] sentences length:', sentences.length)
+    console.log('🔄 [ArticleViewer] onSentenceSelect exists:', !!onSentenceSelect)
+    
+    // 只有当selectedSentenceIndex不为null且有对应的句子数据时才处理
+    if (onSentenceSelect && selectedSentenceIndex !== null && sentences[selectedSentenceIndex]) {
+      const selectedSentence = sentences[selectedSentenceIndex]
+      const sentenceText = selectedSentence.tokens?.map(token => 
+        typeof token === 'string' ? token : token.token_body
+      ).join(' ') || ''
+      
+      console.log('📤 [ArticleViewer] Calling onSentenceSelect with sentence data:')
+      console.log('  - Index:', selectedSentenceIndex)
+      console.log('  - Text:', sentenceText)
+      console.log('  - Data:', selectedSentence)
+      
+      onSentenceSelect(selectedSentenceIndex, sentenceText, selectedSentence)
+    }
+    // 移除自动清除逻辑，让父组件控制清除时机
+  }, [selectedSentenceIndex, sentences, onSentenceSelect])
 
   if (isLoading) {
     return (
@@ -148,6 +179,8 @@ export default function ArticleViewer({
             isSentenceInteracting={isSentenceInteracting}
             hasGrammarNotation={hasGrammarNotation}
             getGrammarNotationsForSentence={getGrammarNotationsForSentence}
+            getGrammarRuleById={getGrammarRuleById}
+            getVocabExampleForToken={getVocabExampleForToken}
           />
         ))}
       </div>

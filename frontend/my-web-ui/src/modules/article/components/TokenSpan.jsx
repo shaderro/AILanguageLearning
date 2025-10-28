@@ -31,7 +31,9 @@ export default function TokenSpan({
   setNotationContent,
   // Grammar notation props
   hasGrammarNotation,
-  getGrammarNotationsForSentence
+  getGrammarNotationsForSentence,
+  // Vocab notation props
+  getVocabExampleForToken
 }) {
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
   const selectable = typeof token === 'object' ? !!token?.selectable : false
@@ -50,6 +52,8 @@ export default function TokenSpan({
   const isAsked = isTextToken && tokenSentenceTokenId != null
     ? isTokenAsked(articleId, tokenSentenceId, tokenSentenceTokenId)
     : false
+  
+  // 调试日志已关闭以提升性能
 
   // 检查是否有grammar notation
   const sentenceId = sentenceIdx + 1
@@ -65,6 +69,17 @@ export default function TokenSpan({
     }
     return notation.marked_token_ids.includes(tokenSentenceTokenId)
   })
+
+  // 检查是否有 vocab notation（来自缓存列表，而不依赖 asked tokens）
+  const vocabNotationsForSentence = typeof getVocabNotationsForSentence === 'function'
+    ? getVocabNotationsForSentence(sentenceId)
+    : []
+  const hasVocabNotationForToken = Array.isArray(vocabNotationsForSentence)
+    ? vocabNotationsForSentence.some(n => n?.token_index === tokenSentenceTokenId)
+    : false
+
+  // 检查是否在 asked tokens 中有 vocab 记录（通过 isAsked 已经包含了这个检查）
+  const hasVocabVisual = isAsked || hasVocabNotationForToken
 
   const bgClass = selected
     ? 'bg-yellow-300'
@@ -129,7 +144,7 @@ export default function TokenSpan({
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
-          console.debug('[TokenSpan.mouseEnter] sentenceIdx=', sentenceIdx, 'uid=', uid, 'text=', displayText)
+          // Debug logging removed for performance
           // 如果是已提问的token，显示notation
           if (isAsked) {
             cancelHideNotation()  // 取消任何待处理的隐藏
@@ -157,8 +172,8 @@ export default function TokenSpan({
           'px-0.5 rounded-sm transition-colors duration-150 select-none',
           cursorClass,
           bgClass,
-          // 优先级：已提问的token > 语法标记
-          isAsked ? 'border-b-2 border-green-500' : (isInGrammarNotation ? 'border-b-2 border-gray-400' : '')
+          // 优先级：vocab 绿色 > 语法 灰色
+          hasVocabVisual ? 'border-b-2 border-green-500' : (isInGrammarNotation ? 'border-b-2 border-gray-400' : '')
         ].join(' ')}
         style={{ color: '#111827' }}
       >
@@ -184,8 +199,8 @@ export default function TokenSpan({
         />
       )} */}
       
-      {/* TokenNotation - 显示在已提问token下方 */}
-      {isAsked && showNotation && (
+      {/* TokenNotation - 对有 vocab 标注（asked 或缓存命中）的 token 显示 */}
+      {hasVocabVisual && showNotation && (
         <TokenNotation 
           isVisible={showNotation}
           note={notationContent || "This is a test note"}
@@ -194,6 +209,7 @@ export default function TokenSpan({
           tokenIndex={tokenSentenceTokenId}
           onMouseEnter={handleNotationMouseEnter}
           onMouseLeave={handleNotationMouseLeave}
+          getVocabExampleForToken={getVocabExampleForToken}
         />
       )}
       

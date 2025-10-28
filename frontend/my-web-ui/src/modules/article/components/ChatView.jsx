@@ -3,7 +3,25 @@ import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 
-export default function ChatView({ quotedText, onClearQuote, disabled = false, hasSelectedToken = false, selectedTokenCount = 1, selectionContext = null, markAsAsked = null, refreshAskedTokens = null, articleId = null }) {
+export default function ChatView({ 
+  quotedText, 
+  onClearQuote, 
+  disabled = false, 
+  hasSelectedToken = false, 
+  selectedTokenCount = 1, 
+  selectionContext = null, 
+  markAsAsked = null, 
+  refreshAskedTokens = null, 
+  refreshGrammarNotations = null, 
+  articleId = null, 
+  hasSelectedSentence = false, 
+  selectedSentence = null,
+  // 新增：实时缓存更新函数
+  addGrammarNotationToCache = null,
+  addVocabNotationToCache = null,
+  addGrammarRuleToCache = null,
+  addVocabExampleToCache = null
+}) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
@@ -15,6 +33,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
   const [toasts, setToasts] = useState([]) // {id, message, slot}
   const messagesEndRef = useRef(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(false)
+  // 移除展开状态相关代码
 
   // 新增：自动滚动到底部的函数
   const scrollToBottom = () => {
@@ -22,6 +41,20 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }
+
+  // 调试：跟踪引用状态变化
+  useEffect(() => {
+    console.log('🔍 [ChatView] Quote state changed:')
+    console.log('  - quotedText:', quotedText)
+    console.log('  - hasSelectedToken:', hasSelectedToken)
+    console.log('  - hasSelectedSentence:', hasSelectedSentence)
+    console.log('  - selectedSentence:', selectedSentence)
+    
+    // 状态冲突检测
+    if (hasSelectedToken && hasSelectedSentence) {
+      console.warn('⚠️ [ChatView] State conflict detected: both token and sentence selected!')
+    }
+  }, [quotedText, hasSelectedToken, hasSelectedSentence, selectedSentence])
 
   // 抽取：显示“知识点已加入”提示卡片
   const showKnowledgeToast = (currentKnowledge) => {
@@ -216,7 +249,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       
       if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
         console.log('✅ [ChatView] 进入标记逻辑')
-        console.log('🏷️ [ChatView] Marking selected tokens as asked...')
+        console.log('🏷️ [ChatView] Checking if tokens should be marked as asked...')
         
         // 从响应中提取 vocab_id（如果有新词汇）
         const vocabIdMap = new Map()
@@ -229,7 +262,19 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           console.log('📝 [ChatView] Vocab ID map:', Object.fromEntries(vocabIdMap))
         }
         
-        // 标记所有选中的tokens为已提问
+        // 获取所有新生成的词汇（vocab_to_add中的词汇对应的tokens）
+        const newVocabTokens = new Set()
+        if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
+          response.vocab_to_add.forEach(v => {
+            // 将词汇名转换为小写，用于匹配
+            if (v.vocab) {
+              newVocabTokens.add(v.vocab.toLowerCase())
+            }
+          })
+        }
+        console.log('📋 [ChatView] New vocab tokens:', Array.from(newVocabTokens))
+        
+        // 只标记那些在vocab example的token_indices中的tokens
         const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
           // 使用fallback确保字段存在
           const sentenceTokenId = token.sentence_token_id ?? (tokenIdx + 1)
@@ -240,19 +285,24 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           const tokenBody = token.token_body?.toLowerCase() || ''
           const vocabId = vocabIdMap.get(tokenBody) || null
           
+          // 检查该token是否在新生成的词汇中
+          const shouldMark = newVocabTokens.has(tokenBody)
+          
           console.log(`🔍 [DEBUG] Token ${tokenIdx}:`, {
             token_body: token.token_body,
             textId,
             sentenceId,
             sentenceTokenId,
-            vocabId
+            vocabId,
+            shouldMark,
+            reason: shouldMark ? '在vocab_to_add中' : '不在vocab_to_add中'
           })
           
-          if (sentenceId && textId && sentenceTokenId != null) {
+          if (shouldMark && sentenceId && textId && sentenceTokenId != null) {
             console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId}) with vocabId=${vocabId}`)
             return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
           } else {
-            console.error(`❌ [ChatView] 缺少必需字段:`, { sentenceId, textId, sentenceTokenId })
+            console.log(`⏭️ [ChatView] Skipping token: "${token.token_body}" - ${shouldMark ? 'missing fields' : 'not in vocab example'}`)
             return Promise.resolve(false)
           }
         })
@@ -279,6 +329,65 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
               if (refreshAskedTokens) {
                 await refreshAskedTokens()
                 console.log('✅ [ChatView] Asked tokens refreshed successfully')
+              }
+              
+              // 实时更新缓存而不是完全刷新
+              console.log('🔄 [ChatView] 开始实时更新缓存...')
+              
+              // 更新grammar notations缓存
+              if (response && response.grammar_to_add && Array.isArray(response.grammar_to_add)) {
+                console.log('➕ [ChatView] 添加新的grammar rules到缓存:', response.grammar_to_add)
+                response.grammar_to_add.forEach(rule => {
+                  if (addGrammarRuleToCache) {
+                    addGrammarRuleToCache(rule)
+                  }
+                })
+              }
+              
+              // 更新vocab notations缓存
+              if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
+                console.log('➕ [ChatView] 添加新的vocab examples到缓存:', response.vocab_to_add)
+                response.vocab_to_add.forEach(vocab => {
+                  if (addVocabExampleToCache && vocab.vocab_id) {
+                    // 构造vocab example对象
+                    const vocabExample = {
+                      vocab_id: vocab.vocab_id,
+                      text_id: articleId,
+                      sentence_id: currentSelectionContext.sentence?.sentence_id,
+                      token_index: currentSelectionContext.tokens?.[0]?.sentence_token_id,
+                      context_explanation: vocab.explanation || '',
+                      token_indices: currentSelectionContext.tokenIndices || []
+                    }
+                    addVocabExampleToCache(vocabExample)
+                  }
+                })
+              }
+              
+              // 如果有新的grammar notation被创建，也添加到缓存
+              if (response && response.new_grammar_notation) {
+                console.log('➕ [ChatView] 添加新的grammar notation到缓存:', response.new_grammar_notation)
+                if (addGrammarNotationToCache) {
+                  addGrammarNotationToCache(response.new_grammar_notation)
+                }
+              }
+              
+              // 如果有新的vocab notation被创建，也添加到缓存
+              if (response && response.new_vocab_notation) {
+                console.log('➕ [ChatView] 添加新的vocab notation到缓存:', response.new_vocab_notation)
+                if (addVocabNotationToCache) {
+                  addVocabNotationToCache(response.new_vocab_notation)
+                }
+              }
+              
+              // 如果实时更新不可用，回退到完全刷新
+              if (!addGrammarNotationToCache && refreshGrammarNotations) {
+                console.log('🔄 [ChatView] 回退到完全刷新grammar notations...')
+                try {
+                  await refreshGrammarNotations()
+                  console.log('✅ [ChatView] Grammar notations refreshed successfully')
+                } catch (grammarError) {
+                  console.error('❌ [ChatView] Failed to refresh grammar notations:', grammarError)
+                }
               }
               
               console.log('🎉 [ChatView] Token states updated - green underlines should be visible now')
@@ -564,7 +673,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
       
       if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
         console.log('✅ [ChatView] 进入标记逻辑（建议问题）')
-        console.log('🏷️ [ChatView] Marking selected tokens as asked (suggested question)...')
+        console.log('🏷️ [ChatView] Checking if tokens should be marked as asked (suggested question)...')
         
         // 从响应中提取 vocab_id（如果有新词汇）
         const vocabIdMap = new Map()
@@ -577,7 +686,19 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           console.log('📝 [ChatView] Vocab ID map (建议问题):', Object.fromEntries(vocabIdMap))
         }
         
-        // 标记所有选中的tokens为已提问
+        // 获取所有新生成的词汇（vocab_to_add中的词汇对应的tokens）
+        const newVocabTokens = new Set()
+        if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
+          response.vocab_to_add.forEach(v => {
+            // 将词汇名转换为小写，用于匹配
+            if (v.vocab) {
+              newVocabTokens.add(v.vocab.toLowerCase())
+            }
+          })
+        }
+        console.log('📋 [ChatView] New vocab tokens (建议问题):', Array.from(newVocabTokens))
+        
+        // 只标记那些在vocab_to_add中的tokens
         const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
           // 使用fallback确保字段存在
           const sentenceTokenId = token.sentence_token_id ?? (tokenIdx + 1)
@@ -588,19 +709,24 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
           const tokenBody = token.token_body?.toLowerCase() || ''
           const vocabId = vocabIdMap.get(tokenBody) || null
           
+          // 检查该token是否在新生成的词汇中
+          const shouldMark = newVocabTokens.has(tokenBody)
+          
           console.log(`🔍 [DEBUG] Token ${tokenIdx} (建议问题):`, {
             token_body: token.token_body,
             textId,
             sentenceId,
             sentenceTokenId,
-            vocabId
+            vocabId,
+            shouldMark,
+            reason: shouldMark ? '在vocab_to_add中' : '不在vocab_to_add中'
           })
           
-          if (sentenceId && textId && sentenceTokenId != null) {
+          if (shouldMark && sentenceId && textId && sentenceTokenId != null) {
             console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId}) with vocabId=${vocabId}`)
             return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
           } else {
-            console.error(`❌ [ChatView] 缺少必需字段（建议问题）:`, { sentenceId, textId, sentenceTokenId })
+            console.log(`⏭️ [ChatView] Skipping token: "${token.token_body}" - ${shouldMark ? 'missing fields' : 'not in vocab example'}`)
             return Promise.resolve(false)
           }
         })
@@ -627,6 +753,19 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
               if (refreshAskedTokens) {
                 await refreshAskedTokens()
                 console.log('✅ [ChatView] Asked tokens refreshed successfully (suggested question)')
+              }
+              
+              // 刷新grammar notations状态
+              if (refreshGrammarNotations) {
+                console.log('🔄 [ChatView] 开始刷新grammar notations (建议问题)...')
+                try {
+                  await refreshGrammarNotations()
+                  console.log('✅ [ChatView] Grammar notations refreshed successfully (suggested question)')
+                } catch (grammarError) {
+                  console.error('❌ [ChatView] Failed to refresh grammar notations (suggested question):', grammarError)
+                }
+              } else {
+                console.warn('⚠️ [ChatView] refreshGrammarNotations function not available (suggested question)')
               }
               
               console.log('🎉 [ChatView] Token states updated - green underlines should be visible now (suggested question)')
@@ -871,18 +1010,31 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
 
       {/* Quote Display */}
       {quotedText && (
-        <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <div className="text-xs text-blue-600 font-medium mb-1">引用（继续提问将保持此引用）</div>
-              <div className="text-sm text-blue-800 italic">"{quotedText}"</div>
+        <div className={`px-4 py-2 border-t ${hasSelectedSentence ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <div className={`text-xs font-medium mb-1 ${hasSelectedSentence ? 'text-green-600' : 'text-blue-600'}`}>
+                {hasSelectedSentence ? '引用整句（继续提问将保持此引用）' : '引用（继续提问将保持此引用）'}
+              </div>
+              <div 
+                className={`text-sm italic ${hasSelectedSentence ? 'text-green-800' : 'text-blue-800'}`}
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  wordBreak: 'break-word'
+                }}
+              >
+                "{quotedText}"
+              </div>
             </div>
             <button
               onClick={onClearQuote}
-              className="flex-shrink-0 p-1.5 hover:bg-blue-100 rounded-lg transition-colors"
+              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${hasSelectedSentence ? 'hover:bg-green-100' : 'hover:bg-blue-100'}`}
               title="清空引用"
             >
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-4 h-4 ${hasSelectedSentence ? 'text-green-600' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -898,6 +1050,7 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
         inputValue={inputText}
         onQuestionClick={handleQuestionClick}
         tokenCount={selectedTokenCount}
+        hasSelectedSentence={hasSelectedSentence}
       />
 
       {/* Input Area */}
@@ -910,17 +1063,17 @@ export default function ChatView({ quotedText, onClearQuote, disabled = false, h
             onKeyPress={handleKeyPress}
             placeholder={
               disabled ? "聊天暂时不可用" : 
-              !hasSelectedToken ? "请先选择文章中的词汇或句子" :
+              (!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" :
               (quotedText ? `回复引用："${quotedText}"` : "输入消息...")
             }
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={disabled || !hasSelectedToken}
+            disabled={disabled || (!hasSelectedToken && !hasSelectedSentence)}
           />
           <button
             onClick={handleSendMessage}
-            disabled={inputText.trim() === '' || disabled || !hasSelectedToken}
+            disabled={inputText.trim() === '' || disabled || (!hasSelectedToken && !hasSelectedSentence)}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title={!hasSelectedToken ? "请先选择文章中的词汇" : "发送消息"}
+            title={(!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" : "发送消息"}
           >
             发送
           </button>

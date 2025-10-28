@@ -310,6 +310,7 @@ class MainAssistant:
         
         current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
         print(f"📚 当前已有 {len(current_grammar_rule_names)} 个语法规则")
+        print(f"📚 现有语法规则列表: {current_grammar_rule_names}")
         new_grammar_summaries = []
         
         for result in self.session_state.summarized_results:
@@ -319,24 +320,33 @@ class MainAssistant:
                 
                 # 检查是否与现有语法相似
                 for existing_rule in current_grammar_rule_names:
+                    print(f"🔍 [DEBUG] 比较语法规则: '{existing_rule}' vs '{result.grammar_rule_name}'")
                     compare_result = self.compare_grammar_rule_assistant.run(
                         existing_rule,
                         result.grammar_rule_name,
                         verbose=False
                     )
+                    print(f"🔍 [DEBUG] 相似度比较结果: {compare_result}")
                     
                     # 确保 compare_result 是字典类型
                     if isinstance(compare_result, str):
                         try:
                             compare_result = json.loads(compare_result)
-                        except:
+                            print(f"🔍 [DEBUG] 解析JSON后的结果: {compare_result}")
+                        except Exception as e:
+                            print(f"❌ [DEBUG] JSON解析失败: {e}")
                             compare_result = {"is_similar": False}
                     elif isinstance(compare_result, list) and len(compare_result) > 0:
                         compare_result = compare_result[0] if isinstance(compare_result[0], dict) else {"is_similar": False}
+                        print(f"🔍 [DEBUG] 取列表第一个元素: {compare_result}")
                     elif not isinstance(compare_result, dict):
+                        print(f"❌ [DEBUG] 结果不是字典类型: {type(compare_result)}")
                         compare_result = {"is_similar": False}
                     
-                    if compare_result.get("is_similar", False):
+                    is_similar = compare_result.get("is_similar", False)
+                    print(f"🔍 [DEBUG] 最终相似度判断: {is_similar}")
+                    
+                    if is_similar:
                         print(f"✅ 语法规则 '{result.grammar_rule_name}' 与现有规则 '{existing_rule}' 相似")
                         has_similar = True
                         existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
@@ -355,6 +365,53 @@ class MainAssistant:
                             
                             try:
                                 print(f"🔍 [DEBUG] 尝试添加现有语法的grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={existing_rule_id}")
+                                print(f"🔍 [DEBUG] explanation_context: {example_explanation}")
+                                
+                                # 🔧 新增：为现有语法创建grammar notation（在add_grammar_example之前）
+                                print(f"🔍 [DEBUG] ========== 开始为现有语法创建grammar notation ==========")
+                                print(f"🔍 [DEBUG] 当前句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                                print(f"🔍 [DEBUG] 现有语法规则ID: {existing_rule_id}")
+                                print(f"🔍 [DEBUG] 现有语法规则名称: {existing_rule}")
+                                
+                                # 获取 token_indices（从 session_state 中的 selected_token）
+                                token_indices = self._get_token_indices_from_selection(current_sentence)
+                                print(f"🔍 [DEBUG] 提取的token_indices: {token_indices}")
+                                print(f"🔍 [DEBUG] token_indices类型: {type(token_indices)}")
+                                print(f"🔍 [DEBUG] token_indices长度: {len(token_indices) if token_indices else 0}")
+                                
+                                # 使用unified_notation_manager创建grammar notation
+                                from backend.data_managers.unified_notation_manager import get_unified_notation_manager
+                                notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                                print(f"🔍 [DEBUG] notation_manager创建成功: {type(notation_manager)}")
+                                
+                                print(f"🔍 [DEBUG] 调用mark_notation参数:")
+                                print(f"  - notation_type: grammar")
+                                print(f"  - user_id: default_user")
+                                print(f"  - text_id: {current_sentence.text_id}")
+                                print(f"  - sentence_id: {current_sentence.sentence_id}")
+                                print(f"  - grammar_id: {existing_rule_id}")
+                                print(f"  - marked_token_ids: {token_indices}")
+                                
+                                success = notation_manager.mark_notation(
+                                    notation_type="grammar",
+                                    user_id="default_user",
+                                    text_id=current_sentence.text_id,
+                                    sentence_id=current_sentence.sentence_id,
+                                    grammar_id=existing_rule_id,
+                                    marked_token_ids=token_indices
+                                )
+                                
+                                print(f"🔍 [DEBUG] mark_notation返回结果: {success}")
+                                print(f"🔍 [DEBUG] 结果类型: {type(success)}")
+                                
+                                if success:
+                                    print(f"✅ [DEBUG] 现有语法的grammar_notation创建成功")
+                                    print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建完成 ==========")
+                                else:
+                                    print(f"❌ [DEBUG] 现有语法的grammar_notation创建失败")
+                                    print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建失败 ==========")
+                                
+                                # 然后添加grammar example
                                 self.data_controller.add_grammar_example(
                                     rule_id=existing_rule_id,
                                     text_id=current_sentence.text_id,
@@ -362,6 +419,7 @@ class MainAssistant:
                                     explanation_context=example_explanation
                                 )
                                 print(f"✅ [DEBUG] 现有语法的grammar_example添加成功")
+                                    
                             except ValueError as e:
                                 print(f"⚠️ [DEBUG] 跳过添加现有语法的grammar_example，因为: {e}")
                             except Exception as e:
@@ -456,6 +514,10 @@ class MainAssistant:
         """
         将新语法和词汇添加到数据管理器中。
         """
+        print(f"🔍 [DEBUG] ========== 开始执行 add_new_to_data ==========")
+        print(f"🔍 [DEBUG] grammar_to_add 长度: {len(self.session_state.grammar_to_add) if self.session_state.grammar_to_add else 0}")
+        print(f"🔍 [DEBUG] vocab_to_add 长度: {len(self.session_state.vocab_to_add) if self.session_state.vocab_to_add else 0}")
+        
         if self.session_state.grammar_to_add:
             print(f"🔍 [DEBUG] 处理grammar_to_add: {len(self.session_state.grammar_to_add)} 个语法规则")
             for grammar in self.session_state.grammar_to_add:
@@ -491,6 +553,58 @@ class MainAssistant:
                             explanation_context=example_explanation
                         )
                         print(f"✅ [DEBUG] grammar_example添加成功")
+                        
+                        # 🔧 新增：创建grammar notation
+                        try:
+                            print(f"🔍 [DEBUG] ========== 开始创建新语法的grammar notation ==========")
+                            print(f"🔍 [DEBUG] 当前句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                            print(f"🔍 [DEBUG] 语法规则ID: {grammar_rule_id}")
+                            print(f"🔍 [DEBUG] 语法规则名称: {grammar.rule_name}")
+                            
+                            # 获取 token_indices（从 session_state 中的 selected_token）
+                            token_indices = self._get_token_indices_from_selection(current_sentence)
+                            print(f"🔍 [DEBUG] 提取的token_indices: {token_indices}")
+                            print(f"🔍 [DEBUG] token_indices类型: {type(token_indices)}")
+                            print(f"🔍 [DEBUG] token_indices长度: {len(token_indices) if token_indices else 0}")
+                            
+                            # 使用unified_notation_manager创建grammar notation
+                            from backend.data_managers.unified_notation_manager import get_unified_notation_manager
+                            notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                            print(f"🔍 [DEBUG] notation_manager创建成功: {type(notation_manager)}")
+                            
+                            print(f"🔍 [DEBUG] 调用mark_notation参数:")
+                            print(f"  - notation_type: grammar")
+                            print(f"  - user_id: default_user")
+                            print(f"  - text_id: {current_sentence.text_id}")
+                            print(f"  - sentence_id: {current_sentence.sentence_id}")
+                            print(f"  - grammar_id: {grammar_rule_id}")
+                            print(f"  - marked_token_ids: {token_indices}")
+                            
+                            success = notation_manager.mark_notation(
+                                notation_type="grammar",
+                                user_id="default_user",
+                                text_id=current_sentence.text_id,
+                                sentence_id=current_sentence.sentence_id,
+                                grammar_id=grammar_rule_id,
+                                marked_token_ids=token_indices
+                            )
+                            
+                            print(f"🔍 [DEBUG] mark_notation返回结果: {success}")
+                            print(f"🔍 [DEBUG] 结果类型: {type(success)}")
+                            
+                            if success:
+                                print(f"✅ [DEBUG] grammar_notation创建成功")
+                                print(f"🔍 [DEBUG] ========== 新语法grammar notation创建完成 ==========")
+                            else:
+                                print(f"❌ [DEBUG] grammar_notation创建失败")
+                                print(f"🔍 [DEBUG] ========== 新语法grammar notation创建失败 ==========")
+                        except Exception as notation_error:
+                            print(f"❌ [DEBUG] 创建grammar_notation时发生错误: {notation_error}")
+                            print(f"❌ [DEBUG] 错误类型: {type(notation_error)}")
+                            import traceback
+                            print(f"❌ [DEBUG] 错误堆栈: {traceback.format_exc()}")
+                            print(f"🔍 [DEBUG] ========== 新语法grammar notation创建异常 ==========")
+                            
                     except ValueError as e:
                         print(f"⚠️ [DEBUG] 跳过添加grammar_example，因为: {e}")
                         print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
@@ -572,24 +686,44 @@ class MainAssistant:
         Returns:
             list[int]: sentence_token_id 列表（如 [3, 4, 5]）
         """
+        print(f"🔍 [TokenIndices] ========== 开始提取token_indices ==========")
         token_indices = []
         
         # 从 session_state 获取选中的 token
         selected_token = self.session_state.current_selected_token
+        print(f"🔍 [TokenIndices] selected_token存在: {selected_token is not None}")
         if not selected_token:
             print("⚠️ [TokenIndices] 没有选中的 token，返回空列表")
             return []
 
+        print(f"🔍 [TokenIndices] selected_token类型: {type(selected_token)}")
+        print(f"🔍 [TokenIndices] selected_token属性: {dir(selected_token)}")
+        if hasattr(selected_token, 'token_text'):
+            print(f"🔍 [TokenIndices] selected_token.token_text: '{selected_token.token_text}'")
+        if hasattr(selected_token, 'token_indices'):
+            print(f"🔍 [TokenIndices] selected_token.token_indices: {selected_token.token_indices}")
+
         # 1) 优先使用 session 中已存在的 token_indices（来自前端/MockServer），且不是整句 [-1]
         if hasattr(selected_token, 'token_indices') and isinstance(selected_token.token_indices, list):
+            print(f"🔍 [TokenIndices] 发现token_indices属性: {selected_token.token_indices}")
             incoming_indices = [int(i) for i in selected_token.token_indices if isinstance(i, (int, float, str)) and str(i).lstrip('-').isdigit()]
+            print(f"🔍 [TokenIndices] 处理后的incoming_indices: {incoming_indices}")
             if incoming_indices and not (len(incoming_indices) == 1 and incoming_indices[0] == -1):
                 print(f"✅ [TokenIndices] 使用 session_state.token_indices: {incoming_indices}")
+                print(f"🔍 [TokenIndices] ========== 使用session token_indices完成 ==========")
                 return incoming_indices
+            else:
+                print(f"🔍 [TokenIndices] incoming_indices为空或为整句标记[-1]，继续查找")
         
         # 检查句子是否有 tokens 列表（新数据结构）
+        print(f"🔍 [TokenIndices] 句子有tokens属性: {hasattr(sentence, 'tokens')}")
+        if hasattr(sentence, 'tokens'):
+            print(f"🔍 [TokenIndices] sentence.tokens存在: {sentence.tokens is not None}")
+            print(f"🔍 [TokenIndices] sentence.tokens长度: {len(sentence.tokens) if sentence.tokens else 0}")
+        
         if not hasattr(sentence, 'tokens') or not sentence.tokens:
             print("⚠️ [TokenIndices] 句子没有 tokens 列表，返回空列表")
+            print(f"🔍 [TokenIndices] ========== 句子无tokens完成 ==========")
             return []
         
         # 获取选中的文本
@@ -602,21 +736,38 @@ class MainAssistant:
             return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
         
         selected_clean = strip_punctuation(selected_text)
+        print(f"🔍 [TokenIndices] 清理后的选中文本: '{selected_clean}'")
         
         # 2) 回退：根据选中文本在句子的 tokens 中查找匹配的 token
-        for token in sentence.tokens:
+        print(f"🔍 [TokenIndices] 开始遍历句子tokens:")
+        for i, token in enumerate(sentence.tokens):
+            print(f"  Token {i}: {token}")
+            if hasattr(token, 'token_type'):
+                print(f"    - token_type: {token.token_type}")
+            if hasattr(token, 'token_body'):
+                print(f"    - token_body: '{token.token_body}'")
+            if hasattr(token, 'sentence_token_id'):
+                print(f"    - sentence_token_id: {token.sentence_token_id}")
+                
             if token.token_type == 'text':  # 只考虑文本 token
                 token_clean = strip_punctuation(token.token_body)
+                print(f"    - 清理后的token_body: '{token_clean}'")
+                print(f"    - 比较: '{token_clean.lower()}' == '{selected_clean.lower()}' ? {token_clean.lower() == selected_clean.lower()}")
                 if token_clean.lower() == selected_clean.lower():
                     if token.sentence_token_id is not None:
                         token_indices.append(token.sentence_token_id)
                         print(f"  ✅ 找到匹配 token: '{token.token_body}' → sentence_token_id={token.sentence_token_id}")
+                    else:
+                        print(f"  ⚠️ 找到匹配token但sentence_token_id为None: '{token.token_body}'")
+                else:
+                    print(f"  ❌ 不匹配: '{token.token_body}'")
         
         if not token_indices:
             print(f"⚠️ [TokenIndices] 未找到匹配的 token，返回空列表")
         else:
             print(f"✅ [TokenIndices] 提取到 token_indices: {token_indices}")
         
+        print(f"🔍 [TokenIndices] ========== token_indices提取完成 ==========")
         return token_indices
     
     def _log_sentence_capabilities(self, sentence: SentenceType):

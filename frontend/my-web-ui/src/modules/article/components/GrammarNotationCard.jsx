@@ -10,6 +10,8 @@ import { apiService } from '../../../services/api'
  * - sentenceId: 句子ID
  * - position: 卡片位置 { top, left, right }
  * - onClose: 关闭回调
+ * - cachedGrammarRules: 缓存的语法规则数据（可选）
+ * - getGrammarRuleById: 获取语法规则详情的函数（可选）
  */
 export default function GrammarNotationCard({ 
   isVisible = false, 
@@ -18,7 +20,9 @@ export default function GrammarNotationCard({
   position = { top: 0, left: 0, right: 'auto' },
   onClose = null,
   onMouseEnter = null,
-  onMouseLeave = null
+  onMouseLeave = null,
+  cachedGrammarRules = null,
+  getGrammarRuleById = null
 }) {
   const [grammarRules, setGrammarRules] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -26,25 +30,44 @@ export default function GrammarNotationCard({
 
   useEffect(() => {
     if (isVisible && textId && sentenceId) {
-      setIsLoading(true)
-      setError(null)
-      
-      // 获取句子的所有语法规则
-      fetchSentenceGrammarRules(textId, sentenceId)
-        .then(rules => {
-          setGrammarRules(rules)
-          setIsLoading(false)
-        })
-        .catch(error => {
-          console.error('Error fetching sentence grammar rules:', error)
-          setError(error.message || 'Failed to load grammar rules')
-          setIsLoading(false)
-        })
+      // 优先使用缓存数据
+      if (cachedGrammarRules && getGrammarRuleById) {
+        console.log('🔍 [GrammarNotationCard] Using cached grammar rules')
+        const rules = cachedGrammarRules.map(notation => {
+          const rule = getGrammarRuleById(notation.grammar_id)
+          return rule ? {
+            ...rule,
+            context_explanation: notation.context_explanation || '',
+            notation_id: notation.notation_id || `${notation.text_id}:${notation.sentence_id}`,
+            marked_token_ids: notation.marked_token_ids || []
+          } : null
+        }).filter(Boolean)
+        
+        setGrammarRules(rules)
+        setIsLoading(false)
+        setError(null)
+      } else {
+        // 回退到API调用
+        console.log('🔍 [GrammarNotationCard] Using API fallback')
+        setIsLoading(true)
+        setError(null)
+        
+        fetchSentenceGrammarRules(textId, sentenceId)
+          .then(rules => {
+            setGrammarRules(rules)
+            setIsLoading(false)
+          })
+          .catch(error => {
+            console.error('Error fetching sentence grammar rules:', error)
+            setError(error.message || 'Failed to load grammar rules')
+            setIsLoading(false)
+          })
+      }
     } else {
       setGrammarRules([])
       setError(null)
     }
-  }, [isVisible, textId, sentenceId])
+  }, [isVisible, textId, sentenceId, cachedGrammarRules, getGrammarRuleById])
 
   // 获取句子的语法规则
   const fetchSentenceGrammarRules = async (textId, sentenceId) => {
@@ -52,29 +75,39 @@ export default function GrammarNotationCard({
       // 使用新的API方法直接获取句子的语法规则
       const response = await apiService.getSentenceGrammarRules(textId, sentenceId)
       
-      console.log(`🔍 [GrammarNotationCard] API response for sentence ${sentenceId}:`, response)
-      
       if (response && response.data) {
         // 如果返回的是语法规则列表
         if (Array.isArray(response.data)) {
-          console.log(`✅ [GrammarNotationCard] Found ${response.data.length} grammar rules`)
           return response.data
         }
         
         // 如果返回的是包含语法规则的对象
         if (response.data.grammar_rules) {
-          console.log(`✅ [GrammarNotationCard] Found grammar_rules array with ${response.data.grammar_rules.length} items`)
           return response.data.grammar_rules
         }
         
         // 如果返回的是单个语法规则
         if (response.data.rule_id) {
-          console.log(`✅ [GrammarNotationCard] Found single grammar rule`)
           return [response.data]
         }
+        
+        // 如果返回的是GrammarNotation对象，需要根据grammar_id获取语法规则详情
+        if (response.data.grammar_id) {
+          try {
+            const ruleResponse = await apiService.getGrammarById(response.data.grammar_id)
+            if (ruleResponse && ruleResponse.data) {
+              return [{
+                ...ruleResponse.data,
+                context_explanation: response.data.context_explanation || '',
+                notation_id: response.data.notation_id || `${response.data.text_id}:${response.data.sentence_id}`,
+                marked_token_ids: response.data.marked_token_ids || []
+              }]
+            }
+          } catch (ruleError) {
+            console.warn(`Failed to fetch grammar rule ${response.data.grammar_id}:`, ruleError)
+          }
+        }
       }
-      
-      console.log(`⚠️ [GrammarNotationCard] No grammar rules found in response`)
       return []
     } catch (error) {
       console.error('Error in fetchSentenceGrammarRules:', error)

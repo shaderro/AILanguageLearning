@@ -83,14 +83,7 @@ class AskedTokensManager:
         if type is None and sentence_token_id is not None:
             type = "token"
         
-        print(f"🔧 [AskedTokens] mark_token_asked called:")
-        print(f"  - user_id: {user_id}")
-        print(f"  - text_id: {text_id}")
-        print(f"  - sentence_id: {sentence_id}")
-        print(f"  - sentence_token_id: {sentence_token_id}")
-        print(f"  - vocab_id: {vocab_id}")
-        print(f"  - grammar_id: {grammar_id}")
-        print(f"  - type: {type}")
+        # Debug logging removed for performance
         
         try:
             asked_token = AskedToken(
@@ -185,9 +178,7 @@ class AskedTokensManager:
     
     def get_asked_tokens_for_article(self, user_id: str, text_id: int) -> Set[str]:
         """获取用户在指定文章下已提问的 token 键集合"""
-        print(f"🔧 [AskedTokens] get_asked_tokens_for_article called:")
-        print(f"  - user_id: {user_id}")
-        print(f"  - text_id: {text_id}")
+        # Debug logging removed for performance
         
         try:
             if self.use_database:
@@ -206,15 +197,15 @@ class AskedTokensManager:
                 cursor.execute("""
                     SELECT text_id, sentence_id, sentence_token_id
                     FROM asked_tokens 
-                    WHERE text_id = ?
-                """, (text_id,))  # 修改：移除 user_id 过滤
+                    WHERE text_id = ? AND type = 'token' AND sentence_token_id IS NOT NULL
+                """, (text_id,))  # 只获取token类型的记录
                 
                 keys = set()
                 for row in cursor.fetchall():
                     t_id, s_id, st_id = row
                     keys.add(f"{t_id}:{s_id}:{st_id}")
                 
-                print(f"✅ [AskedTokens] Retrieved {len(keys)} asked tokens from database")
+                # Debug logging removed for performance
                 return keys
         except Exception as e:
             print(f"❌ [AskedTokens] Database query failed: {e}")
@@ -222,39 +213,40 @@ class AskedTokensManager:
     
     def _get_asked_tokens_json_all_users(self, text_id: int) -> Set[str]:
         """JSON 文件模式：获取所有用户在指定文章下已提问的 token 键"""
-        print(f"🔧 [AskedTokens] _get_asked_tokens_json_all_users called for text_id: {text_id}")
+        # Debug logging removed for performance
         
         try:
             keys = set()
             
             # 扫描所有用户的 JSON 文件
             if not os.path.exists(self.json_dir):
-                print(f"⚠️ [AskedTokens] JSON directory does not exist: {self.json_dir}")
+                # Debug logging removed for performance
                 return keys
             
-            print(f"📁 [AskedTokens] Scanning directory: {self.json_dir}")
+            # Debug logging removed for performance
             for filename in os.listdir(self.json_dir):
                 if filename.endswith('.json'):
                     user_file_path = os.path.join(self.json_dir, filename)
-                    print(f"📖 [AskedTokens] Reading user file: {filename}")
+                    # Debug logging removed for performance
                     
                     try:
                         with open(user_file_path, "r", encoding="utf-8") as f:
                             user_tokens = json.load(f)
                         
-                        print(f"📊 [AskedTokens] User {filename} has {len(user_tokens)} tokens")
+                        # Debug logging removed for performance
                         
                         for token_data in user_tokens:
                             if token_data.get("text_id") == text_id:
-                                key = f"{token_data['text_id']}:{token_data['sentence_id']}:{token_data['sentence_token_id']}"
-                                keys.add(key)
-                                print(f"➕ [AskedTokens] Found matching token: {key}")
+                                # 只处理token类型的记录，跳过sentence类型
+                                if token_data.get("type") == "token" and token_data.get("sentence_token_id") is not None:
+                                    key = f"{token_data['text_id']}:{token_data['sentence_id']}:{token_data['sentence_token_id']}"
+                                    keys.add(key)
+                                    # Debug logging removed for performance
                     except Exception as e:
-                        print(f"⚠️ [AskedTokens] Error reading {filename}: {e}")
+                        # Debug logging removed for performance
                         continue
             
-            print(f"✅ [AskedTokens] Retrieved {len(keys)} asked tokens from all users")
-            print(f"🔍 [AskedTokens] Keys: {list(keys)}")
+            # Debug logging removed for performance
             return keys
         except Exception as e:
             print(f"❌ [AskedTokens] JSON query failed: {e}")
@@ -277,7 +269,7 @@ class AskedTokensManager:
                 if token_data.get("text_id") == text_id:
                     keys.add(f"{token_data['text_id']}:{token_data['sentence_id']}:{token_data['sentence_token_id']}")
             
-            print(f"✅ [AskedTokens] Retrieved {len(keys)} asked tokens from JSON")
+            # Debug logging removed for performance
             return keys
         except Exception as e:
             print(f"❌ [AskedTokens] JSON query failed: {e}")

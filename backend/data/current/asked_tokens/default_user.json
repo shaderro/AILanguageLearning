@@ -2,55 +2,73 @@
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 3,
-    "sentence_token_id": 22,
-    "type": "token",
+    "sentence_id": 10,
+    "sentence_token_id": null,
+    "type": "sentence",
     "vocab_id": null,
-    "grammar_id": null
+    "grammar_id": 10
   },
   {
     "user_id": "default_user",
     "text_id": 1,
     "sentence_id": 5,
-    "sentence_token_id": 41,
-    "type": "token",
-    "vocab_id": 2,
-    "grammar_id": null
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 21,
-    "sentence_token_id": 34,
-    "type": "token",
-    "vocab_id": 3,
-    "grammar_id": null
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 25,
-    "sentence_token_id": 7,
-    "type": "token",
+    "sentence_token_id": null,
+    "type": "sentence",
     "vocab_id": null,
-    "grammar_id": null
+    "grammar_id": 11
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 26,
-    "sentence_token_id": 5,
-    "type": "token",
+    "sentence_id": 11,
+    "sentence_token_id": null,
+    "type": "sentence",
     "vocab_id": null,
+    "grammar_id": 1
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 11,
+    "sentence_token_id": 11,
+    "type": "token",
+    "vocab_id": 8,
     "grammar_id": null
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 28,
-    "sentence_token_id": 13,
+    "sentence_id": 20,
+    "sentence_token_id": 21,
     "type": "token",
-    "vocab_id": 6,
+    "vocab_id": 9,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 51,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 12
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 46,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 7
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 51,
+    "sentence_token_id": 31,
+    "type": "token",
+    "vocab_id": 11,
     "grammar_id": null
   }
 ]

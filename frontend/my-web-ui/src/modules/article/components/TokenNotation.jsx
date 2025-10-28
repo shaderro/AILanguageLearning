@@ -10,6 +10,7 @@ import { apiService } from '../../../services/api'
  * - position: 定位信息（可选）
  * - onMouseEnter: 鼠标进入卡片的回调
  * - onMouseLeave: 鼠标离开卡片的回调
+ * - getVocabExampleForToken: 获取vocab example的函数（可选）
  */
 export default function TokenNotation({ 
   isVisible = false, 
@@ -19,7 +20,8 @@ export default function TokenNotation({
   sentenceId = null,
   tokenIndex = null,
   onMouseEnter = null,
-  onMouseLeave = null
+  onMouseLeave = null,
+  getVocabExampleForToken = null
 }) {
   const [show, setShow] = useState(false)
   const [vocabExample, setVocabExample] = useState(null)
@@ -31,9 +33,32 @@ export default function TokenNotation({
       // 短暂延迟后显示，避免闪烁
       const timer = setTimeout(() => setShow(true), 150)
       
-      // 调用 API 获取 vocab example 信息
-      if (textId && sentenceId && tokenIndex) {
-        console.log(`🔍 [TokenNotation] Fetching vocab example for:`, {
+      // 优先使用缓存数据
+      if (getVocabExampleForToken) {
+        console.log('🔍 [TokenNotation] Using cached vocab example')
+        setIsLoading(true)
+        setError(null)
+        
+        getVocabExampleForToken(textId, sentenceId, tokenIndex)
+          .then(example => {
+            if (example) {
+              console.log(`✅ [TokenNotation] Found cached vocab example:`, example)
+              setVocabExample(example)
+            } else {
+              console.log(`❌ [TokenNotation] No cached vocab example found`)
+              setVocabExample(null)
+            }
+            setIsLoading(false)
+          })
+          .catch(error => {
+            console.error('❌ [TokenNotation] Error fetching vocab example:', error)
+            setError(error.message || 'Failed to load vocab example')
+            setVocabExample(null)
+            setIsLoading(false)
+          })
+      } else if (textId && sentenceId && tokenIndex) {
+        // 回退到API调用
+        console.log(`🔍 [TokenNotation] Using API fallback for:`, {
           textId,
           sentenceId, 
           tokenIndex
@@ -75,7 +100,7 @@ export default function TokenNotation({
       setVocabExample(null)
       setError(null)
     }
-  }, [isVisible, textId, sentenceId, tokenIndex])
+  }, [isVisible, textId, sentenceId, tokenIndex, getVocabExampleForToken])
 
   if (!show) return null
 

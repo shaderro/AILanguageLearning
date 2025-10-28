@@ -41,7 +41,7 @@ class GrammarNotationManager:
             
             self.json_dir = json_dir
             os.makedirs(self.json_dir, exist_ok=True)
-            print(f"[INFO] [GrammarNotation] JSON 目录: {self.json_dir}")
+            # Debug logging removed for performance
     
     def _init_database(self):
         """初始化数据库表"""
@@ -60,7 +60,7 @@ class GrammarNotationManager:
                     )
                 """)
                 conn.commit()
-                print("[OK] [GrammarNotation] Database table initialized")
+                # Debug logging removed for performance
         except Exception as e:
             print(f"[ERROR] [GrammarNotation] Database initialization failed: {e}")
             raise

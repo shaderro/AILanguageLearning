@@ -14,7 +14,11 @@
         "text_id": 1,
         "sentence_id": 2,
         "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          3,
+          9,
+          8
+        ],
         "vocab_annotations": [
           15
         ]
@@ -44,7 +48,10 @@
         "text_id": 1,
         "sentence_id": 5,
         "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          9,
+          11
+        ],
         "vocab_annotations": [
           2
         ]
@@ -85,15 +92,21 @@
         "text_id": 1,
         "sentence_id": 10,
         "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          10
+        ],
         "vocab_annotations": []
       },
       {
         "text_id": 1,
         "sentence_id": 11,
         "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-        "grammar_annotations": [],
-        "vocab_annotations": []
+        "grammar_annotations": [
+          1
+        ],
+        "vocab_annotations": [
+          8
+        ]
       },
       {
         "text_id": 1,
@@ -113,7 +126,9 @@
         "text_id": 1,
         "sentence_id": 14,
         "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          5
+        ],
         "vocab_annotations": []
       },
       {
@@ -156,7 +171,9 @@
         "sentence_id": 20,
         "sentence_body": "Er setzte sich in den Wagen und fuhr rückwärts die Einfahrt zu \nNummer 4 hinaus.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          9
+        ]
       },
       {
         "text_id": 1,
@@ -261,7 +278,9 @@
         "text_id": 1,
         "sentence_id": 34,
         "sentence_body": "Er saß im üblichen morgendlichen Stau fest und konnte nicht \numhin zu bemerken, dass offenbar eine Menge seltsam gekleideter Menschen \nunterwegs waren.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          6
+        ],
         "vocab_annotations": []
       },
       {
@@ -289,7 +308,9 @@
         "text_id": 1,
         "sentence_id": 38,
         "sentence_body": "Er trommelte \nmit den Fingern auf das Lenkrad und sein Blick fiel auf eine Ansammlung dieser \nmerkwürdigen Gestalten nicht weit von ihm.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          8
+        ],
         "vocab_annotations": []
       },
       {
@@ -345,8 +366,13 @@
         "text_id": 1,
         "sentence_id": 46,
         "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
-        "grammar_annotations": [],
-        "vocab_annotations": []
+        "grammar_annotations": [
+          1,
+          7
+        ],
+        "vocab_annotations": [
+          7
+        ]
       },
       {
         "text_id": 1,
@@ -360,7 +386,9 @@
         "sentence_id": 48,
         "sentence_body": "Mr Dursley jedoch verbrachte einen ganz gewöhnlichen, eulenfreien \nMorgen.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          12
+        ]
       },
       {
         "text_id": 1,
@@ -369,7 +397,8 @@
         "grammar_annotations": [],
         "vocab_annotations": [
           30,
-          31
+          31,
+          10
         ]
       },
       {
@@ -377,16 +406,22 @@
         "sentence_id": 50,
         "sentence_body": "Er führte mehrere \nwichtige Telefongespräche und schrie dabei noch ein wenig lauter.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          13
+        ]
       },
       {
         "text_id": 1,
         "sentence_id": 51,
         "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          7,
+          12
+        ],
         "vocab_annotations": [
           32,
-          34
+          34,
+          11
         ]
       }
     ]
