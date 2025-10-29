@@ -4,6 +4,7 @@ import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
 import ChatView from './components/ChatView'
 import { ChatEventProvider } from './contexts/ChatEventContext'
+import { NotationContext } from './contexts/NotationContext'
 import { useAskedTokens } from './hooks/useAskedTokens'
 import { useTokenNotations } from './hooks/useTokenNotations'
 import { useNotationCache } from './hooks/useNotationCache'
@@ -45,7 +46,9 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     addGrammarNotationToCache,
     addVocabNotationToCache,
     addGrammarRuleToCache,
-    addVocabExampleToCache
+    addVocabExampleToCache,
+    // 创建功能（新API）
+    createVocabNotation
   } = useNotationCache(articleId)
   
   // 调试日志已关闭以提升性能
@@ -188,50 +191,65 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }
 
+  // 构建 NotationContext 的值
+  const notationContextValue = {
+    // Grammar 相关
+    getGrammarNotationsForSentence,
+    getGrammarRuleById,
+    hasGrammarNotation,
+    
+    // Vocab 相关
+    getVocabNotationsForSentence,
+    getVocabExampleForToken,
+    hasVocabNotation,
+    
+    // 兼容层（暂时保留用于向后兼容）
+    isTokenAsked,
+    getNotationContent,
+    setNotationContent
+  }
+
   return (
     <ChatEventProvider>
-      <div className="h-full flex flex-col">
-        {/* Header with Back Button */}
-        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span>Back to Articles</span>
-            </button>
+      <NotationContext.Provider value={notationContextValue}>
+        <div className="h-full flex flex-col">
+          {/* Header with Back Button */}
+          <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onBack}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Back to Articles</span>
+              </button>
+            </div>
+            <div className="text-sm text-gray-500">
+              Article ID: {articleId}
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
-            Article ID: {articleId}
-          </div>
-        </div>
 
-        {/* Main Content - Fixed height with no overflow */}
-        <div className="flex gap-8 flex-1 p-4 overflow-hidden min-h-0">
-          {isUploadMode ? (
-            showUploadProgress ? (
-              <UploadProgress onComplete={handleUploadComplete} />
+          {/* Main Content - Fixed height with no overflow */}
+          <div className="flex gap-8 flex-1 p-4 overflow-hidden min-h-0">
+            {isUploadMode ? (
+              showUploadProgress ? (
+                <UploadProgress onComplete={handleUploadComplete} />
+              ) : (
+                <UploadInterface onUploadStart={handleUploadStart} />
+              )
             ) : (
-              <UploadInterface onUploadStart={handleUploadStart} />
-            )
-          ) : (
-            <ArticleViewer 
-              articleId={articleId} 
-              onTokenSelect={handleTokenSelect}
-              isTokenAsked={isTokenAsked}
-              markAsAsked={markAsAsked}
-              getNotationContent={getNotationContent}
-              setNotationContent={setNotationContent}
-              onSentenceSelect={handleSentenceSelect}
-              hasGrammarNotation={hasGrammarNotation}
-              getGrammarNotationsForSentence={getGrammarNotationsForSentence}
-              getGrammarRuleById={getGrammarRuleById}
-              getVocabExampleForToken={getVocabExampleForToken}
-            />
-          )}
+              <ArticleViewer 
+                articleId={articleId} 
+                onTokenSelect={handleTokenSelect}
+                isTokenAsked={isTokenAsked}
+                markAsAsked={markAsAsked}
+                getNotationContent={getNotationContent}
+                setNotationContent={setNotationContent}
+                onSentenceSelect={handleSentenceSelect}
+              />
+            )}
           <ChatView 
             quotedText={quotedText}
             onClearQuote={handleClearQuote}
@@ -239,7 +257,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             hasSelectedToken={hasSelectedToken}
             selectedTokenCount={selectedTokens.length || 1}
             selectionContext={currentContext}
-            markAsAsked={markAsAsked}
+            markAsAsked={markAsAsked}  // 保留作为备用（向后兼容）
+            createVocabNotation={createVocabNotation}  // 新API（优先使用）
             hasSelectedSentence={hasSelectedSentence}
             selectedSentence={selectedSentence}
             refreshAskedTokens={refreshAskedTokens}
@@ -253,6 +272,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           />
         </div>
       </div>
+      </NotationContext.Provider>
     </ChatEventProvider>
   )
 } 

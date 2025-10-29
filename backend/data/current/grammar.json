@@ -42,6 +42,12 @@
         "text_id": 1,
         "sentence_id": 7,
         "explanation_context": "{\"explanation\": \"在这句话中，'dass es jemand aufdecken könnte' 是一个主语从句，它作为整个句子的主语，意思是‘有人可能会揭露它’，这个从句描述了 Dursleys 最大的担忧是什么。\"}"
+      },
+      {
+        "rule_id": 2,
+        "text_id": 0,
+        "sentence_id": 44,
+        "explanation_context": "{\"explanation\": \"这句话中，'Mr Dursley' 是主语，它作为动作的执行者（坐），而整个句子描述了他的位置和状态。这里没有使用主语从句，因为主语是一个简单的名词短语，而不是一个从句结构。\"}"
       }
     ],
     "source": "qa",
@@ -156,6 +162,12 @@
         "text_id": 1,
         "sentence_id": 2,
         "explanation_context": "{\"explanation\": \"这句话中，'denn'连接了两个并列的独立句子：前半句'Niemand wäre...verstricken'和后半句'mit solchem Unsinn...haben'。'denn'在这里表示因果关系，说明前半句的'没人想到会卷入奇怪故事'是因为后半句的'他们不想和这种胡闹扯上关系'，两个句子在语法上平等，没有主从之分。\"}"
+      },
+      {
+        "rule_id": 8,
+        "text_id": 1,
+        "sentence_id": 43,
+        "explanation_context": "{\"explanation\": \"这句话中，'Die Autoschlange bewegte sich' 和 'ein paar Minuten später fuhr Mr Dursley auf den Parkplatz seiner Firma' 是两个独立的句子，通过连接词 'und' 并列连接起来，表示两个连续发生的动作。最后一部分 'die Gedanken wieder bei den Bohrern' 是附加说明，进一步描述 Mr Dursley 的状态，整体构成并列句结构。\"}"
       }
     ],
     "source": "qa",
@@ -222,6 +234,21 @@
         "text_id": 1,
         "sentence_id": 51,
         "explanation_context": "{\"explanation\": \"在这句话中，'wollte sich nun ein wenig die Beine vertreten und ... einen Krapfen holen' 使用了不定式结构。动词 'wollte'（想要）后面直接跟了两个不定式短语 'die Beine vertreten'（散步）和 'einen Krapfen holen'（买一个甜甜圈），省略了 'zu'，表示他想要做的两个连续动作。这种结构使句子更简洁流畅"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 13,
+    "rule_name": "独立主格结构",
+    "rule_summary": "表示伴随状态的独立结构，通常由名词+介词短语构成",
+    "examples": [
+      {
+        "rule_id": 13,
+        "text_id": 1,
+        "sentence_id": 43,
+        "explanation_context": "{\"explanation\": \"在这句话中，'die Gedanken wieder bei den Bohrern' 是一个独立主格结构，它独立于主句的语法结构，用来补充说明 Mr Dursley 在停车时的心理状态，即他的思绪又回到了钻孔机上，增强了描述的生动性。\"}"
       }
     ],
     "source": "qa",

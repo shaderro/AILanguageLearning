@@ -4,13 +4,13 @@ import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
 import { useSentenceInteraction } from '../hooks/useSentenceInteraction'
-// import { useGrammarNotations } from '../hooks/useGrammarNotations' // 不再在这里创建hook实例，从props接收
-// import { useAskedTokens } from '../hooks/useAskedTokens' // 不再在这里创建hook实例，从props接收
-// import { useTokenNotations } from '../hooks/useTokenNotations' // 不再在这里创建hook实例，从props接收
 import SentenceContainer from './SentenceContainer'
 
 /**
  * ArticleViewer - Main component for displaying and interacting with article content
+ * 
+ * 注意：Grammar 和 Vocab notation 相关的功能现在通过 NotationContext 提供，
+ * 不再需要通过 props 传递
  */
 export default function ArticleViewer({ 
   articleId, 
@@ -19,11 +19,7 @@ export default function ArticleViewer({
   markAsAsked,
   getNotationContent,
   setNotationContent,
-  onSentenceSelect,
-  hasGrammarNotation,
-  getGrammarNotationsForSentence,
-  getGrammarRuleById,
-  getVocabExampleForToken
+  onSentenceSelect
 }) {
   // Debug logging removed to improve performance
   const { data, isLoading, isError, error } = useArticle(articleId)
@@ -104,9 +100,7 @@ export default function ArticleViewer({
 
   // Handle sentence selection changes
   useEffect(() => {
-    console.log('🔄 [ArticleViewer] selectedSentenceIndex changed:', selectedSentenceIndex)
-    console.log('🔄 [ArticleViewer] sentences length:', sentences.length)
-    console.log('🔄 [ArticleViewer] onSentenceSelect exists:', !!onSentenceSelect)
+    // 移除详细日志（已通过测试，减少不必要的日志输出）
     
     // 只有当selectedSentenceIndex不为null且有对应的句子数据时才处理
     if (onSentenceSelect && selectedSentenceIndex !== null && sentences[selectedSentenceIndex]) {
@@ -115,11 +109,7 @@ export default function ArticleViewer({
         typeof token === 'string' ? token : token.token_body
       ).join(' ') || ''
       
-      console.log('📤 [ArticleViewer] Calling onSentenceSelect with sentence data:')
-      console.log('  - Index:', selectedSentenceIndex)
-      console.log('  - Text:', sentenceText)
-      console.log('  - Data:', selectedSentence)
-      
+      // 移除详细日志（已通过测试）
       onSentenceSelect(selectedSentenceIndex, sentenceText, selectedSentence)
     }
     // 移除自动清除逻辑，让父组件控制清除时机
@@ -177,10 +167,6 @@ export default function ArticleViewer({
             onSentenceClick={handleSentenceClick}
             getSentenceBackgroundStyle={getSentenceBackgroundStyle}
             isSentenceInteracting={isSentenceInteracting}
-            hasGrammarNotation={hasGrammarNotation}
-            getGrammarNotationsForSentence={getGrammarNotationsForSentence}
-            getGrammarRuleById={getGrammarRuleById}
-            getVocabExampleForToken={getVocabExampleForToken}
           />
         ))}
       </div>

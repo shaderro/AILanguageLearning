@@ -232,5 +232,23 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 14,
+    "vocab_body": "nirgendwo",
+    "explanation": "{'explanation': 'nirgendwo 是一个德语副词，意思是“在任何地方都不”或“无处”。它用来表示某个地方或位置不存在某物或某种情况。这个词常用于否定句中，强调某个事物在世界上任何地方都找不到或不发生。例如，它可以用来表达“世界上没有比这更好的地方”或“在任何地方都找不到”。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 14,
+        "text_id": 1,
+        "sentence_id": 6,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'nirgendwo' 的意思是 '在任何地方都不'，它强调 Dursleys 认为他们的儿子 Dudley 是世界上最棒的男孩。结合句子 'in ihren Augen gab es nirgendwo einen prächtigeren Jungen'（在他们眼中，没有任何地方有更棒的男孩），它表达了他们觉得 Dudley 比其他所有地方的男孩都优秀，突出了他们的自豪感。\"}",
+        "token_indices": [
+          29
+        ]
+      }
+    ]
   }
 ]

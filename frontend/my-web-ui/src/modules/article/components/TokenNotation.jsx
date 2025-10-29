@@ -35,19 +35,13 @@ export default function TokenNotation({
       
       // 优先使用缓存数据
       if (getVocabExampleForToken) {
-        console.log('🔍 [TokenNotation] Using cached vocab example')
+        // 移除详细日志（已通过测试，缓存功能正常）
         setIsLoading(true)
         setError(null)
         
         getVocabExampleForToken(textId, sentenceId, tokenIndex)
           .then(example => {
-            if (example) {
-              console.log(`✅ [TokenNotation] Found cached vocab example:`, example)
-              setVocabExample(example)
-            } else {
-              console.log(`❌ [TokenNotation] No cached vocab example found`)
-              setVocabExample(null)
-            }
+            setVocabExample(example || null)
             setIsLoading(false)
           })
           .catch(error => {
@@ -57,8 +51,8 @@ export default function TokenNotation({
             setIsLoading(false)
           })
       } else if (textId && sentenceId && tokenIndex) {
-        // 回退到API调用
-        console.log(`🔍 [TokenNotation] Using API fallback for:`, {
+        // 回退到API调用（缓存未命中时的fallback）
+        console.log(`🔍 [TokenNotation] Using API fallback (cache miss):`, {
           textId,
           sentenceId, 
           tokenIndex

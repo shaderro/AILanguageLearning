@@ -32,33 +32,71 @@ export default function GrammarNotationCard({
     if (isVisible && textId && sentenceId) {
       // 优先使用缓存数据
       if (cachedGrammarRules && getGrammarRuleById) {
-        console.log('🔍 [GrammarNotationCard] Using cached grammar rules')
+        // 移除详细日志（已通过测试，缓存功能正常）
+        
         const rules = cachedGrammarRules.map(notation => {
           const rule = getGrammarRuleById(notation.grammar_id)
-          return rule ? {
+          
+          if (!rule) {
+            console.warn(`⚠️ [GrammarNotationCard] Grammar rule not found in cache for grammar_id=${notation.grammar_id}`)
+            return null
+          }
+          
+          // 从 grammar rule 的 examples 中查找匹配当前 (text_id, sentence_id) 的 example
+          let contextExplanation = notation.context_explanation || notation.explanation_context || ''
+          
+          if (rule.examples && Array.isArray(rule.examples)) {
+            const matchingExample = rule.examples.find(ex => 
+              Number(ex.text_id) === Number(notation.text_id) && 
+              Number(ex.sentence_id) === Number(notation.sentence_id)
+            )
+            
+            if (matchingExample) {
+              // 解析 explanation_context（可能是JSON字符串）
+              let explanationText = matchingExample.explanation_context || ''
+              try {
+                const parsed = JSON.parse(explanationText)
+                if (parsed && parsed.explanation) {
+                  explanationText = parsed.explanation
+                }
+              } catch (e) {
+                // 如果不是JSON，直接使用原字符串
+              }
+              
+              contextExplanation = explanationText
+            }
+          }
+          
+          const result = {
             ...rule,
-            context_explanation: notation.context_explanation || '',
+            context_explanation: contextExplanation,
             notation_id: notation.notation_id || `${notation.text_id}:${notation.sentence_id}`,
-            marked_token_ids: notation.marked_token_ids || []
-          } : null
+            marked_token_ids: notation.marked_token_ids || [],
+            grammar_id: notation.grammar_id,
+            text_id: notation.text_id,
+            sentence_id: notation.sentence_id
+          }
+          
+          return result
         }).filter(Boolean)
         
         setGrammarRules(rules)
         setIsLoading(false)
         setError(null)
       } else {
-        // 回退到API调用
-        console.log('🔍 [GrammarNotationCard] Using API fallback')
+        // 回退到API调用（缓存未命中时的fallback）
+        console.log(`🔍 [GrammarNotationCard] Using API fallback for sentence ${sentenceId} (cache miss)`)
         setIsLoading(true)
         setError(null)
         
         fetchSentenceGrammarRules(textId, sentenceId)
           .then(rules => {
+            console.log(`✅ [GrammarNotationCard] Fetched ${rules.length} grammar rules from API:`, rules)
             setGrammarRules(rules)
             setIsLoading(false)
           })
           .catch(error => {
-            console.error('Error fetching sentence grammar rules:', error)
+            console.error('❌ [GrammarNotationCard] Error fetching sentence grammar rules:', error)
             setError(error.message || 'Failed to load grammar rules')
             setIsLoading(false)
           })

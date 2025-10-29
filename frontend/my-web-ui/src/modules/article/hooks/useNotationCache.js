@@ -23,22 +23,24 @@ export function useNotationCache(articleId) {
   const loadAllNotations = useCallback(async (textId) => {
     if (!textId) return
 
-    console.log('🚀 [useNotationCache] Starting to load all notations for textId:', textId)
+    // 移除详细日志（已通过测试，减少不必要的日志输出）
     setIsLoading(true)
     setError(null)
 
     try {
-      // 只加载grammar notations，vocab examples通过单独的API获取
-      const grammarResponse = await apiService.getGrammarNotations(textId)
+      // 并行加载grammar notations和vocab notations
+      const [grammarResponse, vocabResponse] = await Promise.all([
+        apiService.getGrammarNotations(textId),
+        apiService.getVocabNotations(textId)
+      ])
 
-      console.log('🔍 [useNotationCache] Grammar notations response:', grammarResponse)
+      // 移除详细响应日志（功能已通过测试）
 
       // 处理grammar notations
       if (grammarResponse && grammarResponse.data) {
         const grammarData = Array.isArray(grammarResponse.data) ? grammarResponse.data : []
         setGrammarNotations(grammarData)
-        console.log('✅ [useNotationCache] Loaded grammar notations:', grammarData.length)
-        console.log('🔍 [useNotationCache] Grammar notations data:', grammarData)
+        // 移除详细日志（已通过测试）
 
         // 预加载所有grammar rules
         const grammarRulesMap = new Map()
@@ -48,7 +50,6 @@ export function useNotationCache(articleId) {
               const ruleResponse = await apiService.getGrammarById(notation.grammar_id)
               if (ruleResponse && ruleResponse.data) {
                 grammarRulesMap.set(notation.grammar_id, ruleResponse.data)
-                console.log('✅ [useNotationCache] Cached grammar rule:', notation.grammar_id)
               }
             } catch (err) {
               console.warn('⚠️ [useNotationCache] Failed to load grammar rule:', notation.grammar_id, err)
@@ -56,14 +57,115 @@ export function useNotationCache(articleId) {
           }
         }
         setGrammarRulesCache(grammarRulesMap)
-        console.log('✅ [useNotationCache] Cached grammar rules:', grammarRulesMap.size)
+        // 移除详细日志（已通过测试）
       }
 
-      // Vocab examples通过单独的API按需获取，不在这里预加载
-      console.log('ℹ️ [useNotationCache] Vocab examples will be loaded on-demand via API')
+      // 处理vocab notations（新API）
+      if (vocabResponse && vocabResponse.success && vocabResponse.data) {
+        // 新API返回格式：{ success: true, data: { notations: [...], count: N } }
+        const vocabData = vocabResponse.data.notations || vocabResponse.data
+        const vocabList = Array.isArray(vocabData) ? vocabData : []
+        
+        // 转换为前端使用的格式（确保有token_index字段）
+        const formattedVocabNotations = vocabList.map(notation => ({
+          user_id: notation.user_id,
+          text_id: notation.text_id,
+          sentence_id: notation.sentence_id,
+          token_id: notation.token_id,
+          token_index: notation.token_id, // 添加token_index字段作为别名
+          vocab_id: notation.vocab_id,
+          created_at: notation.created_at
+        }))
+        
+        setVocabNotations(formattedVocabNotations)
+        
+        // 预加载所有vocab examples（并行加载以提高性能）
+        const vocabExamplesMap = new Map()
+        const loadPromises = formattedVocabNotations.map(async (notation) => {
+          const key = `${notation.text_id}:${notation.sentence_id}:${notation.token_index}`
+          // 避免重复加载同一个example
+          if (vocabExamplesMap.has(key)) {
+            return
+          }
+          try {
+            const exampleResponse = await apiService.getVocabExampleByLocation(
+              notation.text_id,
+              notation.sentence_id,
+              notation.token_index
+            )
+            const payload = exampleResponse?.data?.data ?? exampleResponse?.data ?? exampleResponse
+            if (payload && payload.vocab_id) {
+              const normalized = {
+                vocab_id: payload.vocab_id,
+                text_id: payload.text_id,
+                sentence_id: payload.sentence_id,
+                token_index: payload.token_index ?? notation.token_index,
+                context_explanation: payload.context_explanation,
+                token_indices: payload.token_indices || []
+              }
+              vocabExamplesMap.set(key, normalized)
+            }
+          } catch (err) {
+            // 静默失败，避免单个example加载失败影响整体
+            console.warn(`⚠️ [useNotationCache] Failed to preload vocab example for ${key}:`, err)
+          }
+        })
+        await Promise.all(loadPromises)
+        setVocabExamplesCache(vocabExamplesMap)
+        
+      } else if (vocabResponse && vocabResponse.data) {
+        // 兼容旧的API格式（直接从data中获取数组）
+        const vocabData = Array.isArray(vocabResponse.data) ? vocabResponse.data : []
+        const formattedVocabNotations = vocabData.map(notation => ({
+          user_id: notation.user_id,
+          text_id: notation.text_id,
+          sentence_id: notation.sentence_id,
+          token_id: notation.token_id,
+          token_index: notation.token_id,
+          vocab_id: notation.vocab_id,
+          created_at: notation.created_at
+        }))
+        setVocabNotations(formattedVocabNotations)
+        
+        // 预加载所有vocab examples（兼容旧格式，并行加载）
+        const vocabExamplesMap = new Map()
+        const loadPromises = formattedVocabNotations.map(async (notation) => {
+          const key = `${notation.text_id}:${notation.sentence_id}:${notation.token_index}`
+          if (vocabExamplesMap.has(key)) {
+            return
+          }
+          try {
+            const exampleResponse = await apiService.getVocabExampleByLocation(
+              notation.text_id,
+              notation.sentence_id,
+              notation.token_index
+            )
+            const payload = exampleResponse?.data?.data ?? exampleResponse?.data ?? exampleResponse
+            if (payload && payload.vocab_id) {
+              const normalized = {
+                vocab_id: payload.vocab_id,
+                text_id: payload.text_id,
+                sentence_id: payload.sentence_id,
+                token_index: payload.token_index ?? notation.token_index,
+                context_explanation: payload.context_explanation,
+                token_indices: payload.token_indices || []
+              }
+              vocabExamplesMap.set(key, normalized)
+            }
+          } catch (err) {
+            console.warn(`⚠️ [useNotationCache] Failed to preload vocab example for ${key}:`, err)
+          }
+        })
+        await Promise.all(loadPromises)
+        setVocabExamplesCache(vocabExamplesMap)
+        
+      } else {
+        console.warn('⚠️ [useNotationCache] No vocab notations found or invalid response format')
+        setVocabNotations([])
+      }
 
       setIsInitialized(true)
-      console.log('🎉 [useNotationCache] All notations loaded successfully!')
+      // 移除成功日志（已通过测试）
 
     } catch (err) {
       console.error('❌ [useNotationCache] Error loading notations:', err)
@@ -89,34 +191,33 @@ export function useNotationCache(articleId) {
 
   // 获取句子的vocab notations
   const getVocabNotationsForSentence = useCallback((sentenceId) => {
-    return vocabNotations.filter(notation => 
-      notation.sentence_id === sentenceId
+    // 确保类型一致（数字比较）
+    const sid = Number(sentenceId)
+    
+    const filtered = vocabNotations.filter(notation => 
+      Number(notation.sentence_id) === sid
     )
+    
+    return filtered
   }, [vocabNotations])
 
   // 获取特定token的vocab example（通过API按需获取）
   const getVocabExampleForToken = useCallback(async (textId, sentenceId, tokenIndex) => {
     const key = `${textId}:${sentenceId}:${tokenIndex}`
-    console.log('🔍 [getVocabExampleForToken] Looking for key:', key)
     
     // 首先检查缓存
     if (vocabExamplesCache.has(key)) {
-      console.log('✅ [getVocabExampleForToken] Found in cache:', key)
       return vocabExamplesCache.get(key)
     }
     
     // 如果缓存中没有，通过API获取
-    console.log('🔍 [getVocabExampleForToken] Not in cache, fetching from API...')
     try {
       const { apiService } = await import('../../../services/api')
       const axiosResp = await apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
       // axiosResp -> { data: { success, data } } in mock
       const payload = axiosResp?.data?.data ?? axiosResp?.data ?? axiosResp
-      console.log('📥 [getVocabExampleForToken] Raw API response:', axiosResp)
-      console.log('📦 [getVocabExampleForToken] Parsed payload:', payload)
 
       if (payload && payload.vocab_id) {
-        console.log('✅ [getVocabExampleForToken] Fetched from API (parsed):', payload)
         // 标准化：确保有 token_index 供缓存 key 使用
         const normalized = {
           vocab_id: payload.vocab_id,
@@ -133,7 +234,6 @@ export function useNotationCache(articleId) {
         })
         return normalized
       } else {
-        console.log('❌ [getVocabExampleForToken] No vocab example found for:', key)
         return null
       }
     } catch (error) {
@@ -227,6 +327,44 @@ export function useNotationCache(articleId) {
     })
   }, [])
 
+  // 创建vocab notation（使用新API）
+  const createVocabNotation = useCallback(async (textId, sentenceId, tokenId, vocabId = null, userId = 'default_user') => {
+    try {
+      console.log('➕ [useNotationCache] Creating vocab notation:', { textId, sentenceId, tokenId, vocabId, userId })
+      
+      const response = await apiService.createVocabNotation(userId, textId, sentenceId, tokenId, vocabId)
+      
+      // 处理响应（可能从拦截器返回不同的格式）
+      const result = response?.data || response
+      const success = result?.success !== false && (result?.success === true || response?.status === 200)
+      
+      if (success) {
+        // 创建vocab notation对象
+        const newNotation = {
+          user_id: userId,
+          text_id: textId,
+          sentence_id: sentenceId,
+          token_id: tokenId,
+          token_index: tokenId,  // 添加token_index作为别名
+          vocab_id: vocabId,
+          created_at: new Date().toISOString()
+        }
+        
+        // 添加到缓存
+        addVocabNotationToCache(newNotation)
+        
+        console.log('✅ [useNotationCache] Vocab notation created and added to cache:', newNotation)
+        return { success: true, notation: newNotation }
+      } else {
+        console.error('❌ [useNotationCache] Failed to create vocab notation:', result?.error || 'Unknown error')
+        return { success: false, error: result?.error || 'Unknown error' }
+      }
+    } catch (error) {
+      console.error('❌ [useNotationCache] Error creating vocab notation:', error)
+      return { success: false, error: error.message || 'Failed to create vocab notation' }
+    }
+  }, [addVocabNotationToCache])
+
   return {
     // 状态
     isLoading,
@@ -252,6 +390,9 @@ export function useNotationCache(articleId) {
     addGrammarNotationToCache,
     addVocabNotationToCache,
     addGrammarRuleToCache,
-    addVocabExampleToCache
+    addVocabExampleToCache,
+    
+    // 创建功能（新API）
+    createVocabNotation
   }
 }

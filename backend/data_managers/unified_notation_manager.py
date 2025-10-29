@@ -5,6 +5,7 @@
 支持向后兼容 AskedToken 系统
 """
 
+import os
 from typing import Set, List, Optional, Union, Literal
 from datetime import datetime
 

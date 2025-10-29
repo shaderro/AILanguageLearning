@@ -70,5 +70,32 @@
     "type": "token",
     "vocab_id": 11,
     "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_token_id": 29,
+    "type": "token",
+    "vocab_id": 14,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 43,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 8
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 0,
+    "sentence_id": 44,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 2
   }
 ]

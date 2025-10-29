@@ -10,7 +10,8 @@ export default function ChatView({
   hasSelectedToken = false, 
   selectedTokenCount = 1, 
   selectionContext = null, 
-  markAsAsked = null, 
+  markAsAsked = null,  // 旧API（备用，向后兼容）
+  createVocabNotation = null,  // 新API（优先使用）
   refreshAskedTokens = null, 
   refreshGrammarNotations = null, 
   articleId = null, 
@@ -42,19 +43,13 @@ export default function ChatView({
     }
   }
 
-  // 调试：跟踪引用状态变化
+  // 状态冲突检测（移除详细日志，只保留警告）
   useEffect(() => {
-    console.log('🔍 [ChatView] Quote state changed:')
-    console.log('  - quotedText:', quotedText)
-    console.log('  - hasSelectedToken:', hasSelectedToken)
-    console.log('  - hasSelectedSentence:', hasSelectedSentence)
-    console.log('  - selectedSentence:', selectedSentence)
-    
     // 状态冲突检测
     if (hasSelectedToken && hasSelectedSentence) {
       console.warn('⚠️ [ChatView] State conflict detected: both token and sentence selected!')
     }
-  }, [quotedText, hasSelectedToken, hasSelectedSentence, selectedSentence])
+  }, [hasSelectedToken, hasSelectedSentence])
 
   // 抽取：显示“知识点已加入”提示卡片
   const showKnowledgeToast = (currentKnowledge) => {
@@ -275,7 +270,7 @@ export default function ChatView({
         console.log('📋 [ChatView] New vocab tokens:', Array.from(newVocabTokens))
         
         // 只标记那些在vocab example的token_indices中的tokens
-        const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
+        const markPromises = currentSelectionContext.tokens.map(async (token, tokenIdx) => {
           // 使用fallback确保字段存在
           const sentenceTokenId = token.sentence_token_id ?? (tokenIdx + 1)
           const sentenceId = currentSelectionContext.sentence?.sentence_id
@@ -300,7 +295,30 @@ export default function ChatView({
           
           if (shouldMark && sentenceId && textId && sentenceTokenId != null) {
             console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId}) with vocabId=${vocabId}`)
-            return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
+            
+            // 优先使用新API创建vocab notation
+            if (createVocabNotation) {
+              console.log('✅ [ChatView] Using new API (createVocabNotation)')
+              const result = await createVocabNotation(textId, sentenceId, sentenceTokenId, vocabId)
+              if (result.success) {
+                console.log('✅ [ChatView] Vocab notation created via new API:', result.notation)
+                return true
+              } else {
+                console.warn('⚠️ [ChatView] Failed to create vocab notation via new API, falling back to old API')
+                // 回退到旧API
+                if (markAsAsked) {
+                  return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
+                }
+                return false
+              }
+            } else if (markAsAsked) {
+              // 如果没有新API，使用旧API（向后兼容）
+              console.log('⚠️ [ChatView] Using old API (markAsAsked) - new API not available')
+              return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
+            } else {
+              console.error('❌ [ChatView] No API available to mark token')
+              return false
+            }
           } else {
             console.log(`⏭️ [ChatView] Skipping token: "${token.token_body}" - ${shouldMark ? 'missing fields' : 'not in vocab example'}`)
             return Promise.resolve(false)
@@ -310,91 +328,107 @@ export default function ChatView({
         try {
           const results = await Promise.all(markPromises)
           const successCount = results.filter(r => r).length
-          console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens as asked`)
+          const usedNewAPI = createVocabNotation !== null
           
-          // 如果标记成功，等待后端保存完成，然后刷新vocab数据
+          console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens (usedNewAPI=${usedNewAPI})`)
+          
+          // 如果标记成功
           if (successCount > 0) {
-            console.log('⏳ [ChatView] Waiting for backend to save vocab data...')
-            
-            // 等待500ms确保后端异步保存完成
-            await new Promise(resolve => setTimeout(resolve, 500))
-            
-            // 刷新vocab数据和asked tokens，确保能立即查询到新增的vocab example和显示绿色下划线
-            try {
-              console.log('🔄 [ChatView] Refreshing vocab data and asked tokens...')
-              await apiService.refreshVocab()
-              console.log('✅ [ChatView] Vocab data refreshed successfully')
+            if (usedNewAPI) {
+              // 使用新API时，vocab notation已经实时添加到缓存，不需要刷新
+              console.log('✅ [ChatView] Vocab notations already updated in cache via new API, skipping refresh')
               
-              // 同时刷新asked tokens状态
-              if (refreshAskedTokens) {
-                await refreshAskedTokens()
-                console.log('✅ [ChatView] Asked tokens refreshed successfully')
+              // 只刷新vocab数据（如果有新创建的vocab例子）
+              try {
+                console.log('🔄 [ChatView] Refreshing vocab data...')
+                await apiService.refreshVocab()
+                console.log('✅ [ChatView] Vocab data refreshed successfully')
+              } catch (err) {
+                console.warn('⚠️ [ChatView] Failed to refresh vocab data:', err)
               }
+            } else {
+              // 使用旧API时，需要刷新asked tokens和vocab数据
+              console.log('⏳ [ChatView] Waiting for backend to save vocab data (old API)...')
               
-              // 实时更新缓存而不是完全刷新
-              console.log('🔄 [ChatView] 开始实时更新缓存...')
+              // 等待500ms确保后端异步保存完成
+              await new Promise(resolve => setTimeout(resolve, 500))
               
-              // 更新grammar notations缓存
-              if (response && response.grammar_to_add && Array.isArray(response.grammar_to_add)) {
-                console.log('➕ [ChatView] 添加新的grammar rules到缓存:', response.grammar_to_add)
-                response.grammar_to_add.forEach(rule => {
-                  if (addGrammarRuleToCache) {
-                    addGrammarRuleToCache(rule)
-                  }
-                })
-              }
-              
-              // 更新vocab notations缓存
-              if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
-                console.log('➕ [ChatView] 添加新的vocab examples到缓存:', response.vocab_to_add)
-                response.vocab_to_add.forEach(vocab => {
-                  if (addVocabExampleToCache && vocab.vocab_id) {
-                    // 构造vocab example对象
-                    const vocabExample = {
-                      vocab_id: vocab.vocab_id,
-                      text_id: articleId,
-                      sentence_id: currentSelectionContext.sentence?.sentence_id,
-                      token_index: currentSelectionContext.tokens?.[0]?.sentence_token_id,
-                      context_explanation: vocab.explanation || '',
-                      token_indices: currentSelectionContext.tokenIndices || []
-                    }
-                    addVocabExampleToCache(vocabExample)
-                  }
-                })
-              }
-              
-              // 如果有新的grammar notation被创建，也添加到缓存
-              if (response && response.new_grammar_notation) {
-                console.log('➕ [ChatView] 添加新的grammar notation到缓存:', response.new_grammar_notation)
-                if (addGrammarNotationToCache) {
-                  addGrammarNotationToCache(response.new_grammar_notation)
+              // 刷新vocab数据和asked tokens
+              try {
+                console.log('🔄 [ChatView] Refreshing vocab data and asked tokens (old API)...')
+                await apiService.refreshVocab()
+                console.log('✅ [ChatView] Vocab data refreshed successfully')
+                
+                // 同时刷新asked tokens状态
+                if (refreshAskedTokens) {
+                  await refreshAskedTokens()
+                  console.log('✅ [ChatView] Asked tokens refreshed successfully')
                 }
+              } catch (err) {
+                console.warn('⚠️ [ChatView] Failed to refresh data:', err)
               }
-              
-              // 如果有新的vocab notation被创建，也添加到缓存
-              if (response && response.new_vocab_notation) {
-                console.log('➕ [ChatView] 添加新的vocab notation到缓存:', response.new_vocab_notation)
-                if (addVocabNotationToCache) {
-                  addVocabNotationToCache(response.new_vocab_notation)
-                }
-              }
-              
-              // 如果实时更新不可用，回退到完全刷新
-              if (!addGrammarNotationToCache && refreshGrammarNotations) {
-                console.log('🔄 [ChatView] 回退到完全刷新grammar notations...')
-                try {
-                  await refreshGrammarNotations()
-                  console.log('✅ [ChatView] Grammar notations refreshed successfully')
-                } catch (grammarError) {
-                  console.error('❌ [ChatView] Failed to refresh grammar notations:', grammarError)
-                }
-              }
-              
-              console.log('🎉 [ChatView] Token states updated - green underlines should be visible now')
-            } catch (refreshError) {
-              console.error('❌ [ChatView] Failed to refresh vocab data:', refreshError)
-              console.warn('⚠️ [ChatView] You may need to refresh the page to see vocab examples')
             }
+            
+            // 实时更新缓存而不是完全刷新
+            console.log('🔄 [ChatView] 开始实时更新缓存...')
+            
+            // 更新grammar notations缓存
+            if (response && response.grammar_to_add && Array.isArray(response.grammar_to_add)) {
+              console.log('➕ [ChatView] 添加新的grammar rules到缓存:', response.grammar_to_add)
+              response.grammar_to_add.forEach(rule => {
+                if (addGrammarRuleToCache) {
+                  addGrammarRuleToCache(rule)
+                }
+              })
+            }
+            
+            // 更新vocab notations缓存
+            if (response && response.vocab_to_add && Array.isArray(response.vocab_to_add)) {
+              console.log('➕ [ChatView] 添加新的vocab examples到缓存:', response.vocab_to_add)
+              response.vocab_to_add.forEach(vocab => {
+                if (addVocabExampleToCache && vocab.vocab_id) {
+                  // 构造vocab example对象
+                  const vocabExample = {
+                    vocab_id: vocab.vocab_id,
+                    text_id: articleId,
+                    sentence_id: currentSelectionContext.sentence?.sentence_id,
+                    token_index: currentSelectionContext.tokens?.[0]?.sentence_token_id,
+                    context_explanation: vocab.explanation || '',
+                    token_indices: currentSelectionContext.tokenIndices || []
+                  }
+                  addVocabExampleToCache(vocabExample)
+                }
+              })
+            }
+            
+            // 如果有新的grammar notation被创建，也添加到缓存
+            if (response && response.new_grammar_notation) {
+              console.log('➕ [ChatView] 添加新的grammar notation到缓存:', response.new_grammar_notation)
+              if (addGrammarNotationToCache) {
+                addGrammarNotationToCache(response.new_grammar_notation)
+              }
+            }
+            
+            // 如果有新的vocab notation被创建，也添加到缓存
+            if (response && response.new_vocab_notation) {
+              console.log('➕ [ChatView] 添加新的vocab notation到缓存:', response.new_vocab_notation)
+              if (addVocabNotationToCache) {
+                addVocabNotationToCache(response.new_vocab_notation)
+              }
+            }
+            
+            // 如果实时更新不可用，回退到完全刷新
+            if (!addGrammarNotationToCache && refreshGrammarNotations) {
+              console.log('🔄 [ChatView] 回退到完全刷新grammar notations...')
+              try {
+                await refreshGrammarNotations()
+                console.log('✅ [ChatView] Grammar notations refreshed successfully')
+              } catch (grammarError) {
+                console.error('❌ [ChatView] Failed to refresh grammar notations:', grammarError)
+              }
+            }
+            
+            console.log('🎉 [ChatView] Token states updated - green underlines should be visible now')
           } else {
             console.warn('⚠️ [ChatView] 没有token被成功标记')
           }
@@ -552,14 +586,27 @@ export default function ChatView({
         console.error('💥 [Frontend] 响应数据:', error.response.data)
       }
       
+      // 检查是否是超时错误
+      let errorMessage = '发送消息时发生错误'
+      if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+        errorMessage = '请求超时，AI 处理时间过长。请尝试简化问题或稍后重试。'
+        console.warn('⏰ [Frontend] 检测到超时错误，建议用户简化问题')
+      } else if (error.message.includes('timeout')) {
+        errorMessage = '请求超时，请检查网络连接或稍后重试。'
+      } else if (error.response?.status === 500) {
+        errorMessage = '服务器内部错误，请稍后重试。'
+      } else if (error.response?.status === 503) {
+        errorMessage = '服务暂时不可用，请稍后重试。'
+      }
+      
       // 显示错误消息
-      const errorMessage = {
+      const errorMsg = {
         id: Date.now() + 1,
-        text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
+        text: `抱歉，处理您的问题时出现错误: ${errorMessage}`,
         isUser: false,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages(prev => [...prev, errorMsg])
       
       // ✅ 即使出错也不清空引用，保持引用以便用户重试
     }
@@ -699,7 +746,7 @@ export default function ChatView({
         console.log('📋 [ChatView] New vocab tokens (建议问题):', Array.from(newVocabTokens))
         
         // 只标记那些在vocab_to_add中的tokens
-        const markPromises = currentSelectionContext.tokens.map((token, tokenIdx) => {
+        const markPromises = currentSelectionContext.tokens.map(async (token, tokenIdx) => {
           // 使用fallback确保字段存在
           const sentenceTokenId = token.sentence_token_id ?? (tokenIdx + 1)
           const sentenceId = currentSelectionContext.sentence?.sentence_id
@@ -724,7 +771,30 @@ export default function ChatView({
           
           if (shouldMark && sentenceId && textId && sentenceTokenId != null) {
             console.log(`🏷️ [ChatView] Marking token: "${token.token_body}" (${textId}:${sentenceId}:${sentenceTokenId}) with vocabId=${vocabId}`)
-            return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
+            
+            // 优先使用新API创建vocab notation
+            if (createVocabNotation) {
+              console.log('✅ [ChatView] Using new API (createVocabNotation) - 建议问题')
+              const result = await createVocabNotation(textId, sentenceId, sentenceTokenId, vocabId)
+              if (result.success) {
+                console.log('✅ [ChatView] Vocab notation created via new API (建议问题):', result.notation)
+                return true
+              } else {
+                console.warn('⚠️ [ChatView] Failed to create vocab notation via new API (建议问题), falling back to old API')
+                // 回退到旧API
+                if (markAsAsked) {
+                  return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
+                }
+                return false
+              }
+            } else if (markAsAsked) {
+              // 如果没有新API，使用旧API（向后兼容）
+              console.log('⚠️ [ChatView] Using old API (markAsAsked) - new API not available - 建议问题')
+              return markAsAsked(textId, sentenceId, sentenceTokenId, vocabId)
+            } else {
+              console.error('❌ [ChatView] No API available to mark token (建议问题)')
+              return false
+            }
           } else {
             console.log(`⏭️ [ChatView] Skipping token: "${token.token_body}" - ${shouldMark ? 'missing fields' : 'not in vocab example'}`)
             return Promise.resolve(false)
@@ -734,45 +804,61 @@ export default function ChatView({
         try {
           const results = await Promise.all(markPromises)
           const successCount = results.filter(r => r).length
-          console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens as asked (suggested question)`)
+          const usedNewAPI = createVocabNotation !== null
           
-          // 如果标记成功，等待后端保存完成，然后刷新vocab数据
+          console.log(`✅ [ChatView] Successfully marked ${successCount}/${markPromises.length} tokens (建议问题, usedNewAPI=${usedNewAPI})`)
+          
+          // 如果标记成功
           if (successCount > 0) {
-            console.log('⏳ [ChatView] Waiting for backend to save vocab data (suggested question)...')
-            
-            // 等待500ms确保后端异步保存完成
-            await new Promise(resolve => setTimeout(resolve, 500))
-            
-            // 刷新vocab数据和asked tokens，确保能立即查询到新增的vocab example和显示绿色下划线
-            try {
-              console.log('🔄 [ChatView] Refreshing vocab data and asked tokens (suggested question)...')
-              await apiService.refreshVocab()
-              console.log('✅ [ChatView] Vocab data refreshed successfully (suggested question)')
+            if (usedNewAPI) {
+              // 使用新API时，vocab notation已经实时添加到缓存，不需要刷新
+              console.log('✅ [ChatView] Vocab notations already updated in cache via new API (建议问题), skipping refresh')
               
-              // 同时刷新asked tokens状态
-              if (refreshAskedTokens) {
-                await refreshAskedTokens()
-                console.log('✅ [ChatView] Asked tokens refreshed successfully (suggested question)')
+              // 只刷新vocab数据（如果有新创建的vocab例子）
+              try {
+                console.log('🔄 [ChatView] Refreshing vocab data (建议问题)...')
+                await apiService.refreshVocab()
+                console.log('✅ [ChatView] Vocab data refreshed successfully (建议问题)')
+              } catch (err) {
+                console.warn('⚠️ [ChatView] Failed to refresh vocab data (建议问题):', err)
               }
+            } else {
+              // 使用旧API时，需要刷新asked tokens和vocab数据
+              console.log('⏳ [ChatView] Waiting for backend to save vocab data (old API, 建议问题)...')
               
-              // 刷新grammar notations状态
-              if (refreshGrammarNotations) {
-                console.log('🔄 [ChatView] 开始刷新grammar notations (建议问题)...')
-                try {
-                  await refreshGrammarNotations()
-                  console.log('✅ [ChatView] Grammar notations refreshed successfully (suggested question)')
-                } catch (grammarError) {
-                  console.error('❌ [ChatView] Failed to refresh grammar notations (suggested question):', grammarError)
+              // 等待500ms确保后端异步保存完成
+              await new Promise(resolve => setTimeout(resolve, 500))
+              
+              // 刷新vocab数据和asked tokens
+              try {
+                console.log('🔄 [ChatView] Refreshing vocab data and asked tokens (old API, 建议问题)...')
+                await apiService.refreshVocab()
+                console.log('✅ [ChatView] Vocab data refreshed successfully (建议问题)')
+                
+                // 同时刷新asked tokens状态
+                if (refreshAskedTokens) {
+                  await refreshAskedTokens()
+                  console.log('✅ [ChatView] Asked tokens refreshed successfully (建议问题)')
                 }
-              } else {
-                console.warn('⚠️ [ChatView] refreshGrammarNotations function not available (suggested question)')
+              } catch (err) {
+                console.warn('⚠️ [ChatView] Failed to refresh data (建议问题):', err)
               }
-              
-              console.log('🎉 [ChatView] Token states updated - green underlines should be visible now (suggested question)')
-            } catch (refreshError) {
-              console.error('❌ [ChatView] Failed to refresh vocab data (suggested question):', refreshError)
-              console.warn('⚠️ [ChatView] You may need to refresh the page to see vocab examples')
             }
+            
+            // 刷新grammar notations状态
+            if (refreshGrammarNotations) {
+              console.log('🔄 [ChatView] 开始刷新grammar notations (建议问题)...')
+              try {
+                await refreshGrammarNotations()
+                console.log('✅ [ChatView] Grammar notations refreshed successfully (suggested question)')
+              } catch (grammarError) {
+                console.error('❌ [ChatView] Failed to refresh grammar notations (suggested question):', grammarError)
+              }
+            } else {
+              console.warn('⚠️ [ChatView] refreshGrammarNotations function not available (suggested question)')
+            }
+            
+            console.log('🎉 [ChatView] Token states updated - green underlines should be visible now (suggested question)')
           } else {
             console.warn('⚠️ [ChatView] 没有token被成功标记（建议问题）')
           }
@@ -928,14 +1014,27 @@ export default function ChatView({
         console.error('💥 [Frontend] 响应数据:', error.response.data)
       }
       
+      // 检查是否是超时错误
+      let errorMessage = '发送消息时发生错误'
+      if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+        errorMessage = '请求超时，AI 处理时间过长。请尝试简化问题或稍后重试。'
+        console.warn('⏰ [Frontend] 检测到超时错误，建议用户简化问题')
+      } else if (error.message.includes('timeout')) {
+        errorMessage = '请求超时，请检查网络连接或稍后重试。'
+      } else if (error.response?.status === 500) {
+        errorMessage = '服务器内部错误，请稍后重试。'
+      } else if (error.response?.status === 503) {
+        errorMessage = '服务暂时不可用，请稍后重试。'
+      }
+      
       // 显示错误消息
-      const errorMessage = {
+      const errorMsg = {
         id: Date.now() + 1,
-        text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
+        text: `抱歉，处理您的问题时出现错误: ${errorMessage}`,
         isUser: false,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages(prev => [...prev, errorMsg])
       
       // ✅ 即使出错也不清空引用，保持引用以便用户重试
     }

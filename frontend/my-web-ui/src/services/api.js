@@ -23,7 +23,7 @@ const BASE_URL = API_TARGET === "mock" ? "http://localhost:8000" : "http://local
 // 创建 axios 实例
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000,
+  timeout: 120000, // 增加到 2 分钟
   headers: { "Content-Type": "application/json" },
 });
 
@@ -124,6 +124,16 @@ api.interceptors.response.use(
           console.log("🔍 [DEBUG] Returning sentences array");
           return innerData.sentences;
         }
+        
+        // Vocab notations API - 新格式 { notations: [...], count: N }
+        if (innerData.notations) {
+          console.log("🔍 [DEBUG] Found notations array (vocab/grammar)");
+          // 返回完整结构，让调用者可以访问notations和count
+          return {
+            success: true,
+            data: innerData
+          };
+        }
       }
       
       // 如果没有列表字段，返回整个innerData
@@ -211,6 +221,20 @@ export const apiService = {
     api.get(API_TARGET === 'mock' 
       ? `/api/vocab_notations/${textId}/${sentenceId}` 
       : `/api/v2/notations/vocab/${textId}/${sentenceId}`),
+
+  // 创建词汇标注（新API）
+  createVocabNotation: (userId = 'default_user', textId, sentenceId, tokenId, vocabId = null) => {
+    console.log(`➕ [Frontend] Creating vocab notation: ${textId}:${sentenceId}:${tokenId}`, { userId, vocabId })
+    return api.post(API_TARGET === 'mock' 
+      ? '/api/user/asked-tokens'  // Mock服务器暂时使用旧API
+      : '/api/v2/notations/vocab', {
+        user_id: userId,
+        text_id: textId,
+        sentence_id: sentenceId,
+        token_id: tokenId,
+        vocab_id: vocabId
+      })
+  },
 
   // ==================== Text/Article API（数据库版本）====================
   

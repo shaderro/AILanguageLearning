@@ -18,19 +18,13 @@ export function useAskedTokens(articleId, userId = 'default_user') {
       setError(null)
       
       try {
-        console.log('🚀 [useAskedTokens] Fetching asked tokens for:', { userId, articleId })
+        // 移除详细日志（已通过测试，减少不必要的日志输出）
         const response = await apiService.getAskedTokens(userId, articleId)
-        console.log('📥 [useAskedTokens] API response:', response)
         
         if (response.success && response.data?.asked_tokens) {
           const tokens = new Set(response.data.asked_tokens)
-          console.log('✅ [useAskedTokens] Loaded asked tokens:', {
-            count: tokens.size,
-            tokens: Array.from(tokens)
-          })
           setAskedTokenKeys(tokens)
         } else {
-          console.log('❌ [useAskedTokens] No asked tokens found')
           setAskedTokenKeys(new Set())
         }
       } catch (err) {

@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo, useContext } from 'react'
 import { getTokenKey, getTokenId } from '../utils/tokenUtils'
 // import VocabExplanationButton from './VocabExplanationButton' // 暂时注释掉 - 以后可能会用到
 import VocabTooltip from './VocabTooltip'
 import TokenNotation from './TokenNotation'
 import GrammarNotation from './GrammarNotation'
+import { NotationContext } from '../contexts/NotationContext'
 
 /**
  * TokenSpan - Renders individual token with selection and vocab explanation features
@@ -28,13 +29,17 @@ export default function TokenSpan({
   isTokenAsked,
   markAsAsked,
   getNotationContent,
-  setNotationContent,
-  // Grammar notation props
-  hasGrammarNotation,
-  getGrammarNotationsForSentence,
-  // Vocab notation props
-  getVocabExampleForToken
+  setNotationContent
 }) {
+  // 从 NotationContext 获取 notation 相关功能
+  const notationContext = useContext(NotationContext)
+  const {
+    getGrammarNotationsForSentence,
+    getVocabNotationsForSentence,
+    getVocabExampleForToken,
+    isTokenAsked: isTokenAskedFromContext
+  } = notationContext || {}
+  
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
   const selectable = typeof token === 'object' ? !!token?.selectable : false
   const uid = getTokenId(token, sentenceIdx)
@@ -49,8 +54,10 @@ export default function TokenSpan({
   const tokenSentenceId = sentenceIdx + 1
   const tokenSentenceTokenId = token?.sentence_token_id
   
+  // 优先使用 Context 中的 isTokenAsked，如果没有则使用 props 中的（向后兼容）
+  const isTokenAskedFunc = isTokenAskedFromContext || isTokenAsked
   const isAsked = isTextToken && tokenSentenceTokenId != null
-    ? isTokenAsked(articleId, tokenSentenceId, tokenSentenceTokenId)
+    ? (isTokenAskedFunc ? isTokenAskedFunc(articleId, tokenSentenceId, tokenSentenceTokenId) : false)
     : false
   
   // 调试日志已关闭以提升性能
@@ -70,16 +77,31 @@ export default function TokenSpan({
     return notation.marked_token_ids.includes(tokenSentenceTokenId)
   })
 
-  // 检查是否有 vocab notation（来自缓存列表，而不依赖 asked tokens）
-  const vocabNotationsForSentence = typeof getVocabNotationsForSentence === 'function'
-    ? getVocabNotationsForSentence(sentenceId)
-    : []
-  const hasVocabNotationForToken = Array.isArray(vocabNotationsForSentence)
-    ? vocabNotationsForSentence.some(n => n?.token_index === tokenSentenceTokenId)
-    : false
+  // 优先检查 vocab notation（从新API加载）
+  // vocab notation是数据源，asked tokens只是兼容层
+  // 使用useMemo缓存计算结果，避免每次渲染都重新计算
+  const vocabNotationsForSentence = useMemo(() => {
+    return typeof getVocabNotationsForSentence === 'function'
+      ? getVocabNotationsForSentence(sentenceId)
+      : []
+  }, [getVocabNotationsForSentence, sentenceId])
+  
+  // 使用useMemo缓存匹配结果，避免每次渲染都重新计算
+  const hasVocabNotationForToken = useMemo(() => {
+    if (!Array.isArray(vocabNotationsForSentence) || tokenSentenceTokenId == null) {
+      return false
+    }
+    const currentTokenId = Number(tokenSentenceTokenId)
+    return vocabNotationsForSentence.some(n => {
+      // 确保类型一致（数字比较）
+      const notationTokenId = Number(n?.token_id ?? n?.token_index)
+      return notationTokenId === currentTokenId
+    })
+  }, [vocabNotationsForSentence, tokenSentenceTokenId])
 
-  // 检查是否在 asked tokens 中有 vocab 记录（通过 isAsked 已经包含了这个检查）
-  const hasVocabVisual = isAsked || hasVocabNotationForToken
+  // 优先使用vocab notation，asked tokens作为备用（向后兼容）
+  // 如果vocab notation存在，就不需要检查asked tokens了
+  const hasVocabVisual = hasVocabNotationForToken || (isAsked && !hasVocabNotationForToken)
 
   const bgClass = selected
     ? 'bg-yellow-300'
@@ -144,9 +166,8 @@ export default function TokenSpan({
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
-          // Debug logging removed for performance
-          // 如果是已提问的token，显示notation
-          if (isAsked) {
+          // 如果有vocab notation（来自vocab_notations或asked tokens），显示notation卡片
+          if (hasVocabVisual) {
             cancelHideNotation()  // 取消任何待处理的隐藏
             setShowNotation(true)
           }
@@ -157,7 +178,7 @@ export default function TokenSpan({
             setHoveredTokenId(null)
           }
           // 延迟隐藏notation（而不是立即隐藏）
-          if (isAsked) {
+          if (hasVocabVisual) {
             scheduleHideNotation()
           }
         }}
@@ -199,7 +220,7 @@ export default function TokenSpan({
         />
       )} */}
       
-      {/* TokenNotation - 对有 vocab 标注（asked 或缓存命中）的 token 显示 */}
+      {/* TokenNotation - 对有 vocab 标注（来自vocab_notations或asked tokens）的 token 显示 */}
       {hasVocabVisual && showNotation && (
         <TokenNotation 
           isVisible={showNotation}

@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useContext } from 'react'
 import TokenSpan from './TokenSpan'
 import GrammarNotationCard from './GrammarNotationCard'
+import { NotationContext } from '../contexts/NotationContext'
 
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
@@ -30,14 +31,16 @@ export default function SentenceContainer({
   onSentenceMouseLeave,
   onSentenceClick,
   getSentenceBackgroundStyle,
-  isSentenceInteracting,
-  // Grammar notation props
-  hasGrammarNotation,
-  getGrammarNotationsForSentence,
-  getGrammarRuleById,
-  // Vocab notation props
-  getVocabExampleForToken
+  isSentenceInteracting
 }) {
+  // 从 NotationContext 获取 notation 相关功能
+  const notationContext = useContext(NotationContext)
+  const {
+    hasGrammarNotation,
+    getGrammarNotationsForSentence,
+    getGrammarRuleById
+  } = notationContext || {}
+  
   // Grammar notation hover state
   const [showGrammarCard, setShowGrammarCard] = useState(false)
   const [grammarCardPosition, setGrammarCardPosition] = useState({ top: 0, left: 0, right: 'auto' })
@@ -149,9 +152,6 @@ export default function SentenceContainer({
           markAsAsked={markAsAsked}
           getNotationContent={getNotationContent}
           setNotationContent={setNotationContent}
-          hasGrammarNotation={hasGrammarNotation}
-          getGrammarNotationsForSentence={getGrammarNotationsForSentence}
-          getVocabExampleForToken={getVocabExampleForToken}
         />
       ))}
       
