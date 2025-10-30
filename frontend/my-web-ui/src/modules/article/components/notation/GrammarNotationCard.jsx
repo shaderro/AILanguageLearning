@@ -1,17 +1,8 @@
 import { useState, useEffect } from 'react'
-import { apiService } from '../../../services/api'
+import { apiService } from '../../../../services/api'
 
 /**
- * GrammarNotationCard - 语法注释卡片组件
- * 
- * Props:
- * - isVisible: 是否显示卡片
- * - textId: 文章ID
- * - sentenceId: 句子ID
- * - position: 卡片位置 { top, left, right }
- * - onClose: 关闭回调
- * - cachedGrammarRules: 缓存的语法规则数据（可选）
- * - getGrammarRuleById: 获取语法规则详情的函数（可选）
+ * GrammarNotationCard - 语法注释卡片组件（从 components/ 迁移至 notation/）
  */
 export default function GrammarNotationCard({ 
   isVisible = false, 
@@ -30,43 +21,30 @@ export default function GrammarNotationCard({
 
   useEffect(() => {
     if (isVisible && textId && sentenceId) {
-      // 优先使用缓存数据
       if (cachedGrammarRules && getGrammarRuleById) {
-        // 移除详细日志（已通过测试，缓存功能正常）
-        
         const rules = cachedGrammarRules.map(notation => {
           const rule = getGrammarRuleById(notation.grammar_id)
-          
           if (!rule) {
             console.warn(`⚠️ [GrammarNotationCard] Grammar rule not found in cache for grammar_id=${notation.grammar_id}`)
             return null
           }
-          
-          // 从 grammar rule 的 examples 中查找匹配当前 (text_id, sentence_id) 的 example
           let contextExplanation = notation.context_explanation || notation.explanation_context || ''
-          
           if (rule.examples && Array.isArray(rule.examples)) {
             const matchingExample = rule.examples.find(ex => 
               Number(ex.text_id) === Number(notation.text_id) && 
               Number(ex.sentence_id) === Number(notation.sentence_id)
             )
-            
             if (matchingExample) {
-              // 解析 explanation_context（可能是JSON字符串）
               let explanationText = matchingExample.explanation_context || ''
               try {
                 const parsed = JSON.parse(explanationText)
                 if (parsed && parsed.explanation) {
                   explanationText = parsed.explanation
                 }
-              } catch (e) {
-                // 如果不是JSON，直接使用原字符串
-              }
-              
+              } catch (e) {}
               contextExplanation = explanationText
             }
           }
-          
           const result = {
             ...rule,
             context_explanation: contextExplanation,
@@ -76,22 +54,16 @@ export default function GrammarNotationCard({
             text_id: notation.text_id,
             sentence_id: notation.sentence_id
           }
-          
           return result
         }).filter(Boolean)
-        
         setGrammarRules(rules)
         setIsLoading(false)
         setError(null)
       } else {
-        // 回退到API调用（缓存未命中时的fallback）
-        console.log(`🔍 [GrammarNotationCard] Using API fallback for sentence ${sentenceId} (cache miss)`)
         setIsLoading(true)
         setError(null)
-        
         fetchSentenceGrammarRules(textId, sentenceId)
           .then(rules => {
-            console.log(`✅ [GrammarNotationCard] Fetched ${rules.length} grammar rules from API:`, rules)
             setGrammarRules(rules)
             setIsLoading(false)
           })
@@ -107,29 +79,13 @@ export default function GrammarNotationCard({
     }
   }, [isVisible, textId, sentenceId, cachedGrammarRules, getGrammarRuleById])
 
-  // 获取句子的语法规则
   const fetchSentenceGrammarRules = async (textId, sentenceId) => {
     try {
-      // 使用新的API方法直接获取句子的语法规则
       const response = await apiService.getSentenceGrammarRules(textId, sentenceId)
-      
       if (response && response.data) {
-        // 如果返回的是语法规则列表
-        if (Array.isArray(response.data)) {
-          return response.data
-        }
-        
-        // 如果返回的是包含语法规则的对象
-        if (response.data.grammar_rules) {
-          return response.data.grammar_rules
-        }
-        
-        // 如果返回的是单个语法规则
-        if (response.data.rule_id) {
-          return [response.data]
-        }
-        
-        // 如果返回的是GrammarNotation对象，需要根据grammar_id获取语法规则详情
+        if (Array.isArray(response.data)) return response.data
+        if (response.data.grammar_rules) return response.data.grammar_rules
+        if (response.data.rule_id) return [response.data]
         if (response.data.grammar_id) {
           try {
             const ruleResponse = await apiService.getGrammarById(response.data.grammar_id)
@@ -149,18 +105,13 @@ export default function GrammarNotationCard({
       return []
     } catch (error) {
       console.error('Error in fetchSentenceGrammarRules:', error)
-      // 如果新API失败，回退到旧方法
       try {
         const notationsResponse = await apiService.getGrammarNotations(textId)
         const notations = Array.isArray(notationsResponse) ? notationsResponse : 
                          (notationsResponse?.data && Array.isArray(notationsResponse.data) ? notationsResponse.data : [])
-        
-        // 过滤出当前句子的语法标注
         const sentenceNotations = notations.filter(notation => 
           notation.sentence_id === sentenceId
         )
-        
-        // 获取每个语法规则的详细信息
         const grammarRules = []
         for (const notation of sentenceNotations) {
           try {
@@ -176,7 +127,6 @@ export default function GrammarNotationCard({
             console.warn(`Failed to fetch grammar rule ${notation.grammar_id}:`, ruleError)
           }
         }
-        
         return grammarRules
       } catch (fallbackError) {
         console.error('Fallback method also failed:', fallbackError)
@@ -189,7 +139,7 @@ export default function GrammarNotationCard({
 
   return (
     <div 
-      className="fixed bg-white border border-gray-300 rounded-lg shadow-lg z-50"
+      className="fixed bg-white border border-gray-300 rounded-lg shadow-lg z-50 notation-card"
       style={{
         top: `${position.top}px`,
         left: position.left !== 'auto' ? `${position.left}px` : 'auto',
@@ -207,8 +157,8 @@ export default function GrammarNotationCard({
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={(e) => e.stopPropagation()}
     >
-      {/* 标题栏 - 固定高度 */}
       <div 
         style={{ 
           height: '40px',
@@ -239,7 +189,6 @@ export default function GrammarNotationCard({
         </button>
       </div>
 
-      {/* 内容区域 - 可滚动 */}
       <div 
         style={{ 
           maxHeight: 'calc(200px - 16px - 16px - 40px - 12px)',
@@ -283,7 +232,6 @@ export default function GrammarNotationCard({
                   paddingBottom: '12px'
                 }}
               >
-                {/* 规则名称 */}
                 <div style={{ 
                   fontWeight: '600', 
                   color: '#2563eb', 
@@ -292,8 +240,6 @@ export default function GrammarNotationCard({
                 }}>
                   {rule.rule_name || rule.name}
                 </div>
-                
-                {/* 规则解释 */}
                 <div style={{ fontSize: '14px', color: '#374151', marginBottom: '8px' }}>
                   <span style={{ fontWeight: '500' }}>规则解释:</span>
                   <div style={{ 
@@ -305,8 +251,6 @@ export default function GrammarNotationCard({
                     {rule.rule_summary || rule.explanation}
                   </div>
                 </div>
-                
-                {/* 上下文解释 */}
                 {rule.context_explanation && (
                   <div style={{ fontSize: '14px', color: '#6b7280' }}>
                     <span style={{ fontWeight: '500' }}>上下文解释:</span>
@@ -328,3 +272,5 @@ export default function GrammarNotationCard({
     </div>
   )
 }
+
+

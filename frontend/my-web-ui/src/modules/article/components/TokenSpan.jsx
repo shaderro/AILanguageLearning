@@ -2,9 +2,10 @@ import { useState, useRef, useMemo, useContext } from 'react'
 import { getTokenKey, getTokenId } from '../utils/tokenUtils'
 // import VocabExplanationButton from './VocabExplanationButton' // 暂时注释掉 - 以后可能会用到
 import VocabTooltip from './VocabTooltip'
-import TokenNotation from './TokenNotation'
+import VocabNotationCard from './notation/VocabNotationCard'
 import GrammarNotation from './GrammarNotation'
 import { NotationContext } from '../contexts/NotationContext'
+import { useTokenSelectable } from '../selection/hooks/useTokenSelectable'
 
 /**
  * TokenSpan - Renders individual token with selection and vocab explanation features
@@ -53,6 +54,12 @@ export default function TokenSpan({
   // sentence_id 从 sentenceIdx 计算得出 (sentenceIdx + 1)
   const tokenSentenceId = sentenceIdx + 1
   const tokenSentenceTokenId = token?.sentence_token_id
+  // Selection hook（模块化选择行为）
+  const { className: selectionTokenClass, onMouseEnter: selOnEnter, onMouseLeave: selOnLeave, onClick: selOnClick } = useTokenSelectable({
+    textId: articleId,
+    sentenceId: tokenSentenceId,
+    tokenId: tokenSentenceTokenId
+  })
   
   // 优先使用 Context 中的 isTokenAsked，如果没有则使用 props 中的（向后兼容）
   const isTokenAskedFunc = isTokenAskedFromContext || isTokenAsked
@@ -69,13 +76,8 @@ export default function TokenSpan({
   
   // 检查当前token是否在grammar notation的marked_token_ids中
   // 如果marked_token_ids为空，则整个句子都有grammar notation
-  const isInGrammarNotation = hasGrammar && grammarNotations.some(notation => {
-    if (!notation.marked_token_ids || notation.marked_token_ids.length === 0) {
-      // 如果marked_token_ids为空，整个句子都有grammar notation
-      return true
-    }
-    return notation.marked_token_ids.includes(tokenSentenceTokenId)
-  })
+  // 取消 grammar 灰色下划线的渲染，改用句子右下角徽标触发卡片
+  const isInGrammarNotation = false
 
   // 优先检查 vocab notation（从新API加载）
   // vocab notation是数据源，asked tokens只是兼容层
@@ -163,6 +165,7 @@ export default function TokenSpan({
         }}
         onMouseDown={(e) => handleMouseDownToken(sentenceIdx, tokenIdx, token, e)}
         onMouseEnter={() => {
+          selOnEnter()
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
@@ -174,6 +177,7 @@ export default function TokenSpan({
           handleMouseEnterToken(sentenceIdx, tokenIdx, token)
         }}
         onMouseLeave={() => {
+          selOnLeave()
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(null)
           }
@@ -183,6 +187,7 @@ export default function TokenSpan({
           }
         }}
         onClick={(e) => { 
+          selOnClick()
           if (!isDraggingRef.current && selectable) { 
             e.preventDefault(); 
             e.stopPropagation(); 
@@ -193,8 +198,9 @@ export default function TokenSpan({
           'px-0.5 rounded-sm transition-colors duration-150 select-none',
           cursorClass,
           bgClass,
-          // 优先级：vocab 绿色 > 语法 灰色
-          hasVocabVisual ? 'border-b-2 border-green-500' : (isInGrammarNotation ? 'border-b-2 border-gray-400' : '')
+          selectionTokenClass,
+          // 只渲染 vocab 绿色下划线；grammar 改为句子徽标触发
+          hasVocabVisual ? 'border-b-2 border-green-500' : ''
         ].join(' ')}
         style={{ color: '#111827' }}
       >
@@ -220,9 +226,9 @@ export default function TokenSpan({
         />
       )} */}
       
-      {/* TokenNotation - 对有 vocab 标注（来自vocab_notations或asked tokens）的 token 显示 */}
+      {/* VocabNotationCard - 对有 vocab 标注（来自vocab_notations或asked tokens）的 token 显示 */}
       {hasVocabVisual && showNotation && (
-        <TokenNotation 
+        <VocabNotationCard 
           isVisible={showNotation}
           note={notationContent || "This is a test note"}
           textId={articleId}

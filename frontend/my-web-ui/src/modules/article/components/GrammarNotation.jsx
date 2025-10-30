@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { apiService } from '../../../services/api'
-import GrammarNotationCard from './GrammarNotationCard'
+import GrammarNotationCard from './notation/GrammarNotationCard'
 
 /**
  * GrammarNotation - 显示语法注释的下划线组件

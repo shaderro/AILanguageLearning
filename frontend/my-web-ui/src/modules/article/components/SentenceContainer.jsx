@@ -1,7 +1,9 @@
 import { useState, useRef, useContext } from 'react'
 import TokenSpan from './TokenSpan'
-import GrammarNotationCard from './GrammarNotationCard'
+import GrammarNotationCard from './notation/GrammarNotationCard'
+import GrammarNoteBadge from './notation/GrammarNoteBadge'
 import { NotationContext } from '../contexts/NotationContext'
+import { useSentenceSelectable } from '../selection/hooks/useSentenceSelectable'
 
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
@@ -49,31 +51,12 @@ export default function SentenceContainer({
   const handleSentenceMouseEnter = (e) => {
     // Trigger when entering the sentence container
     onSentenceMouseEnter(sentenceIndex)
-    
-    // Show grammar card if this sentence has grammar notations
-    
-    if (hasGrammar && grammarNotations.length > 0) {
-      const rect = sentenceRef.current?.getBoundingClientRect()
-      if (rect) {
-        // Showing grammar card for sentence
-        setGrammarCardPosition({
-          top: rect.bottom + 8,
-          left: rect.left,
-          right: 'auto'
-        })
-        setShowGrammarCard(true)
-      }
-    }
   }
 
   const handleSentenceMouseLeave = (e) => {
     // Trigger when leaving the sentence container
     onSentenceMouseLeave()
-    
-    // Hide grammar card with delay
-    hideCardTimerRef.current = setTimeout(() => {
-      setShowGrammarCard(false)
-    }, 100)
+    // 不在句子离开时自动隐藏，改由徽标/卡片的 mouseleave 控制
   }
   
   // Handle card mouse enter - cancel hiding
@@ -109,25 +92,24 @@ export default function SentenceContainer({
   
   // Debug logging removed to improve performance
 
+  // Selection hook（句子级选择）
+  const { className: selectionSentenceClass, onMouseEnter: selOnEnter, onMouseLeave: selOnLeave, onClick: selOnClick } = useSentenceSelectable({
+    textId: articleId,
+    sentenceId
+  })
+
   return (
     <div 
       ref={sentenceRef}
       key={`s-${sentenceIndex}`} 
-      className={`select-none relative transition-all duration-200`}
+      className={`select-none relative transition-all duration-200 hover:bg-gray-100 ${selectionSentenceClass}`}
       data-sentence="1"
-      onMouseEnter={handleSentenceMouseEnter}
-      onMouseLeave={handleSentenceMouseLeave}
-      onClick={handleSentenceClick}
+      onMouseEnter={(e) => { selOnEnter(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseEnter(e) }}
+      onMouseLeave={(e) => { selOnLeave(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseLeave(e) }}
+      onClick={(e) => { selOnClick(e); handleSentenceClick(e) }}
+      style={{}}
     >
-      {/* Legacy active sentence background - keep for compatibility with token selection */}
-      {activeSentenceIndex === sentenceIndex && (
-        <div className="absolute inset-0 bg-gray-100 border border-gray-300 rounded-md z-0" />
-      )}
-      
-      {/* New sentence interaction background */}
-      {isInteracting && (
-        <div className={`absolute inset-0 z-0 ${backgroundStyle}`} />
-      )}
+      {/* 移除旧的背景/边框层，避免与 Selection 模块产生双重边框/叠加样式 */}
       
       {(sentence?.tokens || []).map((token, tokenIndex) => (
         <TokenSpan
@@ -157,17 +139,39 @@ export default function SentenceContainer({
       
       {/* Grammar notation card - shown when hovering over the entire sentence */}
       {hasGrammar && grammarNotations.length > 0 && (
-        <GrammarNotationCard
-          isVisible={showGrammarCard}
-          textId={articleId}
-          sentenceId={sentenceId}
-          position={grammarCardPosition}
-          onClose={() => setShowGrammarCard(false)}
-          onMouseEnter={handleCardMouseEnter}
-          onMouseLeave={handleCardMouseLeave}
-          cachedGrammarRules={grammarNotations}
-          getGrammarRuleById={getGrammarRuleById}
-        />
+        <>
+          {/* 右下角小徽标作为触发器 */}
+          <div className="mt-1 flex justify-end">
+            <GrammarNoteBadge
+              className=""
+              style={{ fontSize: '0.60em' }}
+              label="grammar note"
+              onMouseEnter={() => {
+                const rect = sentenceRef.current?.getBoundingClientRect()
+                if (rect) {
+                  setGrammarCardPosition({ top: rect.bottom + 8, left: rect.left, right: 'auto' })
+                }
+                setShowGrammarCard(true)
+              }}
+              onMouseLeave={() => {
+                hideCardTimerRef.current = setTimeout(() => setShowGrammarCard(false), 120)
+              }}
+            />
+          </div>
+
+          {/* 语法注释卡片 */}
+          <GrammarNotationCard
+            isVisible={showGrammarCard}
+            textId={articleId}
+            sentenceId={sentenceId}
+            position={grammarCardPosition}
+            onClose={() => setShowGrammarCard(false)}
+            onMouseEnter={handleCardMouseEnter}
+            onMouseLeave={handleCardMouseLeave}
+            cachedGrammarRules={grammarNotations}
+            getGrammarRuleById={getGrammarRuleById}
+          />
+        </>
       )}
     </div>
   )

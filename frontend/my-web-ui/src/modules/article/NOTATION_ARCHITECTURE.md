@@ -33,8 +33,8 @@ ArticleChatView (顶层容器)
         ├── TokenSpan (token组件)
         │   ├── [使用 useContext(NotationContext)] ✅
         │   ├── 下划线样式 (inline style)
-        │   └── TokenNotation (vocab span卡片)
-        └── GrammarNotationCard (grammar span卡片 - 句子级)
+        │   └── notation/VocabNotationCard (vocab span卡片)
+        └── notation/GrammarNotationCard (grammar span卡片 - 句子级)
 ```
 
 ---

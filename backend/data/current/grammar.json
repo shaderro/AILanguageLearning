@@ -253,5 +253,20 @@
     ],
     "source": "qa",
     "is_starred": false
+  },
+  {
+    "rule_id": 14,
+    "rule_name": "德语倒装结构",
+    "rule_summary": "当句子以连词（如doch）开头时，动词提前到第二位，形成‘连词 + 动词 + 主语’的结构。",
+    "examples": [
+      {
+        "rule_id": 14,
+        "text_id": 0,
+        "sentence_id": 36,
+        "explanation_context": "{\"explanation\": \"在这句话中，'konnte Mr Dursley Leute nicht ausstehen' 使用了倒装结构，因为情态动词 'konnte' 被放在了主语 'Mr Dursley' 前面，而主要动词 'ausstehen' 放在句末。这种倒装强调了达力先生无法忍受某些人的情感，并使句子结构更流畅地连接到后面的描述性从句。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
   }
 ]

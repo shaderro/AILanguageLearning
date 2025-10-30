@@ -5,12 +5,24 @@ import UploadProgress from './components/UploadProgress'
 import ChatView from './components/ChatView'
 import { ChatEventProvider } from './contexts/ChatEventContext'
 import { NotationContext } from './contexts/NotationContext'
+import { SelectionProvider } from './selection/SelectionContext'
+import { useSelection } from './selection/hooks/useSelection'
+
+function ArticleCanvas({ children }) {
+  const { clearSelection } = useSelection()
+  return (
+    <div onClick={() => clearSelection()}>
+      {children}
+    </div>
+  )
+}
 import { useAskedTokens } from './hooks/useAskedTokens'
 import { useTokenNotations } from './hooks/useTokenNotations'
 import { useNotationCache } from './hooks/useNotationCache'
 import { apiService } from '../../services/api'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
+  // 空白处清空选择逻辑已移至 ArticleCanvas（在 SelectionProvider 内部使用 useSelection）
   const [selectedTokens, setSelectedTokens] = useState([])
   const [quotedText, setQuotedText] = useState('')
   const [showUploadProgress, setShowUploadProgress] = useState(false)
@@ -212,6 +224,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   return (
     <ChatEventProvider>
       <NotationContext.Provider value={notationContextValue}>
+        <SelectionProvider>
         <div className="h-full flex flex-col">
           {/* Header with Back Button */}
           <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
@@ -240,15 +253,17 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                 <UploadInterface onUploadStart={handleUploadStart} />
               )
             ) : (
-              <ArticleViewer 
-                articleId={articleId} 
-                onTokenSelect={handleTokenSelect}
-                isTokenAsked={isTokenAsked}
-                markAsAsked={markAsAsked}
-                getNotationContent={getNotationContent}
-                setNotationContent={setNotationContent}
-                onSentenceSelect={handleSentenceSelect}
-              />
+              <ArticleCanvas>
+                <ArticleViewer 
+                  articleId={articleId} 
+                  onTokenSelect={handleTokenSelect}
+                  isTokenAsked={isTokenAsked}
+                  markAsAsked={markAsAsked}
+                  getNotationContent={getNotationContent}
+                  setNotationContent={setNotationContent}
+                  onSentenceSelect={handleSentenceSelect}
+                />
+              </ArticleCanvas>
             )}
           <ChatView 
             quotedText={quotedText}
@@ -272,6 +287,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           />
         </div>
       </div>
+        </SelectionProvider>
       </NotationContext.Provider>
     </ChatEventProvider>
   )
