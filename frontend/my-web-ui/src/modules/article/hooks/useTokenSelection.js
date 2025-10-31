@@ -91,6 +91,10 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
   }
 
   const addSingle = (sIdx, token) => {
+    // 任何 token 选择都应取消句子级选择（避免整句与token同时高亮/上报）
+    if (typeof clearSentenceInteraction === 'function') {
+      try { clearSentenceInteraction() } catch {}
+    }
     // 如果选择了其他句子的token，先清除当前选择，然后设置新句子为活跃状态
     if (activeSentenceRef.current != null && activeSentenceRef.current !== sIdx) {
       clearSelection()

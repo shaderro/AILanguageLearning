@@ -1,4 +1,4 @@
-﻿import { useMemo, useEffect } from 'react'
+﻿import { useMemo, useEffect, useRef } from 'react'
 import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
@@ -98,21 +98,28 @@ export default function ArticleViewer({
   // Token notations management - 现在从props接收，不再创建新的hook实例
   // const { getNotationContent, setNotationContent } = useTokenNotations()
 
-  // Handle sentence selection changes
+  // Handle sentence selection changes（防重复触发：仅在索引变化时上报）
+  const lastEmittedSentenceIndexRef = useRef(null)
   useEffect(() => {
-    // 移除详细日志（已通过测试，减少不必要的日志输出）
-    
-    // 只有当selectedSentenceIndex不为null且有对应的句子数据时才处理
-    if (onSentenceSelect && selectedSentenceIndex !== null && sentences[selectedSentenceIndex]) {
+    // 只有当 selectedSentenceIndex 发生变化且有对应的句子数据时才处理
+    if (
+      onSentenceSelect &&
+      selectedSentenceIndex !== null &&
+      selectedSentenceIndex !== lastEmittedSentenceIndexRef.current &&
+      sentences[selectedSentenceIndex]
+    ) {
       const selectedSentence = sentences[selectedSentenceIndex]
       const sentenceText = selectedSentence.tokens?.map(token => 
         typeof token === 'string' ? token : token.token_body
       ).join(' ') || ''
-      
-      // 移除详细日志（已通过测试）
+
+      lastEmittedSentenceIndexRef.current = selectedSentenceIndex
       onSentenceSelect(selectedSentenceIndex, sentenceText, selectedSentence)
     }
-    // 移除自动清除逻辑，让父组件控制清除时机
+    // 当 selectedSentenceIndex 变为 null 时，重置记录，避免下次选同一句子不触发
+    if (selectedSentenceIndex === null) {
+      lastEmittedSentenceIndexRef.current = null
+    }
   }, [selectedSentenceIndex, sentences, onSentenceSelect])
 
   if (isLoading) {
@@ -164,7 +171,11 @@ export default function ArticleViewer({
             setNotationContent={setNotationContent}
             onSentenceMouseEnter={handleSentenceMouseEnter}
             onSentenceMouseLeave={handleSentenceMouseLeave}
-            onSentenceClick={handleSentenceClick}
+            onSentenceClick={(idx) => {
+              // 句子选择与 token 选择互斥：先清空 token 选择（触发前端 UI 与后端 token=null 同步）
+              clearSelection()
+              handleSentenceClick(idx)
+            }}
             getSentenceBackgroundStyle={getSentenceBackgroundStyle}
             isSentenceInteracting={isSentenceInteracting}
           />

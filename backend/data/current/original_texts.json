@@ -74,21 +74,29 @@
           2,
           3
         ],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          18
+        ]
       },
       {
         "text_id": 1,
         "sentence_id": 8,
         "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          1
+        ],
         "vocab_annotations": []
       },
       {
         "text_id": 1,
         "sentence_id": 9,
         "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
-        "grammar_annotations": [],
-        "vocab_annotations": []
+        "grammar_annotations": [
+          15
+        ],
+        "vocab_annotations": [
+          15
+        ]
       },
       {
         "text_id": 1,
@@ -122,7 +130,9 @@
         "sentence_id": 13,
         "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          17
+        ]
       },
       {
         "text_id": 1,
@@ -131,7 +141,9 @@
         "grammar_annotations": [
           5
         ],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          16
+        ]
       },
       {
         "text_id": 1,
@@ -198,14 +210,18 @@
         "sentence_id": 23,
         "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          21
+        ]
       },
       {
         "text_id": 1,
         "sentence_id": 24,
         "sentence_body": "Woran er nur wieder gedacht hatte!",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          20
+        ]
       },
       {
         "text_id": 1,
@@ -358,7 +374,9 @@
         "sentence_id": 44,
         "sentence_body": "In seinem Büro im neunten Stock saß Mr Dursley immer mit dem Rücken zum \nFenster.",
         "grammar_annotations": [],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          19
+        ]
       },
       {
         "text_id": 1,

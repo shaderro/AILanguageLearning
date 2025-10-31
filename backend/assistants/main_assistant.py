@@ -35,6 +35,9 @@ from backend.assistants.adapters import CapabilityDetector, DataAdapter, Grammar
 from typing import Union
 SentenceType = Union[Sentence, NewSentence] if NEW_STRUCTURE_AVAILABLE else Sentence
 
+# 全局开关：临时关闭语法相关能力（对比/生成规则与例句）
+DISABLE_GRAMMAR_FEATURES = True
+
 class MainAssistant:
     
     def __init__(self, data_controller_instance=None, max_turns=100, session_state_instance=None):
@@ -246,7 +249,11 @@ class MainAssistant:
             effective_sentence_body = quoted_sentence.sentence_body
             
         # 检查是否与语法相关
-        grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(effective_sentence_body, user_question, ai_response)
+        if DISABLE_GRAMMAR_FEATURES:
+            print("⏸️ [MainAssistant] Grammar features are DISABLED (skip relevance/summarize/compare/generation)")
+            grammar_relevant_response = {"is_grammar_relevant": False}
+        else:
+            grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(effective_sentence_body, user_question, ai_response)
         vocab_relevant_response = self.check_if_vocab_relevant_assistant.run(effective_sentence_body, user_question, ai_response)
         
         # 确保响应是字典类型
@@ -260,7 +267,7 @@ class MainAssistant:
             vocab=vocab_relevant_response.get("is_vocab_relevant", False)
         )
 
-        if self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.grammar:
+        if (not DISABLE_GRAMMAR_FEATURES) and self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.grammar:
             print("✅ 语法相关，开始总结语法规则。")
             # 确保所有参数都不为 None
             sentence_body = effective_sentence_body
@@ -306,12 +313,17 @@ class MainAssistant:
                     )
 
         # 语法处理：检查相似度，为现有规则添加例句或添加新规则
-        print("🔍 处理语法规则：检查相似度...")
+        if DISABLE_GRAMMAR_FEATURES:
+            print("⏸️ [MainAssistant] Grammar compare/new-rule flow disabled — skipping grammar pipeline")
+            current_grammar_rule_names = []
+            new_grammar_summaries = []
+        else:
+            print("🔍 处理语法规则：检查相似度...")
         
-        current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
-        print(f"📚 当前已有 {len(current_grammar_rule_names)} 个语法规则")
-        print(f"📚 现有语法规则列表: {current_grammar_rule_names}")
-        new_grammar_summaries = []
+            current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
+            print(f"📚 当前已有 {len(current_grammar_rule_names)} 个语法规则")
+            print(f"📚 现有语法规则列表: {current_grammar_rule_names}")
+            new_grammar_summaries = []
         
         for result in self.session_state.summarized_results:
             if isinstance(result, GrammarSummary):
@@ -432,12 +444,13 @@ class MainAssistant:
                     new_grammar_summaries.append(result)
         
         # 将新语法添加到 grammar_to_add
-        for grammar in new_grammar_summaries:
-            print(f"🆕 添加新语法: {grammar.grammar_rule_name}")
-            self.session_state.add_grammar_to_add(
-                rule_name=grammar.grammar_rule_name,
-                rule_explanation=grammar.grammar_rule_summary
-            )
+        if not DISABLE_GRAMMAR_FEATURES:
+            for grammar in new_grammar_summaries:
+                print(f"🆕 添加新语法: {grammar.grammar_rule_name}")
+                self.session_state.add_grammar_to_add(
+                    rule_name=grammar.grammar_rule_name,
+                    rule_explanation=grammar.grammar_rule_summary
+                )
 
         print("grammar to add：", self.session_state.grammar_to_add)
         #add to data
@@ -518,7 +531,9 @@ class MainAssistant:
         print(f"🔍 [DEBUG] grammar_to_add 长度: {len(self.session_state.grammar_to_add) if self.session_state.grammar_to_add else 0}")
         print(f"🔍 [DEBUG] vocab_to_add 长度: {len(self.session_state.vocab_to_add) if self.session_state.vocab_to_add else 0}")
         
-        if self.session_state.grammar_to_add:
+        if DISABLE_GRAMMAR_FEATURES:
+            print("⏸️ [MainAssistant] Grammar add/new-example disabled — skip grammar_to_add processing")
+        elif self.session_state.grammar_to_add:
             print(f"🔍 [DEBUG] 处理grammar_to_add: {len(self.session_state.grammar_to_add)} 个语法规则")
             for grammar in self.session_state.grammar_to_add:
                 print(f"🔍 [DEBUG] 处理新语法: {grammar.rule_name}")

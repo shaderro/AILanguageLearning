@@ -127,7 +127,15 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       }
     } else if (selectedTexts.length === 0) {
       // Clear selection - no tokens selected
-      console.log('🧹 [ArticleChatView] Clearing selection (no context to send)')
+      console.log('🧹 [ArticleChatView] Clearing token selection and backend session token')
+      try {
+        const clearPayload = { token: null }
+        console.log('📤 [ArticleChatView] Clearing token via updateContext:', clearPayload)
+        await apiService.session.updateContext(clearPayload)
+        console.log('✅ [ArticleChatView] Backend token cleared')
+      } catch (error) {
+        console.error('❌ [ArticleChatView] Failed to clear backend token:', error)
+      }
     }
   }
 
@@ -139,6 +147,14 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     setCurrentContext(null)  // 同时清除上下文
     setSelectedSentence(null)  // 清除句子选择
     setHasSelectedSentence(false)
+    // 同步清空后端的当前 token 选择，避免状态残留
+    try {
+      const clearPayload = { token: null }
+      console.log('📤 [ArticleChatView] Clearing backend token via updateContext:', clearPayload)
+      apiService.session.updateContext(clearPayload)
+    } catch (error) {
+      console.error('❌ [ArticleChatView] Failed to clear backend token on clearQuote:', error)
+    }
   }
 
   const handleSentenceSelect = async (sentenceIndex, sentenceText, sentenceData) => {
@@ -150,10 +166,12 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     console.log('  - Current selectedTokens:', selectedTokens)
     
     if (sentenceIndex !== null && sentenceText) {
-      // 如果当前有token选择，优先保持token选择，不处理句子选择
+      // 如果当前有token选择，则清除token并继续设置句子，确保前后端一致
       if (hasSelectedToken) {
-        console.log('⚠️ [ArticleChatView] Token selection has priority - ignoring sentence selection')
-        return
+        console.log('🧹 [ArticleChatView] Clearing token selection to apply sentence selection')
+        setSelectedTokens([])
+        setHasSelectedToken(false)
+        setCurrentContext(null)
       }
       
       // 选择句子（只有在没有token选择时）
@@ -169,13 +187,19 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       console.log('  - hasSelectedSentence:', true)
       console.log('  - quotedText:', sentenceText)
       
-      // 发送句子上下文到后端session state
+      // 发送句子上下文到后端session state（统一字段为后端期望的 snake_case）
       try {
-        const updatePayload = {
-          sentence: sentenceData
+        // 归一化句子数据，防止 camelCase / snake_case 混用导致会话态错乱
+        const normalizedSentence = {
+          text_id: sentenceData?.text_id ?? sentenceData?.textId ?? articleId,
+          sentence_id: sentenceData?.sentence_id ?? sentenceData?.sentenceId ?? (typeof sentenceIndex === 'number' ? sentenceIndex + 1 : undefined),
+          sentence_body: sentenceData?.sentence_body ?? sentenceData?.sentenceBody ?? sentenceText ?? sentenceData?.text ?? ''
         }
+        // 无条件显式清空后端 token，避免任何历史残留导致错配
+        const updatePayload = { sentence: normalizedSentence, token: null }
         
         console.log('📤 [ArticleChatView] Sending sentence context to backend...')
+        console.log('🧭 [ArticleChatView] Normalized sentence:', normalizedSentence)
         console.log('📤 [ArticleChatView] Update payload:', updatePayload)
         const response = await apiService.session.updateContext(updatePayload)
         console.log('✅ [ArticleChatView] Session context updated:', response)

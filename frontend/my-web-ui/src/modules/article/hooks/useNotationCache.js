@@ -78,41 +78,7 @@ export function useNotationCache(articleId) {
         }))
         
         setVocabNotations(formattedVocabNotations)
-        
-        // 预加载所有vocab examples（并行加载以提高性能）
-        const vocabExamplesMap = new Map()
-        const loadPromises = formattedVocabNotations.map(async (notation) => {
-          const key = `${notation.text_id}:${notation.sentence_id}:${notation.token_index}`
-          // 避免重复加载同一个example
-          if (vocabExamplesMap.has(key)) {
-            return
-          }
-          try {
-            const exampleResponse = await apiService.getVocabExampleByLocation(
-              notation.text_id,
-              notation.sentence_id,
-              notation.token_index
-            )
-            const payload = exampleResponse?.data?.data ?? exampleResponse?.data ?? exampleResponse
-            if (payload && payload.vocab_id) {
-              const normalized = {
-                vocab_id: payload.vocab_id,
-                text_id: payload.text_id,
-                sentence_id: payload.sentence_id,
-                token_index: payload.token_index ?? notation.token_index,
-                context_explanation: payload.context_explanation,
-                token_indices: payload.token_indices || []
-              }
-              vocabExamplesMap.set(key, normalized)
-            }
-          } catch (err) {
-            // 静默失败，避免单个example加载失败影响整体
-            console.warn(`⚠️ [useNotationCache] Failed to preload vocab example for ${key}:`, err)
-          }
-        })
-        await Promise.all(loadPromises)
-        setVocabExamplesCache(vocabExamplesMap)
-        
+        // 不再预加载所有 examples：改为按需懒加载 + 新建后单次写缓存
       } else if (vocabResponse && vocabResponse.data) {
         // 兼容旧的API格式（直接从data中获取数组）
         const vocabData = Array.isArray(vocabResponse.data) ? vocabResponse.data : []
@@ -126,39 +92,7 @@ export function useNotationCache(articleId) {
           created_at: notation.created_at
         }))
         setVocabNotations(formattedVocabNotations)
-        
-        // 预加载所有vocab examples（兼容旧格式，并行加载）
-        const vocabExamplesMap = new Map()
-        const loadPromises = formattedVocabNotations.map(async (notation) => {
-          const key = `${notation.text_id}:${notation.sentence_id}:${notation.token_index}`
-          if (vocabExamplesMap.has(key)) {
-            return
-          }
-          try {
-            const exampleResponse = await apiService.getVocabExampleByLocation(
-              notation.text_id,
-              notation.sentence_id,
-              notation.token_index
-            )
-            const payload = exampleResponse?.data?.data ?? exampleResponse?.data ?? exampleResponse
-            if (payload && payload.vocab_id) {
-              const normalized = {
-                vocab_id: payload.vocab_id,
-                text_id: payload.text_id,
-                sentence_id: payload.sentence_id,
-                token_index: payload.token_index ?? notation.token_index,
-                context_explanation: payload.context_explanation,
-                token_indices: payload.token_indices || []
-              }
-              vocabExamplesMap.set(key, normalized)
-            }
-          } catch (err) {
-            console.warn(`⚠️ [useNotationCache] Failed to preload vocab example for ${key}:`, err)
-          }
-        })
-        await Promise.all(loadPromises)
-        setVocabExamplesCache(vocabExamplesMap)
-        
+        // 不再预加载所有 examples：改为按需懒加载 + 新建后单次写缓存
       } else {
         console.warn('⚠️ [useNotationCache] No vocab notations found or invalid response format')
         setVocabNotations([])
@@ -352,6 +286,31 @@ export function useNotationCache(articleId) {
         
         // 添加到缓存
         addVocabNotationToCache(newNotation)
+        
+        // 只拉取一次该位置的 example 并写入缓存，避免后续悬浮重复请求
+        try {
+          const exampleResp = await apiService.getVocabExampleByLocation(textId, sentenceId, tokenId)
+          const payload = exampleResp?.data?.data ?? exampleResp?.data ?? exampleResp
+          if (payload && (payload.vocab_id || vocabId)) {
+            const example = {
+              vocab_id: payload.vocab_id ?? vocabId,
+              text_id: textId,
+              sentence_id: sentenceId,
+              token_index: payload.token_index ?? tokenId,
+              context_explanation: payload.context_explanation || '',
+              token_indices: payload.token_indices || [tokenId]
+            }
+            const key = `${textId}:${sentenceId}:${example.token_index}`
+            setVocabExamplesCache(prev => {
+              const next = new Map(prev)
+              next.set(key, example)
+              return next
+            })
+            console.log('✅ [useNotationCache] Cached vocab example for new notation:', example)
+          }
+        } catch (e) {
+          console.warn('⚠️ [useNotationCache] Failed to fetch example for new notation (cached will be missing until first hover fetch):', e?.message || e)
+        }
         
         console.log('✅ [useNotationCache] Vocab notation created and added to cache:', newNotation)
         return { success: true, notation: newNotation }

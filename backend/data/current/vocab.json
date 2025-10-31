@@ -250,5 +250,139 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 15,
+    "vocab_body": "sich sehen",
+    "explanation": "{'explanation': 'sich sehen 是一个德语反身动词短语，意思是“见面”或“互相看望”。它表示两个或多个人之间的会面行为。词性为反身动词（reflexives Verb），使用时必须与反身代词 sich 搭配，根据主语的人称和数变化（如 wir sehen uns, ihr seht euch）。这个短语强调相互性，常用于描述朋友、家人或熟人之间的见面。在否定形式中（如 sich nicht sehen），表示“不见面”或“没有联系”。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 15,
+        "text_id": 1,
+        "sentence_id": 9,
+        "context_explanation": "{\"explanation\": \"在这个句子中，“sich sehen” 表示“见面”或“互相看望”。具体来说，它描述了 Mrs Potter 和 Mrs Dursley 之间的关系：她们是姐妹，但“seit etlichen Jahren nicht mehr gesehen” 意思是“多年来没有见面了”。所以，这里“sich sehen” 强调她们之间缺乏面对面的互动。\"}",
+        "token_indices": [
+          20,
+          22,
+          24,
+          26,
+          28,
+          30,
+          32,
+          34,
+          36,
+          38,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 16,
+    "vocab_body": "trüben",
+    "explanation": "{'explanation': 'trüben 是一个德语形容词，意思是“阴沉的、昏暗的”或“模糊的、不清晰的”。它常用于描述天气（如阴天、多云）或抽象事物（如心情、前景），表示缺乏明亮、清晰或乐观的状态。作为形容词，它可以修饰名词，例如 trüber Himmel（阴沉的天空）。trüben 也可以作为动词使用，意思是“使变浑浊、使模糊”或“使心情变坏”，但在这个语境中，它更可能作为形容词出现。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 16,
+        "text_id": 1,
+        "sentence_id": 14,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'trüben' 用来描述天气阴沉、灰暗，没有阳光。它强调了 'Dienstag'（星期二）的沉闷氛围，与后面的 'wolkenverhangenen Himmel'（乌云密布的天空）相呼应，暗示故事开始时的压抑环境。\"}",
+        "token_indices": [
+          15
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 17,
+    "vocab_body": "sollte nicht in berührung kommen",
+    "explanation": "{'explanation': '这是一个德语短语，意思是\"不应该接触\"或\"不应该有联系\"。\\n\\n- 基本含义：表示应该避免与某人或某物发生接触、联系或互动\\n- 词性：动词短语\\n- 用法：\\n  - 通常用于建议或规定某人应该避免与特定的人、事物或情况接触\\n  - 可以指物理接触，也可以指抽象的联系或交往\\n  - 带有警告或预防的意味\\n- 常见使用场景：\\n  - 警告避免与危险人物接触\\n  - 建议远离有害物质\\n  - 提醒避免参与不良活动\\n- 语气：比较正式，带有劝诫或警告的意味'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 17,
+        "text_id": 1,
+        "sentence_id": 13,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'sollte nicht in Berührung kommen' 的意思是 '不应该接触'，强调避免某种互动。结合上下文 'mit einem solchen Kind'（和这样的孩子），它表示说话者认为他们的孩子 Dudley 不应该与那个男孩有任何接触，以避免潜在的不良影响。\"}",
+        "token_indices": []
+      }
+    ]
+  },
+  {
+    "vocab_id": 18,
+    "vocab_body": "aufdecken",
+    "explanation": "{'explanation': 'aufdecken 是一个德语动词，意思是：\\n1. 揭露或揭示（通常指秘密、真相或隐藏的事情），例如揭露一个阴谋或发现隐藏的信息。\\n2. 在字面意义上，也可以表示揭开或掀开（如揭开盖子或覆盖物）。\\n这个词是及物动词，需要与宾语一起使用，常用于描述发现或暴露不为人知的事物。在语言学习中，它强调主动揭示隐藏内容的过程。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 18,
+        "text_id": 1,
+        "sentence_id": 7,
+        "context_explanation": "{\"explanation\": \"在这句话中，'aufdecken' 的意思是揭露或暴露秘密。它指的是 'dass es jemand aufdecken könnte'（有人可能会揭露它），这里的 'es' 指的是前文提到的 'ein Geheimnis'（一个秘密）。因此，'aufdecken' 在这里表示有人可能发现并公开这个秘密，导致德思礼夫妇的担忧。\"}",
+        "token_indices": [
+          38
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 19,
+    "vocab_body": "stock",
+    "explanation": "{'explanation': \"Stock 是一个德语名词，意思是楼层或楼层的层数。它通常用于描述建筑物的楼层，例如 'erster Stock' 表示一楼（在德语中，一楼通常指地面以上的第一层，而不是地面层）。这个词也可以指股票或库存，但在建筑语境中，它主要指楼层。用法上，它常与序数词连用，如 'im neunten Stock' 表示在第九层。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 19,
+        "text_id": 1,
+        "sentence_id": 44,
+        "context_explanation": "{\"explanation\": \"在这个句子中，“stock”指的是建筑物的楼层。\\\"im neunten Stock\\\" 意思是\\\"在第九层\\\"，描述了Mr Dursley办公室的位置。\"}",
+        "token_indices": [
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 20,
+    "vocab_body": "woran",
+    "explanation": "{'explanation': 'Woran 是一个德语疑问副词，由 wo（哪里）和 an（在...上）组合而成。\\n\\n主要含义和用法：\\n1. 表示询问或引导关于某个主题、事物或情况的问题，相当于英语的 \"what...about\" 或 \"what...of\"\\n2. 常用于询问某人正在思考、谈论或涉及的具体内容\\n3. 词性：疑问副词\\n\\n常见搭配：\\n- Woran denkst du?（你在想什么？）\\n- Woran erinnerst du dich?（你记得什么？）\\n- Woran arbeitest du?（你在做什么工作？）'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 20,
+        "text_id": 1,
+        "sentence_id": 24,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'woran' 是一个疑问词，意思是 '在想什么' 或 '在思考什么'。它引导一个疑问句，询问主语（'er'，他）刚才在想什么。整个句子可以翻译为：'他刚才到底在想什么！'，表达了说话者的惊讶或困惑。\"}",
+        "token_indices": [
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 21,
+    "vocab_body": "getigerte",
+    "explanation": "{'explanation': \"形容词，描述动物（特别是猫）身上有类似老虎的条纹或斑纹图案。这个词源自德语中'Tiger'（老虎）一词，用来形容毛皮上的条纹特征。在描述猫时，'getigerte Katze'特指带有经典虎斑纹的家猫，这是猫科动物常见的毛色模式之一。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 21,
+        "text_id": 1,
+        "sentence_id": 23,
+        "context_explanation": "{\"explanation\": \"在这句话中，'getigerte' 用来描述猫的外观，意思是它身上有虎斑纹路。因此，'eine getigerte Katze' 指的是 '一只虎斑猫'，强调这只猫的皮毛图案。\"}",
+        "token_indices": [
+          15
+        ]
+      }
+    ]
   }
 ]
