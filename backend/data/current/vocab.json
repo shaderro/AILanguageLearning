@@ -384,5 +384,109 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 22,
+    "vocab_body": "nachbar",
+    "explanation": "{'explanation': '名词。指居住在附近的人，通常指住在同一街道、同一栋楼或相邻房屋的人。可以指个人，也可以指邻居群体（复数形式：Nachbarn）。这个词用于描述地理位置上的邻近关系，不一定是朋友关系。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 22,
+        "text_id": 1,
+        "sentence_id": 11,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Nachbarn' 指的是 Dursleys 夫妇的邻居们。句子描述了 Dursleys 一想到 'was die Nachbarn sagen würden'（邻居们会说什么）就感到害怕，这突出了他们担心邻居对 Potters 出现在他们街上的反应，体现了他们对社会评价的焦虑。\"}",
+        "token_indices": []
+      },
+      {
+        "vocab_id": 22,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'Nachbarn' 指的是德思礼夫人的邻居。句子描述她伸长脖子是为了 'zu den Nachbarn hinüberspähen'，意思是 '窥视邻居们'，表明她正在偷看或观察住在附近的人。\"}",
+        "token_indices": [
+          72
+        ]
+      },
+      {
+        "vocab_id": 22,
+        "text_id": 1,
+        "sentence_id": 6,
+        "context_explanation": "{\"explanation\": \"这个词在句子中没有出现。请检查拼写或提供正确的词汇/表达。\"}",
+        "token_indices": []
+      }
+    ]
+  },
+  {
+    "vocab_id": 23,
+    "vocab_body": "nachbarn",
+    "explanation": "{'explanation': 'Nachbarn 是德语名词，意思是“邻居”，指居住在附近或相邻房屋的人。这个词是复数形式，单数形式是 Nachbar（男性）或 Nachbarin（女性）。它通常用来描述居住在同一个社区或附近的人，可以用于日常对话中，例如谈论邻里关系或社区活动。在用法上，Nachbarn 可以指代一个或多个邻居，具体取决于上下文。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 23,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这句话中，“Nachbarn” 指的是德思礼家的邻居。原文提到“zu den Nachbarn hinüberspähen”，意思是“伸长脖子偷看邻居们”，这里“Nachbarn”直接指代住在附近的人，德思礼夫人通过伸长脖子来窥探他们的活动。\"}",
+        "token_indices": [
+          72
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 24,
+    "vocab_body": "aufkreuzen",
+    "explanation": "{'explanation': 'aufkreuzen 是一个德语动词，意思是“突然出现”或“意外到来”，通常用于描述某人未经通知或计划地出现在某个地方。它带有非正式或口语化的色彩，常用于日常对话中。这个词可以用于各种语境，比如描述朋友突然来访或某人意外出现在聚会中。作为可分动词，在句子中常与地点状语连用，例如“in der Straße aufkreuzen”（在街上突然出现）。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 24,
+        "text_id": 1,
+        "sentence_id": 11,
+        "context_explanation": "{\"explanation\": \"在这句话中，'aufkreuzen' 的意思是“出现”或“露面”，具体指波特一家（die Potters）有一天可能会突然出现在德思礼家所在的街道上（in ihrer Straße），这让德思礼夫妇感到害怕，因为他们担心邻居会对此说闲话。\"}",
+        "token_indices": [
+          41
+        ]
+      },
+      {
+        "vocab_id": 24,
+        "text_id": 1,
+        "sentence_id": 13,
+        "context_explanation": "{\"explanation\": \"这句话的意思是：'这个男孩也是远离波特一家的一个好理由'。短语 'sich von den Potters fernzuhalten' 意思是 '远离波特一家'，而 'ein guter Grund' 意思是 '一个好理由'。整个句子强调说话者认为这个男孩的存在是避免与波特家接触的另一个原因。\"}",
+        "token_indices": [
+          1,
+          3,
+          5,
+          7,
+          9,
+          11,
+          13,
+          16,
+          18,
+          20,
+          22,
+          24
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 25,
+    "vocab_body": "sich fernzuhalten",
+    "explanation": "{'explanation': 'sich fernzuhalten 是一个德语反身动词短语，意思是\"保持距离\"、\"远离\"或\"避开\"。它由三部分组成：sich（反身代词，表示动作作用于自己）、fern（意为\"远的\"）和 halten（意为\"保持\"）。这个表达通常用来表示主动避免与某人或某事物接触，可能是出于谨慎、不喜欢或安全考虑。使用时需要根据主语的人称和数变化反身代词的形式，比如 ich halte mich fern（我保持距离）、du hältst dich fern（你保持距离）等。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 25,
+        "text_id": 1,
+        "sentence_id": 13,
+        "context_explanation": "{\"explanation\": \"这句话的意思是：'这个男孩也是远离Potters家的一个好理由；他们的Dudley不应该和这样的孩子接触。' 在这里，'sich von den Potters fernzuhalten' 表示说话者建议或决定避免与Potters家来往，而 'mit einem solchen Kind sollte ihr Dudley nicht in Berührung kommen' 则具体说明原因：他们的孩子Dudley不应该与这个男孩（指前文提到的男孩",
+        "token_indices": []
+      }
+    ]
   }
 ]

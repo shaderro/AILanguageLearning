@@ -1,1 +1,113 @@
-[]
+[
+  {
+    "rule_id": 1,
+    "rule_name": "复合句结构",
+    "rule_summary": "复合句由主句、关系从句和原因从句组成，其中'was'指代前文整体情况，'denn'引导原因解释",
+    "examples": [
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，包含一个主句和两个从句。主句 'Mrs Dursley war dünn und blond und besaß doppelt so viel Hals' 描述了Dursley夫人的外貌特征。从句 'wie notwendig gewesen wäre' 是一个比较从句，说明脖子的长度是所需的两倍。另一个从句 'was allerdings sehr nützlich war' 是一个关系从句，补充说明这个长脖子的用处，并"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 7,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由两个并列的主句和一个从句组成。第一个主句是'Die Dursleys besaßen alles, was sie wollten'，其中包含一个关系从句'was sie wollten'。第二个主句是'die hatten auch ein Geheimnis'，后面连接了一个主语从句'und dass es jemand aufdecken könnte, war ihre größte Sorge'，这个从句作为整个句子的主语部分。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 10,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，主句是'Mrs Dursley behauptete sogar'，后面通过连接词'dass'和'denn'引入了两个从句：'dass sie gar keine Schwester hätte'说明她声称的内容，而'denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, wie man es sich nur denken konnte'则解释了原因，其中还包含一个比较从句'wie man es sich"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 13,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由两个分句组成。第一个分句 'Auch dieser Junge war ein guter Grund, sich von den Potters fernzuhalten' 表达了一个原因，第二个分句 'mit einem solchen Kind sollte ihr Dudley nicht in Berührung kommen' 说明了基于这个原因应采取的行动。两个分句通过分号连接，共同构成一个完整的逻辑关系。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 2,
+    "rule_name": "主语从句",
+    "rule_summary": "主语从句由连词如'dass'引导，在句中充当主语，如'dass es jemand aufdecken könnte'是整个句子的主语部分。",
+    "examples": [
+      {
+        "rule_id": 2,
+        "text_id": 1,
+        "sentence_id": 7,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'dass es jemand aufdecken könnte' 是一个主语从句，它作为整个句子的主语，意思是'有人可能会揭露它'，并解释了Dursleys最大的担忧是什么。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 3,
+    "rule_name": "德语名词复数构成",
+    "rule_summary": "德语中一些名词通过添加词尾 -n 构成复数形式，例如 Nachbar 的复数形式是 Nachbarn。",
+    "examples": [
+      {
+        "rule_id": 3,
+        "text_id": 1,
+        "sentence_id": 11,
+        "explanation_context": "{\"explanation\": \"在这句话中，'Dursleys' 和 'Potters' 是专有名词的复数形式，表示两个家庭的所有成员。'Nachbarn' 是普通名词的复数，表示多个邻居。这些复数形式帮助表达句子中涉及多个人物的概念。\"}"
+      },
+      {
+        "rule_id": 3,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'Nachbarn' 是名词 'Nachbar'（邻居）的复数形式，表示多个邻居。它采用了弱变化复数形式，通过添加词尾 '-n' 构成复数，符合德语中许多阳性名词的复数构成规则。\"}"
+      },
+      {
+        "rule_id": 3,
+        "text_id": 1,
+        "sentence_id": 6,
+        "explanation_context": "{\"explanation\": \"在这句话中，'Dursleys' 是复数形式，表示德思礼一家人，而不是单个人。它通过添加 '-s' 构成复数，这是德语名词复数的一种常见方式，用于表示多个家庭成员。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 4,
+    "rule_name": "德语动词前缀构词法",
+    "rule_summary": "动词 aufkreuzen 由可分前缀 auf-（表示'向上、出现'）和词根 kreuzen（意为'交叉、横穿'）构成，整体引申为'突然出现、露面'",
+    "examples": [
+      {
+        "rule_id": 4,
+        "text_id": 1,
+        "sentence_id": 11,
+        "explanation_context": "{\"explanation\": \"在这句话中，动词前缀构词法体现在动词 'aufkreuzen' 上。前缀 'auf-' 表示 '出现' 或 '突然到来' 的含义，与词根 'kreuzen'（意为 '交叉' 或 '相遇'）结合，形成新动词，生动地描述了波特一家可能突然出现在街上的场景。\"}"
+      },
+      {
+        "rule_id": 4,
+        "text_id": 1,
+        "sentence_id": 13,
+        "explanation_context": "{\"explanation\": \"在这句话中，动词'fernzuhalten'由前缀'fern-'和动词'halten'构成，'fern-'表示'远离'的意思，整个词意为'保持距离'，生动地表达了说话者希望避免与Potters一家接触的意图。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 5,
+    "rule_name": "带zu的不定式结构",
+    "rule_summary": "用于表示目的或意图的不定式结构，通常跟在名词或动词后，以'zu + 动词原形'形式出现",
+    "examples": [
+      {
+        "rule_id": 5,
+        "text_id": 1,
+        "sentence_id": 13,
+        "explanation_context": "{\"explanation\": \"在这句话中，'sich fernzuhalten' 是带zu的不定式结构，它表示'远离'这个动作本身，而不是某个具体时间发生的动作。这里它说明了'远离Potters一家'是'ein guter Grund'（一个好理由）的内容，使得理由更加明确完整。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  }
+]

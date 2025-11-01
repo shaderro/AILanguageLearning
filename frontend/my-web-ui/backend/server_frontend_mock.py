@@ -886,7 +886,7 @@ async def update_session_context(payload: dict):
 
 @app.post('/api/chat')
 async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
-    """处理用户聊天请求，调用 MainAssistant 进行问答和自动总结"""
+    """处理用户聊天请求：立即返回主回答，其余流程在后台异步执行"""
     try:
         print("\n" + "="*80)
         print("💬 [Chat] ========== Chat endpoint called ==========")
@@ -982,99 +982,111 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
             raise
         
         print("\n" + "-"*80)
-        print(f"🚀 [Chat] 步骤4: 准备调用 MainAssistant.run()...")
+        print(f"🚀 [Chat] 步骤4: 完整流程...")
         print(f"  - quoted_sentence: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
         print(f"  - sentence_body: {current_sentence.sentence_body[:100]}...")
         print(f"  - user_question: {current_input}")
         print(f"  - selected_text: {selected_text}")
         print("-"*80 + "\n")
-        
-        # 调用 MainAssistant.run()
+
+        # —— 先返回主回答，其余完整流程放后台 ——
         try:
-            print("🚀 [Chat] 步骤4.1: 开始执行 main_assistant.run()...")
-            main_assistant.run(
+            effective_sentence_body = selected_text if selected_text else current_sentence.sentence_body
+            print("🚀 [Chat] 调用 answer_question_function() 生成主回答（将立即返回）...")
+            ai_response = main_assistant.answer_question_function(
                 quoted_sentence=current_sentence,
                 user_question=current_input,
-                selected_text=selected_text
+                sentence_body=effective_sentence_body
             )
-            print("🚀 [Chat] 步骤4.2: main_assistant.run() 执行完成")
+            print("✅ [Chat] 主回答就绪，将立即返回给前端（不再等待后续流程）")
         except Exception as e:
-            print(f"❌ [Chat] 步骤4失败: MainAssistant.run() 执行失败: {e}")
+            print(f"❌ [Chat] 生成主回答失败: {e}")
             import traceback
             print(traceback.format_exc())
             raise
-        
-        # 从 session_state 获取响应
-        ai_response = session_state.current_response
-        print(f"✅ [Chat] AI Response: {ai_response[:100] if ai_response else 'None'}...")
-        
-        # 获取总结的语法和词汇
+
+        # 同步执行：轻量级语法/词汇总结，用于前端即时展示（不做持久化）
         grammar_summaries = []
         vocab_summaries = []
-        
-        if session_state.summarized_results:
-            from backend.assistants.chat_info.session_state import GrammarSummary, VocabSummary
-            for result in session_state.summarized_results:
-                if isinstance(result, GrammarSummary):
-                    grammar_summaries.append({
-                        'name': result.grammar_rule_name,
-                        'summary': result.grammar_rule_summary
-                    })
-                elif isinstance(result, VocabSummary):
-                    vocab_summaries.append({
-                        'vocab': result.vocab
-                    })
-        
-        print(f"📚 [Chat] Summaries:")
-        print(f"  - Grammar: {len(grammar_summaries)} items")
-        print(f"  - Vocab: {len(vocab_summaries)} items")
-        
-        # 获取新增的语法和词汇
         grammar_to_add = []
         vocab_to_add = []
-        
-        if session_state.grammar_to_add:
-            for grammar in session_state.grammar_to_add:
-                grammar_to_add.append({
-                    'name': grammar.rule_name,
-                    'explanation': grammar.rule_explanation
-                })
-        
-        if session_state.vocab_to_add:
-            for vocab in session_state.vocab_to_add:
-                # 尝试从 global_dc 中获取新添加的 vocab_id
-                vocab_id = None
-                if hasattr(vocab, 'vocab_id'):
-                    vocab_id = vocab.vocab_id
-                else:
-                    # 如果没有 vocab_id，尝试从 vocab_manager 中查找
+        try:
+            from backend.assistants import main_assistant as _ma_mod
+            prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+            _ma_mod.DISABLE_GRAMMAR_FEATURES = False
+            print("🧠 [Chat] 同步执行 handle_grammar_vocab_function 以便前端即时展示...")
+            main_assistant.handle_grammar_vocab_function(
+                quoted_sentence=current_sentence,
+                user_question=current_input,
+                ai_response=ai_response,
+                effective_sentence_body=effective_sentence_body
+            )
+            # 组装摘要
+            if session_state.summarized_results:
+                from backend.assistants.chat_info.session_state import GrammarSummary, VocabSummary
+                for result in session_state.summarized_results:
+                    if isinstance(result, GrammarSummary):
+                        grammar_summaries.append({'name': result.grammar_rule_name, 'summary': result.grammar_rule_summary})
+                    elif isinstance(result, VocabSummary):
+                        vocab_summaries.append({'vocab': result.vocab})
+            if session_state.grammar_to_add:
+                for g in session_state.grammar_to_add:
+                    grammar_to_add.append({'name': g.rule_name, 'explanation': g.rule_explanation})
+            if session_state.vocab_to_add:
+                # 尝试补齐 vocab_id（若已存在于全局词库）
+                for v in session_state.vocab_to_add:
+                    vocab_id = None
                     for vid, vbundle in global_dc.vocab_manager.vocab_bundles.items():
-                        if vbundle.vocab_body == vocab.vocab:
+                        if vbundle.vocab_body == getattr(v, 'vocab', None):
                             vocab_id = vid
                             break
-                
-                vocab_to_add.append({
-                    'vocab': vocab.vocab,
-                    'vocab_id': vocab_id
-                })
-        
-        print(f"🆕 [Chat] New items to add:")
-        print(f"  - Grammar: {len(grammar_to_add)} items")
-        print(f"  - Vocab: {len(vocab_to_add)} items")
-        
-        # 🔧 修改：总是保存数据，因为可能有例句更新（不在 *_to_add 列表中）
-        # 例如：用户提问已有词汇时，会添加新的 vocab_example，但 vocab_to_add 为空
-        print(f"💾 [Chat] 添加后台保存任务（可能有例句更新）")
-        background_tasks.add_task(
-            save_data_async,
-            dc=dc,
-            grammar_path=GRAMMAR_PATH,
-            vocab_path=VOCAB_PATH,
-            text_path=TEXT_PATH,
-            dialogue_record_path=DIALOGUE_RECORD_PATH,
-            dialogue_history_path=DIALOGUE_HISTORY_PATH
-        )
-        
+                    vocab_to_add.append({'vocab': getattr(v, 'vocab', None), 'vocab_id': vocab_id})
+            print("✅ [Chat] 即时摘要准备完成：", {
+                'grammar_summaries': len(grammar_summaries),
+                'vocab_summaries': len(vocab_summaries),
+                'grammar_to_add': len(grammar_to_add),
+                'vocab_to_add': len(vocab_to_add)
+            })
+        except Exception as lite_e:
+            print(f"⚠️ [Chat] 同步摘要生成失败，忽略（不影响主回答）: {lite_e}")
+        finally:
+            try:
+                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
+            except Exception:
+                pass
+
+        # 后台执行完整流程（含语法/词汇总结、对比与持久化）
+        def _run_full_flow_background():
+            from backend.assistants import main_assistant as _ma_mod
+            prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+            try:
+                print("\n🛠️ [Background] 启动完整流程（启用语法管线）...")
+                _ma_mod.DISABLE_GRAMMAR_FEATURES = False
+                main_assistant.run(
+                    quoted_sentence=current_sentence,
+                    user_question=current_input,
+                    selected_text=selected_text
+                )
+                print("💾 [Background] 执行保存任务...")
+                save_data_async(
+                    dc=dc,
+                    grammar_path=GRAMMAR_PATH,
+                    vocab_path=VOCAB_PATH,
+                    text_path=TEXT_PATH,
+                    dialogue_record_path=DIALOGUE_RECORD_PATH,
+                    dialogue_history_path=DIALOGUE_HISTORY_PATH
+                )
+                print("✅ [Background] 完整流程与保存完成")
+            except Exception as bg_e:
+                print(f"❌ [Background] 完整流程失败: {bg_e}")
+                import traceback
+                print(traceback.format_exc())
+            finally:
+                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
+
+        background_tasks.add_task(_run_full_flow_background)
+
+        # 立即返回主回答和即时摘要（用于前端直接更新UI）
         return {
             'success': True,
             'data': {

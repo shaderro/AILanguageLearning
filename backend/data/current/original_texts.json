@@ -50,19 +50,26 @@
         "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
         "grammar_annotations": [
           9,
-          11
+          11,
+          1,
+          3
         ],
         "vocab_annotations": [
-          2
+          2,
+          23,
+          22
         ]
       },
       {
         "text_id": 1,
         "sentence_id": 6,
         "sentence_body": "Die Dursleys hatten einen kleinen Sohn namens Dudley und in \nihren Augen gab es nirgendwo einen prächtigeren Jungen.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          3
+        ],
         "vocab_annotations": [
-          14
+          14,
+          22
         ]
       },
       {
@@ -72,7 +79,9 @@
         "grammar_annotations": [
           1,
           2,
-          3
+          3,
+          1,
+          2
         ],
         "vocab_annotations": [
           18
@@ -103,7 +112,8 @@
         "sentence_id": 10,
         "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
         "grammar_annotations": [
-          10
+          10,
+          1
         ],
         "vocab_annotations": []
       },
@@ -112,10 +122,14 @@
         "sentence_id": 11,
         "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
         "grammar_annotations": [
-          1
+          1,
+          3,
+          4
         ],
         "vocab_annotations": [
-          8
+          8,
+          22,
+          24
         ]
       },
       {
@@ -129,9 +143,15 @@
         "text_id": 1,
         "sentence_id": 13,
         "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          4,
+          1,
+          5
+        ],
         "vocab_annotations": [
-          17
+          17,
+          24,
+          25
         ]
       },
       {

@@ -232,6 +232,66 @@ export default function ChatView({
       
       console.log('✅ [Frontend] 步骤5: 收到响应')
       console.log('✅ [Frontend] 响应完整数据:', JSON.stringify(response, null, 2))
+
+      // ⏱️ 启动一次短轮询：后台完整流程会稍后生成新的 grammar/vocab notation，这里主动拉取并实时写入缓存
+      ;(async () => {
+        try {
+          const sentenceId = currentSelectionContext?.sentence?.sentence_id
+          const textId = currentSelectionContext?.sentence?.text_id || articleId
+          if (!textId || !sentenceId) return
+          console.log('⏱️ [ChatView] 开始短轮询新notations:', { textId, sentenceId })
+
+          const trySyncOnce = async () => {
+            const grammarResp = await apiService.getSentenceGrammarRules(textId, sentenceId)
+            const vocabResp = await apiService.getSentenceVocabNotations(textId, sentenceId)
+
+            // 处理 grammar notation（单个或空）
+            const gData = grammarResp?.data || null
+            if (gData && addGrammarNotationToCache) {
+              // 先写入notation
+              addGrammarNotationToCache(gData)
+              // 再确保rule缓存
+              if (gData.grammar_id && addGrammarRuleToCache) {
+                try {
+                  const ruleResp = await apiService.getGrammarById(gData.grammar_id)
+                  const rule = ruleResp?.data || null
+                  if (rule) addGrammarRuleToCache(rule)
+                } catch (e) {
+                  console.warn('⚠️ [ChatView] 加载grammar rule失败:', gData.grammar_id, e)
+                }
+              }
+            }
+
+            // 处理 vocab notations（列表）
+            const vList = Array.isArray(vocabResp?.data) ? vocabResp.data : []
+            if (vList.length && addVocabNotationToCache) {
+              vList.forEach(n => {
+                const formatted = {
+                  ...n,
+                  token_index: n.token_index ?? n.token_id // 标准化字段，供缓存比较
+                }
+                addVocabNotationToCache(formatted)
+              })
+            }
+
+            return Boolean(gData) || vList.length > 0
+          }
+
+          // 轮询最多5次，每次间隔700ms，直到发现新增
+          let synced = false
+          for (let i = 0; i < 5 && !synced; i++) {
+            // eslint-disable-next-line no-await-in-loop
+            synced = await trySyncOnce()
+            if (!synced) {
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise(r => setTimeout(r, 700))
+            }
+          }
+          console.log('✅ [ChatView] 短轮询完成，是否发现新notations:', synced)
+        } catch (pollErr) {
+          console.warn('⚠️ [ChatView] 短轮询新notations出错:', pollErr)
+        }
+      })()
       
       // 标记选中的tokens为已提问
       console.log('🔍 [DEBUG] 检查标记条件:', {

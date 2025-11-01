@@ -225,15 +225,27 @@ export const apiService = {
   // 创建词汇标注（新API）
   createVocabNotation: (userId = 'default_user', textId, sentenceId, tokenId, vocabId = null) => {
     console.log(`➕ [Frontend] Creating vocab notation: ${textId}:${sentenceId}:${tokenId}`, { userId, vocabId })
-    return api.post(API_TARGET === 'mock' 
-      ? '/api/user/asked-tokens'  // Mock服务器暂时使用旧API
-      : '/api/v2/notations/vocab', {
-        user_id: userId,
-        text_id: textId,
-        sentence_id: sentenceId,
-        token_id: tokenId,
-        vocab_id: vocabId
-      })
+    return api.post(
+      API_TARGET === 'mock' 
+        ? '/api/user/asked-tokens'  // Mock服务器使用旧端点，但字段要按旧端点要求
+        : '/api/v2/notations/vocab',
+      API_TARGET === 'mock'
+        ? {
+            user_id: userId,
+            text_id: textId,
+            sentence_id: sentenceId,
+            // 旧端点字段名为 sentence_token_id（不是 token_id）
+            sentence_token_id: tokenId,
+            vocab_id: vocabId
+          }
+        : {
+            user_id: userId,
+            text_id: textId,
+            sentence_id: sentenceId,
+            token_id: tokenId,
+            vocab_id: vocabId
+          }
+    )
   },
 
   // ==================== Text/Article API（数据库版本）====================
@@ -343,7 +355,22 @@ export const apiService = {
   // 聊天功能
   sendChat: (payload = {}) => {
     console.log('💬 [Frontend] Sending chat request:', payload);
-    return api.post("/api/chat", payload);
+    // 测试开关：?fullFlow=1 或 localStorage.CHAT_FULL_FLOW = '1'
+    const needFullFlow = (() => {
+      try {
+        const url = new URL(window.location.href);
+        const q = (url.searchParams.get('fullFlow') || '').toLowerCase();
+        if (q === '1' || q === 'true' || q === 'yes' || q === 'on') return true;
+      } catch {}
+      try {
+        const v = (typeof localStorage !== 'undefined' && localStorage.getItem('CHAT_FULL_FLOW')) || '';
+        if (v === '1' || v.toLowerCase() === 'true') return true;
+      } catch {}
+      return false;
+    })();
+    const finalPayload = needFullFlow ? { ...payload, full_flow: true } : payload;
+    if (needFullFlow) console.log('🔧 [Frontend] full_flow enabled for this request');
+    return api.post("/api/chat", finalPayload);
   },
 
   // 按位置查找词汇例句

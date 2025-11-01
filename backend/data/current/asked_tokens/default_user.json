@@ -160,5 +160,50 @@
     "type": "token",
     "vocab_id": 21,
     "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 7,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 1
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 3
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 11,
+    "sentence_token_id": 41,
+    "type": "token",
+    "vocab_id": null,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 13,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 4
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 13,
+    "sentence_token_id": 1,
+    "type": "token",
+    "vocab_id": 24,
+    "grammar_id": null
   }
 ]

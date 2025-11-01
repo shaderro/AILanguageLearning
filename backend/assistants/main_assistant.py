@@ -484,10 +484,13 @@ class MainAssistant:
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
                         # 验证句子完整性
                         self._ensure_sentence_integrity(current_sentence, "Vocab Explanation 调用")
-                        print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab}'")
+                        # 为上下文解释优先使用“用户实际选择的词形”，避免因词形差异导致的"不在句中"提示
+                        selected_token = self.session_state.current_selected_token
+                        vocab_for_context = getattr(selected_token, 'token_text', None) or vocab
+                        print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab}')")
                         example_explanation = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
-                            vocab=vocab
+                            vocab=vocab_for_context
                         )
                         print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
                         
@@ -504,6 +507,27 @@ class MainAssistant:
                                 token_indices=token_indices
                             )
                             print(f"✅ [DEBUG] 现有词汇的vocab_example添加成功")
+
+                            # 🔧 新增：为现有词汇创建 vocab notation（用于前端实时显示绿色下划线）
+                            try:
+                                from backend.data_managers.unified_notation_manager import get_unified_notation_manager
+                                notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                                token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
+                                print(f"🔍 [DEBUG] 创建vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={existing_vocab_id}")
+                                if token_id is not None:
+                                    v_ok = notation_manager.mark_notation(
+                                        notation_type="vocab",
+                                        user_id="default_user",
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        token_id=token_id,
+                                        vocab_id=existing_vocab_id
+                                    )
+                                    print(f"✅ [DEBUG] vocab_notation创建结果: {v_ok}")
+                                else:
+                                    print("⚠️ [DEBUG] 无法创建vocab notation：token_id为空")
+                            except Exception as vn_err:
+                                print(f"❌ [DEBUG] 创建vocab_notation时发生错误: {vn_err}")
                         except ValueError as e:
                             print(f"⚠️ [DEBUG] 跳过添加现有词汇的vocab_example，因为: {e}")
                             print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
@@ -662,10 +686,13 @@ class MainAssistant:
                 
                 # 生成词汇例句解释
                 if current_sentence:
-                    print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab.vocab}'")
+                    # 为上下文解释优先使用“用户实际选择的词形”
+                    selected_token = self.session_state.current_selected_token
+                    vocab_for_context = getattr(selected_token, 'token_text', None) or vocab.vocab
+                    print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab.vocab}')")
                     example_explanation = self.vocab_example_explanation_assistant.run(
                         sentence=current_sentence,
-                        vocab=vocab.vocab
+                        vocab=vocab_for_context
                     )
                     print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
                     
@@ -683,6 +710,27 @@ class MainAssistant:
                             token_indices=token_indices
                         )
                         print(f"✅ [DEBUG] vocab_example添加成功")
+
+                        # 🔧 新增：为新词汇创建 vocab notation（用于前端实时显示绿色下划线）
+                        try:
+                            from backend.data_managers.unified_notation_manager import get_unified_notation_manager
+                            notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                            token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
+                            print(f"🔍 [DEBUG] 创建新词汇的vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={vocab_id}")
+                            if token_id is not None:
+                                v_ok = notation_manager.mark_notation(
+                                    notation_type="vocab",
+                                    user_id="default_user",
+                                    text_id=current_sentence.text_id,
+                                    sentence_id=current_sentence.sentence_id,
+                                    token_id=token_id,
+                                    vocab_id=vocab_id
+                                )
+                                print(f"✅ [DEBUG] 新词汇 vocab_notation创建结果: {v_ok}")
+                            else:
+                                print("⚠️ [DEBUG] 无法创建新词汇 vocab notation：token_id为空")
+                        except Exception as vn_err:
+                            print(f"❌ [DEBUG] 创建新词汇 vocab_notation时发生错误: {vn_err}")
                     except ValueError as e:
                         print(f"⚠️ [DEBUG] 跳过添加vocab_example，因为: {e}")
                         print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
