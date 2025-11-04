@@ -118,5 +118,29 @@
     "token_id": 1,
     "vocab_id": 24,
     "created_at": "2025-11-01T16:05:12.339821"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 42,
+    "token_id": 44,
+    "vocab_id": 26,
+    "created_at": "2025-11-02T16:27:58.158555"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 2,
+    "token_id": 24,
+    "vocab_id": 27,
+    "created_at": "2025-11-02T17:22:42.749236"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 9,
+    "token_id": 32,
+    "vocab_id": 28,
+    "created_at": "2025-11-02T17:40:49.980125"
   }
 ]

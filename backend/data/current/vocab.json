@@ -488,5 +488,66 @@
         "token_indices": []
       }
     ]
+  },
+  {
+    "vocab_id": 26,
+    "vocab_body": "irgendetwas",
+    "explanation": "{'explanation': 'irgendetwas 是一个德语不定代词，意思是“某物、某事、某个东西”。它用于表示不确定或未知的事物，相当于英语中的“something”或“anything”。这个词通常用于口语和书面语中，表达一种模糊或泛指的概念，不特指具体对象。例如，在疑问句或陈述句中表示对某事物的不确定描述。词性：代词。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 26,
+        "text_id": 1,
+        "sentence_id": 42,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'irgendetwas' 的意思是 '某件事' 或 '某个东西'，它指的是 Mr Dursley 不确定的具体事物。结合上下文 'die Leute sammelten offenbar für irgendetwas'（人们显然在为某件事募捐），这里表示人们在为一个未明确说明的目的收集东西，可能是捐款或物品，但 Mr Dursley 不知道具体是什么。\"}",
+        "token_indices": [
+          44
+        ]
+      },
+      {
+        "vocab_id": 26,
+        "text_id": 1,
+        "sentence_id": 51,
+        "context_explanation": "{\"explanation\": \"这句话描述了某人在午餐休息前的心情和行动：'Bis zur Mittagspause war er glänzender Laune' 意思是'直到午餐休息前，他心情都很好'，然后他想'ein wenig die Beine vertreten'（稍微活动一下腿脚），并去'beim Bäcker über der Straße einen Krapfen holen'（到街对面的面包店买一个甜甜圈）。整个表达用于连贯地",
+        "token_indices": []
+      }
+    ]
+  },
+  {
+    "vocab_id": 27,
+    "vocab_body": "merkwürdig",
+    "explanation": "{'explanation': 'merkwürdig 是一个德语形容词，意思是：\\n1. 奇怪的、古怪的：描述不寻常、难以理解或与常规不同的事物\\n2. 奇特的、奇异的：指具有特殊或非凡特性的事物\\n\\n这个词可以用来形容人、事物、情况或现象。作为形容词，它需要根据名词的性、数、格进行词尾变化。merkwürdig 通常带有中性或轻微的负面含义，暗示某事物超出了正常预期或难以解释。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 27,
+        "text_id": 1,
+        "sentence_id": 2,
+        "context_explanation": "{\"explanation\": \"在这个句子中，“merkwürdige”用来描述“Geschichte”（故事），意思是这个故事是“奇怪的”或“不寻常的”。结合上下文“sich in eine merkwürdige und geheimnisvolle Geschichte verstricken”（卷入一个奇怪而神秘的故事），它强调了故事的非同寻常和令人困惑的性质，暗示人们不想与之有任何关联。\"}",
+        "token_indices": [
+          24
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 28,
+    "vocab_body": "etlichen",
+    "explanation": "{'explanation': 'etlichen 是一个德语形容词，意思是“若干的、不少的、相当数量的”，表示一个不确定但数量较多的概念。它通常用于修饰复数名词，强调数量超出一般范围但又不具体指明。词性为形容词，在句子中常作定语使用。例如，它可以描述时间（如 etlichen Jahren 表示“好几年”）、人或事物的数量。这个词带有略微正式的语气，常见于书面语或正式表达中。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 28,
+        "text_id": 1,
+        "sentence_id": 9,
+        "context_explanation": "{\"explanation\": \"在这句话中，'etlichen' 表示 '许多' 或 '好几个'，用来强调时间很长。例如，'seit etlichen Jahren' 意思是 '自从好几年以来'，说明波特夫人和德思礼夫人已经很久没有见面了。\"}",
+        "token_indices": [
+          32
+        ]
+      }
+    ]
   }
 ]

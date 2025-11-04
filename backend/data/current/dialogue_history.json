@@ -2,81 +2,25 @@
   "texts": {
     "1": {
       "text_title": "Text 1",
-      "current_summary": "用户提问和AI回答总结：\n1. 用户询问\"die\"是否本身没有格，AI解释\"die\"是主格，物主代词\"ihren\"采用属格形式，需与名词保持性数格一致。\n2. 用户问\"Mittelzentrum\"意思，AI解释为德语\"中等中心\"，指具有中等规模服务功能的城市，并对比了更高级的\"Oberzentrum\"。\n3. 用户询问\"ausgew",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇（如Aktentasche、Laune、herstellte等）的意思，分析了各种语法结构，包括主从复合句、并列句、关系从句、不定式结构、虚拟式、可分动词、无人称被动、独立主格结构和反身代词用法。还涉及词根词缀分析和固定搭配解释。",
       "messages": [
         {
-          "user": "What is the grammar structure of this sentence?",
-          "ai": "{'answer': \"这个德语句子的语法结构是：介词短语(Mit...)作状语 + 系动词(ist) + 主语(die Stadt) + 介词短语(in...)作状语 + 表语(als Mittelzentrum...) + 过去分词短语(ausgewiesen)作补足语。主要框架是'Mit...ist die Stadt...als...ausgewiesen'（随着...这个城市被指定为...）。\"}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 1,
-            "sentence_body": " Mit ihren etwa 31.100 Einwohnern ist die Stadt in der Landesplanung als Mittelzentrum mit Teilfunktionen eines Oberzentrums ausgewiesen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487714",
-          "data_type": "old"
-        },
-        {
-          "user": "这个德语句子中的语法结构是什么？",
-          "ai": "{'answer': \"这个德语句子包含两个并列主句，用逗号和'dabei'连接。第一个主句'Die Finne ist groß und stark gebogen'是简单句，主语+系动词+表语结构。第二个主句'sie besitzt dabei zugleich eine sehr breite Basis'是主语+谓语+宾语结构，'dabei'和'zugleich'是副词修饰。两个形容词短语'sehr breite'修饰名词'Basis'。\"}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 1,
-            "sentence_body": " Die Finne ist groß und stark gebogen, sie besitzt dabei zugleich eine sehr breite Basis. ",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487718",
-          "data_type": "old"
-        },
-        {
-          "user": "为何这句话个主谓宾，dabei在这种情况下是什么意思，如何使用？",
-          "ai": "{'answer': \"这句话的主谓宾结构是：Die Finne（主语）ist（谓语）groß und stark gebogen（表语）。dabei在这里是副词，意思是'同时/此外'，用来补充说明前文信息。使用方式：放在句中，连接前后两个相关的事实。\"}",
-          "sentence_id": 1,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 1,
-            "sentence_body": " Die Finne ist groß und stark gebogen, sie besitzt dabei zugleich eine sehr breite Basis. ",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487720",
-          "data_type": "old"
-        },
-        {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'herauskommen 在这里的意思是“被揭露”或“泄露出来”。在句子中指“关于Potters的事情被公开/泄露”。这是一个德语动词，由heraus（出来）+ kommen（来）组成，表示某事从隐藏状态变为公开。'}",
-          "sentence_id": 8,
+          "ai": "{'answer': 'irgendetwas 是德语词，意思是“某物”或“某些东西”，相当于英语的“something”。在句子里表示人们在为某件事或某个东西募捐。'}",
+          "sentence_id": 42,
           "quote": {
             "text_id": 1,
-            "sentence_id": 8,
-            "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
+            "sentence_id": 42,
+            "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487722",
+          "timestamp": "2025-11-02T17:40:50.003645",
           "data_type": "old"
         },
         {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Aktentasche 是德语词，意思是公文包。在这个句子里，Mr Dursley 在八点半时拿了他的公文包。'}",
-          "sentence_id": 17,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 17,
-            "sentence_body": "Um halb neun griff Mr Dursley nach der Aktentasche, gab seiner Frau einen \nSchmatz auf die Wange und versuchte es auch bei Dudley mit einem Abschiedskuss.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487724",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Laune 是德语名词，意思是“心情”或“情绪”。在句子中，“glänzender Laune”是一个固定搭配，意思是“心情极好”或“情绪高涨”，形容他上午心情非常好。'}",
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这是一个由连词\"und\"连接的并列复合句。第一部分\"Bis zur Mittagspause war er glänzender Laune\"是主谓结构，第二部分\"wollte sich...vertreten und...einen Krapfen holen\"包含两个用\"und\"连接的动词短语。主要语法点：\"Bis zur Mittagspause\"是时间状语，\"sich die Beine vertreten\"是固定搭配意思是散步活动腿脚，\"beim Bäcker über der Straße\"是地点状语。'}",
           "sentence_id": 51,
           "quote": {
             "text_id": 1,
@@ -85,110 +29,12 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487726",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'verschiedene 是德语形容词，意思是“不同的、各种各样的”。在这个句子里，它修饰 Leute（人们），表示“五个不同的人”。'}",
-          "sentence_id": 49,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 49,
-            "sentence_body": "Er machte fünf verschiedene Leute zur Schnecke.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487727",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'solchem 是德语中 solch（这样的、这种的）的与格形式，在这里修饰 Unsinn（胡闹、荒唐事），意思是“这种胡闹”。整个短语 solchem Unsinn 表示“这种荒唐事”。'}",
-          "sentence_id": 2,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 2,
-            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487729",
+          "timestamp": "2025-11-02T17:40:50.003651",
           "data_type": "old"
         },
         {
           "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这句话是一个包含多个从句的复合句。主句是‘Mrs Dursley war dünn und blond und besaß doppelt so viel Hals’（德思礼夫人很瘦，金发，脖子长度是需要的两倍）。后面跟着：1) 比较从句‘wie notwendig gewesen wäre’（比需要的长度），2) 关系从句‘was allerdings sehr nützlich war’（这实际上很有用），3) 原因从句‘denn so konnte sie...’（因为这样她就能...）。这种结构在德语中很常见，通过逗号和连接词将多个信息连接在一起。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487730",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个复合句，主要结构是：主句（Mrs Dursley war...und besaß...）+ 比较从句（wie notwendig...）+ 关系从句（was allerdings...）+ 原因从句（denn so konnte...）。简单来说就是：描述Mrs Dursley的外貌特征，然后用比较说明她的脖子有多长，接着解释这个特征很有用，最后说明为什么有用。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487732",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这句话由三个并列分句组成：1. \"Die Dursleys besaßen alles, was sie wollten\"（德思礼夫妇拥有他们想要的一切）包含一个关系从句；2. \"doch sie hatten auch ein Geheimnis\"（但他们也有一个秘密）是转折句；3. \"und dass es jemand aufdecken könnte, war ihre größte Sorge\"（而这个秘密可能被人发现是他们最大的担忧）中\"dass\"引导的主语从句作主语。整个句子用逗号和连词连接多个信息。'}",
-          "sentence_id": 7,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 7,
-            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487733",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个由多个从句组成的复合句。主要结构是：\"Die Dursleys besaßen alles... doch sie hatten auch ein Geheimnis, und dass... war ihre größte Sorge.\" 包含一个关系从句\"was sie wollten\"修饰alles，和一个主语从句\"dass es jemand aufdecken könnte\"作war的主语。doch表示转折，连接前后两个主句。'}",
-          "sentence_id": 7,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 7,
-            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487735",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Schnecke 在德语中是“蜗牛”的意思。在这个句子中，zur Schnecke machen 是一个固定搭配，意思是“严厉斥责”或“痛骂”。整句话的意思是：他严厉斥责了五个不同的人。'}",
-          "sentence_id": 49,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 49,
-            "sentence_body": "Er machte fünf verschiedene Leute zur Schnecke.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487737",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'glänzender 在这里是形容词，意思是“极好的、出色的”。在句子中修饰 Laune（心情），glänzender Laune 表示“心情极好、兴致勃勃”。'}",
+          "ai": "{'answer': '这是一个由连词\"und\"连接的并列复合句。\\n\\n第一部分：\"Bis zur Mittagspause war er glänzender Laune\"（直到午休时间他心情都很好）\\n- 结构：时间状语 + 系动词 + 主语 + 表语\\n\\n第二部分：\"wollte sich nun ein wenig die Beine vertreten\"（现在想稍微活动活动腿脚）\\n- 结构：动词 + 反身代词 + 时间状语 + 程度状语 + 宾语 + 不定式动词\\n\\n第三部分：\"und beim Bäcker über der Straße einen Krapfen holen\"（并且去街对面的面包店买个甜甜圈）\\n- 结构：连词 + 地点状语 + 宾语 + 不定式动词\\n\\n注意：第二和第三部分共用开头的\"wollte\"（想要），表示两个并列的意图。'}",
           "sentence_id": 51,
           "quote": {
             "text_id": 1,
@@ -197,26 +43,26 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487739",
+          "timestamp": "2025-11-02T17:40:50.003653",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'herstellte 是德语动词 herstellen 的过去式，意思是“制造、生产”。在这个句子里，描述德思礼先生的公司制造钻机。'}",
-          "sentence_id": 3,
+          "ai": "{'answer': 'überhaupt在这里表示“根本、完全”的意思，用来加强语气。整句话意思是：他们中大多数人根本从未见过一个（指前文提到的某物），甚至连晚上也没见过。'}",
+          "sentence_id": 47,
           "quote": {
             "text_id": 1,
-            "sentence_id": 3,
-            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "sentence_id": 47,
+            "sentence_body": "Die meisten von ihnen hatten überhaupt noch nie eine gesehen, nicht \neinmal nachts.",
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487740",
+          "timestamp": "2025-11-02T17:40:50.003655",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Laune 是德语名词，意思是“心情”或“情绪”。在句子中，“glänzender Laune”是一个固定搭配，意思是“心情极好”或“情绪高涨”。整个短语描述他午饭休息前心情非常好。'}",
+          "ai": "{'answer': 'Krapfen 是一种德语中的甜点名称，通常指一种油炸的甜甜圈或果酱馅饼。在这个句子里，意思是这个人想去面包店买一个 Krapfen 来吃。'}",
           "sentence_id": 51,
           "quote": {
             "text_id": 1,
@@ -225,54 +71,40 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487741",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'dafür 是一个德语副词，由 da- 和 für 组成。da- 在这里指代前文提到的内容（几乎没有脖子），für 表示“为了、代替”。整个词意思是“作为补偿/替代”，相当于英语的 for that/in return。它用来连接前后对比的情况：没有脖子，但是有大胡子。'}",
-          "sentence_id": 4,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 4,
-            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487742",
+          "timestamp": "2025-11-02T17:40:50.003656",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'herstellte 是德语动词 herstellen 的过去式，意思是“制造、生产”。在这个句子里，描述德思礼先生的公司是制造钻孔机的。'}",
-          "sentence_id": 3,
+          "ai": "{'answer': 'Mündern 是德语名词 Mund（嘴巴）的复数第三格形式，意思是“嘴巴”。在句子中，mit offenen Mündern 表示“张着嘴巴”，形容人们惊讶地张大嘴看着猫头鹰飞过。'}",
+          "sentence_id": 46,
           "quote": {
             "text_id": 1,
-            "sentence_id": 3,
-            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "sentence_id": 46,
+            "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487744",
+          "timestamp": "2025-11-02T17:40:50.003658",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'nützlich 是德语形容词，意思是“有用的”。在这个句子里，它描述德思礼太太的长脖子很有用，因为她可以伸长脖子偷看邻居。'}",
-          "sentence_id": 5,
+          "ai": "{'answer': 'Nichtsnutz 是德语名词，意思是‘废物、无用之人’。在句子中‘Nichtsnutz von einem Mann’可以理解为‘一个废物般的男人’，von 在这里表示比喻关系，类似英语的‘of a’结构。'}",
+          "sentence_id": 10,
           "quote": {
             "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "sentence_id": 10,
+            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487746",
+          "timestamp": "2025-11-02T17:40:50.003659",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Straßenkarte 是德语复合词，Straße 是“街道”，Karte 是“地图”，合起来就是“街道地图”或“城市地图”的意思。在句子里，一只猫正在研究街道地图。'}",
+          "ai": "{'answer': 'Straßenecke 是德语复合词，由 Straße（街道）和 Ecke（角落）组成，意思是“街角”。在句子里指故事发生的地点：在街角处。'}",
           "sentence_id": 21,
           "quote": {
             "text_id": 1,
@@ -281,138 +113,26 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487747",
+          "timestamp": "2025-11-02T17:40:50.003660",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Sinnestäuschung 是一个德语复合名词，意思是“感官错觉”或“幻觉”。在句子中意思是“这一定是一种感官错觉”。这是一个专有名词，可以作为一个整体理解。'}",
-          "sentence_id": 25,
+          "ai": "{'answer': '“Schlingel”是德语中的一个词，意思是“小淘气”或“调皮鬼”，常用于亲昵地称呼调皮的孩子。在句子中，它被用作昵称，意思是“小淘气”。'}",
+          "sentence_id": 19,
           "quote": {
             "text_id": 1,
-            "sentence_id": 25,
-            "sentence_body": "Das \nmusste eine Sinnestäuschung gewesen sein.",
+            "sentence_id": 19,
+            "sentence_body": "»Kleiner Schlingel«, gluckste Mr Dursley, während er \nnach draußen ging.",
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487749",
+          "timestamp": "2025-11-02T17:40:50.003661",
           "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘blinzelte’是德语动词‘blinzeln’的过去式，意思是‘眨眼’。这句话是说：Dursley先生眨了眨眼，盯着那只猫看。'}",
-          "sentence_id": 26,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 26,
-            "sentence_body": "Mr Dursley blinzelte und starrte die \nKatze an.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487750",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'bog 是德语动词 biegen 的过去式，意思是“转弯”。在句子中 um die Ecke bog 表示“在拐角处转弯”。这是一个不规则动词的变化形式。'}",
-          "sentence_id": 28,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 28,
-            "sentence_body": "Während Mr Dursley um die Ecke bog und die \nStraße entlangfuhr, beobachtete er die Katze im Rückspiegel.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487751",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘vorbeischossen’ 是德语动词 ‘vorbeischießen’ 的过去时形式，意思是‘快速飞过’或‘一闪而过’。在句子里描述猫头鹰（Eulen）在白天快速飞过，没被注意到。这个词由 ‘vorbei’（经过）和 ‘schießen’（射击，引申为快速移动）组成。'}",
-          "sentence_id": 46,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 46,
-            "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487753",
-          "data_type": "old"
-        },
-        {
-          "user": "给我讲讲无人称被动结构",
-          "ai": "{'answer': \"这句话中的'war ... zu erkennen'就是无人称被动结构。无人称被动用于描述某个动作的发生，但不强调谁在做这个动作。这里字面意思是'没有迹象可以被识别'，自然表达就是'看不到任何迹象'。德语中当动词没有明确的主语时，常用es作形式主语，但这里es被省略了。\"}",
-          "sentence_id": 14,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 14,
-            "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487754",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '这是一个由dass引导的宾语从句，完整结构是：dass（连词）+ offenbar（副词，显然）+ eine Menge（主语，许多人）+ seltsam gekleideter Menschen（定语，奇怪穿着的人们的）+ unterwegs waren（谓语，在路上）。意思是“显然有许多穿着奇怪的人在路上”。'}",
-          "sentence_id": 34,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 34,
-            "sentence_body": "Er saß im üblichen morgendlichen Stau fest und konnte nicht \numhin zu bemerken, dass offenbar eine Menge seltsam gekleideter Menschen \nunterwegs waren.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487756",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': \"这是德语中的一个关系从句，'die' 是关系代词，指代前文的'die Eulen'（猫头鹰）。'am helllichten Tage' 是时间状语（在光天化日之下），'vorbeischossen' 是动词（飞驰而过）。整个从句的意思是：在光天化日之下飞驰而过的（猫头鹰）。\"}",
-          "sentence_id": 46,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 46,
-            "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487757",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '这个短语是德语中的可分动词结构。\\'holen\\'（取）是动词词干，\\'über der Straße\\'（在街对面）是地点状语，\\'einen Krapfen\\'（一个甜甜圈）是宾语。完整意思是\"在街对面的面包店取一个甜甜圈\"。'}",
-          "sentence_id": 51,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 51,
-            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487759",
-          "data_type": "old"
-        },
-        {
-          "user": "那为什么这部分是可分动词结构？",
-          "ai": "{'answer': '这里‘holen’不是可分动词结构，而是动词原形。可分动词如‘abholen’在句子中会分开，比如‘holt ... ab’。这里的‘holen’是完整动词，意思是‘去取’。'}",
-          "sentence_id": 51,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 51,
-            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487760",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '‘denn’在这里是表示原因的连词，相当于‘因为’。它连接前后两个句子，说明为什么他们不会卷入奇怪故事的原因。完整的结构是‘..., denn ...’，前面是结果，后面是原因。'}",
+          "ai": "{'answer': 'merkwürdige 是德语形容词，意思是“奇怪的、奇特的”。在句子中修饰 Geschichte（故事），表示“一个奇怪神秘的故事”。'}",
           "sentence_id": 2,
           "quote": {
             "text_id": 1,
@@ -421,861 +141,38 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-01T16:07:26.487761",
-          "data_type": "old"
-        },
-        {
-          "user": "这段的语法结构是什么？",
-          "ai": "{'answer': \"这是一个由连词und连接的两个并列句。前半句是'Er trommelte mit den Fingern auf das Lenkrad'（他用手指敲击方向盘），后半句是'sein Blick fiel auf eine Ansammlung dieser merkwürdigen Gestalten nicht weit von ihm'（他的目光落在离他不远的这群奇怪身影上）。在后半句中，主语是'sein Blick'，谓语是'fiel auf'，宾语是'eine Ansammlung'，'dieser merkwürdigen Gestalten'是Ansammlung的定语，'nicht weit von ihm'是地点状语。\"}",
-          "sentence_id": 38,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 38,
-            "sentence_body": "Er trommelte \nmit den Fingern auf das Lenkrad und sein Blick fiel auf eine Ansammlung dieser \nmerkwürdigen Gestalten nicht weit von ihm.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487763",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': \"这是一个德语虚拟式结构，'Niemand wäre auf die Idee gekommen' 字面意思是'没有人会想到'。其中：'wäre...gekommen' 是动词'kommen'的第二虚拟式，表示假设或可能性；'auf die Idee kommen' 是一个固定搭配，意思是'想到某个主意'。整个结构表达一个假设的情况：没有人会想到（但实际上发生了）。\"}",
-          "sentence_id": 2,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 2,
-            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487764",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': \"这是德语中的比较从句结构。'wie notwendig gewesen wäre' 字面意思是'如...原本必要的那样'，这里用来比较Dursley太太的脖子长度与原本需要的长度。'gewesen wäre' 是第二虚拟式的完成时，表示假设的情况。\"}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487766",
+          "timestamp": "2025-11-02T17:40:50.003662",
           "data_type": "old"
         },
         {
           "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是一个由denn连接的并列复合句。前半句是'Niemand wäre...verstricken'，后半句是'm...haben'。denn表示原因，相当于'因为'。后半句的主语是sie(他们)，谓语是wollten...haben(想要...有)，mit solchem Unsinn是介词短语作状语，nichts zu tun haben是固定搭配表示'与...无关'。\"}",
-          "sentence_id": 2,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 2,
-            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487767",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '这是一个由连词dass引导的主语从句，意思是‘有人可能会揭露它’。dass在这里引导整个从句作为主句的主语，es指代前文的Geheimnis（秘密），könnte是情态动词können的虚拟式表示可能性。'}",
-          "sentence_id": 7,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 7,
-            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487769",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': \"这是一个比较从句，结构是 'wie man es sich nur denken konnte'（正如人们所能想象的那样）。其中 'wie' 引导比较，'man' 是泛指代词'人们'，'es' 指代前文描述的情况，'sich denken' 是'想象'的意思，'konnte' 是情态动词können的过去式。整个短语表示'正如人们所能想象的那样'，用来强调前文描述的程度。\"}",
-          "sentence_id": 10,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 10,
-            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487770",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是一个主从复合句，denn引导原因状语从句，解释为什么'非常有用'。从句中so是'这样'的意思，konnte是情态动词，后面跟两个并列动作：den Hals recken（伸长脖子）和hinüberspähen（窥视），用und连接。\"}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487772",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么",
-          "ai": "{'answer': '这是一个主从复合句。主句是\"Die Dursleys schauderten beim Gedanken daran\"，后面是was引导的宾语从句，说明daran的具体内容。从句中又包含了一个条件状语\"sollten die Potters...\"，表示假设情况。整体结构是：主句 + 宾语从句（内含条件状语）。'}",
-          "sentence_id": 11,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 11,
-            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487773",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': \"这里的'daran'是一个德语代副词，指代前面提到的'beim Gedanken'（想到...这个想法）。整句话意思是：想到波特一家哪天出现在他们街上时邻居们会说什么，德思礼夫妇就不寒而栗。'daran'在这里连接'想到'和'邻居会说什么'这个内容。\"}",
-          "sentence_id": 11,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 11,
-            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487774",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Einfahrt 在德语中是“入口、车道”的意思，指车辆进入建筑物或院子的通道。在这个句子里，die Einfahrt 指的是通向4号地址的车道。'}",
-          "sentence_id": 20,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 20,
-            "sentence_body": "Er setzte sich in den Wagen und fuhr rückwärts die Einfahrt zu \nNummer 4 hinaus.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487776",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Schnecke 在德语中是“蜗牛”的意思。在这个句子中，“zur Schnecke machen”是一个固定表达，意思是“严厉批评”或“责骂”。所以整句话的意思是：他严厉批评了五个不同的人。'}",
-          "sentence_id": 49,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 49,
-            "sentence_body": "Er machte fünf verschiedene Leute zur Schnecke.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487778",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': \"这是一个不定式结构，由连词'und'连接两个动作：'sich die Beine vertreten'（散步活动腿脚）和'beim Bäcker...einen Krapfen holen'（在面包店买甜甜圈）。其中'beim Bäcker über der Straße'是地点状语，'einen Krapfen'是第四格宾语，'holen'是主要动词。\"}",
-          "sentence_id": 51,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 51,
-            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487779",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '这是一个德语从句，描述猫头鹰飞过的方式。\"über ihre Köpfe hinweg\" 是介词短语表示\"越过他们的头顶\"，\"flog\" 是动词\"飞行\"的过去式。\"hinwegflog\" 是一个可分动词，表示\"飞过\"的意思。'}",
-          "sentence_id": 46,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 46,
-            "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487780",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'vertreten 在这里是德语动词，意思是“伸展、活动（腿脚）”。在句子中‘sich die Beine vertreten’是一个固定搭配，表示‘散步活动一下腿脚’。'}",
-          "sentence_id": 51,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 51,
-            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487782",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'verbrachte 是德语动词 verbringen 的过去式，意思是\"度过\"。整句话的意思是：\"然而，Dursley先生度过了一个完全平常的、没有猫头鹰的早晨。\"在德语中，verbrachte 描述某人如何度过某段时间。'}",
-          "sentence_id": 48,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 48,
-            "sentence_body": "Mr Dursley jedoch verbrachte einen ganz gewöhnlichen, eulenfreien \nMorgen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487783",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘verbrachte’是德语动词‘verbringen’的过去式，意思是‘度过’。在这个句子里，‘Mr Dursley verbrachte einen Morgen’就是‘德思礼先生度过了一个早晨’。'}",
-          "sentence_id": 48,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 48,
-            "sentence_body": "Mr Dursley jedoch verbrachte einen ganz gewöhnlichen, eulenfreien \nMorgen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487784",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘führte’是德语动词‘führen’的过去式，意思是‘进行’或‘带领’。在句子中‘Er führte mehrere wichtige Telefongespräche’意思是‘他进行了几个重要的电话通话’。'}",
-          "sentence_id": 50,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 50,
-            "sentence_body": "Er führte mehrere \nwichtige Telefongespräche und schrie dabei noch ein wenig lauter.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487786",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘nirgendwo’是德语词，意思是‘在任何地方都不’或‘没有地方’。在这个句子里，‘in ihren Augen gab es nirgendwo einen prächtigeren Jungen’意思是‘在他们眼中，没有地方有比这更出色的男孩了’，强调他们认为自己的儿子是全世界最棒的。'}",
-          "sentence_id": 6,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 6,
-            "sentence_body": "Die Dursleys hatten einen kleinen Sohn namens Dudley und in \nihren Augen gab es nirgendwo einen prächtigeren Jungen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487787",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个由连词und连接的并列复合句。第一分句：Die Autoschlange bewegte sich（汽车长龙移动了）；第二分句：ein paar Minuten später fuhr Mr Dursley auf den Parkplatz seiner Firma（几分钟后德思礼先生开进了他公司的停车场）；最后的die Gedanken wieder bei den Bohrern是独立主格结构，表示伴随状态，意思是‘思绪又回到了钻机上’。'}",
-          "sentence_id": 43,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 43,
-            "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487789",
-          "data_type": "old"
-        },
-        {
-          "user": "给我讲下独立主格结构",
-          "ai": "{'answer': \"这个句子中没有独立主格结构。独立主格结构在德语中通常是由名词+分词构成的，比如'Die Arbeit beendet, ging er nach Hause'（工作完成后，他回家了）。你引用的句子是一个并列复合句，由'und'连接两个分句。你是想了解这个句子的具体结构吗？\"}",
-          "sentence_id": 43,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 43,
-            "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487790",
-          "data_type": "old"
-        },
-        {
-          "user": "你不是说 最后的die Gedanken wieder bei den Bohrern是独立主格结构，表示伴随状态，意思是‘思绪又回到了钻机上’ 吗",
-          "ai": "{'answer': \"是的，'die Gedanken wieder bei den Bohrern' 确实是独立主格结构（或称绝对结构），表示伴随状态。它描述的是德思礼先生开车进入停车场时，他的思绪同时回到了钻机上。这种结构在德语中常用名词短语来表达动作发生时的伴随状态。\"}",
-          "sentence_id": 43,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 43,
-            "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487791",
-          "data_type": "old"
-        },
-        {
-          "user": "给我讲讲独立主格结构",
-          "ai": "{'answer': \"这个句子中没有独立主格结构。独立主格结构是英语中的语法现象，德语中不常见。你引用的句子是一个并列复合句，由两个主句通过'und'连接。如果你对句子的某个具体部分有疑问，比如'bewegte sich'的用法或者'die Gedanken wieder bei den Bohrern'这个短语的意思，请具体告诉我。\"}",
-          "sentence_id": 43,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 43,
-            "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487793",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '这部分是独立主格结构，die Gedanken 是主语，wieder bei den Bohrern 是表语，表示“思绪又回到了钻机那里”。这种结构用来描述伴随主句动作发生的状态。'}",
-          "sentence_id": 43,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 43,
-            "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487795",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个主从复合句，主句是‘die beiden hatten sich nicht mehr gesehen’（这两个人没有再见过面），其中‘sich gesehen haben’是完成时态的反身动词结构。‘schon seit etlichen Jahren’是时间状语，表示‘已经好几年了’。句子的基本结构是：主语 + 反身动词完成时 + 时间状语。'}",
+          "ai": "{'answer': \"这是一个由分号连接的两个并列句。第一个分句 'Mrs Potter war die Schwester von Mrs Dursley' 是主系表结构，意思是'波特夫人是德思礼夫人的姐姐'。第二个分句 'doch die beiden hatten sich schon seit etlichen Jahren nicht mehr gesehen' 是主谓结构，包含反身动词'sich sehen'，意思是'但两人已经多年没见面了'。分号后的'doch'表示转折关系。\"}",
           "sentence_id": 9,
           "quote": {
             "text_id": 1,
             "sentence_id": 9,
             "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
             "grammar_annotations": [],
-            "vocab_annotations": []
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
           },
-          "timestamp": "2025-11-01T16:07:26.487796",
-          "data_type": "old"
+          "timestamp": "2025-11-02T17:40:50.003666",
+          "data_type": "new"
         },
         {
-          "user": "请给我解释sich在此处的用法",
-          "ai": "{'answer': '这里的sich是反身代词，表示动作返回到主语自己身上。sich sehen意思是\"互相见面\"，主语die beiden（这两个人）既是动作的执行者也是承受者，所以要用反身代词sich。'}",
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'etlichen 是德语词，意思是“一些、若干”，相当于英语的“several”。在句子中，etlichen Jahren 表示“好几年”。'}",
           "sentence_id": 9,
           "quote": {
             "text_id": 1,
             "sentence_id": 9,
             "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
             "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487798",
-          "data_type": "old"
-        },
-        {
-          "user": "这里的主语是谁？sich指的是MrsPotter和Mrs Dusley吗？什么情况下可以用sich指代？",
-          "ai": "{'answer': '主语是die beiden（这两个人），指前文提到的Mrs Potter和Mrs Dursley。sich在这里指代主语自己，表示互相见到对方。德语中sich常用于反身动词，表示动作作用于主语自身，比如sich sehen（互相见面）、sich treffen（见面）等。'}",
-          "sentence_id": 9,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 9,
-            "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487799",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个主从复合句。主句是\"Mrs Dursley behauptete sogar, dass...\"（德思礼夫人甚至声称...），后面跟着一个由dass引导的宾语从句。宾语从句中又包含一个denn引导的原因状语从句，解释为什么她声称没有姐妹。'}",
-          "sentence_id": 8,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 8,
-            "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487800",
-          "data_type": "old"
-        },
-        {
-          "user": "这部分的语法结构是什么？",
-          "ai": "{'answer': '这是一个由连词denn连接的原因状语从句。so konnte sie den Hals über den Gartenzaun recken是主句，意思是\"这样她就能把脖子伸过花园围栏\"。德语中denn表示原因，相当于英语的\"because\"或\"for\"。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487801",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是由两个并列分句组成的复合句，用连词und连接。第一个分句是'Die Dursleys hatten einen kleinen Sohn namens Dudley'（德思礼夫妇有一个叫达力的小儿子），第二个分句是'in ihren Augen gab es nirgendwo einen prächtigeren Jungen'（在他们眼中，世界上没有更棒的男孩了）。第二个分句使用了es gibt（有）的倒装结构。\"}",
-          "sentence_id": 6,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 6,
-            "sentence_body": "Die Dursleys hatten einen kleinen Sohn namens Dudley und in \nihren Augen gab es nirgendwo einen prächtigeren Jungen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487803",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'trüben 是德语形容词，意思是“阴沉的、昏暗的”，用来形容天气阴暗、不明朗。在这个句子里，它和 grau（灰色的）一起描述那个星期二阴沉沉的天气。'}",
-          "sentence_id": 14,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 14,
-            "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487804",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话是什么意思？",
-          "ai": "{'answer': \"这句话的意思是：这个男孩（指前文提到的某人）也是远离Potters家的一个好理由；她的Dudley不应该和这样的孩子接触。'Potters'和'Dudley'都是专有名词，可以当作名字来理解。你是对'fernzuhalten'（保持距离）这个词，还是对'sollte...nicht in Berührung kommen'（不应该接触）这个表达有疑问？\"}",
-          "sentence_id": 13,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 13,
-            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487805",
-          "data_type": "old"
-        },
-        {
-          "user": "sollte...nicht in Berührung kommen'（不应该接触）这个表达",
-          "ai": "{'answer': '‘sollte...nicht in Berührung kommen’ 是德语中表示‘不应该接触’的委婉表达。sollte 在这里表示建议或要求，相当于‘应当’，nicht in Berührung kommen 字面是‘不接触到’。整句意思是‘他们的Dudley不应该接触到这样的孩子’。'}",
-          "sentence_id": 13,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 13,
-            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487807",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'aufdecken 在德语中是动词，意思是“揭露、发现、揭开”，指让隐藏的事情被知道。在这句话里，jemand aufdecken könnte 表示“有人可能会发现（这个秘密）”。'}",
-          "sentence_id": 7,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 7,
-            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487808",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Stock在这里是德语词，意思是“楼层”。neunten Stock就是“九楼”。英语中floor表示楼层，德语用Stock。'}",
-          "sentence_id": 44,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 44,
-            "sentence_body": "In seinem Büro im neunten Stock saß Mr Dursley immer mit dem Rücken zum \nFenster.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487809",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Woran 是德语疑问词，意思是“关于什么”或“对什么”。在这个句子中，它引导一个疑问或思考的内容，整句意思是“他刚才到底在想什么！”。Woran 由 wo（哪里/什么）和 an（关于/在...上）组成，用来询问与某事物相关的想法或内容。'}",
-          "sentence_id": 24,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 24,
-            "sentence_body": "Woran er nur wieder gedacht hatte!",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487811",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘getigerte’是形容词，意思是‘有条纹的’，用来描述猫（Katze）的毛色。在这里‘getigerte Katze’就是‘有条纹的猫’或‘虎斑猫’。'}",
-          "sentence_id": 23,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 23,
-            "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487813",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个复合句，主要结构是：主句（Niemand wäre...gekommen）+ 宾语从句（sie könnten sich...verstricken）+ 原因状语从句（denn mit solchem Unsinn...haben）。主句使用第二虚拟式表示假设，宾语从句省略了连接词dass，denn连接原因分句解释前文。'}",
-          "sentence_id": 2,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 2,
-            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487814",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个复合句，主要结构是：主语(Mrs Dursley) + 并列谓语(war... und besaß...) + was引导的非限制性定语从句 + denn引导的原因状语从句。其中was指的是前面描述的整个情况，denn表示原因解释。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487815",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是一个复合句，主要结构是：主句（Mrs Dursley war...und besaß...）+ 关系从句（was allerdings sehr nützlich war）+ 原因从句（denn so konnte sie...）。其中'was'指代前面整句话描述的情况，'denn'表示原因解释为什么'有用'。\"}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487816",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是一个由两个并列主句构成的复合句。第一个主句是'Die Dursleys besaßen alles, was sie wollten'（德思礼夫妇拥有他们想要的一切），其中'was sie wollten'是关系从句。第二个主句是'die hatten auch ein Geheimnis'（他们也有一个秘密），后面跟了一个由'und'连接的从句'und dass es jemand aufdecken könnte, war ihre größte Sorge'（而有人可能揭露这个秘密是他们最大的担忧），其中'dass es jemand aufdecken könnte'是主语从句。\"}",
-          "sentence_id": 7,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 7,
-            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487818",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个主从复合句。主句是\"Mrs Dursley behauptete sogar\"（德思礼夫人甚至声称），后面跟着一个由dass引导的宾语从句，说明她声称的内容。宾语从句中又包含一个denn引导的原因状语从句，解释为什么她这么说。整个句子的结构是：主句 + dass宾语从句 + denn原因从句。'}",
-          "sentence_id": 10,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 10,
-            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487819",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '这是一个主从复合句。主句是\"Mrs Dursley behauptete sogar\"（德思礼夫人甚至声称），后面接了一个由dass引导的宾语从句，说明声称的内容。宾语从句中又包含一个由denn引导的原因从句，解释为什么她这样声称。主要结构是：主句 + dass从句 + denn原因从句。'}",
-          "sentence_id": 10,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 10,
-            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487820",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'Nachbarn 是德语名词，由词根 Nachbar（邻居）加上复数词尾 -n 构成。Nachbar 本身可以拆分为 nach（靠近）和 Bauer（农民/居民），字面意思是“住在附近的人”。'}",
-          "sentence_id": 11,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 11,
-            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487822",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'Nachbarn 是德语词，由词根 Nachbar（邻居）加复数词尾 -n 构成。Nachbar 本身可以拆为 nach-（表示“靠近”）和 -bar（表示“携带者”或“相关的人”），字面意思是“住在附近的人”。'}",
-          "sentence_id": 11,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 11,
-            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487823",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': 'Nachbarn 是德语中的名词，意思是“邻居们”。在句子中，它指的是住在附近的人们。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487825",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词是什么意思？",
-          "ai": "{'answer': '‘Nachbarn’是德语词，意思是‘邻居们’。在这个句子里，佩妮姨妈伸长脖子是为了偷看邻居们的情况。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487826",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'Nachbarn 是德语名词，由词根 Nachbar（邻居）加上复数词尾 -n 构成。Nachbar 本身可以拆分为 nach（在...之后）和 Bar（古德语，意为“居民”或“同住者”），字面意思是“住在附近的人”。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487827",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'Nachbarn 这个词由词根 Nachbar（邻居）加上复数词尾 -n 构成。在德语中，Nachbar 本身就是一个基本词汇，表示邻居，加上 -n 就变成了复数形式 Nachbarn（邻居们）。'}",
-          "sentence_id": 5,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 5,
-            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487829",
-          "data_type": "old"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'aufkreuzen 由前缀 auf- 和词根 kreuzen 组成。auf- 表示“出现、显现”，kreuzen 意思是“交叉、穿越”，合起来就是“突然出现、露面”的意思。'}",
-          "sentence_id": 11,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 11,
-            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-11-01T16:07:26.487843",
+          "timestamp": "2025-11-02T17:40:50.003668",
           "data_type": "new"
-        },
-        {
-          "user": "这个词有什么词根词缀吗？",
-          "ai": "{'answer': 'aufkreuzen 由前缀 auf- 和词根 kreuzen 组成。auf- 表示“向上、出现”，kreuzen 意思是“交叉、横穿”，合起来引申为“突然出现、露面”。在句子中表示波特一家突然出现在街上。'}",
-          "sentence_id": 11,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 11,
-            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
-            "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
-          },
-          "timestamp": "2025-11-01T16:07:26.487845",
-          "data_type": "new"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是一个主从复合句，主句是'Auch dieser Junge war ein guter Grund'（这个男孩也是一个好理由），后面跟一个带zu的不定式结构'sich von den Potters fernzuhalten'（远离Potters一家）。中间用逗号分隔，这种结构表示目的或结果，意思是'这个男孩也是远离Potters一家的一个好理由'。\"}",
-          "sentence_id": 13,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 13,
-            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-            "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
-          },
-          "timestamp": "2025-11-01T16:07:26.487847",
-          "data_type": "new"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': \"这是一个主从复合句。主句是'Auch dieser Junge war ein guter Grund'（这个男孩也是个好理由），后面跟着带zu的不定式结构'sich von den Potters fernzuhalten'（远离Potter一家），表示这个理由的目的。分号后面是另一个独立句子。\"}",
-          "sentence_id": 13,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 13,
-            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-            "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
-          },
-          "timestamp": "2025-11-01T16:07:26.487848",
-          "data_type": "new"
-        },
-        {
-          "user": "不定式结构是什么",
-          "ai": "{'answer': '这个句子中的不定式结构是\"sich fernzuhalten\"（远离），意思是\"保持距离\"。这是一个带反身代词sich的不定式短语，在句中作为Grund（理由）的补充说明，表示\"远离Potters的好理由\"。'}",
-          "sentence_id": 13,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 13,
-            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-            "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
-          },
-          "timestamp": "2025-11-01T16:07:26.487851",
-          "data_type": "new"
-        },
-        {
-          "user": "不定式结构是什么",
-          "ai": "{'answer': '这里的‘sich fernzuhalten’是德语带zu的不定式结构，表示‘远离’。整个结构‘sich von den Potters fernzuhalten’意思是‘远离波特一家’，作为‘Grund’（理由）的定语，说明是什么样的理由。'}",
-          "sentence_id": 13,
-          "quote": {
-            "text_id": 1,
-            "sentence_id": 13,
-            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
-            "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
-          },
-          "timestamp": "2025-11-01T16:07:26.487852",
-          "data_type": "new"
-        }
-      ],
-      "max_turns": 100
-    },
-    "0": {
-      "text_title": "Text 0",
-      "current_summary": "用户提问和AI回答总结：\n1. 用户询问\"die\"是否本身没有格，AI解释\"die\"是主格，物主代词\"ihren\"采用属格形式，需与名词保持性数格一致。\n2. 用户问\"Mittelzentrum\"意思，AI解释为德语\"中等中心\"，指具有中等规模服务功能的城市，并对比了更高级的\"Oberzentrum\"。\n3. 用户询问\"ausgew",
-      "messages": [
-        {
-          "user": "这句话的语法结构是什么",
-          "ai": "{'answer': \"这是一个主从复合句。主句是'war...kein Vorzeichen...zu erkennen'（没有任何征兆可以被察觉），前面是时间状语从句'Als...die Augen aufschlugen'（当...睁开眼睛时），后面是定语从句'die bald...geschehen sollten'（那些即将发生的事情）。句子主干是：当德思礼夫妇睁开眼睛时，外面天空中没有迹象表明即将发生奇怪的事情。\"}",
-          "sentence_id": 14,
-          "quote": {
-            "text_id": 0,
-            "sentence_id": 14,
-            "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487831",
-          "data_type": "old"
-        },
-        {
-          "user": "这段的语法结构是什么？",
-          "ai": "{'answer': \"这个句子的主要结构是：'war kein Vorzeichen zu erkennen'（没有任何征兆可以被察觉）。这是一个德语中的无人称被动结构，字面意思是'在阴云密布的天空中没有奇怪而神秘事情的征兆可以被察觉'。'an dem wolkenverhangenen Himmel draußen' 是地点状语，'der merkwürdigen und geheimnisvollen Dinge' 是Vorzeichen的定语，说明是什么样的征兆。\"}",
-          "sentence_id": 14,
-          "quote": {
-            "text_id": 0,
-            "sentence_id": 14,
-            "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487832",
-          "data_type": "old"
-        },
-        {
-          "user": "给我讲讲这句话中的独立主格结构",
-          "ai": "{'answer': '这句话中没有独立主格结构。德语中独立主格结构（Absoluter Nominativ）通常由名词+分词构成，表示伴随状况。而这里的\"die Gedanken wieder bei den Bohrern\"是一个省略了动词的独立短语，用来描述Dursley先生的心理状态，意思是\"思绪又回到了钻孔机上\"。这是一种文学性的表达方式，不是语法上的独立主格结构。'}",
-          "sentence_id": 43,
-          "quote": {
-            "text_id": 0,
-            "sentence_id": 43,
-            "sentence_body": "Die Autoschlange \nbewegte sich, und ein paar Minuten später fuhr Mr Dursley auf den Parkplatz \nseiner Firma, die Gedanken wieder bei den Bohrern.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487834",
-          "data_type": "old"
-        },
-        {
-          "user": "为什么这个短语可以接在前面完整句后面并省略动词？",
-          "ai": "{'answer': \"这个句子其实包含两个并列的动作：'bewegte sich'（动了动）和'fuhr...auf'（开进）。它们共享同一个主语'Mr Dursley'，所以第二个动作前省略了主语。这不是接在前面的完整句后面，而是用'und'连接的两个并列分句，描述连续发生的两个动作。\"}",
-          "sentence_id": 44,
-          "quote": {
-            "text_id": 0,
-            "sentence_id": 44,
-            "sentence_body": "In seinem Büro im neunten Stock saß Mr Dursley immer mit dem Rücken zum \nFenster.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487835",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '‘doch hatten’是德语中的倒装结构，doch表示‘但是/然而’，hatten是动词‘haben’（有）的过去时复数形式。当句子以doch等连词开头时，动词会提前到第二位，形成‘连词 + 动词 + 主语’的结构。例如‘Doch hatten sie...’意思是‘然而他们曾经有...’。'}",
-          "sentence_id": 36,
-          "quote": {
-            "text_id": 0,
-            "sentence_id": 36,
-            "sentence_body": "Mr Dursley konnte \nLeute nicht ausstehen, die sich komisch anzogen – wie sich die jungen Leute \nSeite 3 von 3 \nHARRY POTTER und der Stein der Weisen    \nherausputzten!",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487836",
-          "data_type": "old"
-        },
-        {
-          "user": "这句话的语法结构是什么？",
-          "ai": "{'answer': '你引用的‘doch hatten’并不在提供的完整句子中。请确认你想问的是哪个部分的语法结构？是‘konnte nicht umhin zu bemerken’（忍不住注意到），还是‘dass...unterwegs waren’（从句结构）？'}",
-          "sentence_id": 34,
-          "quote": {
-            "text_id": 0,
-            "sentence_id": 34,
-            "sentence_body": "Er saß im üblichen morgendlichen Stau fest und konnte nicht \numhin zu bemerken, dass offenbar eine Menge seltsam gekleideter Menschen \nunterwegs waren.",
-            "grammar_annotations": [],
-            "vocab_annotations": []
-          },
-          "timestamp": "2025-11-01T16:07:26.487838",
-          "data_type": "old"
         }
       ],
       "max_turns": 100

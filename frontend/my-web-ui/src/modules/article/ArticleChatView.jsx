@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
@@ -31,6 +31,14 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
   const [hasSelectedSentence, setHasSelectedSentence] = useState(false)  // 新增：是否有选中的句子
+  const [debugLogs, setDebugLogs] = useState([])  // 调试日志
+  const debugLogRef = useRef([])  // 使用 ref 避免闭包问题
+  
+  const addDebugLog = (msg) => {
+    const entry = `[${new Date().toLocaleTimeString()}] ${msg}`
+    debugLogRef.current = [...debugLogRef.current.slice(-9), entry]
+    setDebugLogs(debugLogRef.current)
+  }
   
   // 获取asked tokens功能（统一在这里管理，避免多次调用）
   const { askedTokenKeys, isTokenAsked, markAsAsked, refreshAskedTokens } = useAskedTokens(articleId, 'default_user')
@@ -69,6 +77,10 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const sampleText = isUploadMode ? '' : 'Sample text for demo'
 
   const handleTokenSelect = async (tokenText, selectedSet, selectedTexts = [], context = null) => {
+    // 添加到可视化日志
+    const logEntry = `[${new Date().toLocaleTimeString()}] handleTokenSelect: ${selectedTexts.length} tokens`
+    setDebugLogs(prev => [...prev.slice(-4), logEntry])
+    
     console.log('🎯 [ArticleChatView] Token selection triggered:')
     console.log('  - Token text:', tokenText)
     console.log('  - Selected texts:', selectedTexts)
@@ -125,9 +137,9 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       } catch (error) {
         console.error('❌ [ArticleChatView] Failed to update session context:', error)
       }
-    } else if (selectedTexts.length === 0) {
-      // Clear selection - no tokens selected
-      console.log('🧹 [ArticleChatView] Clearing token selection and backend session token')
+    } else if (selectedTexts.length === 0 && hasSelectedToken) {
+      // 只在"之前有选择 → 现在变为0"时才清空后端，避免拖拽中间状态误触发
+      console.log('🧹 [ArticleChatView] Clearing token selection and backend session token (was selected, now cleared)')
       try {
         const clearPayload = { token: null }
         console.log('📤 [ArticleChatView] Clearing token via updateContext:', clearPayload)
@@ -250,6 +262,22 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       <NotationContext.Provider value={notationContextValue}>
         <SelectionProvider>
         <div className="h-full flex flex-col">
+          {/* 调试面板：显示当前选择状态 */}
+          <div className="fixed top-2 right-2 bg-black bg-opacity-90 text-white text-xs p-3 rounded z-50 max-w-sm font-mono">
+            <div className="font-bold mb-2">Debug Panel</div>
+            <div>Tokens: {selectedTokens.length}</div>
+            <div>Quoted: {quotedText.substring(0, 30)}{quotedText.length > 30 ? '...' : ''}</div>
+            <div>HasToken: {hasSelectedToken ? '✅' : '❌'}</div>
+            <div>HasSent: {hasSelectedSentence ? '✅' : '❌'}</div>
+            <div>Grammar Notations: {grammarNotations?.length || 0}</div>
+            <div>Vocab Notations: {vocabNotations?.length || 0}</div>
+            <div className="mt-2 border-t border-gray-500 pt-2">
+              <div className="font-bold mb-1">Recent Events:</div>
+              {debugLogs.map((log, i) => (
+                <div key={i} className="text-[10px] text-gray-300">{log}</div>
+              ))}
+            </div>
+          </div>
           {/* Header with Back Button */}
           <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center space-x-4">

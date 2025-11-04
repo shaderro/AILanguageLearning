@@ -70,16 +70,36 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
   }
 
   const emitSelection = (set, lastTokenText = '') => {
+    // 写入 document.title 以便无控制台时也能看到
+    const logMsg = `emit: size=${set.size}, active=${activeSentenceRef.current}`
+    document.title = logMsg
+    
+    console.log('📡 [useTokenSelection.emitSelection] Called with:', {
+      setSize: set.size,
+      setContents: Array.from(set),
+      lastTokenText,
+      activeSentence: activeSentenceRef.current
+    })
+    console.trace('📡 [useTokenSelection.emitSelection] Call stack')
+    
     setSelectedTokenIds(set)
     if (onTokenSelect) {
       const selectedTexts = buildSelectedTexts(activeSentenceRef.current, set)
       const context = buildSelectionContext(activeSentenceRef.current, set)
-      // Debug logging removed for performance
+      console.log('📡 [useTokenSelection.emitSelection] Built data:', {
+        selectedTexts,
+        contextTokens: context?.tokens?.length
+      })
       onTokenSelect(lastTokenText, set, selectedTexts, context)
     }
   }
 
   const clearSelection = () => {
+    // 写入标题栏
+    document.title = 'clearSelection() called!'
+    console.log('🧹 [useTokenSelection.clearSelection] Called')
+    console.trace('🧹 [useTokenSelection.clearSelection] Call stack')
+    
     const empty = new Set()
     emitSelection(empty, '')
     activeSentenceRef.current = null

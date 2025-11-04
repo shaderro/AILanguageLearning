@@ -32,46 +32,48 @@ export default function VocabNotationCard({
     if (isVisible) {
       const timer = setTimeout(() => setShow(true), 150)
 
-      if (getVocabExampleForToken) {
-        setIsLoading(true)
-        setError(null)
-        getVocabExampleForToken(textId, sentenceId, tokenIndex)
-          .then(example => {
-            setVocabExample(example || null)
-            setIsLoading(false)
-          })
-          .catch(error => {
-            console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
-            setError(error.message || 'Failed to load vocab example')
-            setVocabExample(null)
-            setIsLoading(false)
-          })
-      } else if (textId && sentenceId && tokenIndex) {
-        setIsLoading(true)
-        setError(null)
-        apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
-          .then(response => {
-            if (response && response.vocab_id) {
-              setVocabExample(response)
-            } else {
+      // 🔧 只在第一次显示且没有数据时才加载，避免重复请求
+      if (!vocabExample && !isLoading && !error) {
+        if (getVocabExampleForToken) {
+          setIsLoading(true)
+          setError(null)
+          getVocabExampleForToken(textId, sentenceId, tokenIndex)
+            .then(example => {
+              setVocabExample(example || null)
+              setIsLoading(false)
+            })
+            .catch(error => {
+              console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
+              setError(error.message || 'Failed to load vocab example')
               setVocabExample(null)
-            }
-            setIsLoading(false)
-          })
-          .catch(error => {
-            console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
-            setError(error.message || 'Failed to load vocab example')
-            setIsLoading(false)
-          })
+              setIsLoading(false)
+            })
+        } else if (textId && sentenceId && tokenIndex) {
+          setIsLoading(true)
+          setError(null)
+          apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
+            .then(response => {
+              if (response && response.vocab_id) {
+                setVocabExample(response)
+              } else {
+                setVocabExample(null)
+              }
+              setIsLoading(false)
+            })
+            .catch(error => {
+              console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
+              setError(error.message || 'Failed to load vocab example')
+              setIsLoading(false)
+            })
+        }
       }
 
       return () => clearTimeout(timer)
     } else {
       setShow(false)
-      setVocabExample(null)
-      setError(null)
+      // 不再清空 vocabExample，保留缓存
     }
-  }, [isVisible, textId, sentenceId, tokenIndex, getVocabExampleForToken])
+  }, [isVisible, textId, sentenceId, tokenIndex, getVocabExampleForToken, vocabExample, isLoading, error])
 
   if (!show) return null
 

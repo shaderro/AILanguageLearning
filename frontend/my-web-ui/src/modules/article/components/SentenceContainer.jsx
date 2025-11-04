@@ -15,6 +15,7 @@ export default function SentenceContainer({
   selectedTokenIds,
   activeSentenceIndex,
   isDraggingRef,
+  wasDraggingRef,
   tokenRefsRef,
   hasExplanation,
   getExplanation,
@@ -73,6 +74,13 @@ export default function SentenceContainer({
   }
 
   const handleSentenceClick = async (e) => {
+    // 如果正在拖拽或刚结束拖拽，跳过句子点击（避免清空 token 选择）
+    if (isDraggingRef.current || wasDraggingRef.current) {
+      console.log(`⏭️ [SentenceContainer] Sentence click blocked - dragging or just finished dragging`)
+      e.stopPropagation()
+      return
+    }
+    
     // Always trigger sentence click for now - we'll let the token components handle their own clicks
     e.stopPropagation()
     
@@ -121,6 +129,7 @@ export default function SentenceContainer({
           selectedTokenIds={selectedTokenIds}
           activeSentenceIndex={activeSentenceIndex}
           isDraggingRef={isDraggingRef}
+          wasDraggingRef={wasDraggingRef}
           tokenRefsRef={tokenRefsRef}
           hasExplanation={hasExplanation}
           getExplanation={getExplanation}

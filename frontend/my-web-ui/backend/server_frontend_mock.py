@@ -1021,6 +1021,12 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                 ai_response=ai_response,
                 effective_sentence_body=effective_sentence_body
             )
+            
+            # 🔧 关键修复：调用 add_new_to_data() 以创建新词汇和 notations
+            print("🧠 [Chat] 同步执行 add_new_to_data() 以创建词汇和 notations...")
+            main_assistant.add_new_to_data()
+            print("✅ [Chat] add_new_to_data() 完成")
+            
             # 组装摘要
             if session_state.summarized_results:
                 from backend.assistants.chat_info.session_state import GrammarSummary, VocabSummary
@@ -1055,19 +1061,20 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
             except Exception:
                 pass
 
-        # 后台执行完整流程（含语法/词汇总结、对比与持久化）
-        def _run_full_flow_background():
-            from backend.assistants import main_assistant as _ma_mod
-            prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+        # 🔧 关键修复：在启动后台任务前，先保存当前的 created_notations
+        # 因为后台任务会调用 reset_processing_results() 清空这些数据
+        created_grammar_notations_snapshot = list(session_state.created_grammar_notations) if hasattr(session_state, 'created_grammar_notations') else []
+        created_vocab_notations_snapshot = list(session_state.created_vocab_notations) if hasattr(session_state, 'created_vocab_notations') else []
+        
+        print(f"📸 [Chat] 快照 notations（启动后台任务前）:")
+        print(f"  - Grammar notations: {len(created_grammar_notations_snapshot)}")
+        print(f"  - Vocab notations: {len(created_vocab_notations_snapshot)}")
+
+        # 后台执行持久化流程（不再重新调用 main_assistant.run，只做数据保存）
+        # 因为同步流程已经完成了所有必要的处理（回答、摘要、notation创建）
+        def _run_persistence_background():
             try:
-                print("\n🛠️ [Background] 启动完整流程（启用语法管线）...")
-                _ma_mod.DISABLE_GRAMMAR_FEATURES = False
-                main_assistant.run(
-                    quoted_sentence=current_sentence,
-                    user_question=current_input,
-                    selected_text=selected_text
-                )
-                print("💾 [Background] 执行保存任务...")
+                print("\n💾 [Background] 启动数据持久化任务...")
                 save_data_async(
                     dc=dc,
                     grammar_path=GRAMMAR_PATH,
@@ -1076,17 +1083,22 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                     dialogue_record_path=DIALOGUE_RECORD_PATH,
                     dialogue_history_path=DIALOGUE_HISTORY_PATH
                 )
-                print("✅ [Background] 完整流程与保存完成")
+                print("✅ [Background] 数据持久化完成")
             except Exception as bg_e:
-                print(f"❌ [Background] 完整流程失败: {bg_e}")
+                print(f"❌ [Background] 持久化失败: {bg_e}")
                 import traceback
                 print(traceback.format_exc())
-            finally:
-                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
 
-        background_tasks.add_task(_run_full_flow_background)
+        background_tasks.add_task(_run_persistence_background)
 
         # 立即返回主回答和即时摘要（用于前端直接更新UI）
+        # 🔧 使用快照而不是直接读取 session_state（避免被后台任务清空）
+        print(f"📋 [Chat] 返回给前端的 notations（快照）:")
+        print(f"  - Grammar notations: {len(created_grammar_notations_snapshot)}")
+        print(f"  - Vocab notations: {len(created_vocab_notations_snapshot)}")
+        if created_grammar_notations_snapshot:
+            print(f"  - Grammar notation details: {created_grammar_notations_snapshot}")
+        
         return {
             'success': True,
             'data': {
@@ -1094,7 +1106,9 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                 'grammar_summaries': grammar_summaries,
                 'vocab_summaries': vocab_summaries,
                 'grammar_to_add': grammar_to_add,
-                'vocab_to_add': vocab_to_add
+                'vocab_to_add': vocab_to_add,
+                'created_grammar_notations': created_grammar_notations_snapshot,
+                'created_vocab_notations': created_vocab_notations_snapshot
             }
         }
         

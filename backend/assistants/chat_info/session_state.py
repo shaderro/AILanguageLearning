@@ -42,6 +42,8 @@ class SessionState:
         self.summarized_results: List[Union[GrammarSummary, VocabSummary]] = []
         self.grammar_to_add: List[GrammarToAdd] = []
         self.vocab_to_add: List[VocabToAdd] = []
+        self.created_grammar_notations: List[dict] = []  # 新增：本轮创建的 grammar notations
+        self.created_vocab_notations: List[dict] = []  # 新增：本轮创建的 vocab notations
     
     def set_current_sentence(self, sentence: SentenceType):
         """
@@ -104,7 +106,29 @@ class SessionState:
         self.summarized_results.clear()
         self.grammar_to_add.clear()
         self.vocab_to_add.clear()
+        self.created_grammar_notations.clear()
+        self.created_vocab_notations.clear()
         # 保留：current_sentence、current_selected_token、current_input
+    
+    def add_created_grammar_notation(self, text_id: int, sentence_id: int, grammar_id: int, marked_token_ids: list = None):
+        """记录本轮创建的 grammar notation"""
+        self.created_grammar_notations.append({
+            'text_id': text_id,
+            'sentence_id': sentence_id,
+            'grammar_id': grammar_id,
+            'marked_token_ids': marked_token_ids or [],
+            'user_id': 'default_user'
+        })
+    
+    def add_created_vocab_notation(self, text_id: int, sentence_id: int, token_id: int, vocab_id: int):
+        """记录本轮创建的 vocab notation"""
+        self.created_vocab_notations.append({
+            'text_id': text_id,
+            'sentence_id': sentence_id,
+            'token_id': token_id,
+            'vocab_id': vocab_id,
+            'user_id': 'default_user'
+        })
 
     def get_current_sentence_info(self) -> dict:
         """获取当前句子的详细信息，适配新旧数据结构"""

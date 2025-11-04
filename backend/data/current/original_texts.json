@@ -17,10 +17,12 @@
         "grammar_annotations": [
           3,
           9,
-          8
+          8,
+          1
         ],
         "vocab_annotations": [
-          15
+          15,
+          27
         ]
       },
       {
@@ -101,10 +103,12 @@
         "sentence_id": 9,
         "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
         "grammar_annotations": [
-          15
+          15,
+          1
         ],
         "vocab_annotations": [
-          15
+          15,
+          28
         ]
       },
       {
@@ -302,7 +306,10 @@
         "text_id": 1,
         "sentence_id": 32,
         "sentence_body": "Während er in Richtung Stadt fuhr, hatte \ner nur noch den großen Auftrag für Bohrmaschinen im Sinn, der heute hoffentlich \neintreffen würde.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          1,
+          6
+        ],
         "vocab_annotations": []
       },
       {
@@ -332,7 +339,9 @@
         "text_id": 1,
         "sentence_id": 36,
         "sentence_body": "Mr Dursley konnte \nLeute nicht ausstehen, die sich komisch anzogen – wie sich die jungen Leute \nSeite 3 von 3 \nHARRY POTTER und der Stein der Weisen    \nherausputzten!",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          1
+        ],
         "vocab_annotations": []
       },
       {
@@ -362,7 +371,9 @@
         "text_id": 1,
         "sentence_id": 40,
         "sentence_body": "Erzürnt stellte Mr Dursley fest, dass einige von ihnen überhaupt nicht \njung waren; nanu, dieser Mann dort musste älter sein als er und trug einen \nsmaragdgrünen Umhang!",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          1
+        ],
         "vocab_annotations": []
       },
       {
@@ -376,8 +387,12 @@
         "text_id": 1,
         "sentence_id": 42,
         "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
-        "grammar_annotations": [],
-        "vocab_annotations": []
+        "grammar_annotations": [
+          1
+        ],
+        "vocab_annotations": [
+          26
+        ]
       },
       {
         "text_id": 1,
@@ -411,7 +426,9 @@
         "sentence_body": "Er bemerkte die Eulen nicht, die am helllichten Tage \nvorbeischossen, wohl aber die Leute unten auf der Straße; sie deuteten in die Lüfte \nund verfolgten mit offenen Mündern, wie eine Eule nach der andern über ihre Köpfe \nhinwegflog.",
         "grammar_annotations": [
           1,
-          7
+          7,
+          1,
+          3
         ],
         "vocab_annotations": [
           7
@@ -459,12 +476,15 @@
         "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
         "grammar_annotations": [
           7,
-          12
+          12,
+          1,
+          6
         ],
         "vocab_annotations": [
           32,
           34,
-          11
+          11,
+          26
         ]
       }
     ]

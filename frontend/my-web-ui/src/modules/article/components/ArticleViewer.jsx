@@ -70,6 +70,7 @@ export default function ArticleViewer({
   // Token drag selection management
   const {
     isDraggingRef,
+    wasDraggingRef,
     tokenRefsRef,
     handleMouseDownToken,
     handleMouseEnterToken,
@@ -156,6 +157,7 @@ export default function ArticleViewer({
             selectedTokenIds={selectedTokenIds}
             activeSentenceIndex={activeSentenceIndex}
             isDraggingRef={isDraggingRef}
+            wasDraggingRef={wasDraggingRef}
             tokenRefsRef={tokenRefsRef}
             hasExplanation={hasExplanation}
             getExplanation={getExplanation}

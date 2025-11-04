@@ -144,6 +144,14 @@ export default function ChatView({
 
   const handleSendMessage = async () => {
     if (inputText.trim() === '') return
+    
+    // 添加到父组件的调试日志
+    if (typeof addDebugLog === 'undefined') {
+      // 如果没有传递 addDebugLog，创建一个本地版本
+      window.chatDebugLogs = window.chatDebugLogs || []
+      window.chatDebugLogs.push(`[${new Date().toLocaleTimeString()}] handleSendMessage 开始`)
+      window.chatDebugLogs = window.chatDebugLogs.slice(-10)
+    }
 
     const questionText = inputText
     // 保存当前的引用文本和上下文，因为后面会清空
@@ -161,9 +169,11 @@ export default function ChatView({
     
     setMessages(prev => [...prev, userMessage])
     setInputText('')
+    document.title = '正在发送请求...'
 
     // 调用后端 chat API
     try {
+      document.title = '等待后端响应...'
       console.log('\n' + '='.repeat(80))
       console.log('💬 [ChatView] ========== 发送消息 ==========')
       console.log('📝 [ChatView] 问题文本:', questionText)
@@ -230,79 +240,61 @@ export default function ChatView({
         user_question: questionText
       })
       
+      document.title = '收到响应，处理中...'
       console.log('✅ [Frontend] 步骤5: 收到响应')
-      console.log('✅ [Frontend] 响应完整数据:', JSON.stringify(response, null, 2))
-
-      // ⏱️ 启动一次短轮询：后台完整流程会稍后生成新的 grammar/vocab notation，这里主动拉取并实时写入缓存
-      ;(async () => {
-        try {
-          const sentenceId = currentSelectionContext?.sentence?.sentence_id
-          const textId = currentSelectionContext?.sentence?.text_id || articleId
-          if (!textId || !sentenceId) return
-          console.log('⏱️ [ChatView] 开始短轮询新notations:', { textId, sentenceId })
-
-          const trySyncOnce = async () => {
-            const grammarResp = await apiService.getSentenceGrammarRules(textId, sentenceId)
-            const vocabResp = await apiService.getSentenceVocabNotations(textId, sentenceId)
-
-            // 处理 grammar notation（单个或空）
-            const gData = grammarResp?.data || null
-            if (gData && addGrammarNotationToCache) {
-              // 先写入notation
-              addGrammarNotationToCache(gData)
-              // 再确保rule缓存
-              if (gData.grammar_id && addGrammarRuleToCache) {
-                try {
-                  const ruleResp = await apiService.getGrammarById(gData.grammar_id)
-                  const rule = ruleResp?.data || null
-                  if (rule) addGrammarRuleToCache(rule)
-                } catch (e) {
-                  console.warn('⚠️ [ChatView] 加载grammar rule失败:', gData.grammar_id, e)
-                }
-              }
-            }
-
-            // 处理 vocab notations（列表）
-            const vList = Array.isArray(vocabResp?.data) ? vocabResp.data : []
-            if (vList.length && addVocabNotationToCache) {
-              vList.forEach(n => {
-                const formatted = {
-                  ...n,
-                  token_index: n.token_index ?? n.token_id // 标准化字段，供缓存比较
-                }
-                addVocabNotationToCache(formatted)
-              })
-            }
-
-            return Boolean(gData) || vList.length > 0
-          }
-
-          // 轮询最多5次，每次间隔700ms，直到发现新增
-          let synced = false
-          for (let i = 0; i < 5 && !synced; i++) {
-            // eslint-disable-next-line no-await-in-loop
-            synced = await trySyncOnce()
-            if (!synced) {
-              // eslint-disable-next-line no-await-in-loop
-              await new Promise(r => setTimeout(r, 700))
-            }
-          }
-          console.log('✅ [ChatView] 短轮询完成，是否发现新notations:', synced)
-        } catch (pollErr) {
-          console.warn('⚠️ [ChatView] 短轮询新notations出错:', pollErr)
+      
+      // 🔧 立即显示 AI 回答和 notations（不等待标记操作）
+      if (response && response.ai_response) {
+        document.title = '显示 AI 回答...'
+        const aiMessage = {
+          id: Date.now() + 1,
+          text: response.ai_response,
+          isUser: false,
+          timestamp: new Date()
         }
-      })()
+        setMessages(prev => [...prev, aiMessage])
+        document.title = 'AI 回答已显示'
+        console.log('📺 [ChatView] AI 回答已立即显示')
+      }
       
-      // 标记选中的tokens为已提问
-      console.log('🔍 [DEBUG] 检查标记条件:', {
-        hasMarkAsAsked: !!markAsAsked,
-        hasContext: !!currentSelectionContext,
-        hasTokens: !!(currentSelectionContext?.tokens),
-        tokenCount: currentSelectionContext?.tokens?.length,
-        articleId: articleId
-      })
+      // 立即添加 notations 到缓存
+      document.title = '添加 notations...'
+      if (response?.created_grammar_notations) {
+        console.log('➕ Adding grammar notations:', response.created_grammar_notations)
+        response.created_grammar_notations.forEach(n => {
+          console.log('Adding notation:', n)
+          if (addGrammarNotationToCache) addGrammarNotationToCache(n)
+        })
+        document.title = `Added ${response.created_grammar_notations.length} grammar notations`
+      }
+      if (response?.created_vocab_notations) {
+        response.created_vocab_notations.forEach(n => addVocabNotationToCache?.(n))
+      }
       
-      if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+      // Toast
+      const toasts = []
+      response.grammar_to_add?.forEach(g => toasts.push(`🆕 语法: ${g.name}`))
+      response.vocab_to_add?.forEach(v => toasts.push(`🆕 词汇: ${v.vocab}`))
+      toasts.forEach((t, i) => setTimeout(() => showKnowledgeToast(t), i * 600))
+      
+      document.title = '完成'
+      console.log('✅ [ChatView] handleSendMessage 主流程完成（AI回答已显示）')
+      
+    } catch (error) {
+      console.error('💥 [Frontend] Chat request 发生错误:', error)
+      const errorMsg = {
+        id: Date.now() + 1,
+        text: `抱歉，处理您的问题时出现错误: ${error.message}`,
+        isUser: false,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMsg])
+    }
+    
+    // 下面的代码已废弃（保留作为参考）
+    /* 原标记逻辑
+      ;(async () => {
+        if (markAsAsked && currentSelectionContext && currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
         console.log('✅ [ChatView] 进入标记逻辑')
         console.log('🏷️ [ChatView] Checking if tokens should be marked as asked...')
         
@@ -669,7 +661,7 @@ export default function ChatView({
       setMessages(prev => [...prev, errorMsg])
       
       // ✅ 即使出错也不清空引用，保持引用以便用户重试
-    }
+    */
   }
 
   const handleKeyPress = (e) => {

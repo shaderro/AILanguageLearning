@@ -418,6 +418,13 @@ class MainAssistant:
                                 
                                 if success:
                                     print(f"✅ [DEBUG] 现有语法的grammar_notation创建成功")
+                                    # 记录到 session_state 以便返回给前端
+                                    self.session_state.add_created_grammar_notation(
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        grammar_id=existing_rule_id,
+                                        marked_token_ids=token_indices
+                                    )
                                     print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建完成 ==========")
                                 else:
                                     print(f"❌ [DEBUG] 现有语法的grammar_notation创建失败")
@@ -524,6 +531,14 @@ class MainAssistant:
                                         vocab_id=existing_vocab_id
                                     )
                                     print(f"✅ [DEBUG] vocab_notation创建结果: {v_ok}")
+                                    if v_ok:
+                                        # 记录到 session_state
+                                        self.session_state.add_created_vocab_notation(
+                                            text_id=current_sentence.text_id,
+                                            sentence_id=current_sentence.sentence_id,
+                                            token_id=token_id,
+                                            vocab_id=existing_vocab_id
+                                        )
                                 else:
                                     print("⚠️ [DEBUG] 无法创建vocab notation：token_id为空")
                             except Exception as vn_err:
@@ -633,6 +648,13 @@ class MainAssistant:
                             
                             if success:
                                 print(f"✅ [DEBUG] grammar_notation创建成功")
+                                # 记录到 session_state 以便返回给前端
+                                self.session_state.add_created_grammar_notation(
+                                    text_id=current_sentence.text_id,
+                                    sentence_id=current_sentence.sentence_id,
+                                    grammar_id=grammar_rule_id,
+                                    marked_token_ids=token_indices
+                                )
                                 print(f"🔍 [DEBUG] ========== 新语法grammar notation创建完成 ==========")
                             else:
                                 print(f"❌ [DEBUG] grammar_notation创建失败")
@@ -727,6 +749,14 @@ class MainAssistant:
                                     vocab_id=vocab_id
                                 )
                                 print(f"✅ [DEBUG] 新词汇 vocab_notation创建结果: {v_ok}")
+                                if v_ok:
+                                    # 记录到 session_state
+                                    self.session_state.add_created_vocab_notation(
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        token_id=token_id,
+                                        vocab_id=vocab_id
+                                    )
                             else:
                                 print("⚠️ [DEBUG] 无法创建新词汇 vocab notation：token_id为空")
                         except Exception as vn_err:

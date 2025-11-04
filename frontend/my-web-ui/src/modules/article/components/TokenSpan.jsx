@@ -18,6 +18,7 @@ export default function TokenSpan({
   selectedTokenIds,
   activeSentenceIndex,
   isDraggingRef,
+  wasDraggingRef,
   tokenRefsRef,
   hasExplanation,
   getExplanation,
@@ -187,8 +188,15 @@ export default function TokenSpan({
           }
         }}
         onClick={(e) => { 
+          // 如果正在拖拽或刚结束拖拽，完全跳过点击处理（避免拖拽结束时误触发切换）
+          if (isDraggingRef.current || wasDraggingRef.current) {
+            console.log('⏭️ [TokenSpan] onClick blocked - dragging or just finished dragging')
+            e.preventDefault()
+            e.stopPropagation()
+            return
+          }
           selOnClick()
-          if (!isDraggingRef.current && selectable) { 
+          if (selectable) { 
             e.preventDefault(); 
             e.stopPropagation(); 
             addSingle(sentenceIdx, token) 

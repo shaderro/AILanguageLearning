@@ -27,6 +27,54 @@
         "text_id": 1,
         "sentence_id": 13,
         "explanation_context": "{\"explanation\": \"这句话是一个复合句，由两个分句组成。第一个分句 'Auch dieser Junge war ein guter Grund, sich von den Potters fernzuhalten' 表达了一个原因，第二个分句 'mit einem solchen Kind sollte ihr Dudley nicht in Berührung kommen' 说明了基于这个原因应采取的行动。两个分句通过分号连接，共同构成一个完整的逻辑关系。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 2,
+        "explanation_context": "{\"explanation\": \"在这个句子中，复合句结构由主句 'Niemand wäre auf die Idee gekommen' 和两个从句组成。第一个从句 'sie könnten sich in eine merkwürdige und geheimnisvolle Geschichte verstricken' 解释了没有人想到的内容，第二个从句 'denn mit solchem Unsinn wollten sie nichts zu tun haben' 通过 'denn' 连接，提供了原因解释为什么没有人想到这一点。整个"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 32,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，包含一个主句和一个从句。从句'Während er in Richtung Stadt fuhr'表示时间背景，描述他开车进城的同时；主句'hatte er nur noch den großen Auftrag...im Sinn'表达他的主要想法，而关系从句'der heute hoffentlich eintreffen würde'进一步说明这个订单的情况。整个句子通过从句的嵌套，清晰地展现了动作、思想和期望之间的逻辑关系。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 36,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由主句 'Mr Dursley konnte Leute nicht ausstehen' 和从句 'die sich komisch anzogen – wie sich die jungen Leute herausputzten!' 组成。从句用破折号连接，进一步解释主句中提到的 'Leute'，说明这些人是如何穿着古怪的，具体指年轻人打扮自己的方式。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 46,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由三个分句组成：主句 'Er bemerkte die Eulen nicht... wohl aber die Leute unten auf der Straße' 描述他注意到什么，两个从句 'die am helllichten Tage vorbeischossen' 和 'wie eine Eule nach der andern über ihre Köpfe hinwegflog' 分别补充说明猫头鹰和人们观看的动作，通过分号连接，使描述更"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 42,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由主句 'Doch dann fiel Mr Dursley plötzlich ein' 和从句 'dass dies wohl eine verrückte Verkleidung sein musste' 组成，从句通过连接词 'dass' 引入，说明 Mr Dursley 突然想到的内容。之后，破折号后的部分 'die Leute sammelten offenbar für irgendetwas … ja, so mus"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 40,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由主句 'Erzürnt stellte Mr Dursley fest' 和两个从句组成：第一个从句 'dass einige von ihnen überhaupt nicht jung waren' 是宾语从句，说明 Dursley 先生发现的内容；第二个从句 'dieser Mann dort musste älter sein als er und trug einen smaragdgrünen Umhang' 是并列从句，进一步描述具体观察。整个句子"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 51,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由两个并列的主句构成，用连词'und'连接。第一个主句描述了他午休前的心情（'Bis zur Mittagspause war er glänzender Laune'），第二个主句描述了他的两个意图：散步和买糕点（'wollte sich...vertreten und...einen Krapfen holen'）。整个句子通过并列结构清晰地表达了时间顺序和动作的连贯性。\""
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 9,
+        "explanation_context": "{\"explanation\": \"这个句子包含两个分句，用分号连接。第一个分句'Mrs Potter war die Schwester von Mrs Dursley'说明两人的姐妹关系，第二个分句'die beiden hatten sich schon seit etlichen Jahren nicht mehr gesehen'通过'doch'转折，说明她们多年未见的事实。两个分句共同构成了完整的语义。\"}"
       }
     ],
     "source": "qa",
@@ -69,6 +117,12 @@
         "text_id": 1,
         "sentence_id": 6,
         "explanation_context": "{\"explanation\": \"在这句话中，'Dursleys' 是复数形式，表示德思礼一家人，而不是单个人。它通过添加 '-s' 构成复数，这是德语名词复数的一种常见方式，用于表示多个家庭成员。\"}"
+      },
+      {
+        "rule_id": 3,
+        "text_id": 1,
+        "sentence_id": 46,
+        "explanation_context": "{\"explanation\": \"在这句话中，名词复数形式的应用体现在'Eulen'（猫头鹰）和'Köpfe'（头）上。'Eulen'是'Eule'（猫头鹰）的复数形式，表示多只猫头鹰在白天飞过；'Köpfe'是'Kopf'（头）的复数形式，描述街上的人们抬头仰望时多个头部动作。这些复数形式帮助表达句子中多个对象的存在，使"
       }
     ],
     "source": "qa",
@@ -105,6 +159,27 @@
         "text_id": 1,
         "sentence_id": 13,
         "explanation_context": "{\"explanation\": \"在这句话中，'sich fernzuhalten' 是带zu的不定式结构，它表示'远离'这个动作本身，而不是某个具体时间发生的动作。这里它说明了'远离Potters一家'是'ein guter Grund'（一个好理由）的内容，使得理由更加明确完整。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 6,
+    "rule_name": "时间状语从句结构",
+    "rule_summary": "由连词Während引导的时间状语从句，结构为：连词 + 主语 + 方向状语 + 谓语，为主句提供时间背景。",
+    "examples": [
+      {
+        "rule_id": 6,
+        "text_id": 1,
+        "sentence_id": 32,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'Während er in Richtung Stadt fuhr' 是一个时间状语从句，它描述了主句动作发生的时间背景。具体来说，这个从句告诉我们，'他'在开车前往城市的过程中，心里只想着那个大订单。从句通过'während'（在...期间）连接，明确了主句动作的时间范围。\"}"
+      },
+      {
+        "rule_id": 6,
+        "text_id": 1,
+        "sentence_id": 51,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'Bis zur Mittagspause' 作为时间状语从句结构，表示动作发生的时间范围。它说明了'他心情很好'的状态持续到午休时间为止，为后面的主要动作'散步和买甜甜圈'提供了时间背景。\"}"
       }
     ],
     "source": "qa",
