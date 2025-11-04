@@ -159,6 +159,54 @@ class AskedToken(Base):
         UniqueConstraint('user_id', 'text_id', 'sentence_id', 'sentence_token_id', 'type', name='uq_asked_token_user_text_sentence_token_type')
     )
 
+class VocabNotation(Base):
+    __tablename__ = 'vocab_notations'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(255), nullable=False)
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
+    sentence_id = Column(Integer, nullable=False)
+    token_id = Column(Integer, nullable=False)  # sentence_token_id
+    vocab_id = Column(Integer, ForeignKey('vocab_expressions.vocab_id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['text_id', 'sentence_id'],
+            ['sentences.text_id', 'sentences.sentence_id'],
+            ondelete='CASCADE'
+        ),
+        UniqueConstraint('user_id', 'text_id', 'sentence_id', 'token_id', name='uq_vocab_notation')
+    )
+    
+    # 关系
+    vocab = relationship('VocabExpression', backref='notations')
+    text = relationship('OriginalText', backref='vocab_notations')
+
+class GrammarNotation(Base):
+    __tablename__ = 'grammar_notations'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(255), nullable=False)
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
+    sentence_id = Column(Integer, nullable=False)
+    grammar_id = Column(Integer, ForeignKey('grammar_rules.rule_id', ondelete='CASCADE'))
+    marked_token_ids = Column(JSON, nullable=False, default=[])
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['text_id', 'sentence_id'],
+            ['sentences.text_id', 'sentences.sentence_id'],
+            ondelete='CASCADE'
+        ),
+        UniqueConstraint('user_id', 'text_id', 'sentence_id', name='uq_grammar_notation')
+    )
+    
+    # 关系
+    grammar_rule = relationship('GrammarRule', backref='notations')
+    text = relationship('OriginalText', backref='grammar_notations')
+
 class User(Base):
     __tablename__ = 'users'
     

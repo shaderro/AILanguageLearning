@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import json
@@ -6,20 +6,29 @@ import requests
 import uuid
 from datetime import datetime
 
-# 导入自定义模块
-from models import ApiResponse
-from services import data_service
-from utils import create_success_response, create_error_response
+# 首先设置路径
 import os
 import sys
 
-# 添加backend路径到sys.path
-CURRENT_DIR = os.path.dirname(__file__)
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..', '..', '..'))
 BACKEND_DIR = os.path.join(REPO_ROOT, 'backend')
-for p in [REPO_ROOT, BACKEND_DIR]:
+
+# 添加路径到 sys.path
+for p in [REPO_ROOT, BACKEND_DIR, CURRENT_DIR]:
     if p not in sys.path:
         sys.path.insert(0, p)
+
+# 切换工作目录到项目根目录，确保数据库路径正确
+original_cwd = os.getcwd()
+os.chdir(REPO_ROOT)
+print(f"[OK] 工作目录已切换: {original_cwd} -> {REPO_ROOT}")
+
+# 导入自定义模块（现在使用绝对路径导入）
+sys.path.insert(0, CURRENT_DIR)
+from models import ApiResponse
+from services import data_service
+from utils import create_success_response, create_error_response
 
 # 导入预处理模块
 try:
@@ -238,6 +247,30 @@ if notation_router:
     app.include_router(notation_router)
     print("[OK] 注册新的标注API路由: /api/v2/notations")
 
+# 注册文章API路由
+try:
+    from backend.api.text_routes import router as text_router
+    app.include_router(text_router)
+    print("[OK] 注册文章API路由: /api/v2/texts")
+except ImportError as e:
+    print(f"Warning: Could not import text_routes: {e}")
+
+# 注册词汇API路由
+try:
+    from backend.api.vocab_routes import router as vocab_router
+    app.include_router(vocab_router)
+    print("[OK] 注册词汇API路由: /api/v2/vocab")
+except ImportError as e:
+    print(f"Warning: Could not import vocab_routes: {e}")
+
+# 注册语法API路由
+try:
+    from backend.api.grammar_routes import router as grammar_router
+    app.include_router(grammar_router)
+    print("[OK] 注册语法API路由: /api/v2/grammar")
+except ImportError as e:
+    print(f"Warning: Could not import grammar_routes: {e}")
+
 @app.get("/")
 async def root():
     return {"message": "AI Language Learning API"}
@@ -246,22 +279,116 @@ async def root():
 async def health_check():
     return {"status": "healthy", "message": "API is running"}
 
+@app.get("/api/debug/db-info")
+async def debug_db_info():
+    """调试端点：显示数据库连接信息"""
+    from database_system.database_manager import DatabaseManager
+    import sqlite3
+    import os
+    
+    db_manager = DatabaseManager('development')
+    engine = db_manager.get_engine()
+    db_url = str(engine.url)
+    
+    # 提取文件路径
+    db_path = db_url.replace('sqlite:///', '')
+    if db_path.startswith('/') and ':' in db_path:
+        db_path = db_path[1:]
+    
+    # 获取绝对路径
+    abs_path = os.path.abspath(db_path)
+    
+    info = {
+        "db_url": db_url,
+        "db_path": db_path,
+        "abs_path": abs_path,
+        "cwd": os.getcwd(),
+        "exists": os.path.exists(db_path),
+        "tables": []
+    }
+    
+    if os.path.exists(db_path):
+        conn = sqlite3.connect(db_path)
+        tables = [t[0] for t in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+        info["tables"] = tables
+        info["file_size"] = os.path.getsize(db_path)
+        conn.close()
+    
+    return info
+
 # ==================== Session Management API ====================
 # 这些API原本在server_frontend_mock.py中，现在添加到主服务器以支持前端功能
 
-# 简单的会话状态存储（内存中）
-session_state = {
-    "current_sentence": None,
-    "current_selected_token": None,
-    "current_input": None
-}
+# 初始化全局 SessionState（使用完整的 SessionState 类）
+from backend.assistants.chat_info.session_state import SessionState
+from backend.assistants.chat_info.selected_token import SelectedToken
+from backend.data_managers.data_classes_new import Sentence as NewSentence
+
+session_state = SessionState()
+print("[OK] SessionState singleton initialized")
+
+# 初始化全局 DataController
+from backend.data_managers import data_controller
+
+# 数据文件路径
+DATA_DIR = os.path.join(BACKEND_DIR, "data", "current")
+GRAMMAR_PATH = os.path.join(DATA_DIR, "grammar.json")
+VOCAB_PATH = os.path.join(DATA_DIR, "vocab.json")
+TEXT_PATH = os.path.join(DATA_DIR, "original_texts.json")
+DIALOGUE_RECORD_PATH = os.path.join(DATA_DIR, "dialogue_record.json")
+DIALOGUE_HISTORY_PATH = os.path.join(DATA_DIR, "dialogue_history.json")
+
+global_dc = data_controller.DataController(max_turns=100)
+print("✅ Global DataController created")
+
+# 加载数据
+try:
+    global_dc.load_data(
+        grammar_path=GRAMMAR_PATH,
+        vocab_path=VOCAB_PATH,
+        text_path=TEXT_PATH,
+        dialogue_record_path=DIALOGUE_RECORD_PATH,
+        dialogue_history_path=DIALOGUE_HISTORY_PATH
+    )
+    print("✅ Global data loaded successfully")
+    print(f"  - Grammar rules: {len(global_dc.grammar_manager.grammar_bundles)}")
+    print(f"  - Vocab items: {len(global_dc.vocab_manager.vocab_bundles)}")
+    print(f"  - Texts: {len(global_dc.text_manager.original_texts)}")
+except Exception as e:
+    print(f"⚠️ Global data loading failed: {e}")
+    print("⚠️ Continuing with empty data")
+
+# 异步保存数据的辅助函数
+def save_data_async(dc, grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path):
+    """后台异步保存数据"""
+    try:
+        print("\n💾 [Background] ========== 开始异步保存数据 ==========")
+        dc.save_data(
+            grammar_path=grammar_path,
+            vocab_path=vocab_path,
+            text_path=text_path,
+            dialogue_record_path=dialogue_record_path,
+            dialogue_history_path=dialogue_history_path
+        )
+        print("✅ [Background] 数据保存成功")
+    except Exception as e:
+        print(f"❌ [Background] 数据保存失败: {e}")
+        import traceback
+        print(traceback.format_exc())
 
 @app.post("/api/session/set_sentence")
 async def set_session_sentence(payload: dict):
     """设置当前句子上下文"""
     try:
-        print(f"[Session] Setting session sentence: {payload}")
-        session_state["current_sentence"] = payload
+        print(f"[Session] Setting session sentence")
+        sentence_data = payload.get('sentence', payload)
+        sentence = NewSentence(
+            text_id=sentence_data['text_id'],
+            sentence_id=sentence_data['sentence_id'],
+            sentence_body=sentence_data['sentence_body'],
+            tokens=tuple(sentence_data.get('tokens', []))
+        )
+        session_state.set_current_sentence(sentence)
         return {"success": True, "message": "Sentence context set"}
     except Exception as e:
         print(f"[Session] Error setting sentence: {e}")
@@ -271,8 +398,16 @@ async def set_session_sentence(payload: dict):
 async def set_session_selected_token(payload: dict):
     """设置选中的token"""
     try:
-        print(f"[Session] Setting selected token: {payload}")
-        session_state["current_selected_token"] = payload
+        print(f"[Session] Setting selected token")
+        token_data = payload.get('token', {})
+        selected_token = SelectedToken(
+            token_indices=token_data.get('token_indices', [-1]),
+            token_text=token_data.get('token_text', ''),
+            sentence_body=session_state.current_sentence.sentence_body if session_state.current_sentence else '',
+            sentence_id=session_state.current_sentence.sentence_id if session_state.current_sentence else 0,
+            text_id=session_state.current_sentence.text_id if session_state.current_sentence else 0
+        )
+        session_state.set_current_selected_token(selected_token)
         return {"success": True, "message": "Token context set"}
     except Exception as e:
         print(f"[Session] Error setting token: {e}")
@@ -282,92 +417,278 @@ async def set_session_selected_token(payload: dict):
 async def update_session_context(payload: dict):
     """一次性更新会话上下文（批量更新）"""
     try:
-        print(f"[Session] Updating session context (batch): {payload}")
-        
+        print(f"[SessionState] 批量更新上下文...")
         updated_fields = []
         
         # 更新 current_input
         if 'current_input' in payload:
-            session_state["current_input"] = payload['current_input']
+            session_state.set_current_input(payload['current_input'])
             updated_fields.append('current_input')
-            print(f"  ✓ current_input set")
         
-        # 更新句子信息
+        # 更新句子
         if 'sentence' in payload:
-            session_state["current_sentence"] = payload['sentence']
+            sentence_data = payload['sentence']
+            current_sentence = NewSentence(
+                text_id=sentence_data['text_id'],
+                sentence_id=sentence_data['sentence_id'],
+                sentence_body=sentence_data['sentence_body'],
+                tokens=tuple(sentence_data.get('tokens', []))
+            )
+            session_state.set_current_sentence(current_sentence)
             updated_fields.append('sentence')
-            print(f"  ✓ sentence set")
         
-        # 更新选中的 token
+        # 更新 token
         if 'token' in payload:
-            session_state["current_selected_token"] = payload['token']
-            updated_fields.append('token')
-            print(f"  ✓ token set")
+            token_data = payload['token']
+            current_sentence = session_state.current_sentence
+            if current_sentence and token_data:
+                if 'multiple_tokens' in token_data:
+                    # 多个token
+                    token_indices = token_data.get('token_indices', [])
+                    token_text = token_data.get('token_text', '')
+                    selected_token = SelectedToken(
+                        token_indices=token_indices,
+                        token_text=token_text,
+                        sentence_body=current_sentence.sentence_body,
+                        sentence_id=current_sentence.sentence_id,
+                        text_id=current_sentence.text_id
+                    )
+                else:
+                    # 单个token
+                    sentence_token_id = token_data.get('sentence_token_id')
+                    token_indices = [sentence_token_id] if sentence_token_id is not None else [-1]
+                    selected_token = SelectedToken(
+                        token_indices=token_indices,
+                        token_text=token_data.get('token_body', current_sentence.sentence_body),
+                        sentence_body=current_sentence.sentence_body,
+                        sentence_id=current_sentence.sentence_id,
+                        text_id=current_sentence.text_id
+                    )
+                session_state.set_current_selected_token(selected_token)
+                updated_fields.append('token')
         
-        print(f"[Session] Context updated: {', '.join(updated_fields)}")
         return {
-            "success": True,
-            "message": "Session context updated",
-            "updated_fields": updated_fields
+            'success': True,
+            'message': 'Session context updated',
+            'updated_fields': updated_fields
         }
     except Exception as e:
-        print(f"[Session] Error updating context: {e}")
-        return {"success": False, "error": str(e)}
+        import traceback
+        print(f"[SessionState] Error updating context: {e}")
+        print(f"[SessionState] Traceback:\n{traceback.format_exc()}")
+        return {'success': False, 'error': str(e)}
 
 @app.post("/api/session/reset")
 async def reset_session_state(payload: dict):
     """重置会话状态"""
     try:
         print(f"[Session] Resetting session state")
-        session_state["current_sentence"] = None
-        session_state["current_selected_token"] = None
-        session_state["current_input"] = None
+        session_state.reset()
         return {"success": True, "message": "Session state reset"}
     except Exception as e:
         print(f"[Session] Error resetting session: {e}")
         return {"success": False, "error": str(e)}
 
 @app.post("/api/chat")
-async def chat_with_assistant(payload: dict):
-    """聊天功能（简化版）"""
+async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
+    """聊天功能（完整 MainAssistant 集成）"""
     try:
-        print(f"[Chat] Chat endpoint called: {payload}")
+        print("\n" + "="*80)
+        print("💬 [Chat] ========== Chat endpoint called ==========")
+        print(f"📥 [Chat] Payload: {payload}")
+        print("="*80)
         
-        # 从会话状态获取上下文
-        current_sentence = session_state.get("current_sentence")
-        current_selected_token = session_state.get("current_selected_token")
-        current_input = session_state.get("current_input")
+        # 从 session_state 获取上下文信息
+        current_sentence = session_state.current_sentence
+        current_selected_token = session_state.current_selected_token
+        current_input = session_state.current_input
         
-        print(f"[Chat] Session State Info:")
+        print(f"📋 [Chat] Session State Info:")
         print(f"  - current_input: {current_input}")
-        print(f"  - current_sentence: {current_sentence}")
-        print(f"  - current_selected_token: {current_selected_token}")
+        print(f"  - current_sentence: {current_sentence.sentence_body[:50] if current_sentence else 'None'}...")
+        print(f"  - current_selected_token: {current_selected_token.token_text if current_selected_token else 'None'}")
         
-        # 获取用户问题
-        user_question = payload.get('user_question', '')
-        if not user_question:
+        # 验证必要的参数
+        if not current_sentence:
             return {
                 'success': False,
-                'error': 'No user question provided'
+                'error': 'No sentence context in session state. Please select a sentence first.'
             }
         
-        # 这里应该调用AI服务，现在返回模拟响应
-        response_text = f"这是对问题 '{user_question}' 的模拟回答。"
+        if not current_input:
+            current_input = payload.get('user_question', '')
+            if not current_input:
+                return {
+                    'success': False,
+                    'error': 'No user question provided'
+                }
+            session_state.set_current_input(current_input)
+        
+        # 准备 selected_text
+        selected_text = None
+        if current_selected_token and current_selected_token.token_text:
+            if hasattr(current_selected_token, 'token_indices') and current_selected_token.token_indices == [-1]:
+                selected_text = None
+            elif current_selected_token.token_text.strip() == current_sentence.sentence_body.strip():
+                selected_text = None
+            else:
+                selected_text = current_selected_token.token_text
+        
+        # 创建 MainAssistant 实例
+        from backend.assistants.main_assistant import MainAssistant
+        main_assistant = MainAssistant(
+            data_controller_instance=global_dc,
+            session_state_instance=session_state
+        )
+        
+        print(f"🚀 [Chat] 调用 MainAssistant...")
+        
+        # 先返回主回答，其余完整流程放后台
+        effective_sentence_body = selected_text if selected_text else current_sentence.sentence_body
+        print("🚀 [Chat] 生成主回答...")
+        ai_response = main_assistant.answer_question_function(
+            quoted_sentence=current_sentence,
+            user_question=current_input,
+            sentence_body=effective_sentence_body
+        )
+        print("✅ [Chat] 主回答就绪")
+        
+        # 同步执行：轻量级语法/词汇总结
+        grammar_summaries = []
+        vocab_summaries = []
+        grammar_to_add = []
+        vocab_to_add = []
+        try:
+            from backend.assistants import main_assistant as _ma_mod
+            prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+            _ma_mod.DISABLE_GRAMMAR_FEATURES = False
+            
+            main_assistant.handle_grammar_vocab_function(
+                quoted_sentence=current_sentence,
+                user_question=current_input,
+                ai_response=ai_response,
+                effective_sentence_body=effective_sentence_body
+            )
+            
+            # 组装摘要
+            if session_state.summarized_results:
+                from backend.assistants.chat_info.session_state import GrammarSummary, VocabSummary
+                for result in session_state.summarized_results:
+                    if isinstance(result, GrammarSummary):
+                        grammar_summaries.append({'name': result.grammar_rule_name, 'summary': result.grammar_rule_summary})
+                    elif isinstance(result, VocabSummary):
+                        vocab_summaries.append({'vocab': result.vocab})
+            
+            if session_state.grammar_to_add:
+                for g in session_state.grammar_to_add:
+                    grammar_to_add.append({'name': g.rule_name, 'explanation': g.rule_explanation})
+            
+            if session_state.vocab_to_add:
+                for v in session_state.vocab_to_add:
+                    vocab_id = None
+                    for vid, vbundle in global_dc.vocab_manager.vocab_bundles.items():
+                        if vbundle.vocab_body == getattr(v, 'vocab', None):
+                            vocab_id = vid
+                            break
+                    vocab_to_add.append({'vocab': getattr(v, 'vocab', None), 'vocab_id': vocab_id})
+        except Exception as lite_e:
+            print(f"⚠️ [Chat] 同步摘要生成失败: {lite_e}")
+        finally:
+            try:
+                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
+            except Exception:
+                pass
+        
+        # 后台执行完整流程
+        def _run_full_flow_background():
+            from backend.assistants import main_assistant as _ma_mod
+            prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+            try:
+                print("\n🛠️ [Background] 启动完整流程...")
+                _ma_mod.DISABLE_GRAMMAR_FEATURES = False
+                main_assistant.run(
+                    quoted_sentence=current_sentence,
+                    user_question=current_input,
+                    selected_text=selected_text
+                )
+                save_data_async(
+                    dc=global_dc,
+                    grammar_path=GRAMMAR_PATH,
+                    vocab_path=VOCAB_PATH,
+                    text_path=TEXT_PATH,
+                    dialogue_record_path=DIALOGUE_RECORD_PATH,
+                    dialogue_history_path=DIALOGUE_HISTORY_PATH
+                )
+                print("✅ [Background] 完整流程与保存完成")
+            except Exception as bg_e:
+                print(f"❌ [Background] 完整流程失败: {bg_e}")
+                import traceback
+                print(traceback.format_exc())
+            finally:
+                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
+        
+        background_tasks.add_task(_run_full_flow_background)
         
         return {
             'success': True,
             'data': {
-                'response': response_text,
-                'context': {
-                    'sentence': current_sentence,
-                    'selected_token': current_selected_token
-                }
-            },
-            'message': 'Chat response generated'
+                'ai_response': ai_response,
+                'grammar_summaries': grammar_summaries,
+                'vocab_summaries': vocab_summaries,
+                'grammar_to_add': grammar_to_add,
+                'vocab_to_add': vocab_to_add
+            }
         }
     except Exception as e:
-        print(f"[Chat] Error in chat: {e}")
+        import traceback
+        print(f"❌ [Chat] Error: {e}")
+        print(traceback.format_exc())
         return {"success": False, "error": str(e)}
+
+@app.get("/api/vocab-example-by-location")
+async def get_vocab_example_by_location(
+    text_id: int = Query(..., description="文章ID"),
+    sentence_id: Optional[int] = Query(None, description="句子ID"),
+    token_index: Optional[int] = Query(None, description="Token索引")
+):
+    """按位置查找词汇例句"""
+    try:
+        print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
+        
+        # 使用全局 DataController 查找例句
+        example = global_dc.vocab_manager.get_vocab_example_by_location(text_id, sentence_id, token_index)
+        
+        if example:
+            print(f"✅ [VocabExample] Found example")
+            
+            # 转换为字典格式返回
+            example_dict = {
+                'vocab_id': example.vocab_id,
+                'text_id': example.text_id,
+                'sentence_id': example.sentence_id,
+                'context_explanation': example.context_explanation,
+                'token_indices': getattr(example, 'token_indices', []),
+                'token_index': token_index  # 添加 token_index 供前端使用
+            }
+            
+            return {
+                'success': True,
+                'data': example_dict,
+                'message': f'Found vocab example'
+            }
+        else:
+            print(f"❌ [VocabExample] No example found")
+            return {
+                'success': False,
+                'data': None,
+                'message': f'No vocab example found'
+            }
+            
+    except Exception as e:
+        print(f"❌ [VocabExample] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
 
 @app.get("/api/vocab", response_model=ApiResponse)
 async def get_vocab_list():
@@ -443,7 +764,7 @@ async def get_stats():
 
 @app.get("/api/articles", response_model=ApiResponse)
 async def list_articles():
-    """获取文章列表摘要（兼容 *_processed_*.json 与 text_<id>/ 结构）"""
+    """获取文章列表摘要（优先使用文件系统，兼容 *_processed_*.json 与 text_<id>/ 结构）"""
     try:
         summaries = _collect_articles_summary()
         return create_success_response(
@@ -452,6 +773,22 @@ async def list_articles():
         )
     except Exception as e:
         return create_error_response(f"获取文章列表失败: {str(e)}")
+
+@app.get("/api/v2/texts/fallback")
+async def get_texts_fallback():
+    """文章列表回退接口（使用文件系统数据）"""
+    try:
+        summaries = _collect_articles_summary()
+        return {
+            "success": True,
+            "data": {
+                "texts": summaries,
+                "count": len(summaries),
+                "source": "filesystem"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/articles/{article_id}", response_model=ApiResponse)
 async def get_article_detail(article_id: int):
@@ -806,4 +1143,15 @@ async def unmark_token_asked(payload: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("\n" + "="*80)
+    print("🚀 启动数据库后端服务器（含 Chat/Session/MainAssistant）")
+    print("="*80)
+    print("📡 端口: 8001")
+    print("📊 功能:")
+    print("  ✅ Session 管理")
+    print("  ✅ Chat 聊天（MainAssistant）")
+    print("  ✅ Vocab/Grammar CRUD")
+    print("  ✅ Notation 管理（主 ORM）")
+    print("  ✅ Articles 上传与查看")
+    print("="*80 + "\n")
+    uvicorn.run(app, host="0.0.0.0", port=8001)

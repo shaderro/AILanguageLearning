@@ -1,14 +1,14 @@
 import json
 from typing import List, Dict
 from dataclasses import asdict, dataclass
-from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
-from data_managers.original_text_manager import OriginalTextManager
+from backend.data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
+from backend.data_managers.original_text_manager import OriginalTextManager
 import os
 import chardet
 
 # 导入新的数据结构类
 try:
-    from data_managers.data_classes_new import GrammarRule as NewGrammarRule, GrammarExample as NewGrammarExample
+    from backend.data_managers.data_classes_new import GrammarRule as NewGrammarRule, GrammarExample as NewGrammarExample
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False

@@ -107,27 +107,41 @@ class VocabNotationManager:
             return False
     
     def _create_vocab_notation_database(self, vocab_notation: VocabNotation) -> bool:
-        """数据库模式：创建词汇标注"""
+        """数据库模式：创建词汇标注（使用主 ORM）"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT OR REPLACE INTO vocab_notations 
-                    (user_id, text_id, sentence_id, token_id, vocab_id, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    vocab_notation.user_id,
-                    vocab_notation.text_id,
-                    vocab_notation.sentence_id,
-                    vocab_notation.token_id,
-                    vocab_notation.vocab_id,
-                    vocab_notation.created_at
-                ))
-                conn.commit()
-                print(f"[OK] [VocabNotation] Created vocab notation in database: {vocab_notation.text_id}:{vocab_notation.sentence_id}:{vocab_notation.token_id}")
+            # 使用主数据库的 ORM Session
+            from database_system.database_manager import DatabaseManager
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            
+            try:
+                from database_system.business_logic.crud.notation_crud import VocabNotationCRUD
+                crud = VocabNotationCRUD(session)
+                
+                # 检查是否已存在
+                if crud.exists(vocab_notation.user_id, vocab_notation.text_id, 
+                              vocab_notation.sentence_id, vocab_notation.token_id):
+                    print(f"[INFO] [VocabNotation] Already exists: {vocab_notation.text_id}:{vocab_notation.sentence_id}:{vocab_notation.token_id}")
+                    session.close()
+                    return True
+                
+                # 创建新标注
+                crud.create(
+                    user_id=vocab_notation.user_id,
+                    text_id=vocab_notation.text_id,
+                    sentence_id=vocab_notation.sentence_id,
+                    token_id=vocab_notation.token_id,
+                    vocab_id=vocab_notation.vocab_id
+                )
+                print(f"[OK] [VocabNotation] Created vocab notation in ORM: {vocab_notation.text_id}:{vocab_notation.sentence_id}:{vocab_notation.token_id}")
+                session.close()
                 return True
+            except Exception as e:
+                session.rollback()
+                session.close()
+                raise e
         except Exception as e:
-            print(f"[ERROR] [VocabNotation] Database creation failed: {e}")
+            print(f"[ERROR] [VocabNotation] ORM creation failed: {e}")
             return False
     
     def _create_vocab_notation_json(self, vocab_notation: VocabNotation) -> bool:
@@ -259,47 +273,49 @@ class VocabNotationManager:
             return set()
     
     def _get_vocab_notations_database(self, user_id: str, text_id: int) -> Set[str]:
-        """数据库模式：获取词汇标注键"""
+        """数据库模式：获取词汇标注键（使用主 ORM）"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT text_id, sentence_id, token_id
-                    FROM vocab_notations 
-                    WHERE user_id = ? AND text_id = ?
-                """, (user_id, text_id))
-                
-                keys = set()
-                for row in cursor.fetchall():
-                    t_id, s_id, tok_id = row
-                    keys.add(f"{t_id}:{s_id}:{tok_id}")
-                
-                print(f"[OK] [VocabNotation] Retrieved {len(keys)} vocab notations from database")
+            from database_system.database_manager import DatabaseManager
+            from database_system.business_logic.crud.notation_crud import VocabNotationCRUD
+            
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            
+            try:
+                crud = VocabNotationCRUD(session)
+                notations = crud.get_by_text(text_id, user_id)
+                keys = {f"{n.text_id}:{n.sentence_id}:{n.token_id}" for n in notations}
+                print(f"[OK] [VocabNotation] Retrieved {len(keys)} vocab notations from ORM")
+                session.close()
                 return keys
+            except Exception as e:
+                session.close()
+                raise e
         except Exception as e:
-            print(f"[ERROR] [VocabNotation] Database query failed: {e}")
+            print(f"[ERROR] [VocabNotation] ORM query failed: {e}")
             return set()
     
     def _get_vocab_notations_database_all_users(self, text_id: int) -> Set[str]:
-        """数据库模式：获取所有用户在指定文章下的词汇标注键"""
+        """数据库模式：获取所有用户在指定文章下的词汇标注键（使用主 ORM）"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT text_id, sentence_id, token_id
-                    FROM vocab_notations 
-                    WHERE text_id = ?
-                """, (text_id,))
-                
-                keys = set()
-                for row in cursor.fetchall():
-                    t_id, s_id, tok_id = row
-                    keys.add(f"{t_id}:{s_id}:{tok_id}")
-                
-                print(f"[OK] [VocabNotation] Retrieved {len(keys)} vocab notations from database (all users)")
+            from database_system.database_manager import DatabaseManager
+            from database_system.business_logic.crud.notation_crud import VocabNotationCRUD
+            
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            
+            try:
+                crud = VocabNotationCRUD(session)
+                notations = crud.get_by_text(text_id, user_id=None)
+                keys = {f"{n.text_id}:{n.sentence_id}:{n.token_id}" for n in notations}
+                print(f"[OK] [VocabNotation] Retrieved {len(keys)} vocab notations from ORM (all users)")
+                session.close()
                 return keys
+            except Exception as e:
+                session.close()
+                raise e
         except Exception as e:
-            print(f"[ERROR] [VocabNotation] Database query failed: {e}")
+            print(f"[ERROR] [VocabNotation] ORM query failed: {e}")
             return set()
     
     def _get_vocab_notations_json_all_users(self, text_id: int) -> Set[str]:

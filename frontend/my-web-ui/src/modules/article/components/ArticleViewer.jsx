@@ -28,7 +28,14 @@ export default function ArticleViewer({
   // const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId)
 
   const sentences = useMemo(() => {
+    console.log('🔍 [ArticleViewer] Processing data:', data)
+    console.log('🔍 [ArticleViewer] data.data:', data?.data)
     const raw = data?.data?.sentences
+    console.log('🔍 [ArticleViewer] sentences:', raw, 'isArray:', Array.isArray(raw))
+    if (Array.isArray(raw) && raw.length > 0) {
+      console.log('🔍 [ArticleViewer] First sentence:', raw[0])
+      console.log('🔍 [ArticleViewer] First sentence has tokens?', raw[0]?.tokens, 'length:', raw[0]?.tokens?.length)
+    }
     return Array.isArray(raw) ? raw : []
   }, [data])
 

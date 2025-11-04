@@ -15,7 +15,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003645",
+          "timestamp": "2025-11-04T15:18:16.372976",
           "data_type": "old"
         },
         {
@@ -29,7 +29,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003651",
+          "timestamp": "2025-11-04T15:18:16.372982",
           "data_type": "old"
         },
         {
@@ -43,7 +43,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003653",
+          "timestamp": "2025-11-04T15:18:16.372984",
           "data_type": "old"
         },
         {
@@ -57,7 +57,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003655",
+          "timestamp": "2025-11-04T15:18:16.372986",
           "data_type": "old"
         },
         {
@@ -71,7 +71,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003656",
+          "timestamp": "2025-11-04T15:18:16.372987",
           "data_type": "old"
         },
         {
@@ -85,7 +85,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003658",
+          "timestamp": "2025-11-04T15:18:16.372989",
           "data_type": "old"
         },
         {
@@ -99,7 +99,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003659",
+          "timestamp": "2025-11-04T15:18:16.372990",
           "data_type": "old"
         },
         {
@@ -113,7 +113,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003660",
+          "timestamp": "2025-11-04T15:18:16.372991",
           "data_type": "old"
         },
         {
@@ -127,7 +127,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003661",
+          "timestamp": "2025-11-04T15:18:16.372992",
           "data_type": "old"
         },
         {
@@ -141,7 +141,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003662",
+          "timestamp": "2025-11-04T15:18:16.372993",
           "data_type": "old"
         },
         {
@@ -153,11 +153,10 @@
             "sentence_id": 9,
             "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-11-02T17:40:50.003666",
-          "data_type": "new"
+          "timestamp": "2025-11-04T15:18:16.372995",
+          "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
@@ -168,10 +167,39 @@
             "sentence_id": 9,
             "sentence_body": "Mrs Potter war die \nSchwester von Mrs Dursley; doch die beiden hatten sich schon seit etlichen Jahren \nnicht mehr gesehen.",
             "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-04T15:18:16.372996",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "{'answer': 'getigerte 是形容词，来自名词 Tiger（老虎），加上后缀 -t 构成形容词，意思是“有虎纹的”。这里描述猫的花纹像老虎一样。'}",
+          "sentence_id": 23,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 23,
+            "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
+            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-11-02T17:40:50.003668",
+          "timestamp": "2025-11-04T15:18:16.373000",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "{'answer': 'getigerte 是形容词，来自名词 Tiger（老虎），加上后缀 -t 表示“有...花纹的”。getigerte Katze 就是“有虎斑纹的猫”，也就是我们常说的“虎斑猫”。'}",
+          "sentence_id": 23,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 23,
+            "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-11-04T15:18:16.373002",
           "data_type": "new"
         }
       ],

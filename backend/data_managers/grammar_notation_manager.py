@@ -110,29 +110,41 @@ class GrammarNotationManager:
             return False
     
     def _create_grammar_notation_database(self, grammar_notation: GrammarNotation) -> bool:
-        """数据库模式：创建语法标注"""
+        """数据库模式：创建语法标注（使用主 ORM）"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                # 将 marked_token_ids 列表转换为 JSON 字符串存储
-                marked_token_ids_json = json.dumps(grammar_notation.marked_token_ids)
-                cursor.execute("""
-                    INSERT OR REPLACE INTO grammar_notations 
-                    (user_id, text_id, sentence_id, grammar_id, marked_token_ids, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    grammar_notation.user_id,
-                    grammar_notation.text_id,
-                    grammar_notation.sentence_id,
-                    grammar_notation.grammar_id,
-                    marked_token_ids_json,
-                    grammar_notation.created_at
-                ))
-                conn.commit()
-                print(f"[OK] [GrammarNotation] Created grammar notation in database: {grammar_notation.text_id}:{grammar_notation.sentence_id}")
+            # 使用主数据库的 ORM Session
+            from database_system.database_manager import DatabaseManager
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            
+            try:
+                from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
+                crud = GrammarNotationCRUD(session)
+                
+                # 检查是否已存在
+                if crud.exists(grammar_notation.user_id, grammar_notation.text_id, 
+                              grammar_notation.sentence_id):
+                    print(f"[INFO] [GrammarNotation] Already exists: {grammar_notation.text_id}:{grammar_notation.sentence_id}")
+                    session.close()
+                    return True
+                
+                # 创建新标注
+                crud.create(
+                    user_id=grammar_notation.user_id,
+                    text_id=grammar_notation.text_id,
+                    sentence_id=grammar_notation.sentence_id,
+                    grammar_id=grammar_notation.grammar_id,
+                    marked_token_ids=grammar_notation.marked_token_ids
+                )
+                print(f"[OK] [GrammarNotation] Created grammar notation in ORM: {grammar_notation.text_id}:{grammar_notation.sentence_id}")
+                session.close()
                 return True
+            except Exception as e:
+                session.rollback()
+                session.close()
+                raise e
         except Exception as e:
-            print(f"[ERROR] [GrammarNotation] Database creation failed: {e}")
+            print(f"[ERROR] [GrammarNotation] ORM creation failed: {e}")
             return False
     
     def _create_grammar_notation_json(self, grammar_notation: GrammarNotation) -> bool:
@@ -261,47 +273,49 @@ class GrammarNotationManager:
             return set()
     
     def _get_grammar_notations_database(self, user_id: str, text_id: int) -> Set[str]:
-        """数据库模式：获取语法标注键"""
+        """数据库模式：获取语法标注键（使用主 ORM）"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT text_id, sentence_id
-                    FROM grammar_notations 
-                    WHERE user_id = ? AND text_id = ?
-                """, (user_id, text_id))
-                
-                keys = set()
-                for row in cursor.fetchall():
-                    t_id, s_id = row
-                    keys.add(f"{t_id}:{s_id}")
-                
-                print(f"[OK] [GrammarNotation] Retrieved {len(keys)} grammar notations from database")
+            from database_system.database_manager import DatabaseManager
+            from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
+            
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            
+            try:
+                crud = GrammarNotationCRUD(session)
+                notations = crud.get_by_text(text_id, user_id)
+                keys = {f"{n.text_id}:{n.sentence_id}" for n in notations}
+                print(f"[OK] [GrammarNotation] Retrieved {len(keys)} grammar notations from ORM")
+                session.close()
                 return keys
+            except Exception as e:
+                session.close()
+                raise e
         except Exception as e:
-            print(f"[ERROR] [GrammarNotation] Database query failed: {e}")
+            print(f"[ERROR] [GrammarNotation] ORM query failed: {e}")
             return set()
     
     def _get_grammar_notations_database_all_users(self, text_id: int) -> Set[str]:
-        """数据库模式：获取所有用户在指定文章下的语法标注键"""
+        """数据库模式：获取所有用户在指定文章下的语法标注键（使用主 ORM）"""
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT text_id, sentence_id
-                    FROM grammar_notations 
-                    WHERE text_id = ?
-                """, (text_id,))
-                
-                keys = set()
-                for row in cursor.fetchall():
-                    t_id, s_id = row
-                    keys.add(f"{t_id}:{s_id}")
-                
-                print(f"[OK] [GrammarNotation] Retrieved {len(keys)} grammar notations from database (all users)")
+            from database_system.database_manager import DatabaseManager
+            from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
+            
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            
+            try:
+                crud = GrammarNotationCRUD(session)
+                notations = crud.get_by_text(text_id, user_id=None)
+                keys = {f"{n.text_id}:{n.sentence_id}" for n in notations}
+                print(f"[OK] [GrammarNotation] Retrieved {len(keys)} grammar notations from ORM (all users)")
+                session.close()
                 return keys
+            except Exception as e:
+                session.close()
+                raise e
         except Exception as e:
-            print(f"[ERROR] [GrammarNotation] Database query failed: {e}")
+            print(f"[ERROR] [GrammarNotation] ORM query failed: {e}")
             return set()
     
     def _get_grammar_notations_json_all_users(self, text_id: int) -> Set[str]:

@@ -184,5 +184,20 @@
     ],
     "source": "qa",
     "is_starred": false
+  },
+  {
+    "rule_id": 7,
+    "rule_name": "形容词后缀 -t 的用法",
+    "rule_summary": "在德语中，名词 Tiger 加上后缀 -t 构成形容词 getigerte，表示“有...花纹的”，用于描述具有某种图案或特征的事物。",
+    "examples": [
+      {
+        "rule_id": 7,
+        "text_id": 1,
+        "sentence_id": 23,
+        "explanation_context": "{\"explanation\": \"在这句话中，'getigerte' 使用了形容词后缀 -t，表示'有虎斑纹的'，用来描述猫的特征。它由名词 'Tiger' 加上后缀 -t 构成，修饰 'Katze'，说明这是一只虎斑猫。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
   }
 ]

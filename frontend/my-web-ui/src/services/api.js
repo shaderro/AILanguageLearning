@@ -92,6 +92,21 @@ api.interceptors.response.use(
           };
         }
         
+        // 单个 Grammar Rule - 需要字段名映射并保持 { data: {...} } 格式
+        if (innerData.rule_id && innerData.name !== undefined) {
+          console.log("🔍 [DEBUG] Found single grammar rule, applying field mapping");
+          const mappedRule = {
+            ...innerData,
+            rule_name: innerData.name,           // 前端期望 rule_name
+            rule_summary: innerData.explanation  // 前端期望 rule_summary
+          };
+          console.log("🔍 [DEBUG] Mapped rule:", mappedRule);
+          // 返回包装格式，让前端可以用 response.data 访问
+          return {
+            data: mappedRule
+          };
+        }
+        
         if (innerData.grammars) {
           console.log("🔍 [DEBUG] Returning grammars array");
           return innerData.grammars;
@@ -117,6 +132,15 @@ api.interceptors.response.use(
             count: innerData.count,
             skip: innerData.skip,
             limit: innerData.limit
+          };
+        }
+        
+        // 单个 Text 详情 - 包含 text_id, text_title, sentences
+        if (innerData.text_id && innerData.sentences) {
+          console.log("🔍 [DEBUG] Found single text with sentences");
+          // 返回包装格式，让前端可以用 response.data 访问
+          return {
+            data: innerData
           };
         }
         
@@ -160,7 +184,23 @@ export const apiService = {
   
   // 获取词汇列表
   // Vocab
-  getVocabList: () => api.get(API_TARGET === 'mock' ? "/api/vocab" : "/api/v2/vocab/"),
+  getVocabList: async () => {
+    try {
+      if (API_TARGET === 'mock') {
+        return api.get("/api/vocab");
+      } else {
+        try {
+          return await api.get("/api/v2/vocab/");
+        } catch (dbError) {
+          console.log('🔄 [API] v2 vocab API失败，回退到兼容端点:', dbError.message);
+          return api.get("/api/vocab");
+        }
+      }
+    } catch (e) {
+      console.error('❌ [API] 获取词汇列表失败:', e);
+      throw e;
+    }
+  },
 
   // 获取单个词汇详情
   getVocabById: (id) => api.get(API_TARGET === 'mock' ? `/api/vocab/${id}` : `/api/v2/vocab/${id}/`),
@@ -184,7 +224,23 @@ export const apiService = {
   
   // 获取语法规则列表
   // Grammar
-  getGrammarList: () => api.get(API_TARGET === 'mock' ? "/api/grammar" : "/api/v2/grammar/"),
+  getGrammarList: async () => {
+    try {
+      if (API_TARGET === 'mock') {
+        return api.get("/api/grammar");
+      } else {
+        try {
+          return await api.get("/api/v2/grammar/");
+        } catch (dbError) {
+          console.log('🔄 [API] v2 grammar API失败，回退到兼容端点:', dbError.message);
+          return api.get("/api/grammar");
+        }
+      }
+    } catch (e) {
+      console.error('❌ [API] 获取语法列表失败:', e);
+      throw e;
+    }
+  },
 
   // 获取单个语法规则详情
   getGrammarById: (id) => api.get(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}/`),
@@ -252,13 +308,50 @@ export const apiService = {
   
   // 获取文章列表
   // Articles
-  getArticlesList: () => api.get(API_TARGET === 'mock' ? "/api/articles" : "/api/v2/texts/"),
+  getArticlesList: async () => {
+    try {
+      if (API_TARGET === 'mock') {
+        return api.get("/api/articles");
+      } else {
+        // 数据库模式：优先尝试 v2 API，失败则回退到文件系统
+        try {
+          const response = await api.get("/api/v2/texts/");
+          // 如果数据库返回空，回退到文件系统
+          if (response?.data?.texts && response.data.texts.length > 0) {
+            return response;
+          }
+          console.log('🔄 [API] 数据库为空，回退到文件系统');
+          return api.get("/api/articles");
+        } catch (dbError) {
+          console.log('🔄 [API] 数据库API失败，回退到文件系统:', dbError.message);
+          return api.get("/api/articles");
+        }
+      }
+    } catch (e) {
+      console.error('❌ [API] 获取文章列表失败:', e);
+      throw e;
+    }
+  },
 
   // 获取文章详情（包含句子）
-  getArticleById: (id) => 
-    api.get(API_TARGET === 'mock'
-      ? `/api/articles/${id}`
-      : `/api/v2/texts/${id}/?include_sentences=true`),
+  getArticleById: async (id) => {
+    try {
+      if (API_TARGET === 'mock') {
+        return api.get(`/api/articles/${id}`);
+      } else {
+        // 数据库模式：优先尝试 v2 API，失败则回退到文件系统
+        try {
+          return await api.get(`/api/v2/texts/${id}?include_sentences=true`);
+        } catch (dbError) {
+          console.log('🔄 [API] 数据库API失败，回退到文件系统:', dbError.message);
+          return api.get(`/api/articles/${id}`);
+        }
+      }
+    } catch (e) {
+      console.error('❌ [API] 获取文章详情失败:', e);
+      throw e;
+    }
+  },
 
   // 获取文章的句子列表
   getArticleSentences: (textId) => 

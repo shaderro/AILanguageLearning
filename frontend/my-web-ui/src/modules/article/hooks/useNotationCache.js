@@ -37,19 +37,22 @@ export function useNotationCache(articleId) {
       // 移除详细响应日志（功能已通过测试）
 
       // 处理grammar notations
+      console.log('🔍 [useNotationCache] Grammar response:', grammarResponse)
       if (grammarResponse && grammarResponse.data) {
-        const grammarData = Array.isArray(grammarResponse.data) ? grammarResponse.data : []
-        setGrammarNotations(grammarData)
-        // 移除详细日志（已通过测试）
+        const grammarData = grammarResponse.data.notations || grammarResponse.data
+        const grammarList = Array.isArray(grammarData) ? grammarData : []
+        console.log('📝 [useNotationCache] Loaded grammar notations:', grammarList.length, grammarList)
+        setGrammarNotations(grammarList)
 
         // 预加载所有grammar rules
         const grammarRulesMap = new Map()
-        for (const notation of grammarData) {
+        for (const notation of grammarList) {
           if (notation.grammar_id && !grammarRulesMap.has(notation.grammar_id)) {
             try {
               const ruleResponse = await apiService.getGrammarById(notation.grammar_id)
               if (ruleResponse && ruleResponse.data) {
                 grammarRulesMap.set(notation.grammar_id, ruleResponse.data)
+                console.log('📚 [useNotationCache] Cached grammar rule:', notation.grammar_id, ruleResponse.data.rule_name)
               }
             } catch (err) {
               console.warn('⚠️ [useNotationCache] Failed to load grammar rule:', notation.grammar_id, err)
@@ -57,7 +60,7 @@ export function useNotationCache(articleId) {
           }
         }
         setGrammarRulesCache(grammarRulesMap)
-        // 移除详细日志（已通过测试）
+        console.log('✅ [useNotationCache] Grammar cache ready:', grammarRulesMap.size, 'rules')
       }
 
       // 处理vocab notations（新API）

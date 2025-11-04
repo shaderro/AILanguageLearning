@@ -393,7 +393,7 @@ class MainAssistant:
                                 
                                 # 使用unified_notation_manager创建grammar notation
                                 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
-                                notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                                notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                                 print(f"🔍 [DEBUG] notation_manager创建成功: {type(notation_manager)}")
                                 
                                 print(f"🔍 [DEBUG] 调用mark_notation参数:")
@@ -518,7 +518,7 @@ class MainAssistant:
                             # 🔧 新增：为现有词汇创建 vocab notation（用于前端实时显示绿色下划线）
                             try:
                                 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
-                                notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                                notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                                 token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
                                 print(f"🔍 [DEBUG] 创建vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={existing_vocab_id}")
                                 if token_id is not None:

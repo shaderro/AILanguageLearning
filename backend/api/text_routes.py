@@ -154,13 +154,17 @@ async def get_text(
     - **include_sentences**: 是否包含句子
     """
     try:
+        print(f"[API] Getting text {text_id}, include_sentences={include_sentences}")
         text_manager = OriginalTextManagerDB(session)
         text = text_manager.get_text_by_id(text_id, include_sentences=include_sentences)
         
         if not text:
+            print(f"[API] Text {text_id} not found")
             raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
         
-        return {
+        print(f"[API] Found text {text_id}: {text.text_title}, sentences: {len(text.text_by_sentence)}")
+        
+        result = {
             "success": True,
             "data": {
                 "text_id": text.text_id,
@@ -172,15 +176,28 @@ async def get_text(
                         "sentence_body": s.sentence_body,
                         "difficulty_level": s.sentence_difficulty_level,
                         "grammar_annotations": list(s.grammar_annotations) if s.grammar_annotations else [],
-                        "vocab_annotations": list(s.vocab_annotations) if s.vocab_annotations else []
+                        "vocab_annotations": list(s.vocab_annotations) if s.vocab_annotations else [],
+                        "tokens": [
+                            {
+                                "text": t.token_body,
+                                "sentence_token_id": t.sentence_token_id,
+                                "is_text_token": t.token_type == 'TEXT'
+                            }
+                            for t in s.tokens
+                        ] if hasattr(s, 'tokens') and s.tokens else []
                     }
                     for s in text.text_by_sentence
                 ] if include_sentences else []
             }
         }
+        print(f"[API] Returning {len(result['data']['sentences'])} sentences")
+        return result
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[ERROR] Failed to get text {text_id}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

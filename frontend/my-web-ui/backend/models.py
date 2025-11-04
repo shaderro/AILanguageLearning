@@ -12,6 +12,14 @@ class VocabExample(BaseModel):
     token_indices: List[int]
 
 
+class GrammarExample(BaseModel):
+    """语法例句模型"""
+    rule_id: int
+    text_id: int
+    sentence_id: int
+    explanation_context: str
+
+
 class Vocab(BaseModel):
     """词汇模型"""
     vocab_id: int
@@ -27,7 +35,7 @@ class GrammarRule(BaseModel):
     rule_id: int
     rule_name: str
     rule_summary: str
-    examples: List[str]
+    examples: List[GrammarExample]  # 修复：应该是对象列表，不是字符串列表
     source: str
     is_starred: bool
 

@@ -1,14 +1,14 @@
 import json
 from typing import List, Dict
 from dataclasses import asdict
-from data_managers.data_classes import VocabExpression, VocabExpressionExample, VocabExpressionBundle
+from backend.data_managers.data_classes import VocabExpression, VocabExpressionExample, VocabExpressionBundle
 import os
 import chardet
-from data_managers.original_text_manager import OriginalTextManager
+from backend.data_managers.original_text_manager import OriginalTextManager
 
 # 导入新的数据结构类
 try:
-    from data_managers.data_classes_new import VocabExpression as NewVocabExpression, VocabExpressionExample as NewVocabExpressionExample
+    from backend.data_managers.data_classes_new import VocabExpression as NewVocabExpression, VocabExpressionExample as NewVocabExpressionExample
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False

@@ -1,14 +1,14 @@
 import json
 from typing import List, Dict
 from dataclasses import asdict, dataclass
-from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
-from data_managers.grammar_rule_manager import GrammarRuleManager
-from data_managers.vocab_manager import VocabManager
-from data_managers.original_text_manager import OriginalTextManager
-from data_managers.dialogue_record import DialogueRecordBySentence
-from data_managers.dialogue_record_new import DialogueRecordBySentenceNew
-from assistants.chat_info.dialogue_history import DialogueHistory
-from data_managers.data_classes import VocabExpressionBundle
+from backend.data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
+from backend.data_managers.grammar_rule_manager import GrammarRuleManager
+from backend.data_managers.vocab_manager import VocabManager
+from backend.data_managers.original_text_manager import OriginalTextManager
+from backend.data_managers.dialogue_record import DialogueRecordBySentence
+from backend.data_managers.dialogue_record_new import DialogueRecordBySentenceNew
+from backend.assistants.chat_info.dialogue_history import DialogueHistory
+from backend.data_managers.data_classes import VocabExpressionBundle
 
 # 新结构模式开关
 USE_NEW_STRUCTURE = True

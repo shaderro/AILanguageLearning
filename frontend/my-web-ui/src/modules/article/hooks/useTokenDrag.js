@@ -69,7 +69,6 @@ export function useTokenDrag({
     if (dragSentenceIndexRef.current !== sIdx) return
     if (!token?.selectable) return
 
-    console.log('🔀 [useTokenDrag] mouseEnter token:', { sIdx, tIdx, token: token?.token_body })
     hasMovedRef.current = true
 
     const start = dragStartIndexRef.current ?? tIdx
@@ -87,60 +86,18 @@ export function useTokenDrag({
         if (id) rangeSet.add(id)
       }
     }
-    console.log('📝 [useTokenDrag] Range selection:', Array.from(rangeSet))
+    
+    // 调试信息显示在标题栏
+    document.title = `drag: start=${start} end=${end} range=[${from}-${to}] count=${rangeSet.size}`
+    
     emitSelection(rangeSet, token?.token_body ?? '')
   }
 
   const handleMouseMove = (e) => {
-    if (!isDraggingRef.current) return
-    const sIdx = activeSentenceRef.current
-    if (sIdx == null) return
-
-    const start = dragStartPointRef.current
-    const current = { x: e.clientX, y: e.clientY }
-    const rect = {
-      left: Math.min(start.x, current.x),
-      right: Math.max(start.x, current.x),
-      top: Math.min(start.y, current.y),
-      bottom: Math.max(start.y, current.y),
-    }
-
-    const base = selectionBeforeDragRef.current ?? new Set()
-    const rangeSet = new Set(base)
-
-    const tokens = (sentences[sIdx]?.tokens || [])
-    const tokenRefsRow = tokenRefsRef.current[sIdx] || {}
-
-    const coveredIdx = []
-    for (let i = 0; i < tokens.length; i++) {
-      const tk = tokens[i]
-      if (!(tk && typeof tk === 'object' && tk.selectable)) continue
-      const el = tokenRefsRow[i]
-      if (!el) continue
-      const elRect = el.getBoundingClientRect()
-      if (rectsOverlap(rect, elRect)) {
-        coveredIdx.push(i)
-      }
-    }
-
-    let lastText = ''
-    if (coveredIdx.length > 0) {
-      const minIdx = Math.min(...coveredIdx)
-      const maxIdx = Math.max(...coveredIdx)
-      for (let i = minIdx; i <= maxIdx; i++) {
-        const tk = tokens[i]
-        if (tk && typeof tk === 'object' && tk.selectable) {
-          const id = getTokenId(tk, sIdx)
-          if (id) rangeSet.add(id)
-          lastText = tk?.token_body ?? lastText
-        }
-      }
-    }
-
-    hasMovedRef.current = true
-    // 写入标题显示拖拽中的选择
-    document.title = `dragging: ${rangeSet.size} tokens, base: ${base.size}`
-    emitSelection(rangeSet, lastText)
+    // 🔧 禁用：让 handleMouseEnterToken 完全负责拖拽选择逻辑
+    // handleMouseMove 的矩形覆盖判断会导致跨行拖拽时的选择错误
+    // 改为依赖 TokenSpan 的 onMouseEnter 事件来跟踪当前 token
+    return
   }
 
   const handleMouseUp = () => {

@@ -35,10 +35,12 @@ def get_db_session():
     """
     db_manager = DatabaseManager('development')
     session = db_manager.get_session()
+    print(f"[DEBUG] Created session, engine URL: {db_manager.get_engine().url}")
     try:
         yield session
         session.commit()  # 成功时提交事务
     except Exception as e:
+        print(f"[ERROR] Session error: {e}")
         session.rollback()  # 失败时回滚事务
         raise e
     finally:
@@ -156,12 +158,15 @@ async def get_grammar_rule(
     - **include_examples**: 是否包含例句
     """
     try:
+        print(f"[API] Getting grammar rule {rule_id}")
         grammar_manager = GrammarRuleManagerDB(session)
         rule = grammar_manager.get_rule_by_id(rule_id)
         
         if not rule:
+            print(f"[API] Grammar rule {rule_id} not found")
             raise HTTPException(status_code=404, detail=f"Grammar Rule ID {rule_id} not found")
         
+        print(f"[API] Found grammar rule: {rule.name}")
         return {
             "success": True,
             "data": {
@@ -184,6 +189,9 @@ async def get_grammar_rule(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[ERROR] Failed to get grammar rule {rule_id}: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

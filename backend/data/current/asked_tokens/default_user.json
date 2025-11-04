@@ -322,5 +322,14 @@
     "type": "token",
     "vocab_id": 28,
     "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 23,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 7
   }
 ]

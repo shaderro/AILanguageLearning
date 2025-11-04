@@ -3,11 +3,11 @@ import os
 import chardet  
 from typing import List, Dict
 from dataclasses import asdict, dataclass
-from data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
+from backend.data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 
 # 导入新的数据结构类
 try:
-    from data_managers.data_classes_new import Sentence as NewSentence, OriginalText as NewOriginalText
+    from backend.data_managers.data_classes_new import Sentence as NewSentence, OriginalText as NewOriginalText
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False

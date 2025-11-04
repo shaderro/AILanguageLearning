@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple, Optional, Union
-from data_managers.data_classes import Sentence
-from data_managers.data_classes_new import Sentence as NewSentence
-from assistants.chat_info.selected_token import SelectedToken
+from backend.data_managers.data_classes import Sentence
+from backend.data_managers.data_classes_new import Sentence as NewSentence
+from backend.assistants.chat_info.selected_token import SelectedToken
 import json
 import chardet
 import os

@@ -233,7 +233,9 @@
         "text_id": 1,
         "sentence_id": 23,
         "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
-        "grammar_annotations": [],
+        "grammar_annotations": [
+          7
+        ],
         "vocab_annotations": [
           21
         ]

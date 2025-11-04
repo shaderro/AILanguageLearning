@@ -43,9 +43,17 @@ class SentenceAdapter:
         # 处理tokens
         tokens = ()
         if include_tokens and model.tokens:
-            # TODO: 如果需要完整的Token信息，这里需要实现TokenAdapter
-            # 目前先留空，因为Token结构较复杂
-            tokens = ()
+            tokens = tuple([
+                TokenDTO(
+                    text_id=t.text_id,
+                    sentence_id=t.sentence_id,
+                    sentence_token_id=t.sentence_token_id,
+                    token_body=t.token_body,
+                    token_type=t.token_type.value if t.token_type else 'TEXT',
+                    difficulty_level=t.difficulty_level.value.lower() if t.difficulty_level else None
+                )
+                for t in sorted(model.tokens, key=lambda x: x.sentence_token_id)
+            ])
         
         # 处理difficulty_level（枚举 → 字符串）
         difficulty_level = None
@@ -118,7 +126,7 @@ class TextAdapter:
         sentences = []
         if include_sentences and model.sentences:
             sentences = [
-                SentenceAdapter.model_to_dto(s, include_tokens=False)
+                SentenceAdapter.model_to_dto(s, include_tokens=True)
                 for s in sorted(model.sentences, key=lambda x: x.sentence_id)
             ]
         

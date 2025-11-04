@@ -98,7 +98,10 @@ export default function SentenceContainer({
   const hasGrammar = hasGrammarNotation ? hasGrammarNotation(sentenceId) : false
   const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
   
-  // Debug logging removed to improve performance
+  // Debug logging
+  if (grammarNotations.length > 0) {
+    console.log('🔍 [SentenceContainer] Grammar notations for sentence', sentenceId, ':', grammarNotations)
+  }
 
   // Selection hook（句子级选择）
   const { className: selectionSentenceClass, onMouseEnter: selOnEnter, onMouseLeave: selOnLeave, onClick: selOnClick } = useSentenceSelectable({

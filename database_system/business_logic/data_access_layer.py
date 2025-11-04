@@ -8,6 +8,7 @@ from .crud import (
     VocabCRUD, GrammarCRUD, TextCRUD, TokenCRUD, 
     AskedTokenCRUD, StatsCRUD, UserCRUD
 )
+from .crud.notation_crud import VocabNotationCRUD, GrammarNotationCRUD
 
 
 class VocabDataAccessLayer:
@@ -270,6 +271,9 @@ class DataAccessManager:
         self.token = TokenDataAccessLayer(session)
         self.asked_token = AskedTokenDataAccessLayer(session)
         self.stats = StatsDataAccessLayer(session)
+        # 新增：Notation CRUD
+        self.vocab_notation_crud = VocabNotationCRUD(session)
+        self.grammar_notation_crud = GrammarNotationCRUD(session)
     
     def close(self):
         """关闭会话"""
