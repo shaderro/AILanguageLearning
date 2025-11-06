@@ -69,8 +69,35 @@ api.interceptors.response.use(
         
         // 检查常见的列表字段名
         if (innerData.vocabs) {
-          console.log("🔍 [DEBUG] Returning vocabs array");
-          return innerData.vocabs;
+          console.log("🔍 [DEBUG] Found vocabs, applying field mapping");
+          // 映射字段名：vocab_body -> vocab
+          const mappedVocabs = innerData.vocabs.map(v => ({
+            ...v,
+            vocab: v.vocab_body || v.vocab,  // 前端可能期望 vocab
+            id: v.vocab_id                    // 前端可能期望 id
+          }));
+          console.log("🔍 [DEBUG] Mapped vocabs:", mappedVocabs[0]);
+          return {
+            data: mappedVocabs,
+            count: innerData.count,
+            skip: innerData.skip,
+            limit: innerData.limit
+          };
+        }
+        
+        // 单个 Vocab - 需要字段名映射并保持 { data: {...} } 格式
+        if (innerData.vocab_id && innerData.vocab_body !== undefined) {
+          console.log("🔍 [DEBUG] Found single vocab, applying field mapping");
+          const mappedVocab = {
+            ...innerData,
+            vocab: innerData.vocab_body,     // 前端期望 vocab
+            id: innerData.vocab_id           // 前端期望 id
+          };
+          console.log("🔍 [DEBUG] Mapped vocab:", mappedVocab);
+          // 返回包装格式，让前端可以用 response.data 访问
+          return {
+            data: mappedVocab
+          };
         }
         
         // Grammar API - 需要字段名映射

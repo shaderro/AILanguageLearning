@@ -2,153 +2,89 @@
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 3,
-    "token_id": 22,
-    "vocab_id": 1,
-    "created_at": "2025-10-29T10:33:39.582647"
+    "sentence_id": 4,
+    "token_id": 9,
+    "vocab_id": 30,
+    "created_at": "2025-11-05T15:14:38.733670"
   },
   {
     "user_id": "default_user",
     "text_id": 1,
     "sentence_id": 5,
-    "token_id": 41,
-    "vocab_id": 2,
-    "created_at": "2025-10-29T10:33:39.582702"
+    "token_id": 9,
+    "vocab_id": 30,
+    "created_at": "2025-11-05T15:27:42.434688"
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 11,
-    "token_id": 11,
-    "vocab_id": 8,
-    "created_at": "2025-10-29T10:33:39.583152"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 20,
-    "token_id": 21,
-    "vocab_id": 9,
-    "created_at": "2025-10-29T10:33:39.583232"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 21,
-    "token_id": 34,
-    "vocab_id": 3,
-    "created_at": "2025-10-29T10:33:39.582745"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 25,
-    "token_id": 7,
-    "vocab_id": 4,
-    "created_at": "2025-10-29T10:33:39.582844"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 26,
+    "sentence_id": 7,
     "token_id": 5,
-    "vocab_id": 5,
-    "created_at": "2025-10-29T10:33:39.582893"
+    "vocab_id": 31,
+    "created_at": "2025-11-05T16:45:05.062028"
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 28,
-    "token_id": 13,
-    "vocab_id": 6,
-    "created_at": "2025-10-29T10:33:39.582974"
+    "sentence_id": 3,
+    "token_id": 22,
+    "vocab_id": 1,
+    "created_at": "2025-11-05T16:48:51.628165"
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 46,
-    "token_id": 20,
-    "vocab_id": 7,
-    "created_at": "2025-10-29T10:33:39.583068"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 48,
-    "token_id": 7,
-    "vocab_id": 12,
-    "created_at": "2025-10-29T10:33:39.583485"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 49,
-    "token_id": 13,
-    "vocab_id": 10,
-    "created_at": "2025-10-29T10:33:39.583317"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 50,
-    "token_id": 3,
-    "vocab_id": 13,
-    "created_at": "2025-10-29T10:33:39.583551"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 51,
-    "token_id": 31,
-    "vocab_id": 11,
-    "created_at": "2025-10-29T10:33:39.583417"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 11,
-    "token_id": 41,
-    "vocab_id": 24,
-    "created_at": "2025-11-01T15:51:37.651993"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 13,
-    "token_id": 1,
-    "vocab_id": 24,
-    "created_at": "2025-11-01T16:05:12.339821"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 42,
-    "token_id": 44,
-    "vocab_id": 26,
-    "created_at": "2025-11-02T16:27:58.158555"
+    "sentence_id": 10,
+    "token_id": 5,
+    "vocab_id": 32,
+    "created_at": "2025-11-05T17:04:16.427312"
   },
   {
     "user_id": "default_user",
     "text_id": 1,
     "sentence_id": 2,
-    "token_id": 24,
-    "vocab_id": 27,
-    "created_at": "2025-11-02T17:22:42.749236"
-  },
-  {
-    "user_id": "default_user",
-    "text_id": 1,
-    "sentence_id": 9,
     "token_id": 32,
-    "vocab_id": 28,
-    "created_at": "2025-11-02T17:40:49.980125"
+    "vocab_id": 33,
+    "created_at": "2025-11-05T17:10:20.280535"
   },
   {
     "user_id": "default_user",
     "text_id": 1,
-    "sentence_id": 23,
-    "token_id": 15,
-    "vocab_id": 21,
-    "created_at": "2025-11-04T15:18:12.653898"
+    "sentence_id": 32,
+    "token_id": 7,
+    "vocab_id": 34,
+    "created_at": "2025-11-05T17:16:36.309358"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 5,
+    "token_id": 30,
+    "vocab_id": 35,
+    "created_at": "2025-11-05T17:25:09.420606"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 40,
+    "token_id": 29,
+    "vocab_id": 36,
+    "created_at": "2025-11-05T17:28:12.480435"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 47,
+    "token_id": 11,
+    "vocab_id": 37,
+    "created_at": "2025-11-05T17:32:57.244000"
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 2,
+    "token_id": 39,
+    "vocab_id": 38,
+    "created_at": "2025-11-05T17:39:23.724285"
   }
 ]

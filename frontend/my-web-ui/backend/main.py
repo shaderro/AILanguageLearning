@@ -440,8 +440,15 @@ async def update_session_context(payload: dict):
         # 更新 token
         if 'token' in payload:
             token_data = payload['token']
-            current_sentence = session_state.current_sentence
-            if current_sentence and token_data:
+            
+            # 🔧 如果 token_data 为 None，明确清除 token 选择
+            if token_data is None:
+                print("[SessionState] 清除 token 选择（token = null）")
+                session_state.set_current_selected_token(None)
+                updated_fields.append('token (cleared)')
+            elif session_state.current_sentence:
+                # token_data 不为 None，设置新的 token
+                current_sentence = session_state.current_sentence
                 if 'multiple_tokens' in token_data:
                     # 多个token
                     token_indices = token_data.get('token_indices', [])
@@ -489,13 +496,134 @@ async def reset_session_state(payload: dict):
         print(f"[Session] Error resetting session: {e}")
         return {"success": False, "error": str(e)}
 
+def _sync_to_database():
+    """同步 JSON 数据到数据库"""
+    try:
+        from database_system.database_manager import DatabaseManager
+        from backend.data_managers import GrammarRuleManagerDB, VocabManagerDB
+        
+        db_manager = DatabaseManager('development')
+        session = db_manager.get_session()
+        
+        try:
+            grammar_db_mgr = GrammarRuleManagerDB(session)
+            vocab_db_mgr = VocabManagerDB(session)
+            
+            # 同步 Grammar Rules（只处理新增的）
+            synced_grammar = 0
+            for rule_id, bundle in global_dc.grammar_manager.grammar_bundles.items():
+                # GrammarBundle 结构：bundle.rule (GrammarRule), bundle.examples (list)
+                rule = bundle.rule if hasattr(bundle, 'rule') else bundle
+                rule_name = rule.name if hasattr(rule, 'name') else getattr(bundle, 'rule_name', None)
+                rule_explanation = rule.explanation if hasattr(rule, 'explanation') else getattr(bundle, 'rule_explanation', None)
+                
+                if not rule_name:
+                    continue
+                
+                # 检查是否已存在
+                existing = grammar_db_mgr.get_rule_by_name(rule_name)
+                if not existing:
+                    # 添加新的 grammar rule
+                    new_rule = grammar_db_mgr.add_new_rule(
+                        name=rule_name,
+                        explanation=rule_explanation or '',
+                        source='auto'
+                    )
+                    print(f"✅ [Sync] 新增 grammar rule: {rule_name} (ID: {new_rule.rule_id})")
+                    synced_grammar += 1
+                    
+                    # 同步 examples
+                    examples = bundle.examples if hasattr(bundle, 'examples') else []
+                    for ex in examples:
+                        grammar_db_mgr.add_grammar_example(
+                            rule_id=new_rule.rule_id,
+                            text_id=ex.text_id,
+                            sentence_id=ex.sentence_id,
+                            explanation_context=ex.explanation_context
+                        )
+            
+            # 同步 Vocab Expressions
+            synced_vocab = 0
+            for vocab_id, bundle in global_dc.vocab_manager.vocab_bundles.items():
+                # VocabExpressionBundle 可能直接包含字段或嵌套在 vocab_expression 中
+                vocab_body = getattr(bundle, 'vocab_body', None)
+                explanation = getattr(bundle, 'explanation', '')
+                
+                if not vocab_body:
+                    print(f"⚠️ [Sync] 跳过无 vocab_body 的 vocab (ID: {vocab_id})")
+                    continue
+                
+                # 🔧 获取 examples（兼容新旧结构）
+                # 新结构：vocab.examples (复数)
+                # 旧结构：bundle.example (单数)
+                examples = getattr(bundle, 'examples', None) or getattr(bundle, 'example', [])
+                
+                # 检查是否已存在
+                existing = vocab_db_mgr.get_vocab_by_body(vocab_body)
+                if not existing:
+                    # 添加新的 vocab
+                    new_vocab = vocab_db_mgr.add_new_vocab(
+                        vocab_body=vocab_body,
+                        explanation=explanation
+                    )
+                    print(f"✅ [Sync] 新增 vocab: {vocab_body} (ID: {new_vocab.vocab_id})")
+                    synced_vocab += 1
+                    
+                    # 同步 examples
+                    print(f"🔍 [Sync] Vocab {vocab_body} 有 {len(examples)} 个 examples")
+                    for ex in examples:
+                        try:
+                            vocab_db_mgr.add_vocab_example(
+                                vocab_id=new_vocab.vocab_id,
+                                text_id=ex.text_id,
+                                sentence_id=ex.sentence_id,
+                                context_explanation=getattr(ex, 'context_explanation', ''),
+                                token_indices=getattr(ex, 'token_indices', [])
+                            )
+                            print(f"  ✅ 添加 example: text_id={ex.text_id}, sentence_id={ex.sentence_id}")
+                        except Exception as ex_err:
+                            print(f"  ❌ Example 添加失败: {ex_err}")
+                else:
+                    # 已存在的 vocab，同步新的 examples（静默处理）
+                    existing_vocab_id = existing.vocab_id
+                    synced_examples = 0
+                    for ex in examples:
+                        try:
+                            vocab_db_mgr.add_vocab_example(
+                                vocab_id=existing_vocab_id,
+                                text_id=ex.text_id,
+                                sentence_id=ex.sentence_id,
+                                context_explanation=getattr(ex, 'context_explanation', ''),
+                                token_indices=getattr(ex, 'token_indices', [])
+                            )
+                            synced_examples += 1
+                        except Exception as ex_err:
+                            # 静默处理重复或其他错误
+                            pass
+                    if synced_examples > 0:
+                        print(f"ℹ️ [Sync] Vocab '{vocab_body}': 补充了 {synced_examples} 个 examples")
+            
+            session.commit()
+            print(f"✅ [Sync] 数据库同步完成: {synced_grammar} grammar rules, {synced_vocab} vocab expressions")
+            
+        finally:
+            session.close()
+            
+    except Exception as e:
+        print(f"❌ [Sync] 数据库同步失败: {e}")
+        import traceback
+        traceback.print_exc()
+
 @app.post("/api/chat")
 async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
     """聊天功能（完整 MainAssistant 集成）"""
     try:
+        import time
+        request_id = int(time.time() * 1000) % 10000
+        
         print("\n" + "="*80)
-        print("💬 [Chat] ========== Chat endpoint called ==========")
-        print(f"📥 [Chat] Payload: {payload}")
+        print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")
+        print(f"📥 [Chat #{request_id}] Payload: {payload}")
         print("="*80)
         
         # 从 session_state 获取上下文信息
@@ -503,10 +631,13 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
         current_selected_token = session_state.current_selected_token
         current_input = session_state.current_input
         
-        print(f"📋 [Chat] Session State Info:")
+        print(f"📋 [Chat #{request_id}] Session State Info:")
         print(f"  - current_input: {current_input}")
         print(f"  - current_sentence: {current_sentence.sentence_body[:50] if current_sentence else 'None'}...")
-        print(f"  - current_selected_token: {current_selected_token.token_text if current_selected_token else 'None'}")
+        print(f"  - current_selected_token: {current_selected_token}")
+        if current_selected_token:
+            print(f"    - token_text: {current_selected_token.token_text}")
+            print(f"    - token_indices: {current_selected_token.token_indices if hasattr(current_selected_token, 'token_indices') else 'N/A'}")
         
         # 验证必要的参数
         if not current_sentence:
@@ -553,51 +684,11 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
         )
         print("✅ [Chat] 主回答就绪")
         
-        # 同步执行：轻量级语法/词汇总结
+        # 准备返回的摘要数据（从后台任务获取）
         grammar_summaries = []
         vocab_summaries = []
         grammar_to_add = []
         vocab_to_add = []
-        try:
-            from backend.assistants import main_assistant as _ma_mod
-            prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
-            _ma_mod.DISABLE_GRAMMAR_FEATURES = False
-            
-            main_assistant.handle_grammar_vocab_function(
-                quoted_sentence=current_sentence,
-                user_question=current_input,
-                ai_response=ai_response,
-                effective_sentence_body=effective_sentence_body
-            )
-            
-            # 组装摘要
-            if session_state.summarized_results:
-                from backend.assistants.chat_info.session_state import GrammarSummary, VocabSummary
-                for result in session_state.summarized_results:
-                    if isinstance(result, GrammarSummary):
-                        grammar_summaries.append({'name': result.grammar_rule_name, 'summary': result.grammar_rule_summary})
-                    elif isinstance(result, VocabSummary):
-                        vocab_summaries.append({'vocab': result.vocab})
-            
-            if session_state.grammar_to_add:
-                for g in session_state.grammar_to_add:
-                    grammar_to_add.append({'name': g.rule_name, 'explanation': g.rule_explanation})
-            
-            if session_state.vocab_to_add:
-                for v in session_state.vocab_to_add:
-                    vocab_id = None
-                    for vid, vbundle in global_dc.vocab_manager.vocab_bundles.items():
-                        if vbundle.vocab_body == getattr(v, 'vocab', None):
-                            vocab_id = vid
-                            break
-                    vocab_to_add.append({'vocab': getattr(v, 'vocab', None), 'vocab_id': vocab_id})
-        except Exception as lite_e:
-            print(f"⚠️ [Chat] 同步摘要生成失败: {lite_e}")
-        finally:
-            try:
-                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
-            except Exception:
-                pass
         
         # 后台执行完整流程
         def _run_full_flow_background():
@@ -611,6 +702,23 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                     user_question=current_input,
                     selected_text=selected_text
                 )
+                
+                # 🔧 先检查内存中的 examples
+                print("\n🔍 [DEBUG] 检查内存中的 vocab examples:")
+                for vid, vb in list(global_dc.vocab_manager.vocab_bundles.items())[-3:]:
+                    # 兼容新旧结构
+                    exs = getattr(vb, 'examples', None) or getattr(vb, 'example', [])
+                    vocab_body = getattr(vb, 'vocab_body', 'unknown')
+                    print(f"  Vocab '{vocab_body}' (ID {vid}): {len(exs)} examples")
+                    if exs:
+                        for ex in exs[:2]:  # 只显示前2个
+                            print(f"    - text_id={ex.text_id}, sentence_id={ex.sentence_id}")
+                
+                # 🔧 同步到数据库（在内存数据还在时立即同步）
+                print("\n💾 [Background] 同步新数据到数据库...")
+                _sync_to_database()
+                
+                # 保存到 JSON 文件（保持兼容）
                 save_data_async(
                     dc=global_dc,
                     grammar_path=GRAMMAR_PATH,
@@ -619,6 +727,7 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                     dialogue_record_path=DIALOGUE_RECORD_PATH,
                     dialogue_history_path=DIALOGUE_HISTORY_PATH
                 )
+                
                 print("✅ [Background] 完整流程与保存完成")
             except Exception as bg_e:
                 print(f"❌ [Background] 完整流程失败: {bg_e}")

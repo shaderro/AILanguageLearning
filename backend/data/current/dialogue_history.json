@@ -15,7 +15,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372976",
+          "timestamp": "2025-11-05T17:39:24.250675",
           "data_type": "old"
         },
         {
@@ -29,7 +29,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372982",
+          "timestamp": "2025-11-05T17:39:24.250700",
           "data_type": "old"
         },
         {
@@ -43,7 +43,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372984",
+          "timestamp": "2025-11-05T17:39:24.250709",
           "data_type": "old"
         },
         {
@@ -57,7 +57,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372986",
+          "timestamp": "2025-11-05T17:39:24.250714",
           "data_type": "old"
         },
         {
@@ -71,7 +71,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372987",
+          "timestamp": "2025-11-05T17:39:24.250720",
           "data_type": "old"
         },
         {
@@ -85,7 +85,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372989",
+          "timestamp": "2025-11-05T17:39:24.250725",
           "data_type": "old"
         },
         {
@@ -99,7 +99,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372990",
+          "timestamp": "2025-11-05T17:39:24.250730",
           "data_type": "old"
         },
         {
@@ -113,7 +113,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372991",
+          "timestamp": "2025-11-05T17:39:24.250736",
           "data_type": "old"
         },
         {
@@ -127,7 +127,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372992",
+          "timestamp": "2025-11-05T17:39:24.250740",
           "data_type": "old"
         },
         {
@@ -141,7 +141,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372993",
+          "timestamp": "2025-11-05T17:39:24.250745",
           "data_type": "old"
         },
         {
@@ -155,7 +155,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372995",
+          "timestamp": "2025-11-05T17:39:24.250750",
           "data_type": "old"
         },
         {
@@ -169,7 +169,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.372996",
+          "timestamp": "2025-11-05T17:39:24.250755",
           "data_type": "old"
         },
         {
@@ -181,11 +181,10 @@
             "sentence_id": 23,
             "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-11-04T15:18:16.373000",
-          "data_type": "new"
+          "timestamp": "2025-11-05T17:39:24.250760",
+          "data_type": "old"
         },
         {
           "user": "这个词有什么词根词缀吗？",
@@ -196,10 +195,487 @@
             "sentence_id": 23,
             "sentence_body": "An der Einbiegung zum Ligusterweg stand eine getigerte Katze, aber \neine Straßenkarte war nicht zu sehen.",
             "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250765",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘holen’在德语中是‘取、拿、买’的意思。在这个句子里，‘einen Krapfen holen’意思是‘去买一个甜甜圈’。这是一个常用动词，表示去某个地方把某物带回来。'}",
+          "sentence_id": 51,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 51,
+            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250771",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘holen’在德语中是‘去拿、去取’的意思。在这个句子里，‘einen Krapfen holen’就是‘去拿一个甜甜圈’的意思。'}",
+          "sentence_id": 51,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 51,
+            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250775",
+          "data_type": "old"
+        },
+        {
+          "user": "这部分的语法结构是什么？",
+          "ai": "{'answer': \"这是一个并列结构，由连词 'dafür aber' 连接。前半句说 '几乎没有脖子'，后半句用 'dafür aber' 表示转折补偿，意思是 '但取而代之的是有一个非常大的胡子'。'dafür' 表示补偿，'aber' 表示转折，常一起使用。\"}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250781",
+          "data_type": "old"
+        },
+        {
+          "user": "这部分的语法结构是什么？",
+          "ai": "{'answer': \"这是一个并列句结构，由连词 'dafür aber' 连接两个对比的部分。前半句说 '几乎没有脖子'，后半句用 'dafür aber' 表示转折对比，意思是 '但却有一个非常大的胡子'。这种结构用来强调前后两个特征的对比关系。\"}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250786",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘bullig’在德语中形容人长得像公牛一样，指身材高大、粗壮、结实。在这个句子里描述一个人‘高大粗壮，几乎没脖子，但有大胡子’。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250791",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘bullig’在德语中形容人长得像公牛一样，表示身材高大、壮实、魁梧的意思。这里描述一个人又高又壮。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250796",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '你问的\"bullig\"这个词在引用的句子中并没有出现。请确认你想问的是哪个词或哪个部分的语法结构？比如你是想问\"besaß\"（拥有）的用法，还是\"wie notwendig gewesen wäre\"（比必要的多）这个比较结构？'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250800",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这句话描述Mrs Dursley的外貌和行为。主要结构是：主语(Mrs Dursley) + 两个并列特征(war dünn und blond) + 比较从句(besaß doppelt so viel Hals, wie...) + 非限制性定语从句(was...war) + 原因从句(denn so konnte sie...)。你是对哪个具体部分的结构有疑问？比如比较结构'doppelt so viel...wie'还是'was'引导的定语从句？\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250805",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这句话是德语复合句，包含一个主句和多个从句。主句是\"Mrs Dursley war dünn und blond und besaß doppelt so viel Hals\"（德思礼夫人很瘦，金发，脖子长度是正常的两倍），后面跟着比较从句\"wie notwendig gewesen wäre\"（比需要的长度），以及关系从句\"was allerdings sehr nützlich war\"（这实际上很有用），最后是原因从句\"denn so konnte sie...\"（因为这样她可以...）。整个句子通过连词和关系代词连接起来。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250810",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '你提到的‘bullig’在句子中并不存在。你引用的句子是德语，它的主要结构是：主句‘Mrs Dursley war dünn und blond und besaß doppelt so viel Hals, wie notwendig gewesen wäre’，后面接一个关系从句‘was allerdings sehr nützlich war’，再跟一个原因从句‘denn so konnte sie...’。你是对哪个具体部分（比如‘wie notwendig gewesen wäre’或‘was allerdings...’）的语法结构有疑问吗？'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250815",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘besaßen’是德语动词‘besitzen’的过去时形式，意思是‘拥有’或‘占有’。在这个句子里，‘Die Dursleys besaßen alles, was sie wollten’意思是‘德思礼一家拥有他们想要的一切’。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250819",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘besaßen’ 是德语动词 ‘besitzen’ 的过去时形式，意思是‘拥有’或‘占有’。在句子里指‘德思礼一家拥有他们想要的一切’。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250824",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话是什么意思？",
+          "ai": "{'answer': '这句话的意思是：德思礼夫妇拥有他们想要的一切，但他们也有一个秘密，而有人可能会发现这个秘密是他们最大的担忧。你是想问‘besaßen’这个动词的意思，还是整个句子的结构？'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250829",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话是什么意思？",
+          "ai": "{'answer': '这句话的意思是：德思礼夫妇拥有他们想要的一切，但他们也有一个秘密，而有人可能发现这个秘密是他们最大的担忧。你是想问\"besaßen\"这个动词的意思，还是整个句子的结构？'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250834",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘herstellte’是德语动词‘herstellen’的过去时形式，意思是‘制造、生产’。在这个句子里，它表示这家公司制造钻机。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 3,
+            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250840",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'herstellte 是德语动词 herstellen 的过去时形式，意思是“制造、生产”。在这个句子里，它表示这家公司制造钻机。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 3,
+            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250845",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个复合句，包含主句和两个从句：\\n1. 主句：Mrs Dursley war dünn und blond und besaß doppelt so viel Hals（德思礼夫人又瘦又金发，拥有的脖子是需要的两倍）\\n2. 关系从句：was allerdings sehr nützlich war（这确实很有用）\\n3. 原因从句：denn so konnte sie...（因为这样她可以...）\\n句子通过'was'和'denn'连接，描述德思礼夫人的外貌特征及其用途。\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250850",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这是一个复合句，主要结构是：主句（Mrs Dursley war...） + 非限制性定语从句（was...）。主句包含并列描述（dünn und blond）和比较结构（doppelt so viel...wie...），定语从句用was指代前面整句话的内容，并用denn引出原因说明。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250854",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个德语虚拟语气的主从复合句。主句是'Einfach unerträglich wäre es'（这简直无法忍受），从句是'wenn die Sache mit den Potters herauskommen würde'（如果Potter家的事情被曝光的话）。主句中动词'wäre'位于第二位，从句中动词'würde'位于句末，这是德语典型的主从句结构。\"}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 8,
+            "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250859",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个德语虚拟语气的主从复合句。主句是'Einfach unerträglich wäre es'（这简直无法忍受），从句是'wenn die Sache mit den Potters herauskommen würde'（如果Potter家的事情被曝光的话）。主句使用了动词前置的倒装结构，从句使用了wenn引导的条件从句和虚拟语气würde。\"}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 8,
+            "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250865",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'behauptete 是德语动词 behaupten 的过去式，意思是“声称、断言”。在句子中表示 Dursley 夫人声称自己没有姐妹。'}",
+          "sentence_id": 10,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 10,
+            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250870",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'behauptete 是德语动词 behaupten 的过去时形式，意思是“声称、断言”。在这个句子里，Mrs Dursley behauptete 就是“德思礼夫人声称”的意思。'}",
+          "sentence_id": 10,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 10,
+            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250875",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘verstricken’在这里是‘卷入、陷入’的意思。整句意思是：没人会想到他们可能卷入一个奇怪神秘的事件，因为他们不想和这种无聊的事扯上关系。这个词常用于表示无意中陷入困境或复杂情况。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250880",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘verstricken’在这里是‘卷入、陷入’的意思。整句意思是：没人会想到他们可能卷入一个奇怪神秘的事件，因为他们不想跟这种无稽之谈扯上关系。这个词常用于表示无意中陷入困境或复杂情况。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250886",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Richtung 是德语名词，意思是“方向”。在句子中“in Richtung Stadt”表示“朝着城市的方向”。'}",
+          "sentence_id": 32,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 32,
+            "sentence_body": "Während er in Richtung Stadt fuhr, hatte \ner nur noch den großen Auftrag für Bohrmaschinen im Sinn, der heute hoffentlich \neintreffen würde.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250890",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Richtung 是德语中的名词，意思是“方向”。在这个句子里，in Richtung Stadt 表示“朝着城市的方向”。'}",
+          "sentence_id": 32,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 32,
+            "sentence_body": "Während er in Richtung Stadt fuhr, hatte \ner nur noch den großen Auftrag für Bohrmaschinen im Sinn, der heute hoffentlich \neintreffen würde.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250895",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': \"gewesen是德语动词sein（是）的过去分词形式，意思是'曾经是'。在这个句子里，gewesen wäre表示'本来会是'，描述一种假设情况：'本来需要那么多的脖子'。\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250900",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'gewesen 是德语动词 sein（是）的过去分词形式，意思是“曾经是/存在过”。在这个句子里，gewesen wäre 构成虚拟式，表示假设情况：“...本来会是必要的”。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250906",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘nanu’是德语中的一个感叹词，相当于中文的‘哎呀’、‘咦’或‘嗯？’，用来表达惊讶、意外或疑问。在这里，Dursley先生突然注意到有人比他年纪还大，所以用‘nanu’表示惊讶。'}",
+          "sentence_id": 40,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 40,
+            "sentence_body": "Erzürnt stellte Mr Dursley fest, dass einige von ihnen überhaupt nicht \njung waren; nanu, dieser Mann dort musste älter sein als er und trug einen \nsmaragdgrünen Umhang!",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250911",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘nanu’是德语中的一个感叹词，表示惊讶或意外，类似于中文的‘哎呀’、‘咦’或‘怎么’。在这个句子里，它表达了Dursley先生发现有人比他年纪还大时的惊讶情绪。'}",
+          "sentence_id": 40,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 40,
+            "sentence_body": "Erzürnt stellte Mr Dursley fest, dass einige von ihnen überhaupt nicht \njung waren; nanu, dieser Mann dort musste älter sein als er und trug einen \nsmaragdgrünen Umhang!",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250916",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'überhaupt在这里表示“根本、完全”的意思，用来加强语气。整句话意思是：他们中大多数人根本从未见过一个，甚至在晚上也没有。'}",
+          "sentence_id": 47,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 47,
+            "sentence_body": "Die meisten von ihnen hatten überhaupt noch nie eine gesehen, nicht \neinmal nachts.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250921",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'überhaupt在这里是副词，意思是\"根本\"或\"完全\"，用来加强语气。整个句子的意思是：\"他们中的大多数人根本从未见过一个，甚至晚上也没有。\" 它强调了\"从未\"这个否定含义。'}",
+          "sentence_id": 47,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 47,
+            "sentence_body": "Die meisten von ihnen hatten überhaupt noch nie eine gesehen, nicht \neinmal nachts.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-05T17:39:24.250926",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'solchem 是德语指示代词 solch 的与格形式，意思是“这样的”或“这种的”。在句子中，solchem Unsinn 意思是“这种胡闹/这种无聊的事”，指代前文提到的“奇怪而神秘的故事”。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-11-04T15:18:16.373002",
+          "timestamp": "2025-11-05T17:39:24.250936",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘solchem’是德语指示代词‘solch’的与格形式，意思是‘这样的’或‘这种的’。在这里指代前文提到的‘merkwürdige und geheimnisvolle Geschichte’（奇怪而神秘的故事）。整句意思是：他们不想和这种胡闹扯上关系。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-11-05T17:39:24.250943",
           "data_type": "new"
         }
       ],

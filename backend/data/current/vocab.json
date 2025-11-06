@@ -14,6 +14,13 @@
         "token_indices": [
           22
         ]
+      },
+      {
+        "vocab_id": 1,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'herstellen' 没有直接出现，但根据上下文，它可能是一个误解或拼写错误。原句描述的是 Dursley 夫人伸长脖子窥视邻居的行为，因此 'herstellen' 可能意指 '伸长' 或 '伸出'，类似于 'recken'（伸长）的动作，用于强调她如何利用长脖子来观察周围。\"}",
+        "token_indices": []
       }
     ]
   },
@@ -546,6 +553,209 @@
         "context_explanation": "{\"explanation\": \"在这句话中，'etlichen' 表示 '许多' 或 '好几个'，用来强调时间很长。例如，'seit etlichen Jahren' 意思是 '自从好几年以来'，说明波特夫人和德思礼夫人已经很久没有见面了。\"}",
         "token_indices": [
           32
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 29,
+    "vocab_body": "holen",
+    "explanation": "{'explanation': 'Holen 是一个德语动词，意思是“取、拿、获得或带来”。它通常用于描述从某处获取物品或人，例如从商店买东西、从某个地方取回东西，或邀请某人。词性为及物动词，需要搭配宾语使用。常见用法包括：1. 表示获取物品，如“einen Kaffee holen”（取一杯咖啡）；2. 表示带来或接人，如“jemanden abholen”（接某人）；3. 在非正式语境中，表示购买或拿取。这个词强调主动去取的动作，而不是被动接收。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 29,
+        "text_id": 1,
+        "sentence_id": 51,
+        "context_explanation": "{\"explanation\": \"在这句话中，'holen' 的意思是 '去取' 或 '买来'。它描述了这个人想从街对面的面包店获取一个甜甜圈，具体动作是 'beim Bäcker über der Straße einen Krapfen holen'，翻译为 '从街对面的面包店取一个甜甜圈'。\"}",
+        "token_indices": [
+          49
+        ]
+      },
+      {
+        "vocab_id": 29,
+        "text_id": 1,
+        "sentence_id": 4,
+        "context_explanation": "{\"explanation\": \"在这个句子中，“dafür aber einen sehr großen Schnurrbart” 用来描述人物特征：尽管他“几乎没有脖子”（hatte fast keinen Hals），但作为补偿或替代，他有一个“非常大的胡子”。这里的“dafür aber”表示一种对比或平衡，强调虽然缺少脖子，却有大胡子作为突出特征。\"}",
+        "token_indices": [
+          22,
+          24,
+          26,
+          28,
+          30,
+          32
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 30,
+    "vocab_body": "bullig",
+    "explanation": "{'explanation': 'bullig 是一个德语形容词，意思是像公牛一样强壮、结实或魁梧的。它通常用来形容人（尤其是男性）的身体特征，强调肌肉发达、体型宽厚或力量感。这个词带有积极的含义，暗示健康或强壮，但有时也可能略带贬义，表示笨重或粗壮。在用法上，它可以作定语（如 ein bulliger Mann）或表语（如 Er ist bullig）。注意，bullig 是一个非正式词汇，常用于口语或描述性语境中。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 30,
+        "text_id": 1,
+        "sentence_id": 4,
+        "context_explanation": "{\"explanation\": \"在这句话中，'bullig' 描述的是一个人的体型，意思是像公牛一样强壮、粗壮或结实。结合句子 'Er war groß und bullig'（他高大而粗壮），它强调了这个人不仅高大，而且身体很健壮，给人一种力量感。\"}",
+        "token_indices": [
+          9
+        ]
+      },
+      {
+        "vocab_id": 30,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在句子中，'bullig' 描述的是德思礼夫人（Mrs Dursley）的脖子特征。原文说 'besaß doppelt so viel Hals, wie notwendig gewesen wäre'（意思是 '她的脖子比实际需要的多了一倍'），这暗示她的脖子粗壮或结实。'bullig' 在这里用来强调脖子的强壮或粗大，这有助于她 'den Hals über den Gartenzaun",
+        "token_indices": [
+          9
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 31,
+    "vocab_body": "besitzen",
+    "explanation": "{'explanation': 'besitzen 是一个德语动词，意思是“拥有”或“占有”。它表示某人或某物对某事物的所有权或控制权。这个词常用于描述拥有财产、物品、能力或特征。例如，\"Ich besitze ein Auto\" 意思是“我拥有一辆车”。besitzen 是一个规则动词，其变化形式为：ich besitze, du besitzt, er/sie/es besitzt, wir besitzen, ihr besitzt, sie/Sie besitzen。它也可以用于抽象概念，如“拥有知识”或“拥有技能”。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 31,
+        "text_id": 1,
+        "sentence_id": 7,
+        "context_explanation": "{\"explanation\": \"在这句话中，“besaßen”的意思是“拥有”或“持有”。它描述了德思礼一家拥有他们想要的一切东西，比如房子、汽车等。所以，“Die Dursleys besaßen alles, was sie wollten”可以理解为“德思礼一家拥有他们想要的一切”。\"}",
+        "token_indices": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 32,
+    "vocab_body": "behaupten",
+    "explanation": "{'explanation': 'behaupten 是一个德语动词，意思是\"声称\"、\"断言\"或\"主张\"。它用于表达某人坚持某个观点、事实或说法，通常带有主观性或可能缺乏充分证据。该词是及物动词，后面常接一个从句（如 dass 从句）或直接宾语。例如，在争论或陈述个人意见时使用。它没有明显的贬义或褒义，但根据语境可能暗示说话者的自信或固执。其他常见用法包括：behaupten, dass...（声称...）、etwas behaupten（主张某事）。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 32,
+        "text_id": 1,
+        "sentence_id": 10,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'behauptete' 的意思是声称或断言，表示达力夫人正在说一个她认为是真的但可能不是事实的事情。例如，她说 'sie gar keine Schwester hätte'（她根本没有姐妹），这强调了她的主观观点。\"}",
+        "token_indices": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 33,
+    "vocab_body": "verstricken",
+    "explanation": "{'explanation': 'verstricken 是一个德语动词，意思是“卷入、陷入或纠缠”，通常指某人无意中或被动地陷入某种复杂、困难或危险的情况。它还可以表示在物理上缠绕或纠结，比如线或绳索。这个词常用于描述人际关系、冲突或困境中，强调身不由己的状态。其词性为弱变化动词，过去式为 verstrickte，过去分词为 verstrickt。用法上，常与介词 in（表示陷入某种情况）搭配，例如 sich in etwas verstricken（卷入某事）。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 33,
+        "text_id": 1,
+        "sentence_id": 2,
+        "context_explanation": "{\"explanation\": \"在这句话中，'verstricken' 的意思是'卷入'或'陷入'，指的是他们（sie）无意中参与进了一个奇怪而神秘的故事（in eine merkwürdige und geheimnisvolle Geschichte）。整个句子表达的是：没有人会想到他们可能卷入这样一个故事，因为他们不想和这种无意义的事情（solchem Unsinn）有任何关系。\"}",
+        "token_indices": [
+          32
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 34,
+    "vocab_body": "richtung",
+    "explanation": "{'explanation': 'Richtung 是一个德语名词，意思是“方向”或“朝向”。它用于表示移动或面对的具体方位，例如在描述位置、路径或目标时。常见用法包括介词短语如“in Richtung”（朝着...方向），表示向某个地点或目标前进。此外，它还可以指代趋势或倾向，例如在抽象意义上表示某种发展方向。Richtung 是一个阴性名词，复数形式为 Richtungen。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 34,
+        "text_id": 1,
+        "sentence_id": 32,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Richtung' 表示方向，具体指 'in Richtung Stadt' 即 '朝着城市的方向'。它描述了动作的方向，说明他开车是朝着城市去的。\"}",
+        "token_indices": [
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 35,
+    "vocab_body": "gewesen",
+    "explanation": "{'explanation': \"Gewesen 是德语动词 sein (是，存在) 的第二分词形式，用于构成完成时态。它表示过去发生的动作或状态，相当于英语中的 'been'。\\n\\n用法：\\n- 在现在完成时中与助动词 haben 或 sein 连用，例如：Ich bin gewesen (我曾经是)。\\n- 在被动语态的完成时中表示过去的状态，例如：Es ist gemacht gewesen (它已经被完成了)。\\n- 作为独立分词使用，表示过去的条件或假设，例如：Wenn ich da gewesen wäre... (如果我在那里的话...)。\\n\\n词性：动词分词 (Verbpartizip)\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 35,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'gewesen' 是德语动词 'sein'（是）的过去分词形式，用于构成过去完成时态 'gewesen wäre'（would have been）。它表示一种假设或虚拟的情况：'wie notwendig gewesen wäre' 意思是 'as would have been necessary'，即 '像本来必要的那样'。这里用来强调德思礼夫人的脖子比实际需要的长度多了一倍，暗示这是一种夸张的描述。\"}",
+        "token_indices": [
+          30
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 36,
+    "vocab_body": "nanu",
+    "explanation": "{'explanation': 'nanu 是一个德语感叹词，用于表达惊讶、困惑或难以置信的情绪，类似于英语中的 \"huh?\"、\"what?\" 或 \"well, well\"。它通常用在口语中，表示说话者对某事感到意外或需要进一步确认。这个词没有固定的词性变化，常作为独立的感叹语使用。例如，当遇到出乎意料的情况时，人们可能会说 \"nanu\" 来表现自己的反应。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 36,
+        "text_id": 1,
+        "sentence_id": 40,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'nanu' 是一个表示惊讶或疑惑的感叹词，相当于英语中的 'well' 或 'hey'。它表达了 Mr Dursley 的意外情绪，因为他发现 'dieser Mann dort musste älter sein als er'（那个男人肯定比他还老），这让他感到吃惊。\"}",
+        "token_indices": [
+          29
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 37,
+    "vocab_body": "überhaupt",
+    "explanation": "{'explanation': 'überhaupt 是一个德语副词，主要有以下含义和用法：\\n1. 基本含义：表示“根本、完全、全然”，用于强调否定或疑问的语气，相当于英语中的“at all”。例如，在否定句中，它加强否定的程度，表示“一点也不”或“根本不”。\\n2. 用法：常用于否定句或疑问句中，以突出强调。在否定句中，它通常放在否定词（如 nicht）之前或之后，具体位置取决于句子结构。在疑问句中，它可以表示“究竟”或“到底”，用于加强疑问的语气。\\n3. 其他含义：在非正式语境中，überhaupt 还可以表示“总的来说”或“一般而言”，用于引出一般性陈述，但较少使用。\\n4. 词性：副词，不变化，可直接修饰动词、形容词或其他副词。\\n注意：überhaupt 是一个多功能词，其具体含义取决于上下文，但核心是强调语气。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 37,
+        "text_id": 1,
+        "sentence_id": 47,
+        "context_explanation": "{\"explanation\": \"在这句话中，“überhaupt” 用于强调否定，意思是“完全”或“压根儿”。它强调了“他们大多数人从未见过一只”的程度，即连一次都没有，结合“nicht einmal nachts”（甚至连晚上都没有）进一步强化了这种绝对否定的含义。\"}",
+        "token_indices": [
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 38,
+    "vocab_body": "solchem",
+    "explanation": "{'explanation': 'solchem 是德语指示代词 solcher 的与格（Dativ）形式，用于指代前面提到或暗示的某类事物或情况，通常带有强调或对比的意味。\\n\\n基本含义：\\n- 意为“这样的”、“那种的”，用于指代特定类型的事物、情况或性质\\n- 带有一定的强调语气，常表达“正是这种...”的含义\\n\\n词性：指示代词 (Demonstrativpronomen)\\n\\n用法特点：\\n- 必须与所修饰的名词在性、数、格上保持一致\\n- 在此形式中，solchem 是阳性/中性名词单数的与格形式\\n- 常用于书面语和正式场合\\n\\n语法形式：\\n- 原形：solcher (阳性单数主格)\\n- 变化形式会根据名词的性、数、格而变化\\n\\n功能：\\n- 可以替代形容词使用\\n- 用于避免重复提及前面已经说明的内容\\n- 帮助建立上下文之间的逻辑联系'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 38,
+        "text_id": 1,
+        "sentence_id": 2,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'solchem' 指的是前面提到的 'eine merkwürdige und geheimnisvolle Geschichte'（一个奇怪而神秘的故事），意思是他们不想和 '这种' 或 '那样的' 无意义的事情有任何关系。\"}",
+        "token_indices": [
+          39
         ]
       }
     ]

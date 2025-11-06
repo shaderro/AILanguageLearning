@@ -75,6 +75,12 @@
         "text_id": 1,
         "sentence_id": 9,
         "explanation_context": "{\"explanation\": \"这个句子包含两个分句，用分号连接。第一个分句'Mrs Potter war die Schwester von Mrs Dursley'说明两人的姐妹关系，第二个分句'die beiden hatten sich schon seit etlichen Jahren nicht mehr gesehen'通过'doch'转折，说明她们多年未见的事实。两个分句共同构成了完整的语义。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1,
+        "sentence_id": 8,
+        "explanation_context": "{\"explanation\": \"这是一个主从复合句，主句是'Einfach unerträglich wäre es'，从句是'wenn die Sache mit den Potters herauskommen würde'。从句以wenn引导，表示条件，整个句子结构是'如果...就会...'的关系。\"}"
       }
     ],
     "source": "qa",
@@ -195,6 +201,51 @@
         "text_id": 1,
         "sentence_id": 23,
         "explanation_context": "{\"explanation\": \"在这句话中，'getigerte' 使用了形容词后缀 -t，表示'有虎斑纹的'，用来描述猫的特征。它由名词 'Tiger' 加上后缀 -t 构成，修饰 'Katze'，说明这是一只虎斑猫。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 8,
+    "rule_name": "并列句转折结构",
+    "rule_summary": "使用连词 'dafür aber' 连接两个对比部分，表示转折关系，强调前后特征的对比",
+    "examples": [
+      {
+        "rule_id": 8,
+        "text_id": 1,
+        "sentence_id": 4,
+        "explanation_context": "{\"explanation\": \"在这句话中，'dafür aber' 连接了两个并列的描述：'fast keinen Hals'（几乎没有脖子）和 'einen sehr großen Schnurrbart'（一个非常大的胡子）。'dafür aber' 表示转折，强调虽然脖子很短，但胡子却很大，突出了这两个特征之间的对比关系。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 9,
+    "rule_name": "非限制性定语从句",
+    "rule_summary": "用was指代前面整句话的内容，作为非限制性定语从句",
+    "examples": [
+      {
+        "rule_id": 9,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'was allerdings sehr nützlich war' 是一个非限制性定语从句，它补充说明前面整个主句描述的情况（Mrs Dursley 拥有超长的脖子），指出这个特点实际上很有用。从句用逗号与主句隔开，去掉后不影响主句的基本意思，只是少了额外的解释。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 10,
+    "rule_name": "德语动词过去分词与虚拟式",
+    "rule_summary": "gewesen 是 sein 的过去分词，表示'曾经是/存在过'，与 wäre 结合构成虚拟式，用于表达假设情况。",
+    "examples": [
+      {
+        "rule_id": 10,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这句话中，'gewesen wäre' 使用了虚拟式过去完成时，表示一个假设的情况：佩妮姨妈其实并不需要这么长的脖子，但作者用虚拟式来强调这是一种夸张的想象。而 'konnte' 是直陈式过去时，描述她实际能够做到的动作——伸长脖子偷看邻居。\"}"
       }
     ],
     "source": "qa",

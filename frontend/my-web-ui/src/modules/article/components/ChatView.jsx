@@ -222,6 +222,10 @@ export default function ChatView({
               // 🔧 移除 global_token_id：后端只使用 sentence_token_id
             }
           }
+        } else {
+          // 🔧 重要：如果只选择了句子而没有token，必须明确清除旧的token
+          console.log('💬 [ChatView] 只选择了句子，清除 token 选择')
+          updatePayload.token = null
         }
         
         console.log('📤 [ChatView] 发送的完整payload:', JSON.stringify(updatePayload, null, 2))
@@ -742,6 +746,10 @@ export default function ChatView({
               // 🔧 移除 global_token_id：后端只使用 sentence_token_id
             }
           }
+        } else {
+          // 🔧 重要：如果只选择了句子而没有token，必须明确清除旧的token
+          console.log('💬 [ChatView] 只选择了句子，清除 token 选择')
+          updatePayload.token = null
         }
         
         console.log('📤 [ChatView] 发送的完整payload:', JSON.stringify(updatePayload, null, 2))
