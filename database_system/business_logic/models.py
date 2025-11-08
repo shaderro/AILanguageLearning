@@ -30,38 +30,52 @@ class VocabExpression(Base):
     __tablename__ = 'vocab_expressions'
 
     vocab_id = Column(Integer, primary_key=True, autoincrement=True)
-    vocab_body = Column(String(255), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    vocab_body = Column(String(255), nullable=False)
     explanation = Column(Text, nullable=False)
     source = Column(Enum(SourceType), default=SourceType.AUTO, nullable=False)
     is_starred = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint('user_id', 'vocab_body', name='uq_user_vocab_body'),
+    )
+
     examples = relationship('VocabExpressionExample', back_populates='vocab', cascade='all, delete-orphan')
     tokens = relationship('Token', back_populates='linked_vocab')
+    owner = relationship('User', backref='vocab_expressions')
 
 class GrammarRule(Base):
     __tablename__ = 'grammar_rules'
 
     rule_id = Column(Integer, primary_key=True, autoincrement=True)
-    rule_name = Column(String(255), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    rule_name = Column(String(255), nullable=False)
     rule_summary = Column(Text, nullable=False)
     source = Column(Enum(SourceType), default=SourceType.AUTO, nullable=False)
     is_starred = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint('user_id', 'rule_name', name='uq_user_rule_name'),
+    )
+
     examples = relationship('GrammarExample', back_populates='grammar_rule', cascade='all, delete-orphan')
+    owner = relationship('User', backref='grammar_rules')
 
 class OriginalText(Base):
     __tablename__ = 'original_texts'
 
     text_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
     text_title = Column(String(500), nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
     sentences = relationship('Sentence', back_populates='text', cascade='all, delete-orphan')
+    owner = relationship('User', backref='original_texts')
 
 class Sentence(Base):
     __tablename__ = 'sentences'

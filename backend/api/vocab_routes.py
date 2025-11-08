@@ -10,6 +10,10 @@ from pydantic import BaseModel, Field
 
 # 导入数据库管理器
 from database_system.database_manager import DatabaseManager
+from database_system.business_logic.models import User, VocabExpression
+
+# 导入认证依赖
+from backend.api.auth_routes import get_current_user
 
 # 导入数据库版本的 VocabManager
 from backend.data_managers import VocabManagerDB
@@ -109,18 +113,28 @@ async def get_all_vocabs(
     skip: int = Query(default=0, ge=0, description="跳过的记录数"),
     limit: int = Query(default=100, ge=1, le=1000, description="返回的最大记录数"),
     starred_only: bool = Query(default=False, description="是否只返回收藏的词汇"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: 'User' = Depends(get_current_user)
 ):
     """
-    获取所有词汇（分页）
+    获取当前用户的所有词汇（分页）
     
     - **skip**: 跳过的记录数（用于分页）
     - **limit**: 返回的最大记录数
     - **starred_only**: 是否只返回收藏的词汇
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
-        vocabs = vocab_manager.get_all_vocabs(skip=skip, limit=limit, starred_only=starred_only)
+        from database_system.business_logic.models import VocabExpression
+        
+        # 查询当前用户的词汇
+        query = session.query(VocabExpression).filter(VocabExpression.user_id == current_user.user_id)
+        
+        if starred_only:
+            query = query.filter(VocabExpression.is_starred == True)
+        
+        vocabs = query.offset(skip).limit(limit).all()
         
         return {
             "success": True,
@@ -148,17 +162,26 @@ async def get_all_vocabs(
 async def get_vocab(
     vocab_id: int,
     include_examples: bool = Query(default=True, description="是否包含例句"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     根据 ID 获取词汇
     
     - **vocab_id**: 词汇ID
     - **include_examples**: 是否包含例句
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
-        vocab = vocab_manager.get_vocab_by_id(vocab_id)
+        # 验证词汇属于当前用户
+        vocab_model = session.query(VocabExpression).filter(
+            VocabExpression.vocab_id == vocab_id,
+            VocabExpression.user_id == current_user.user_id
+        ).first()
+        
+        if not vocab_model:
+            raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
         
         if not vocab:
             raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
@@ -192,7 +215,8 @@ async def get_vocab(
 @router.post("/", summary="创建新词汇", status_code=201)
 async def create_vocab(
     request: VocabCreateRequest,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     创建新词汇
@@ -201,25 +225,34 @@ async def create_vocab(
     - **explanation**: 词汇解释
     - **source**: 来源（auto/qa/manual）
     - **is_starred**: 是否收藏
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
+        # 检查当前用户是否已存在此词汇
+        existing = session.query(VocabExpression).filter(
+            VocabExpression.vocab_body == request.vocab_body,
+            VocabExpression.user_id == current_user.user_id
+        ).first()
         
-        # 检查是否已存在
-        existing = vocab_manager.get_vocab_by_body(request.vocab_body)
         if existing:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Vocab '{request.vocab_body}' already exists with ID {existing.vocab_id}"
             )
         
-        # 创建词汇
-        vocab = vocab_manager.add_new_vocab(
+        # 创建词汇（设置 user_id）
+        from database_system.business_logic.models import SourceType
+        vocab = VocabExpression(
+            user_id=current_user.user_id,
             vocab_body=request.vocab_body,
             explanation=request.explanation,
-            source=request.source,
+            source=SourceType(request.source),
             is_starred=request.is_starred
         )
+        session.add(vocab)
+        session.commit()
+        session.refresh(vocab)
         
         return {
             "success": True,
@@ -242,16 +275,26 @@ async def create_vocab(
 async def update_vocab(
     vocab_id: int,
     request: VocabUpdateRequest,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     更新词汇
     
     - **vocab_id**: 词汇ID
     - 其他字段：要更新的内容（仅传需要更新的字段）
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
+        # 验证词汇属于当前用户
+        vocab = session.query(VocabExpression).filter(
+            VocabExpression.vocab_id == vocab_id,
+            VocabExpression.user_id == current_user.user_id
+        ).first()
+        
+        if not vocab:
+            raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
         
         # 构建更新字典（只包含非 None 的字段）
         update_data = {
@@ -262,7 +305,11 @@ async def update_vocab(
             raise HTTPException(status_code=400, detail="No fields to update")
         
         # 更新词汇
-        vocab = vocab_manager.update_vocab(vocab_id, **update_data)
+        for key, value in update_data.items():
+            setattr(vocab, key, value)
+        
+        session.commit()
+        session.refresh(vocab)
         
         if not vocab:
             raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
@@ -287,16 +334,29 @@ async def update_vocab(
 @router.delete("/{vocab_id}", summary="删除词汇")
 async def delete_vocab(
     vocab_id: int,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     删除词汇
     
     - **vocab_id**: 词汇ID
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
-        success = vocab_manager.delete_vocab(vocab_id)
+        # 验证词汇属于当前用户
+        vocab = session.query(VocabExpression).filter(
+            VocabExpression.vocab_id == vocab_id,
+            VocabExpression.user_id == current_user.user_id
+        ).first()
+        
+        if not vocab:
+            raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
+        
+        session.delete(vocab)
+        session.commit()
+        success = True
         
         if not success:
             raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
@@ -314,16 +374,29 @@ async def delete_vocab(
 @router.post("/{vocab_id}/star", summary="切换收藏状态")
 async def toggle_star(
     vocab_id: int,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     切换词汇的收藏状态
     
     - **vocab_id**: 词汇ID
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
-        is_starred = vocab_manager.toggle_star(vocab_id)
+        # 验证词汇属于当前用户
+        vocab = session.query(VocabExpression).filter(
+            VocabExpression.vocab_id == vocab_id,
+            VocabExpression.user_id == current_user.user_id
+        ).first()
+        
+        if not vocab:
+            raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
+        
+        vocab.is_starred = not vocab.is_starred
+        session.commit()
+        is_starred = vocab.is_starred
         
         return {
             "success": True,
@@ -340,16 +413,23 @@ async def toggle_star(
 @router.get("/search/", summary="搜索词汇")
 async def search_vocabs(
     keyword: str = Query(..., description="搜索关键词"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     搜索词汇（根据词汇内容或解释）
     
     - **keyword**: 搜索关键词
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
-        vocabs = vocab_manager.search_vocabs(keyword)
+        # 搜索当前用户的词汇
+        vocabs = session.query(VocabExpression).filter(
+            VocabExpression.user_id == current_user.user_id,
+            (VocabExpression.vocab_body.like(f"%{keyword}%")) | 
+            (VocabExpression.explanation.like(f"%{keyword}%"))
+        ).all()
         
         return {
             "success": True,
@@ -414,20 +494,33 @@ async def create_vocab_example(
 
 @router.get("/stats/summary", summary="获取词汇统计")
 async def get_vocab_stats(
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    获取词汇统计信息
+    获取当前用户的词汇统计信息
     
     返回：
     - total: 总词汇数
     - starred: 收藏词汇数
     - auto: 自动生成的词汇数
     - manual: 手动添加的词汇数
+    
+    需要认证：是
     """
     try:
-        vocab_manager = VocabManagerDB(session)
-        stats = vocab_manager.get_vocab_stats()
+        # 统计当前用户的词汇
+        vocabs = session.query(VocabExpression).filter(
+            VocabExpression.user_id == current_user.user_id
+        ).all()
+        
+        from database_system.business_logic.models import SourceType
+        stats = {
+            "total": len(vocabs),
+            "starred": len([v for v in vocabs if v.is_starred]),
+            "auto": len([v for v in vocabs if v.source == SourceType.AUTO]),
+            "manual": len([v for v in vocabs if v.source == SourceType.MANUAL])
+        }
         
         return {
             "success": True,

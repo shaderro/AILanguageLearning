@@ -29,10 +29,20 @@ const api = axios.create({
 
 console.log(`[API] Target: ${API_TARGET} → ${BASE_URL}`);
 
-// 请求拦截器
+// 请求拦截器 - 添加 JWT token
 api.interceptors.request.use(
   (config) => {
     console.log("🌐 API Request:", config.method?.toUpperCase(), config.url);
+    
+    // 从 localStorage 获取 token 并添加到请求头
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log("🔑 Added Authorization header");
+    } else {
+      console.log("⚠️ No access token found in localStorage");
+    }
+    
     return config;
   },
   (error) => {

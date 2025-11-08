@@ -10,6 +10,10 @@ from pydantic import BaseModel, Field
 
 # 导入数据库管理器
 from database_system.database_manager import DatabaseManager
+from database_system.business_logic.models import User, GrammarRule
+
+# 导入认证依赖
+from backend.api.auth_routes import get_current_user
 
 # 导入数据库版本的 GrammarRuleManager
 from backend.data_managers import GrammarRuleManagerDB
@@ -110,18 +114,26 @@ async def get_all_grammar_rules(
     skip: int = Query(default=0, ge=0, description="跳过的记录数"),
     limit: int = Query(default=100, ge=1, le=1000, description="返回的最大记录数"),
     starred_only: bool = Query(default=False, description="是否只返回收藏的规则"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    获取所有语法规则（分页）
+    获取当前用户的所有语法规则（分页）
     
     - **skip**: 跳过的记录数（用于分页）
     - **limit**: 返回的最大记录数
     - **starred_only**: 是否只返回收藏的规则
+    
+    需要认证：是
     """
     try:
-        grammar_manager = GrammarRuleManagerDB(session)
-        rules = grammar_manager.get_all_rules(skip=skip, limit=limit, starred_only=starred_only)
+        # 查询当前用户的语法规则
+        query = session.query(GrammarRule).filter(GrammarRule.user_id == current_user.user_id)
+        
+        if starred_only:
+            query = query.filter(GrammarRule.is_starred == True)
+        
+        rules = query.offset(skip).limit(limit).all()
         
         return {
             "success": True,

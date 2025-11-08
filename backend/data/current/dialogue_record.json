@@ -7,199 +7,199 @@
           {
             "user_question": "What does this sentence mean?",
             "ai_response": "{'answer': '这句话的意思是：这是一个用于对话录音的测试句子。你是对某个单词的意思不清楚，还是对整句话的用途有疑问呢？'}",
-            "timestamp": "2025-11-06T13:17:18.345677",
+            "timestamp": "2025-11-08T23:02:28.874978",
             "is_learning_related": true
           },
           {
             "user_question": "Can you explain the grammar?",
             "ai_response": "{'answer': '这是一个简单的陈述句，结构是：主语(This) + 系动词(is) + 表语(a test sentence for dialogue recording)。句子没有复杂的语法点，只是说明某物是什么。你是想了解某个特定部分的语法吗？比如介词for的用法？'}",
-            "timestamp": "2025-11-06T13:17:18.345683",
+            "timestamp": "2025-11-08T23:02:28.874991",
             "is_learning_related": true
           },
           {
             "user_question": "What vocabulary should I learn?",
             "ai_response": "{'answer': '这句话中值得学习的词汇是：recording（录音/录制）。这是一个常用名词，指录制声音或影像的过程或结果。例如：I made a voice recording.（我录了一段声音。）'}",
-            "timestamp": "2025-11-06T13:17:18.345685",
+            "timestamp": "2025-11-08T23:02:28.874993",
             "is_learning_related": true
           },
           {
             "user_question": "What does this sentence mean?",
             "ai_response": "{'answer': 'This is a test sentence for dialogue history. 这句话的意思是：这是一个用于对话历史记录的测试句子。你是想问某个特定单词的意思，还是整个句子的用途？'}",
-            "timestamp": "2025-11-06T13:17:18.345686",
+            "timestamp": "2025-11-08T23:02:28.874995",
             "is_learning_related": true
           },
           {
             "user_question": "Can you explain the grammar?",
             "ai_response": "{'answer': \"这是一个简单的陈述句，结构是'This is + 名词短语'。'This'是主语，'is'是系动词，'a test sentence for dialogue history'是表语。你想了解具体的哪部分语法呢？比如冠词'a'的用法，还是介词短语'for dialogue history'的修饰关系？\"}",
-            "timestamp": "2025-11-06T13:17:18.345687",
+            "timestamp": "2025-11-08T23:02:28.874996",
             "is_learning_related": true
           },
           {
             "user_question": "What vocabulary should I learn?",
             "ai_response": "{'answer': '这句话中的主要词汇是：test（测试）、sentence（句子）、dialogue（对话）、history（历史）。你可以先记住这些基础词汇。'}",
-            "timestamp": "2025-11-06T13:17:18.345689",
+            "timestamp": "2025-11-08T23:02:28.874999",
             "is_learning_related": true
           },
           {
             "user_question": "What does this sentence mean?",
             "ai_response": "{'answer': '这句话的意思是：这是第一个测试句子。你是想问具体的单词意思，还是整个句子的结构呢？'}",
-            "timestamp": "2025-11-06T13:17:18.345689",
+            "timestamp": "2025-11-08T23:02:28.875000",
             "is_learning_related": true
           },
           {
             "user_question": "Can you explain the grammar?",
             "ai_response": "{'answer': '这是一个简单的主系表结构：This（主语） is（系动词） the first test sentence（表语）。系动词is连接主语和表语，说明主语的性质或状态。the first test sentence是名词短语作表语。'}",
-            "timestamp": "2025-11-06T13:17:18.345690",
+            "timestamp": "2025-11-08T23:02:28.875002",
             "is_learning_related": true
           },
           {
             "user_question": "sowie是什么意思？",
             "ai_response": "{'answer': 'sowie是德语中的连词，意思是‘以及’或‘还有’。它用来连接两个并列的成分，类似于英语中的‘as well as’或‘and’。在这里连接的是两位当选的职位：Vorsitzenden（主席）和Generalsekretär（秘书长）。'}",
-            "timestamp": "2025-11-06T13:17:18.345691",
+            "timestamp": "2025-11-08T23:02:28.875003",
             "is_learning_related": true
           },
           {
             "user_question": "What does this sentence mean?",
             "ai_response": "{'answer': \"This sentence means: '这是第一个测试句子。' It is simply stating that this is the first example sentence being presented. Do you need help understanding any specific words or the structure of the sentence?\"}",
-            "timestamp": "2025-11-06T13:17:18.345692",
+            "timestamp": "2025-11-08T23:02:28.875004",
             "is_learning_related": true
           },
           {
             "user_question": "Can you explain the grammar?",
             "ai_response": "{'answer': \"这是一个简单的陈述句，结构是：主语(This) + 系动词(is) + 表语(the first test sentence)。英语中'This is...'是最基础的介绍句型，表示'这是...'。你想了解哪个具体语法点呢？\"}",
-            "timestamp": "2025-11-06T13:17:18.345693",
+            "timestamp": "2025-11-08T23:02:28.875006",
             "is_learning_related": true
           },
           {
             "user_question": "这句话的语法结构是什么？",
             "ai_response": null,
-            "timestamp": "2025-11-06T13:17:18.345694",
+            "timestamp": "2025-11-08T23:02:28.875007",
             "is_learning_related": true
           },
           {
             "user_question": "sowie是什么意思？",
             "ai_response": "{'answer': 'sowie是德语中的连词，意思是‘以及’或‘还有’，相当于英语的‘as well as’。这里用来连接两个并列的人名：Bärbel Bas和Tim Klüssendorf。'}",
-            "timestamp": "2025-11-06T13:17:18.345695",
+            "timestamp": "2025-11-08T23:02:28.875009",
             "is_learning_related": true
           },
           {
             "user_question": "Einwohnern是什么意思？",
             "ai_response": "The question is not relevant to language learning, skipping processing.",
-            "timestamp": "2025-11-06T13:17:18.345696",
+            "timestamp": "2025-11-08T23:02:28.875010",
             "is_learning_related": true
           },
           {
             "user_question": "Einwohnern这个词是什么意思？我在试图学习语言",
             "ai_response": "{'answer': 'Einwohnern 是德语名词，意思是‘居民’或‘人口’。它是Einwohner（单数）的复数形式，指居住在某地的人。比如：Die Stadt hat viele Einwohner（这座城市有很多居民）。'}",
-            "timestamp": "2025-11-06T13:17:18.345697",
+            "timestamp": "2025-11-08T23:02:28.875011",
             "is_learning_related": true
           },
           {
             "user_question": "Teilfunktionen这个单词是什么意思？",
             "ai_response": "The question is not relevant to language learning, skipping processing.",
-            "timestamp": "2025-11-06T13:17:18.345697",
+            "timestamp": "2025-11-08T23:02:28.875012",
             "is_learning_related": true
           },
           {
             "user_question": "Teilfunktionen 这个单词是什么意思？我在学习语言",
             "ai_response": "{'answer': 'Teilfunktionen 是德语复合词，由 Teil（部分）和 Funktionen（功能）组成，意思是‘部分功能’。这里指该城市具有一些（但不是全部）大区域中心（Oberzentrum）的功能。'}",
-            "timestamp": "2025-11-06T13:17:18.345698",
+            "timestamp": "2025-11-08T23:02:28.875014",
             "is_learning_related": true
           },
           {
             "user_question": "我在学习德语，这句话中的ausgewiesen是什么意思？",
             "ai_response": "The question is not relevant to language learning, skipping processing.",
-            "timestamp": "2025-11-06T13:17:18.345699",
+            "timestamp": "2025-11-08T23:02:28.875015",
             "is_learning_related": true
           },
           {
             "user_question": "我在学习语言，这句话中的ausgewiesen是什么意思？",
             "ai_response": "{'answer': 'ausgewiesen在这里的意思是‘被指定’或‘被划定为’。它是一个动词的过去分词形式，表示被动语态。整句意思是：这座拥有约31,100居民的城市在区域规划中被指定为具有部分高级中心功能的中级中心。'}",
-            "timestamp": "2025-11-06T13:17:18.345700",
+            "timestamp": "2025-11-08T23:02:28.875016",
             "is_learning_related": true
           },
           {
             "user_question": "我在学习语言，Oberzentrums是Obe高级） + zentrums中心）的意思吗？",
             "ai_response": "{'answer': '是的，你的理解基本正确。Oberzentrum是由Ober（高级）和Zentrum（中心）组成的复合词，意思是‘高级中心’或‘主要中心’。德语中常用这种复合词构成新词。'}",
-            "timestamp": "2025-11-06T13:17:18.345701",
+            "timestamp": "2025-11-08T23:02:28.875018",
             "is_learning_related": true
           },
           {
             "user_question": "ausgewiesen是什么意思？",
             "ai_response": "The question is not relevant to language learning, skipping processing.",
-            "timestamp": "2025-11-06T13:17:18.345702",
+            "timestamp": "2025-11-08T23:02:28.875019",
             "is_learning_related": true
           },
           {
             "user_question": "What does ausgewiesen mean? I'm trying to lean German and want to learn this word",
             "ai_response": "{'answer': \"ausgewiesen means 'designated' or 'classified' in this context. It's a past participle of the verb 'ausweisen', which generally means to designate or identify something officially. In this sentence, it means the city is officially classified as a medium-sized center with partial functions of a higher-level center.\"}",
-            "timestamp": "2025-11-06T13:17:18.345702",
+            "timestamp": "2025-11-08T23:02:28.875020",
             "is_learning_related": true
           },
           {
             "user_question": "为什么这里用ihen？",
             "ai_response": "{'answer': \"这里的'ihren'是物主代词，意思是'它的'，指代前文提到的'die Stadt'(这个城市)。德语中物主代词需要和名词的性、数、格保持一致，这里用ihren是因为Einwohnern是复数第三格。\"}",
-            "timestamp": "2025-11-06T13:17:18.345704",
+            "timestamp": "2025-11-08T23:02:28.875022",
             "is_learning_related": true
           },
           {
             "user_question": "是物主代词？",
             "ai_response": "{'answer': \"是的，'ihren'是物主代词（Possessivpronomen），在这里指代'der Stadt'（这座城市），表示'这座城市的约31,100名居民'。德语中物主代词需要根据所修饰名词的性、数、格变化，这里用复数第三格形式。\"}",
-            "timestamp": "2025-11-06T13:17:18.345705",
+            "timestamp": "2025-11-08T23:02:28.875023",
             "is_learning_related": true
           },
           {
             "user_question": "名词的格是什么",
             "ai_response": "{'answer': \"名词的格（Kasus）是指名词在句子中与其他词的关系，德语有4个格：第一格（主格）、第二格（属格）、第三格（与格）、第四格（宾格）。在这句中'ihren'是第三格复数形式，表示所属关系（约31,100名居民）。\"}",
-            "timestamp": "2025-11-06T13:17:18.345706",
+            "timestamp": "2025-11-08T23:02:28.875024",
             "is_learning_related": true
           },
           {
             "user_question": "是代词吗？它根据哪个名词的格这句话哪个名词是属格，为什么？",
             "ai_response": "{'answer': \"句子中'ihren'是物主代词（属格），指代前文的'die Stadt'（城市）。德语中物主代词要根据所指名词的性数格变化，这里'die Stadt'是阴性单数，所以用'ihr'的第三格复数形式'ihren'修饰阴性名词'Einwohnern'。\"}",
-            "timestamp": "2025-11-06T13:17:18.345706",
+            "timestamp": "2025-11-08T23:02:28.875025",
             "is_learning_related": true
           },
           {
             "user_question": "也就是说，这句话中的di本身并不具有\"格\"，对吗，是物主代词需要指代它才变成属格的，对吗",
             "ai_response": "{'answer': \"是的，这里的'die'（指代'die Stadt'）本身是主格形式。物主代词'ihren'（指代'der Stadt'）采用了属格形式，这是德语中物主代词需要与被指代名词保持性数格一致的语法规则。\"}",
-            "timestamp": "2025-11-06T13:17:18.345707",
+            "timestamp": "2025-11-08T23:02:28.875027",
             "is_learning_related": true
           },
           {
             "user_question": "What does Mittelzentrum mean?",
             "ai_response": "{'answer': \"Mittelzentrum是德语专有名词，字面意思是'中等中心'，指城市规划中具有中等规模服务功能的城市。在这句话里可以理解为'区域中等中心城市'。Oberzentrum是更高级别的'区域中心城市'。\"}",
-            "timestamp": "2025-11-06T13:17:18.345708",
+            "timestamp": "2025-11-08T23:02:28.875028",
             "is_learning_related": true
           },
           {
             "user_question": "ausgewiesen这个单词或词缀组成的吗",
             "ai_response": "{'answer': \"ausgewiesen是动词ausweisen的过去分词形式，意思是'被指定/被划定为'。这里是被动态用法，表示'被规划确定为'。这个词由前缀aus-（表示向外）和weisen（指示）组成。\"}",
-            "timestamp": "2025-11-06T13:17:18.345709",
+            "timestamp": "2025-11-08T23:02:28.875029",
             "is_learning_related": true
           },
           {
             "user_question": "/Users/mac/langApp514/venv/bin/python /Users/mac/langApp514/main.py",
             "ai_response": "{'answer': \"这句话的意思是：这座拥有约31,100名居民的城市，在区域规划中被定位为具有部分高级中心功能的中级中心。你是想问某个具体词汇（如'Mittelzentrum'）还是句子结构？\"}",
-            "timestamp": "2025-11-06T13:17:18.345710",
+            "timestamp": "2025-11-08T23:02:28.875030",
             "is_learning_related": true
           },
           {
             "user_question": "What is the grammar structure of this sentence?",
             "ai_response": "{'answer': \"这个德语句子的语法结构是：介词短语(Mit...)作状语 + 系动词(ist) + 主语(die Stadt) + 介词短语(in...)作状语 + 表语(als Mittelzentrum...) + 过去分词短语(ausgewiesen)作补足语。主要框架是'Mit...ist die Stadt...als...ausgewiesen'（随着...这个城市被指定为...）。\"}",
-            "timestamp": "2025-11-06T13:17:18.345711",
+            "timestamp": "2025-11-08T23:02:28.875031",
             "is_learning_related": true
           },
           {
             "user_question": "这个德语句子中的语法结构是什么？",
             "ai_response": "{'answer': \"这个德语句子包含两个并列主句，用逗号和'dabei'连接。第一个主句'Die Finne ist groß und stark gebogen'是简单句，主语+系动词+表语结构。第二个主句'sie besitzt dabei zugleich eine sehr breite Basis'是主语+谓语+宾语结构，'dabei'和'zugleich'是副词修饰。两个形容词短语'sehr breite'修饰名词'Basis'。\"}",
-            "timestamp": "2025-11-06T13:17:18.345711",
+            "timestamp": "2025-11-08T23:02:28.875033",
             "is_learning_related": true
           },
           {
             "user_question": "为何这句话个主谓宾，dabei在这种情况下是什么意思，如何使用？",
             "ai_response": "{'answer': \"这句话的主谓宾结构是：Die Finne（主语）ist（谓语）groß und stark gebogen（表语）。dabei在这里是副词，意思是'同时/此外'，用来补充说明前文信息。使用方式：放在句中，连接前后两个相关的事实。\"}",
-            "timestamp": "2025-11-06T13:17:18.345712",
+            "timestamp": "2025-11-08T23:02:28.875034",
             "is_learning_related": true
           }
         ],
@@ -207,13 +207,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345714",
+            "timestamp": "2025-11-08T23:02:28.875036",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'herauskommen 在这里的意思是“被揭露”或“泄露出来”。在句子中指“关于Potters的事情被公开/泄露”。这是一个德语动词，由heraus（出来）+ kommen（来）组成，表示某事从隐藏状态变为公开。'}",
-            "timestamp": "2025-11-06T13:17:18.345715",
+            "timestamp": "2025-11-08T23:02:28.875038",
             "is_learning_related": true
           },
           {
@@ -230,19 +230,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345716",
+            "timestamp": "2025-11-08T23:02:28.875039",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345717",
+            "timestamp": "2025-11-08T23:02:28.875040",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个主从复合句。主句是\"Mrs Dursley behauptete sogar, dass...\"（德思礼夫人甚至声称...），后面跟着一个由dass引导的宾语从句。宾语从句中又包含一个denn引导的原因状语从句，解释为什么她声称没有姐妹。'}",
-            "timestamp": "2025-11-06T13:17:18.345718",
+            "timestamp": "2025-11-08T23:02:28.875041",
             "is_learning_related": true
           },
           {
@@ -259,19 +259,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345719",
+            "timestamp": "2025-11-08T23:02:28.875042",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345720",
+            "timestamp": "2025-11-08T23:02:28.875044",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个德语虚拟语气的主从复合句。主句是'Einfach unerträglich wäre es'（这简直无法忍受），从句是'wenn die Sache mit den Potters herauskommen würde'（如果Potter家的事情被曝光的话）。主句使用了动词前置的倒装结构，从句使用了wenn引导的条件从句和虚拟语气würde。\"}",
-            "timestamp": "2025-11-06T13:17:18.345721",
+            "timestamp": "2025-11-08T23:02:28.875045",
             "is_learning_related": true
           },
           {
@@ -288,7 +288,7 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345721",
+            "timestamp": "2025-11-08T23:02:28.875046",
             "is_learning_related": true
           }
         ],
@@ -296,13 +296,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345723",
+            "timestamp": "2025-11-08T23:02:28.875049",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Aktentasche 是德语词，意思是公文包。在这个句子里，Mr Dursley 在八点半时拿了他的公文包。'}",
-            "timestamp": "2025-11-06T13:17:18.345724",
+            "timestamp": "2025-11-08T23:02:28.875050",
             "is_learning_related": true
           },
           {
@@ -319,7 +319,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345725",
+            "timestamp": "2025-11-08T23:02:28.875051",
             "is_learning_related": true
           }
         ],
@@ -327,13 +327,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345726",
+            "timestamp": "2025-11-08T23:02:28.875053",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Laune 是德语名词，意思是“心情”或“情绪”。在句子中，“glänzender Laune”是一个固定搭配，意思是“心情极好”或“情绪高涨”，形容他上午心情非常好。'}",
-            "timestamp": "2025-11-06T13:17:18.345727",
+            "timestamp": "2025-11-08T23:02:28.875054",
             "is_learning_related": true
           },
           {
@@ -350,19 +350,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345728",
+            "timestamp": "2025-11-08T23:02:28.875056",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345729",
+            "timestamp": "2025-11-08T23:02:28.875057",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'glänzender 在这里是形容词，意思是“极好的、出色的”。在句子中修饰 Laune（心情），glänzender Laune 表示“心情极好、兴致勃勃”。'}",
-            "timestamp": "2025-11-06T13:17:18.345730",
+            "timestamp": "2025-11-08T23:02:28.875058",
             "is_learning_related": true
           },
           {
@@ -379,19 +379,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345731",
+            "timestamp": "2025-11-08T23:02:28.875060",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345731",
+            "timestamp": "2025-11-08T23:02:28.875061",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Laune 是德语名词，意思是“心情”或“情绪”。在句子中，“glänzender Laune”是一个固定搭配，意思是“心情极好”或“情绪高涨”。整个短语描述他午饭休息前心情非常好。'}",
-            "timestamp": "2025-11-06T13:17:18.345732",
+            "timestamp": "2025-11-08T23:02:28.875063",
             "is_learning_related": true
           },
           {
@@ -408,19 +408,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345735",
+            "timestamp": "2025-11-08T23:02:28.875064",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345736",
+            "timestamp": "2025-11-08T23:02:28.875065",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这个短语是德语中的可分动词结构。\\'holen\\'（取）是动词词干，\\'über der Straße\\'（在街对面）是地点状语，\\'einen Krapfen\\'（一个甜甜圈）是宾语。完整意思是\"在街对面的面包店取一个甜甜圈\"。'}",
-            "timestamp": "2025-11-06T13:17:18.345738",
+            "timestamp": "2025-11-08T23:02:28.875067",
             "is_learning_related": true
           },
           {
@@ -442,19 +442,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345738",
+            "timestamp": "2025-11-08T23:02:28.875068",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "那为什么这部分是可分动词结构？",
-            "timestamp": "2025-11-06T13:17:18.345739",
+            "timestamp": "2025-11-08T23:02:28.875069",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这里‘holen’不是可分动词结构，而是动词原形。可分动词如‘abholen’在句子中会分开，比如‘holt ... ab’。这里的‘holen’是完整动词，意思是‘去取’。'}",
-            "timestamp": "2025-11-06T13:17:18.345740",
+            "timestamp": "2025-11-08T23:02:28.875071",
             "is_learning_related": true
           },
           {
@@ -472,19 +472,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345741",
+            "timestamp": "2025-11-08T23:02:28.875072",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345742",
+            "timestamp": "2025-11-08T23:02:28.875073",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个不定式结构，由连词'und'连接两个动作：'sich die Beine vertreten'（散步活动腿脚）和'beim Bäcker...einen Krapfen holen'（在面包店买甜甜圈）。其中'beim Bäcker über der Straße'是地点状语，'einen Krapfen'是第四格宾语，'holen'是主要动词。\"}",
-            "timestamp": "2025-11-06T13:17:18.345743",
+            "timestamp": "2025-11-08T23:02:28.875074",
             "is_learning_related": true
           },
           {
@@ -508,19 +508,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345744",
+            "timestamp": "2025-11-08T23:02:28.875076",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345745",
+            "timestamp": "2025-11-08T23:02:28.875077",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'vertreten 在这里是德语动词，意思是“伸展、活动（腿脚）”。在句子中‘sich die Beine vertreten’是一个固定搭配，表示‘散步活动一下腿脚’。'}",
-            "timestamp": "2025-11-06T13:17:18.345746",
+            "timestamp": "2025-11-08T23:02:28.875078",
             "is_learning_related": true
           },
           {
@@ -537,19 +537,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345747",
+            "timestamp": "2025-11-08T23:02:28.875079",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345748",
+            "timestamp": "2025-11-08T23:02:28.875080",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个由连词\"und\"连接的并列复合句。\\n\\n第一部分：\"Bis zur Mittagspause war er glänzender Laune\"（直到午休时间他心情都很好）\\n- 结构：时间状语 + 系动词 + 主语 + 表语\\n\\n第二部分：\"wollte sich nun ein wenig die Beine vertreten\"（现在想稍微活动活动腿脚）\\n- 结构：动词 + 反身代词 + 时间状语 + 程度状语 + 宾语 + 不定式动词\\n\\n第三部分：\"und beim Bäcker über der Straße einen Krapfen holen\"（并且去街对面的面包店买个甜甜圈）\\n- 结构：连词 + 地点状语 + 宾语 + 不定式动词\\n\\n注意：第二和第三部分共用开头的\"wollte\"（想要），表示两个并列的意图。'}",
-            "timestamp": "2025-11-06T13:17:18.345749",
+            "timestamp": "2025-11-08T23:02:28.875082",
             "is_learning_related": true
           },
           {
@@ -566,19 +566,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345750",
+            "timestamp": "2025-11-08T23:02:28.875083",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345751",
+            "timestamp": "2025-11-08T23:02:28.875084",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘holen’在德语中是‘去拿、去取’的意思。在这个句子里，‘einen Krapfen holen’就是‘去拿一个甜甜圈’的意思。'}",
-            "timestamp": "2025-11-06T13:17:18.345752",
+            "timestamp": "2025-11-08T23:02:28.875085",
             "is_learning_related": true
           },
           {
@@ -595,7 +595,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345753",
+            "timestamp": "2025-11-08T23:02:28.875086",
             "is_learning_related": true
           }
         ],
@@ -603,13 +603,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345755",
+            "timestamp": "2025-11-08T23:02:28.875088",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'verschiedene 是德语形容词，意思是“不同的、各种各样的”。在这个句子里，它修饰 Leute（人们），表示“五个不同的人”。'}",
-            "timestamp": "2025-11-06T13:17:18.345755",
+            "timestamp": "2025-11-08T23:02:28.875089",
             "is_learning_related": true
           },
           {
@@ -626,19 +626,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345756",
+            "timestamp": "2025-11-08T23:02:28.875091",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345757",
+            "timestamp": "2025-11-08T23:02:28.875092",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Schnecke 在德语中是“蜗牛”的意思。在这个句子中，zur Schnecke machen 是一个固定搭配，意思是“严厉斥责”或“痛骂”。整句话的意思是：他严厉斥责了五个不同的人。'}",
-            "timestamp": "2025-11-06T13:17:18.345758",
+            "timestamp": "2025-11-08T23:02:28.875093",
             "is_learning_related": true
           },
           {
@@ -655,19 +655,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345759",
+            "timestamp": "2025-11-08T23:02:28.875095",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345760",
+            "timestamp": "2025-11-08T23:02:28.875096",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Schnecke 在德语中是“蜗牛”的意思。在这个句子中，“zur Schnecke machen”是一个固定表达，意思是“严厉批评”或“责骂”。所以整句话的意思是：他严厉批评了五个不同的人。'}",
-            "timestamp": "2025-11-06T13:17:18.345761",
+            "timestamp": "2025-11-08T23:02:28.875097",
             "is_learning_related": true
           },
           {
@@ -684,7 +684,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345762",
+            "timestamp": "2025-11-08T23:02:28.875098",
             "is_learning_related": true
           }
         ],
@@ -692,13 +692,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345763",
+            "timestamp": "2025-11-08T23:02:28.875101",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'solchem 是德语中 solch（这样的、这种的）的与格形式，在这里修饰 Unsinn（胡闹、荒唐事），意思是“这种胡闹”。整个短语 solchem Unsinn 表示“这种荒唐事”。'}",
-            "timestamp": "2025-11-06T13:17:18.345764",
+            "timestamp": "2025-11-08T23:02:28.875102",
             "is_learning_related": true
           },
           {
@@ -715,19 +715,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345765",
+            "timestamp": "2025-11-08T23:02:28.875103",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345766",
+            "timestamp": "2025-11-08T23:02:28.875104",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘denn’在这里是表示原因的连词，相当于‘因为’。它连接前后两个句子，说明为什么他们不会卷入奇怪故事的原因。完整的结构是‘..., denn ...’，前面是结果，后面是原因。'}",
-            "timestamp": "2025-11-06T13:17:18.345767",
+            "timestamp": "2025-11-08T23:02:28.875105",
             "is_learning_related": true
           },
           {
@@ -745,19 +745,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345768",
+            "timestamp": "2025-11-08T23:02:28.875106",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345768",
+            "timestamp": "2025-11-08T23:02:28.875107",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个德语虚拟式结构，'Niemand wäre auf die Idee gekommen' 字面意思是'没有人会想到'。其中：'wäre...gekommen' 是动词'kommen'的第二虚拟式，表示假设或可能性；'auf die Idee kommen' 是一个固定搭配，意思是'想到某个主意'。整个结构表达一个假设的情况：没有人会想到（但实际上发生了）。\"}",
-            "timestamp": "2025-11-06T13:17:18.345769",
+            "timestamp": "2025-11-08T23:02:28.875109",
             "is_learning_related": true
           },
           {
@@ -779,19 +779,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345770",
+            "timestamp": "2025-11-08T23:02:28.875110",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345771",
+            "timestamp": "2025-11-08T23:02:28.875111",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个由denn连接的并列复合句。前半句是'Niemand wäre...verstricken'，后半句是'm...haben'。denn表示原因，相当于'因为'。后半句的主语是sie(他们)，谓语是wollten...haben(想要...有)，mit solchem Unsinn是介词短语作状语，nichts zu tun haben是固定搭配表示'与...无关'。\"}",
-            "timestamp": "2025-11-06T13:17:18.345772",
+            "timestamp": "2025-11-08T23:02:28.875112",
             "is_learning_related": true
           },
           {
@@ -817,19 +817,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345773",
+            "timestamp": "2025-11-08T23:02:28.875114",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345773",
+            "timestamp": "2025-11-08T23:02:28.875116",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个由denn连接的并列复合句。前半句是主句'Niemand wäre...verstricken'，后半句是原因从句'denn mit solchem Unsinn wollten sie nichts zu tun haben'。后半句的结构是：denn（连词）+ mit solchem Unsinn（介词短语作状语）+ wollten sie（动词+主语）+ nichts zu tun haben（不定式结构作宾语）。\"}",
-            "timestamp": "2025-11-06T13:17:18.345774",
+            "timestamp": "2025-11-08T23:02:28.875118",
             "is_learning_related": true
           },
           {
@@ -855,19 +855,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345775",
+            "timestamp": "2025-11-08T23:02:28.875119",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345776",
+            "timestamp": "2025-11-08T23:02:28.875121",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘verstricken’在这里是‘卷入、陷入’的意思。整句意思是：没人会想到他们可能卷入一个奇怪神秘的事件，因为他们不想跟这种无稽之谈扯上关系。这个词常用于表示无意中陷入困境或复杂情况。'}",
-            "timestamp": "2025-11-06T13:17:18.345777",
+            "timestamp": "2025-11-08T23:02:28.875122",
             "is_learning_related": true
           },
           {
@@ -884,19 +884,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345778",
+            "timestamp": "2025-11-08T23:02:28.875124",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345778",
+            "timestamp": "2025-11-08T23:02:28.875127",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘solchem’是德语指示代词‘solch’的与格形式，意思是‘这样的’或‘这种的’。在这里指代前文提到的‘merkwürdige und geheimnisvolle Geschichte’（奇怪而神秘的故事）。整句意思是：他们不想和这种胡闹扯上关系。'}",
-            "timestamp": "2025-11-06T13:17:18.345779",
+            "timestamp": "2025-11-08T23:02:28.875134",
             "is_learning_related": true
           },
           {
@@ -913,7 +913,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345780",
+            "timestamp": "2025-11-08T23:02:28.875136",
             "is_learning_related": true
           }
         ],
@@ -921,13 +921,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345781",
+            "timestamp": "2025-11-08T23:02:28.875141",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这句话是一个包含多个从句的复合句。主句是‘Mrs Dursley war dünn und blond und besaß doppelt so viel Hals’（德思礼夫人很瘦，金发，脖子长度是需要的两倍）。后面跟着：1) 比较从句‘wie notwendig gewesen wäre’（比需要的长度），2) 关系从句‘was allerdings sehr nützlich war’（这实际上很有用），3) 原因从句‘denn so konnte sie...’（因为这样她就能...）。这种结构在德语中很常见，通过逗号和连接词将多个信息连接在一起。'}",
-            "timestamp": "2025-11-06T13:17:18.345782",
+            "timestamp": "2025-11-08T23:02:28.875143",
             "is_learning_related": true
           },
           {
@@ -979,19 +979,19 @@
               "is_single_token": false,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345784",
+            "timestamp": "2025-11-08T23:02:28.875145",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345785",
+            "timestamp": "2025-11-08T23:02:28.875147",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个复合句，主要结构是：主句（Mrs Dursley war...und besaß...）+ 比较从句（wie notwendig...）+ 关系从句（was allerdings...）+ 原因从句（denn so konnte...）。简单来说就是：描述Mrs Dursley的外貌特征，然后用比较说明她的脖子有多长，接着解释这个特征很有用，最后说明为什么有用。'}",
-            "timestamp": "2025-11-06T13:17:18.345786",
+            "timestamp": "2025-11-08T23:02:28.875149",
             "is_learning_related": true
           },
           {
@@ -1043,19 +1043,19 @@
               "is_single_token": false,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345787",
+            "timestamp": "2025-11-08T23:02:28.875157",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345788",
+            "timestamp": "2025-11-08T23:02:28.875159",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'nützlich 是德语形容词，意思是“有用的”。在这个句子里，它描述德思礼太太的长脖子很有用，因为她可以伸长脖子偷看邻居。'}",
-            "timestamp": "2025-11-06T13:17:18.345788",
+            "timestamp": "2025-11-08T23:02:28.875161",
             "is_learning_related": true
           },
           {
@@ -1072,19 +1072,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345789",
+            "timestamp": "2025-11-08T23:02:28.875163",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345790",
+            "timestamp": "2025-11-08T23:02:28.875165",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是德语中的比较从句结构。'wie notwendig gewesen wäre' 字面意思是'如...原本必要的那样'，这里用来比较Dursley太太的脖子长度与原本需要的长度。'gewesen wäre' 是第二虚拟式的完成时，表示假设的情况。\"}",
-            "timestamp": "2025-11-06T13:17:18.345791",
+            "timestamp": "2025-11-08T23:02:28.875167",
             "is_learning_related": true
           },
           {
@@ -1104,19 +1104,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345792",
+            "timestamp": "2025-11-08T23:02:28.875169",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345793",
+            "timestamp": "2025-11-08T23:02:28.875171",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个主从复合句，denn引导原因状语从句，解释为什么'非常有用'。从句中so是'这样'的意思，konnte是情态动词，后面跟两个并列动作：den Hals recken（伸长脖子）和hinüberspähen（窥视），用und连接。\"}",
-            "timestamp": "2025-11-06T13:17:18.345793",
+            "timestamp": "2025-11-08T23:02:28.875173",
             "is_learning_related": true
           },
           {
@@ -1147,19 +1147,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345794",
+            "timestamp": "2025-11-08T23:02:28.875174",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345795",
+            "timestamp": "2025-11-08T23:02:28.875176",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个由连词denn连接的原因状语从句。so konnte sie den Hals über den Gartenzaun recken是主句，意思是\"这样她就能把脖子伸过花园围栏\"。德语中denn表示原因，相当于英语的\"because\"或\"for\"。'}",
-            "timestamp": "2025-11-06T13:17:18.345796",
+            "timestamp": "2025-11-08T23:02:28.875178",
             "is_learning_related": true
           },
           {
@@ -1184,19 +1184,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345797",
+            "timestamp": "2025-11-08T23:02:28.875180",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345797",
+            "timestamp": "2025-11-08T23:02:28.875182",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个复合句，主要结构是：主语(Mrs Dursley) + 并列谓语(war... und besaß...) + was引导的非限制性定语从句 + denn引导的原因状语从句。其中was指的是前面描述的整个情况，denn表示原因解释。'}",
-            "timestamp": "2025-11-06T13:17:18.345798",
+            "timestamp": "2025-11-08T23:02:28.875184",
             "is_learning_related": true
           },
           {
@@ -1213,19 +1213,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345799",
+            "timestamp": "2025-11-08T23:02:28.875185",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345800",
+            "timestamp": "2025-11-08T23:02:28.875187",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个复合句，主要结构是：主句（Mrs Dursley war...und besaß...）+ 关系从句（was allerdings sehr nützlich war）+ 原因从句（denn so konnte sie...）。其中'was'指代前面整句话描述的情况，'denn'表示原因解释为什么'有用'。\"}",
-            "timestamp": "2025-11-06T13:17:18.345801",
+            "timestamp": "2025-11-08T23:02:28.875189",
             "is_learning_related": true
           },
           {
@@ -1242,19 +1242,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345802",
+            "timestamp": "2025-11-08T23:02:28.875191",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345802",
+            "timestamp": "2025-11-08T23:02:28.875193",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘Nachbarn’是德语词，意思是‘邻居们’。在这个句子里，佩妮姨妈伸长脖子是为了偷看邻居们的情况。'}",
-            "timestamp": "2025-11-06T13:17:18.345803",
+            "timestamp": "2025-11-08T23:02:28.875196",
             "is_learning_related": true
           },
           {
@@ -1271,19 +1271,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345804",
+            "timestamp": "2025-11-08T23:02:28.875198",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词有什么词根词缀吗？",
-            "timestamp": "2025-11-06T13:17:18.345805",
+            "timestamp": "2025-11-08T23:02:28.875200",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Nachbarn 这个词由词根 Nachbar（邻居）加上复数词尾 -n 构成。在德语中，Nachbar 本身就是一个基本词汇，表示邻居，加上 -n 就变成了复数形式 Nachbarn（邻居们）。'}",
-            "timestamp": "2025-11-06T13:17:18.345806",
+            "timestamp": "2025-11-08T23:02:28.875202",
             "is_learning_related": true
           },
           {
@@ -1300,19 +1300,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345807",
+            "timestamp": "2025-11-08T23:02:28.875204",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345807",
+            "timestamp": "2025-11-08T23:02:28.875206",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这句话描述Mrs Dursley的外貌和行为。主要结构是：主语(Mrs Dursley) + 两个并列特征(war dünn und blond) + 比较从句(besaß doppelt so viel Hals, wie...) + 非限制性定语从句(was...war) + 原因从句(denn so konnte sie...)。你是对哪个具体部分的结构有疑问？比如比较结构'doppelt so viel...wie'还是'was'引导的定语从句？\"}",
-            "timestamp": "2025-11-06T13:17:18.345808",
+            "timestamp": "2025-11-08T23:02:28.875208",
             "is_learning_related": true
           },
           {
@@ -1329,19 +1329,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345809",
+            "timestamp": "2025-11-08T23:02:28.875210",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345810",
+            "timestamp": "2025-11-08T23:02:28.875212",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '你提到的‘bullig’在句子中并不存在。你引用的句子是德语，它的主要结构是：主句‘Mrs Dursley war dünn und blond und besaß doppelt so viel Hals, wie notwendig gewesen wäre’，后面接一个关系从句‘was allerdings sehr nützlich war’，再跟一个原因从句‘denn so konnte sie...’。你是对哪个具体部分（比如‘wie notwendig gewesen wäre’或‘was allerdings...’）的语法结构有疑问吗？'}",
-            "timestamp": "2025-11-06T13:17:18.345811",
+            "timestamp": "2025-11-08T23:02:28.875214",
             "is_learning_related": true
           },
           {
@@ -1358,19 +1358,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345811",
+            "timestamp": "2025-11-08T23:02:28.875215",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345812",
+            "timestamp": "2025-11-08T23:02:28.875219",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个复合句，主要结构是：主句（Mrs Dursley war...） + 非限制性定语从句（was...）。主句包含并列描述（dünn und blond）和比较结构（doppelt so viel...wie...），定语从句用was指代前面整句话的内容，并用denn引出原因说明。'}",
-            "timestamp": "2025-11-06T13:17:18.345813",
+            "timestamp": "2025-11-08T23:02:28.875221",
             "is_learning_related": true
           },
           {
@@ -1387,19 +1387,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345814",
+            "timestamp": "2025-11-08T23:02:28.875223",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345815",
+            "timestamp": "2025-11-08T23:02:28.875224",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'gewesen 是德语动词 sein（是）的过去分词形式，意思是“曾经是/存在过”。在这个句子里，gewesen wäre 构成虚拟式，表示假设情况：“...本来会是必要的”。'}",
-            "timestamp": "2025-11-06T13:17:18.345816",
+            "timestamp": "2025-11-08T23:02:28.875226",
             "is_learning_related": true
           },
           {
@@ -1416,7 +1416,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345816",
+            "timestamp": "2025-11-08T23:02:28.875228",
             "is_learning_related": true
           }
         ],
@@ -1424,13 +1424,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345818",
+            "timestamp": "2025-11-08T23:02:28.875231",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这句话由三个并列分句组成：1. \"Die Dursleys besaßen alles, was sie wollten\"（德思礼夫妇拥有他们想要的一切）包含一个关系从句；2. \"doch sie hatten auch ein Geheimnis\"（但他们也有一个秘密）是转折句；3. \"und dass es jemand aufdecken könnte, war ihre größte Sorge\"（而这个秘密可能被人发现是他们最大的担忧）中\"dass\"引导的主语从句作主语。整个句子用逗号和连词连接多个信息。'}",
-            "timestamp": "2025-11-06T13:17:18.345819",
+            "timestamp": "2025-11-08T23:02:28.875233",
             "is_learning_related": true
           },
           {
@@ -1469,19 +1469,19 @@
               "is_single_token": false,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345819",
+            "timestamp": "2025-11-08T23:02:28.875235",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345820",
+            "timestamp": "2025-11-08T23:02:28.875237",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个由多个从句组成的复合句。主要结构是：\"Die Dursleys besaßen alles... doch sie hatten auch ein Geheimnis, und dass... war ihre größte Sorge.\" 包含一个关系从句\"was sie wollten\"修饰alles，和一个主语从句\"dass es jemand aufdecken könnte\"作war的主语。doch表示转折，连接前后两个主句。'}",
-            "timestamp": "2025-11-06T13:17:18.345821",
+            "timestamp": "2025-11-08T23:02:28.875238",
             "is_learning_related": true
           },
           {
@@ -1520,19 +1520,19 @@
               "is_single_token": false,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345822",
+            "timestamp": "2025-11-08T23:02:28.875241",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345823",
+            "timestamp": "2025-11-08T23:02:28.875243",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个由连词dass引导的主语从句，意思是‘有人可能会揭露它’。dass在这里引导整个从句作为主句的主语，es指代前文的Geheimnis（秘密），könnte是情态动词können的虚拟式表示可能性。'}",
-            "timestamp": "2025-11-06T13:17:18.345824",
+            "timestamp": "2025-11-08T23:02:28.875245",
             "is_learning_related": true
           },
           {
@@ -1553,19 +1553,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345825",
+            "timestamp": "2025-11-08T23:02:28.875247",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345827",
+            "timestamp": "2025-11-08T23:02:28.875249",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'aufdecken 在德语中是动词，意思是“揭露、发现、揭开”，指让隐藏的事情被知道。在这句话里，jemand aufdecken könnte 表示“有人可能会发现（这个秘密）”。'}",
-            "timestamp": "2025-11-06T13:17:18.345828",
+            "timestamp": "2025-11-08T23:02:28.875251",
             "is_learning_related": true
           },
           {
@@ -1582,19 +1582,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345830",
+            "timestamp": "2025-11-08T23:02:28.875252",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345831",
+            "timestamp": "2025-11-08T23:02:28.875254",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个由两个并列主句构成的复合句。第一个主句是'Die Dursleys besaßen alles, was sie wollten'（德思礼夫妇拥有他们想要的一切），其中'was sie wollten'是关系从句。第二个主句是'die hatten auch ein Geheimnis'（他们也有一个秘密），后面跟了一个由'und'连接的从句'und dass es jemand aufdecken könnte, war ihre größte Sorge'（而有人可能揭露这个秘密是他们最大的担忧），其中'dass es jemand aufdecken könnte'是主语从句。\"}",
-            "timestamp": "2025-11-06T13:17:18.345832",
+            "timestamp": "2025-11-08T23:02:28.875256",
             "is_learning_related": true
           },
           {
@@ -1611,19 +1611,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345833",
+            "timestamp": "2025-11-08T23:02:28.875257",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345834",
+            "timestamp": "2025-11-08T23:02:28.875259",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘besaßen’ 是德语动词 ‘besitzen’ 的过去时形式，意思是‘拥有’或‘占有’。在句子里指‘德思礼一家拥有他们想要的一切’。'}",
-            "timestamp": "2025-11-06T13:17:18.345835",
+            "timestamp": "2025-11-08T23:02:28.875261",
             "is_learning_related": true
           },
           {
@@ -1640,19 +1640,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345836",
+            "timestamp": "2025-11-08T23:02:28.875262",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345836",
+            "timestamp": "2025-11-08T23:02:28.875264",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这句话的意思是：德思礼夫妇拥有他们想要的一切，但他们也有一个秘密，而有人可能发现这个秘密是他们最大的担忧。你是想问\"besaßen\"这个动词的意思，还是整个句子的结构？'}",
-            "timestamp": "2025-11-06T13:17:18.345837",
+            "timestamp": "2025-11-08T23:02:28.875266",
             "is_learning_related": true
           },
           {
@@ -1669,7 +1669,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345838",
+            "timestamp": "2025-11-08T23:02:28.875268",
             "is_learning_related": true
           }
         ],
@@ -1677,13 +1677,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345839",
+            "timestamp": "2025-11-08T23:02:28.875271",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'herstellte 是德语动词 herstellen 的过去式，意思是“制造、生产”。在这个句子里，描述德思礼先生的公司制造钻机。'}",
-            "timestamp": "2025-11-06T13:17:18.345840",
+            "timestamp": "2025-11-08T23:02:28.875273",
             "is_learning_related": true
           },
           {
@@ -1700,19 +1700,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345841",
+            "timestamp": "2025-11-08T23:02:28.875275",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345842",
+            "timestamp": "2025-11-08T23:02:28.875277",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'herstellte 是德语动词 herstellen 的过去式，意思是“制造、生产”。在这个句子里，描述德思礼先生的公司是制造钻孔机的。'}",
-            "timestamp": "2025-11-06T13:17:18.345843",
+            "timestamp": "2025-11-08T23:02:28.875278",
             "is_learning_related": true
           },
           {
@@ -1729,19 +1729,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345844",
+            "timestamp": "2025-11-08T23:02:28.875282",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345845",
+            "timestamp": "2025-11-08T23:02:28.875284",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'herstellte 是德语动词 herstellen 的过去时形式，意思是“制造、生产”。在这个句子里，它表示这家公司制造钻机。'}",
-            "timestamp": "2025-11-06T13:17:18.345845",
+            "timestamp": "2025-11-08T23:02:28.875286",
             "is_learning_related": true
           },
           {
@@ -1758,7 +1758,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345846",
+            "timestamp": "2025-11-08T23:02:28.875288",
             "is_learning_related": true
           }
         ],
@@ -1766,13 +1766,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词有什么词根词缀吗？",
-            "timestamp": "2025-11-06T13:17:18.345847",
+            "timestamp": "2025-11-08T23:02:28.875291",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'dafür 是一个德语副词，由 da- 和 für 组成。da- 在这里指代前文提到的内容（几乎没有脖子），für 表示“为了、代替”。整个词意思是“作为补偿/替代”，相当于英语的 for that/in return。它用来连接前后对比的情况：没有脖子，但是有大胡子。'}",
-            "timestamp": "2025-11-06T13:17:18.345848",
+            "timestamp": "2025-11-08T23:02:28.875293",
             "is_learning_related": true
           },
           {
@@ -1789,19 +1789,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345849",
+            "timestamp": "2025-11-08T23:02:28.875295",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345850",
+            "timestamp": "2025-11-08T23:02:28.875297",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个并列句结构，由连词 'dafür aber' 连接两个对比的部分。前半句说 '几乎没有脖子'，后半句用 'dafür aber' 表示转折对比，意思是 '但却有一个非常大的胡子'。这种结构用来强调前后两个特征的对比关系。\"}",
-            "timestamp": "2025-11-06T13:17:18.345850",
+            "timestamp": "2025-11-08T23:02:28.875299",
             "is_learning_related": true
           },
           {
@@ -1823,19 +1823,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345851",
+            "timestamp": "2025-11-08T23:02:28.875301",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345853",
+            "timestamp": "2025-11-08T23:02:28.875303",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘bullig’在德语中形容人长得像公牛一样，表示身材高大、壮实、魁梧的意思。这里描述一个人又高又壮。'}",
-            "timestamp": "2025-11-06T13:17:18.345853",
+            "timestamp": "2025-11-08T23:02:28.875305",
             "is_learning_related": true
           },
           {
@@ -1852,7 +1852,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345870",
+            "timestamp": "2025-11-08T23:02:28.875307",
             "is_learning_related": true
           }
         ],
@@ -1860,13 +1860,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345877",
+            "timestamp": "2025-11-08T23:02:28.875310",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Straßenkarte 是德语复合词，Straße 是“街道”，Karte 是“地图”，合起来就是“街道地图”或“城市地图”的意思。在句子里，一只猫正在研究街道地图。'}",
-            "timestamp": "2025-11-06T13:17:18.345879",
+            "timestamp": "2025-11-08T23:02:28.875312",
             "is_learning_related": true
           },
           {
@@ -1883,7 +1883,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345881",
+            "timestamp": "2025-11-08T23:02:28.875313",
             "is_learning_related": true
           }
         ],
@@ -1891,13 +1891,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345884",
+            "timestamp": "2025-11-08T23:02:28.875316",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Sinnestäuschung 是一个德语复合名词，意思是“感官错觉”或“幻觉”。在句子中意思是“这一定是一种感官错觉”。这是一个专有名词，可以作为一个整体理解。'}",
-            "timestamp": "2025-11-06T13:17:18.345886",
+            "timestamp": "2025-11-08T23:02:28.875318",
             "is_learning_related": true
           },
           {
@@ -1914,7 +1914,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345887",
+            "timestamp": "2025-11-08T23:02:28.875319",
             "is_learning_related": true
           }
         ],
@@ -1922,13 +1922,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345890",
+            "timestamp": "2025-11-08T23:02:28.875321",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘blinzelte’是德语动词‘blinzeln’的过去式，意思是‘眨眼’。这句话是说：Dursley先生眨了眨眼，盯着那只猫看。'}",
-            "timestamp": "2025-11-06T13:17:18.345892",
+            "timestamp": "2025-11-08T23:02:28.875322",
             "is_learning_related": true
           },
           {
@@ -1945,7 +1945,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345895",
+            "timestamp": "2025-11-08T23:02:28.875323",
             "is_learning_related": true
           }
         ],
@@ -1953,13 +1953,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345898",
+            "timestamp": "2025-11-08T23:02:28.875325",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'bog 是德语动词 biegen 的过去式，意思是“转弯”。在句子中 um die Ecke bog 表示“在拐角处转弯”。这是一个不规则动词的变化形式。'}",
-            "timestamp": "2025-11-06T13:17:18.345900",
+            "timestamp": "2025-11-08T23:02:28.875326",
             "is_learning_related": true
           },
           {
@@ -1976,7 +1976,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345901",
+            "timestamp": "2025-11-08T23:02:28.875327",
             "is_learning_related": true
           }
         ],
@@ -1984,13 +1984,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345914",
+            "timestamp": "2025-11-08T23:02:28.875329",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘vorbeischossen’ 是德语动词 ‘vorbeischießen’ 的过去时形式，意思是‘快速飞过’或‘一闪而过’。在句子里描述猫头鹰（Eulen）在白天快速飞过，没被注意到。这个词由 ‘vorbei’（经过）和 ‘schießen’（射击，引申为快速移动）组成。'}",
-            "timestamp": "2025-11-06T13:17:18.345919",
+            "timestamp": "2025-11-08T23:02:28.875330",
             "is_learning_related": true
           },
           {
@@ -2007,19 +2007,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345921",
+            "timestamp": "2025-11-08T23:02:28.875331",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345922",
+            "timestamp": "2025-11-08T23:02:28.875333",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是德语中的一个关系从句，'die' 是关系代词，指代前文的'die Eulen'（猫头鹰）。'am helllichten Tage' 是时间状语（在光天化日之下），'vorbeischossen' 是动词（飞驰而过）。整个从句的意思是：在光天化日之下飞驰而过的（猫头鹰）。\"}",
-            "timestamp": "2025-11-06T13:17:18.345923",
+            "timestamp": "2025-11-08T23:02:28.875334",
             "is_learning_related": true
           },
           {
@@ -2040,19 +2040,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345924",
+            "timestamp": "2025-11-08T23:02:28.875337",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345925",
+            "timestamp": "2025-11-08T23:02:28.875338",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个德语从句，描述猫头鹰飞过的方式。\"über ihre Köpfe hinweg\" 是介词短语表示\"越过他们的头顶\"，\"flog\" 是动词\"飞行\"的过去式。\"hinwegflog\" 是一个可分动词，表示\"飞过\"的意思。'}",
-            "timestamp": "2025-11-06T13:17:18.345926",
+            "timestamp": "2025-11-08T23:02:28.875339",
             "is_learning_related": true
           },
           {
@@ -2072,19 +2072,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345929",
+            "timestamp": "2025-11-08T23:02:28.875340",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345930",
+            "timestamp": "2025-11-08T23:02:28.875342",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这句话是主从复合句。主句是'Er bemerkte die Eulen nicht, wohl aber die Leute unten auf der Straße'（他没注意到猫头鹰，但注意到了街上的人）。中间'die am helllichten Tage vorbeischossen'是关系从句，修饰前面的'die Eulen'，说明是'在光天化日下飞过的猫头鹰'。\"}",
-            "timestamp": "2025-11-06T13:17:18.345931",
+            "timestamp": "2025-11-08T23:02:28.875344",
             "is_learning_related": true
           },
           {
@@ -2118,7 +2118,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345933",
+            "timestamp": "2025-11-08T23:02:28.875345",
             "is_learning_related": true
           }
         ],
@@ -2126,13 +2126,13 @@
           {
             "user_question": "user_input",
             "ai_response": "给我讲讲无人称被动结构",
-            "timestamp": "2025-11-06T13:17:18.345936",
+            "timestamp": "2025-11-08T23:02:28.875346",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这句话中的'war ... zu erkennen'就是无人称被动结构。无人称被动用于描述某个动作的发生，但不强调谁在做这个动作。这里字面意思是'没有迹象可以被识别'，自然表达就是'看不到任何迹象'。德语中当动词没有明确的主语时，常用es作形式主语，但这里es被省略了。\"}",
-            "timestamp": "2025-11-06T13:17:18.345937",
+            "timestamp": "2025-11-08T23:02:28.875347",
             "is_learning_related": true
           },
           {
@@ -2150,19 +2150,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345938",
+            "timestamp": "2025-11-08T23:02:28.875348",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345940",
+            "timestamp": "2025-11-08T23:02:28.875350",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'trüben 是德语形容词，意思是“阴沉的、昏暗的”，用来形容天气阴暗、不明朗。在这个句子里，它和 grau（灰色的）一起描述那个星期二阴沉沉的天气。'}",
-            "timestamp": "2025-11-06T13:17:18.345941",
+            "timestamp": "2025-11-08T23:02:28.875351",
             "is_learning_related": true
           },
           {
@@ -2179,7 +2179,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345942",
+            "timestamp": "2025-11-08T23:02:28.875352",
             "is_learning_related": true
           }
         ],
@@ -2187,13 +2187,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345943",
+            "timestamp": "2025-11-08T23:02:28.875353",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个由dass引导的宾语从句，完整结构是：dass（连词）+ offenbar（副词，显然）+ eine Menge（主语，许多人）+ seltsam gekleideter Menschen（定语，奇怪穿着的人们的）+ unterwegs waren（谓语，在路上）。意思是“显然有许多穿着奇怪的人在路上”。'}",
-            "timestamp": "2025-11-06T13:17:18.345944",
+            "timestamp": "2025-11-08T23:02:28.875355",
             "is_learning_related": true
           },
           {
@@ -2218,19 +2218,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345946",
+            "timestamp": "2025-11-08T23:02:28.875356",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345948",
+            "timestamp": "2025-11-08T23:02:28.875357",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Stau 是德语名词，意思是“交通堵塞”。在句子中，Er saß im Stau fest 表示“他堵在交通堵塞中”。这是一个常见的德语词汇，用来描述车辆无法前进的拥堵状况。'}",
-            "timestamp": "2025-11-06T13:17:18.345949",
+            "timestamp": "2025-11-08T23:02:28.875358",
             "is_learning_related": true
           },
           {
@@ -2247,19 +2247,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345950",
+            "timestamp": "2025-11-08T23:02:28.875359",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345951",
+            "timestamp": "2025-11-08T23:02:28.875361",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘umhin’在这里是‘umhin können’的一部分，意思是‘忍不住’或‘不得不’。整个短语‘konnte nicht umhin zu bemerken’就是‘忍不住注意到’或‘不得不注意到’。'}",
-            "timestamp": "2025-11-06T13:17:18.345952",
+            "timestamp": "2025-11-08T23:02:28.875362",
             "is_learning_related": true
           },
           {
@@ -2276,7 +2276,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345954",
+            "timestamp": "2025-11-08T23:02:28.875363",
             "is_learning_related": true
           }
         ],
@@ -2284,13 +2284,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这段的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345955",
+            "timestamp": "2025-11-08T23:02:28.875365",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个由连词und连接的两个并列句。前半句是'Er trommelte mit den Fingern auf das Lenkrad'（他用手指敲击方向盘），后半句是'sein Blick fiel auf eine Ansammlung dieser merkwürdigen Gestalten nicht weit von ihm'（他的目光落在离他不远的这群奇怪身影上）。在后半句中，主语是'sein Blick'，谓语是'fiel auf'，宾语是'eine Ansammlung'，'dieser merkwürdigen Gestalten'是Ansammlung的定语，'nicht weit von ihm'是地点状语。\"}",
-            "timestamp": "2025-11-06T13:17:18.345956",
+            "timestamp": "2025-11-08T23:02:28.875366",
             "is_learning_related": true
           },
           {
@@ -2319,7 +2319,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345958",
+            "timestamp": "2025-11-08T23:02:28.875367",
             "is_learning_related": true
           }
         ],
@@ -2327,13 +2327,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345959",
+            "timestamp": "2025-11-08T23:02:28.875369",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个比较从句，结构是 'wie man es sich nur denken konnte'（正如人们所能想象的那样）。其中 'wie' 引导比较，'man' 是泛指代词'人们'，'es' 指代前文描述的情况，'sich denken' 是'想象'的意思，'konnte' 是情态动词können的过去式。整个短语表示'正如人们所能想象的那样'，用来强调前文描述的程度。\"}",
-            "timestamp": "2025-11-06T13:17:18.345960",
+            "timestamp": "2025-11-08T23:02:28.875371",
             "is_learning_related": true
           },
           {
@@ -2356,19 +2356,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345961",
+            "timestamp": "2025-11-08T23:02:28.875373",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345962",
+            "timestamp": "2025-11-08T23:02:28.875375",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个主从复合句。主句是\"Mrs Dursley behauptete sogar\"（德思礼夫人甚至声称），后面接了一个由dass引导的宾语从句，说明声称的内容。宾语从句中又包含一个由denn引导的原因从句，解释为什么她这样声称。主要结构是：主句 + dass从句 + denn原因从句。'}",
-            "timestamp": "2025-11-06T13:17:18.345963",
+            "timestamp": "2025-11-08T23:02:28.875377",
             "is_learning_related": true
           },
           {
@@ -2385,19 +2385,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345964",
+            "timestamp": "2025-11-08T23:02:28.875380",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345966",
+            "timestamp": "2025-11-08T23:02:28.875382",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'behauptete 是德语动词 behaupten 的过去时形式，意思是“声称、断言”。在这个句子里，Mrs Dursley behauptete 就是“德思礼夫人声称”的意思。'}",
-            "timestamp": "2025-11-06T13:17:18.345967",
+            "timestamp": "2025-11-08T23:02:28.875387",
             "is_learning_related": true
           },
           {
@@ -2414,7 +2414,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345968",
+            "timestamp": "2025-11-08T23:02:28.875392",
             "is_learning_related": true
           }
         ],
@@ -2422,13 +2422,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么",
-            "timestamp": "2025-11-06T13:17:18.345969",
+            "timestamp": "2025-11-08T23:02:28.875397",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个主从复合句。主句是\"Die Dursleys schauderten beim Gedanken daran\"，后面是was引导的宾语从句，说明daran的具体内容。从句中又包含了一个条件状语\"sollten die Potters...\"，表示假设情况。整体结构是：主句 + 宾语从句（内含条件状语）。'}",
-            "timestamp": "2025-11-06T13:17:18.345970",
+            "timestamp": "2025-11-08T23:02:28.875399",
             "is_learning_related": true
           },
           {
@@ -2445,19 +2445,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345971",
+            "timestamp": "2025-11-08T23:02:28.875401",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345972",
+            "timestamp": "2025-11-08T23:02:28.875403",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这里的'daran'是一个德语代副词，指代前面提到的'beim Gedanken'（想到...这个想法）。整句话意思是：想到波特一家哪天出现在他们街上时邻居们会说什么，德思礼夫妇就不寒而栗。'daran'在这里连接'想到'和'邻居会说什么'这个内容。\"}",
-            "timestamp": "2025-11-06T13:17:18.345973",
+            "timestamp": "2025-11-08T23:02:28.875405",
             "is_learning_related": true
           },
           {
@@ -2474,19 +2474,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345973",
+            "timestamp": "2025-11-08T23:02:28.875408",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词有什么词根词缀吗？",
-            "timestamp": "2025-11-06T13:17:18.345974",
+            "timestamp": "2025-11-08T23:02:28.875410",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Nachbarn 是德语词，由词根 Nachbar（邻居）加复数词尾 -n 构成。Nachbar 本身可以拆为 nach-（表示“靠近”）和 -bar（表示“携带者”或“相关的人”），字面意思是“住在附近的人”。'}",
-            "timestamp": "2025-11-06T13:17:18.345975",
+            "timestamp": "2025-11-08T23:02:28.875412",
             "is_learning_related": true
           },
           {
@@ -2503,19 +2503,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345976",
+            "timestamp": "2025-11-08T23:02:28.875414",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词有什么词根词缀吗？",
-            "timestamp": "2025-11-06T13:17:18.345977",
+            "timestamp": "2025-11-08T23:02:28.875416",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'aufkreuzen 由前缀 auf- 和词根 kreuzen 组成。auf- 表示“向上、出现”，kreuzen 意思是“交叉、横穿”，合起来引申为“突然出现、露面”。在句子中表示波特一家突然出现在街上。'}",
-            "timestamp": "2025-11-06T13:17:18.345978",
+            "timestamp": "2025-11-08T23:02:28.875417",
             "is_learning_related": true
           },
           {
@@ -2532,7 +2532,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345979",
+            "timestamp": "2025-11-08T23:02:28.875419",
             "is_learning_related": true
           }
         ],
@@ -2540,13 +2540,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345981",
+            "timestamp": "2025-11-08T23:02:28.875422",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Einfahrt 在德语中是“入口、车道”的意思，指车辆进入建筑物或院子的通道。在这个句子里，die Einfahrt 指的是通向4号地址的车道。'}",
-            "timestamp": "2025-11-06T13:17:18.345982",
+            "timestamp": "2025-11-08T23:02:28.875424",
             "is_learning_related": true
           },
           {
@@ -2563,7 +2563,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345983",
+            "timestamp": "2025-11-08T23:02:28.875426",
             "is_learning_related": true
           }
         ],
@@ -2571,13 +2571,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345984",
+            "timestamp": "2025-11-08T23:02:28.875430",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'verbrachte 是德语动词 verbringen 的过去式，意思是\"度过\"。整句话的意思是：\"然而，Dursley先生度过了一个完全平常的、没有猫头鹰的早晨。\"在德语中，verbrachte 描述某人如何度过某段时间。'}",
-            "timestamp": "2025-11-06T13:17:18.345985",
+            "timestamp": "2025-11-08T23:02:28.875432",
             "is_learning_related": true
           },
           {
@@ -2594,19 +2594,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345986",
+            "timestamp": "2025-11-08T23:02:28.875434",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345987",
+            "timestamp": "2025-11-08T23:02:28.875436",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘verbrachte’是德语动词‘verbringen’的过去式，意思是‘度过’。在这个句子里，‘Mr Dursley verbrachte einen Morgen’就是‘德思礼先生度过了一个早晨’。'}",
-            "timestamp": "2025-11-06T13:17:18.345988",
+            "timestamp": "2025-11-08T23:02:28.875438",
             "is_learning_related": true
           },
           {
@@ -2623,7 +2623,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345989",
+            "timestamp": "2025-11-08T23:02:28.875439",
             "is_learning_related": true
           }
         ],
@@ -2631,13 +2631,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345990",
+            "timestamp": "2025-11-08T23:02:28.875441",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘führte’是德语动词‘führen’的过去式，意思是‘进行’或‘带领’。在句子中‘Er führte mehrere wichtige Telefongespräche’意思是‘他进行了几个重要的电话通话’。'}",
-            "timestamp": "2025-11-06T13:17:18.345991",
+            "timestamp": "2025-11-08T23:02:28.875448",
             "is_learning_related": true
           },
           {
@@ -2654,7 +2654,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345993",
+            "timestamp": "2025-11-08T23:02:28.875450",
             "is_learning_related": true
           }
         ],
@@ -2662,13 +2662,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.345994",
+            "timestamp": "2025-11-08T23:02:28.875453",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘nirgendwo’是德语词，意思是‘在任何地方都不’或‘没有地方’。在这个句子里，‘in ihren Augen gab es nirgendwo einen prächtigeren Jungen’意思是‘在他们眼中，没有地方有比这更出色的男孩了’，强调他们认为自己的儿子是全世界最棒的。'}",
-            "timestamp": "2025-11-06T13:17:18.345995",
+            "timestamp": "2025-11-08T23:02:28.875456",
             "is_learning_related": true
           },
           {
@@ -2685,19 +2685,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.345996",
+            "timestamp": "2025-11-08T23:02:28.875458",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.345997",
+            "timestamp": "2025-11-08T23:02:28.875460",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是由两个并列分句组成的复合句，用连词und连接。第一个分句是'Die Dursleys hatten einen kleinen Sohn namens Dudley'（德思礼夫妇有一个叫达力的小儿子），第二个分句是'in ihren Augen gab es nirgendwo einen prächtigeren Jungen'（在他们眼中，世界上没有更棒的男孩了）。第二个分句使用了es gibt（有）的倒装结构。\"}",
-            "timestamp": "2025-11-06T13:17:18.345998",
+            "timestamp": "2025-11-08T23:02:28.875463",
             "is_learning_related": true
           },
           {
@@ -2714,7 +2714,7 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.345999",
+            "timestamp": "2025-11-08T23:02:28.875465",
             "is_learning_related": true
           }
         ],
@@ -2722,13 +2722,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346001",
+            "timestamp": "2025-11-08T23:02:28.875468",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个由连词und连接的并列复合句。第一分句：Die Autoschlange bewegte sich（汽车长龙移动了）；第二分句：ein paar Minuten später fuhr Mr Dursley auf den Parkplatz seiner Firma（几分钟后德思礼先生开进了他公司的停车场）；最后的die Gedanken wieder bei den Bohrern是独立主格结构，表示伴随状态，意思是‘思绪又回到了钻机上’。'}",
-            "timestamp": "2025-11-06T13:17:18.346002",
+            "timestamp": "2025-11-08T23:02:28.875469",
             "is_learning_related": true
           },
           {
@@ -2762,19 +2762,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346003",
+            "timestamp": "2025-11-08T23:02:28.875471",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "给我讲下独立主格结构",
-            "timestamp": "2025-11-06T13:17:18.346004",
+            "timestamp": "2025-11-08T23:02:28.875472",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这个句子中没有独立主格结构。独立主格结构在德语中通常是由名词+分词构成的，比如'Die Arbeit beendet, ging er nach Hause'（工作完成后，他回家了）。你引用的句子是一个并列复合句，由'und'连接两个分句。你是想了解这个句子的具体结构吗？\"}",
-            "timestamp": "2025-11-06T13:17:18.346005",
+            "timestamp": "2025-11-08T23:02:28.875473",
             "is_learning_related": true
           },
           {
@@ -2808,19 +2808,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346005",
+            "timestamp": "2025-11-08T23:02:28.875475",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "你不是说 最后的die Gedanken wieder bei den Bohrern是独立主格结构，表示伴随状态，意思是‘思绪又回到了钻机上’ 吗",
-            "timestamp": "2025-11-06T13:17:18.346006",
+            "timestamp": "2025-11-08T23:02:28.875477",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"是的，'die Gedanken wieder bei den Bohrern' 确实是独立主格结构（或称绝对结构），表示伴随状态。它描述的是德思礼先生开车进入停车场时，他的思绪同时回到了钻机上。这种结构在德语中常用名词短语来表达动作发生时的伴随状态。\"}",
-            "timestamp": "2025-11-06T13:17:18.346007",
+            "timestamp": "2025-11-08T23:02:28.875479",
             "is_learning_related": true
           },
           {
@@ -2854,19 +2854,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346008",
+            "timestamp": "2025-11-08T23:02:28.875480",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "给我讲讲独立主格结构",
-            "timestamp": "2025-11-06T13:17:18.346009",
+            "timestamp": "2025-11-08T23:02:28.875482",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这个句子中没有独立主格结构。独立主格结构是英语中的语法现象，德语中不常见。你引用的句子是一个并列复合句，由两个主句通过'und'连接。如果你对句子的某个具体部分有疑问，比如'bewegte sich'的用法或者'die Gedanken wieder bei den Bohrern'这个短语的意思，请具体告诉我。\"}",
-            "timestamp": "2025-11-06T13:17:18.346010",
+            "timestamp": "2025-11-08T23:02:28.875484",
             "is_learning_related": true
           },
           {
@@ -2900,19 +2900,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346011",
+            "timestamp": "2025-11-08T23:02:28.875485",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346012",
+            "timestamp": "2025-11-08T23:02:28.875487",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这部分是独立主格结构，die Gedanken 是主语，wieder bei den Bohrern 是表语，表示“思绪又回到了钻机那里”。这种结构用来描述伴随主句动作发生的状态。'}",
-            "timestamp": "2025-11-06T13:17:18.346013",
+            "timestamp": "2025-11-08T23:02:28.875489",
             "is_learning_related": true
           },
           {
@@ -2934,7 +2934,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346014",
+            "timestamp": "2025-11-08T23:02:28.875491",
             "is_learning_related": true
           }
         ],
@@ -2942,13 +2942,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346015",
+            "timestamp": "2025-11-08T23:02:28.875493",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个主从复合句，主句是‘die beiden hatten sich nicht mehr gesehen’（这两个人没有再见过面），其中‘sich gesehen haben’是完成时态的反身动词结构。‘schon seit etlichen Jahren’是时间状语，表示‘已经好几年了’。句子的基本结构是：主语 + 反身动词完成时 + 时间状语。'}",
-            "timestamp": "2025-11-06T13:17:18.346016",
+            "timestamp": "2025-11-08T23:02:28.875495",
             "is_learning_related": true
           },
           {
@@ -2975,19 +2975,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346017",
+            "timestamp": "2025-11-08T23:02:28.875497",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "请给我解释sich在此处的用法",
-            "timestamp": "2025-11-06T13:17:18.346018",
+            "timestamp": "2025-11-08T23:02:28.875499",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这里的sich是反身代词，表示动作返回到主语自己身上。sich sehen意思是\"互相见面\"，主语die beiden（这两个人）既是动作的执行者也是承受者，所以要用反身代词sich。'}",
-            "timestamp": "2025-11-06T13:17:18.346019",
+            "timestamp": "2025-11-08T23:02:28.875501",
             "is_learning_related": true
           },
           {
@@ -3014,19 +3014,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346020",
+            "timestamp": "2025-11-08T23:02:28.875503",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这里的主语是谁？sich指的是MrsPotter和Mrs Dusley吗？什么情况下可以用sich指代？",
-            "timestamp": "2025-11-06T13:17:18.346021",
+            "timestamp": "2025-11-08T23:02:28.875505",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '主语是die beiden（这两个人），指前文提到的Mrs Potter和Mrs Dursley。sich在这里指代主语自己，表示互相见到对方。德语中sich常用于反身动词，表示动作作用于主语自身，比如sich sehen（互相见面）、sich treffen（见面）等。'}",
-            "timestamp": "2025-11-06T13:17:18.346021",
+            "timestamp": "2025-11-08T23:02:28.875507",
             "is_learning_related": true
           },
           {
@@ -3053,7 +3053,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346022",
+            "timestamp": "2025-11-08T23:02:28.875508",
             "is_learning_related": true
           }
         ],
@@ -3061,13 +3061,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346024",
+            "timestamp": "2025-11-08T23:02:28.875511",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这句话的意思是：这个男孩（指前文提到的某人）也是远离Potters家的一个好理由；她的Dudley不应该和这样的孩子接触。'Potters'和'Dudley'都是专有名词，可以当作名字来理解。你是对'fernzuhalten'（保持距离）这个词，还是对'sollte...nicht in Berührung kommen'（不应该接触）这个表达有疑问？\"}",
-            "timestamp": "2025-11-06T13:17:18.346025",
+            "timestamp": "2025-11-08T23:02:28.875514",
             "is_learning_related": true
           },
           {
@@ -3084,19 +3084,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.346026",
+            "timestamp": "2025-11-08T23:02:28.875516",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "sollte...nicht in Berührung kommen'（不应该接触）这个表达",
-            "timestamp": "2025-11-06T13:17:18.346027",
+            "timestamp": "2025-11-08T23:02:28.875518",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘sollte...nicht in Berührung kommen’ 是德语中表示‘不应该接触’的委婉表达。sollte 在这里表示建议或要求，相当于‘应当’，nicht in Berührung kommen 字面是‘不接触到’。整句意思是‘他们的Dudley不应该接触到这样的孩子’。'}",
-            "timestamp": "2025-11-06T13:17:18.346028",
+            "timestamp": "2025-11-08T23:02:28.875520",
             "is_learning_related": true
           },
           {
@@ -3113,19 +3113,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.346028",
+            "timestamp": "2025-11-08T23:02:28.875522",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346029",
+            "timestamp": "2025-11-08T23:02:28.875524",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个主从复合句。主句是'Auch dieser Junge war ein guter Grund'（这个男孩也是个好理由），后面跟着带zu的不定式结构'sich von den Potters fernzuhalten'（远离Potter一家），表示这个理由的目的。分号后面是另一个独立句子。\"}",
-            "timestamp": "2025-11-06T13:17:18.346030",
+            "timestamp": "2025-11-08T23:02:28.875526",
             "is_learning_related": true
           },
           {
@@ -3153,19 +3153,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346031",
+            "timestamp": "2025-11-08T23:02:28.875528",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "不定式结构是什么",
-            "timestamp": "2025-11-06T13:17:18.346032",
+            "timestamp": "2025-11-08T23:02:28.875530",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这里的‘sich fernzuhalten’是德语带zu的不定式结构，表示‘远离’。整个结构‘sich von den Potters fernzuhalten’意思是‘远离波特一家’，作为‘Grund’（理由）的定语，说明是什么样的理由。'}",
-            "timestamp": "2025-11-06T13:17:18.346033",
+            "timestamp": "2025-11-08T23:02:28.875531",
             "is_learning_related": true
           },
           {
@@ -3182,7 +3182,7 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.346034",
+            "timestamp": "2025-11-08T23:02:28.875533",
             "is_learning_related": true
           }
         ],
@@ -3190,13 +3190,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346035",
+            "timestamp": "2025-11-08T23:02:28.875536",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Stock在这里是德语词，意思是“楼层”。neunten Stock就是“九楼”。英语中floor表示楼层，德语用Stock。'}",
-            "timestamp": "2025-11-06T13:17:18.346036",
+            "timestamp": "2025-11-08T23:02:28.875537",
             "is_learning_related": true
           },
           {
@@ -3213,7 +3213,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346037",
+            "timestamp": "2025-11-08T23:02:28.875539",
             "is_learning_related": true
           }
         ],
@@ -3221,13 +3221,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346038",
+            "timestamp": "2025-11-08T23:02:28.875542",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Woran 是德语疑问词，意思是“关于什么”或“对什么”。在这个句子中，它引导一个疑问或思考的内容，整句意思是“他刚才到底在想什么！”。Woran 由 wo（哪里/什么）和 an（关于/在...上）组成，用来询问与某事物相关的想法或内容。'}",
-            "timestamp": "2025-11-06T13:17:18.346039",
+            "timestamp": "2025-11-08T23:02:28.875543",
             "is_learning_related": true
           },
           {
@@ -3244,7 +3244,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346041",
+            "timestamp": "2025-11-08T23:02:28.875545",
             "is_learning_related": true
           }
         ],
@@ -3252,13 +3252,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346042",
+            "timestamp": "2025-11-08T23:02:28.875549",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘getigerte’是形容词，意思是‘有条纹的’，用来描述猫（Katze）的毛色。在这里‘getigerte Katze’就是‘有条纹的猫’或‘虎斑猫’。'}",
-            "timestamp": "2025-11-06T13:17:18.346043",
+            "timestamp": "2025-11-08T23:02:28.875551",
             "is_learning_related": true
           },
           {
@@ -3275,19 +3275,19 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346045",
+            "timestamp": "2025-11-08T23:02:28.875553",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词有什么词根词缀吗？",
-            "timestamp": "2025-11-06T13:17:18.346046",
+            "timestamp": "2025-11-08T23:02:28.875558",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'getigerte 是形容词，来自名词 Tiger（老虎），加上后缀 -t 表示“有...花纹的”。getigerte Katze 就是“有虎斑纹的猫”，也就是我们常说的“虎斑猫”。'}",
-            "timestamp": "2025-11-06T13:17:18.346046",
+            "timestamp": "2025-11-08T23:02:28.875562",
             "is_learning_related": true
           },
           {
@@ -3304,7 +3304,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346047",
+            "timestamp": "2025-11-08T23:02:28.875565",
             "is_learning_related": true
           }
         ],
@@ -3312,13 +3312,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这部分的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346048",
+            "timestamp": "2025-11-08T23:02:28.875573",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个时间状语从句，结构是：连词Während（当...时）+ 主语er + 方向状语in Richtung Stadt（往城市方向）+ 谓语fuhr（开车）。整个从句意思是“当他往城市方向开车时”，为主句提供时间背景。'}",
-            "timestamp": "2025-11-06T13:17:18.346049",
+            "timestamp": "2025-11-08T23:02:28.875575",
             "is_learning_related": true
           },
           {
@@ -3340,19 +3340,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346050",
+            "timestamp": "2025-11-08T23:02:28.875577",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346051",
+            "timestamp": "2025-11-08T23:02:28.875579",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Richtung 是德语中的名词，意思是“方向”。在这个句子里，in Richtung Stadt 表示“朝着城市的方向”。'}",
-            "timestamp": "2025-11-06T13:17:18.346052",
+            "timestamp": "2025-11-08T23:02:28.875580",
             "is_learning_related": true
           },
           {
@@ -3369,7 +3369,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346053",
+            "timestamp": "2025-11-08T23:02:28.875582",
             "is_learning_related": true
           }
         ],
@@ -3377,13 +3377,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346054",
+            "timestamp": "2025-11-08T23:02:28.875585",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这是一个主从复合句。主句是\"Mr Dursley konnte Leute nicht ausstehen\"（德思礼先生受不了人），后面跟了一个关系从句\"die sich komisch anzogen\"（那些穿着奇怪的人）。关系代词\"die\"指代前面的\"Leute\"，引导从句说明是哪些人。'}",
-            "timestamp": "2025-11-06T13:17:18.346055",
+            "timestamp": "2025-11-08T23:02:28.875587",
             "is_learning_related": true
           },
           {
@@ -3409,7 +3409,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346056",
+            "timestamp": "2025-11-08T23:02:28.875590",
             "is_learning_related": true
           }
         ],
@@ -3417,13 +3417,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346057",
+            "timestamp": "2025-11-08T23:02:28.875593",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个主从复合句。主句是'Doch dann fiel Mr Dursley plötzlich ein'（但突然达力先生想起），从句是'dass dies wohl eine verrückte Verkleidung sein musste'（这想必是一个疯狂的装扮）。'dass'引导的是宾语从句，说明想起的内容。主句中'fiel ein'是可分动词'einfallen'的过去式，意思是'突然想起'。\"}",
-            "timestamp": "2025-11-06T13:17:18.346058",
+            "timestamp": "2025-11-08T23:02:28.875595",
             "is_learning_related": true
           },
           {
@@ -3454,19 +3454,19 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346059",
+            "timestamp": "2025-11-08T23:02:28.875597",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346060",
+            "timestamp": "2025-11-08T23:02:28.875599",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'irgendetwas 是德语词，意思是“某物”或“某些东西”，相当于英语的“something”。在句子里表示人们在为某件事或某个东西募捐。'}",
-            "timestamp": "2025-11-06T13:17:18.346061",
+            "timestamp": "2025-11-08T23:02:28.875600",
             "is_learning_related": true
           },
           {
@@ -3483,7 +3483,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346062",
+            "timestamp": "2025-11-08T23:02:28.875602",
             "is_learning_related": true
           }
         ],
@@ -3491,13 +3491,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346064",
+            "timestamp": "2025-11-08T23:02:28.875605",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘nanu’是德语中的一个感叹词，表示惊讶或意外，类似于中文的‘哎呀’、‘咦’或‘怎么’。在这个句子里，它表达了Dursley先生发现有人比他年纪还大时的惊讶情绪。'}",
-            "timestamp": "2025-11-06T13:17:18.346064",
+            "timestamp": "2025-11-08T23:02:28.875607",
             "is_learning_related": true
           },
           {
@@ -3514,7 +3514,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346065",
+            "timestamp": "2025-11-08T23:02:28.875608",
             "is_learning_related": true
           }
         ],
@@ -3522,13 +3522,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346066",
+            "timestamp": "2025-11-08T23:02:28.875611",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'überhaupt在这里是副词，意思是\"根本\"或\"完全\"，用来加强语气。整个句子的意思是：\"他们中的大多数人根本从未见过一个，甚至晚上也没有。\" 它强调了\"从未\"这个否定含义。'}",
-            "timestamp": "2025-11-06T13:17:18.346067",
+            "timestamp": "2025-11-08T23:02:28.875612",
             "is_learning_related": true
           },
           {
@@ -3545,7 +3545,7 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346068",
+            "timestamp": "2025-11-08T23:02:28.875614",
             "is_learning_related": true
           }
         ]
@@ -3558,37 +3558,37 @@
           {
             "user_question": "What vocabulary should I learn?",
             "ai_response": "{'answer': \"这句话中可学习的词汇是'sentence'(句子)和'test'(测试)。建议重点记忆这两个名词的用法。英语中'sentence'指完整的表达单位，'test'指测验或检验。\"}",
-            "timestamp": "2025-11-06T13:17:18.346070",
+            "timestamp": "2025-11-08T23:02:28.875618",
             "is_learning_related": true
           },
           {
             "user_question": "How do you pronounce this?",
             "ai_response": "{'answer': '这句话的发音是：/ðɪs ɪz ðə ˈsɛkənd tɛst ˈsɛntəns/。可以分解为：This（ðɪs） is（ɪz） the（ðə） second（ˈsɛkənd） test（tɛst） sentence（ˈsɛntəns）。注意重音在second和sentence的第一个音节。'}",
-            "timestamp": "2025-11-06T13:17:18.346072",
+            "timestamp": "2025-11-08T23:02:28.875620",
             "is_learning_related": true
           },
           {
             "user_question": "What vocabulary should I learn?",
             "ai_response": "{'answer': \"在这句话中，你可以学习以下词汇：'second'（第二）、'test'（测试）、'sentence'（句子）。这些是基础但重要的英语单词。\"}",
-            "timestamp": "2025-11-06T13:17:18.346073",
+            "timestamp": "2025-11-08T23:02:28.875622",
             "is_learning_related": true
           },
           {
             "user_question": "How do you pronounce this?",
             "ai_response": "{'answer': \"这句话的发音是 /ðɪs ɪz ðə ˈsɛkənd tɛst ˈsɛntəns/。英语中，'second' 读作 /ˈsɛkənd/，'test' 读作 /tɛst/，'sentence' 读作 /ˈsɛntəns/。\"}",
-            "timestamp": "2025-11-06T13:17:18.346074",
+            "timestamp": "2025-11-08T23:02:28.875624",
             "is_learning_related": true
           },
           {
             "user_question": "Finne是什么意思？",
             "ai_response": "Finne是德语名词，指鱼类的背鳍。",
-            "timestamp": "2025-11-06T13:17:18.346075",
+            "timestamp": "2025-11-08T23:02:28.875626",
             "is_learning_related": true
           },
           {
             "user_question": "这句话的语法结构是什么？",
             "ai_response": "这是一个复合句，包含两个主句，用逗号连接。",
-            "timestamp": "2025-11-06T13:17:18.346076",
+            "timestamp": "2025-11-08T23:02:28.875628",
             "is_learning_related": true
           }
         ]
@@ -3601,25 +3601,25 @@
           {
             "user_question": "yy",
             "ai_response": "The question is not relevant to language learning, skipping processing.",
-            "timestamp": "2025-11-06T13:17:18.346078",
+            "timestamp": "2025-11-08T23:02:28.875632",
             "is_learning_related": true
           },
           {
             "user_question": "What does revolutionized mean?",
             "ai_response": "{'answer': 'revolutionized意思是‘彻底改变’或‘带来革命性变化’。在这里指互联网使语言学习方式发生了根本性的改变。比如：Smartphones revolutionized how we communicate.（智能手机彻底改变了我们的交流方式。）'}",
-            "timestamp": "2025-11-06T13:17:18.346079",
+            "timestamp": "2025-11-08T23:02:28.875633",
             "is_learning_related": true
           },
           {
             "user_question": "What does revolutionized mean?",
             "ai_response": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这个词表示某事物带来了巨大的、根本性的改变。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
-            "timestamp": "2025-11-06T13:17:18.346080",
+            "timestamp": "2025-11-08T23:02:28.875635",
             "is_learning_related": true
           },
           {
             "user_question": "What does revolutionized mean?Use English to answer!",
             "ai_response": "{'answer': \"The word 'revolutionized' means to completely and dramatically change or transform something, making it much better or more effective than before. In this sentence, it means the internet has completely changed and improved how we learn languages.\"}",
-            "timestamp": "2025-11-06T13:17:18.346080",
+            "timestamp": "2025-11-08T23:02:28.875637",
             "is_learning_related": true
           }
         ]
@@ -3632,25 +3632,25 @@
           {
             "user_question": "What does revolutionized mean？",
             "ai_response": "{'answer': 'revolutionized意思是‘彻底改变’或‘使发生革命性变化’。这里指互联网完全改变了我们学习语言的方式。比如：Smartphones have revolutionized communication.（智能手机彻底改变了通讯方式。）'}",
-            "timestamp": "2025-11-06T13:17:18.346082",
+            "timestamp": "2025-11-08T23:02:28.875640",
             "is_learning_related": true
           },
           {
             "user_question": "What does revolutionized mean ? Please answer in  English",
             "ai_response": "{'answer': \"The word 'revolutionized' means to completely change or transform something in a very significant way. In this sentence, it means the internet has dramatically changed how we learn languages.\"}",
-            "timestamp": "2025-11-06T13:17:18.346083",
+            "timestamp": "2025-11-08T23:02:28.875641",
             "is_learning_related": true
           },
           {
             "user_question": "What does this word mean, answer in English",
             "ai_response": "{'answer': \"The word 'revolutionized' means to completely change or transform something in a radical or fundamental way, often leading to significant improvement or innovation.\"}",
-            "timestamp": "2025-11-06T13:17:18.346083",
+            "timestamp": "2025-11-08T23:02:28.875644",
             "is_learning_related": true
           },
           {
             "user_question": "What is the grammaticle structure of this phrase, please answer in English",
             "ai_response": "{'answer': \"The grammatical structure is: [determiner 'the'] + [noun 'way'] + [relative clause 'we learn languages']. It's a noun phrase where 'the way' is modified by the clause 'we learn languages' (which describes what kind of way).\"}",
-            "timestamp": "2025-11-06T13:17:18.346084",
+            "timestamp": "2025-11-08T23:02:28.875647",
             "is_learning_related": true
           }
         ],
@@ -3658,7 +3658,7 @@
           {
             "user_question": "What does advent mean? please answer in English",
             "ai_response": "{'answer': \"The word 'advent' means the arrival or beginning of something important. For example: 'The advent of computers changed the world.' It often refers to the start of a new era or significant development.\"}",
-            "timestamp": "2025-11-06T13:17:18.346085",
+            "timestamp": "2025-11-08T23:02:28.875650",
             "is_learning_related": true
           }
         ],
@@ -3666,19 +3666,19 @@
           {
             "user_question": "What is the grammatical structure of this sentence? please answer in English",
             "ai_response": "{'answer': \"The grammatical structure is: Subject ('One of the most significant advantages of internet-based language learning') + Linking Verb ('is') + Subject Complement ('the availability of authentic materials'). It's a simple sentence with a subject-verb-complement pattern.\"}",
-            "timestamp": "2025-11-06T13:17:18.346087",
+            "timestamp": "2025-11-08T23:02:28.875653",
             "is_learning_related": true
           },
           {
             "user_question": "What is subject complement?",
             "ai_response": "{'answer': \"在英语语法中，subject complement（主语补足语）是用来说明或描述主语的成分。在你引用的句子中，'the availability of authentic materials'就是主语补足语，它用来说明主语'One of the most significant advantages of internet-based language learning'是什么。主语补足语通常出现在系动词（如is, are, seem等）之后。\"}",
-            "timestamp": "2025-11-06T13:17:18.346088",
+            "timestamp": "2025-11-08T23:02:28.875655",
             "is_learning_related": true
           },
           {
             "user_question": "What is the grammaticle structure of this sentence? please answer in English",
             "ai_response": "{'answer': \"The grammatical structure is: Subject ('One of the most significant advantages of internet-based language learning') + Linking Verb ('is') + Subject Complement ('the availability of authentic materials'). It's a simple sentence with a subject-verb-complement pattern.\"}",
-            "timestamp": "2025-11-06T13:17:18.346089",
+            "timestamp": "2025-11-08T23:02:28.875657",
             "is_learning_related": true
           }
         ],
@@ -3686,7 +3686,7 @@
           {
             "user_question": "What does this word mean? please explain in simple english",
             "ai_response": "{'answer': \"Facilitates means 'makes something easier' or 'helps something happen'. For example: 'The new software facilitates communication' means the software makes communication easier.\"}",
-            "timestamp": "2025-11-06T13:17:18.346090",
+            "timestamp": "2025-11-08T23:02:28.875659",
             "is_learning_related": true
           }
         ]
@@ -3699,13 +3699,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么",
-            "timestamp": "2025-11-06T13:17:18.346091",
+            "timestamp": "2025-11-08T23:02:28.875662",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这是一个主从复合句。主句是'war...kein Vorzeichen...zu erkennen'（没有任何征兆可以被察觉），前面是时间状语从句'Als...die Augen aufschlugen'（当...睁开眼睛时），后面是定语从句'die bald...geschehen sollten'（那些即将发生的事情）。句子主干是：当德思礼夫妇睁开眼睛时，外面天空中没有迹象表明即将发生奇怪的事情。\"}",
-            "timestamp": "2025-11-06T13:17:18.346092",
+            "timestamp": "2025-11-08T23:02:28.875664",
             "is_learning_related": true
           },
           {
@@ -3722,19 +3722,19 @@
               "is_single_token": true,
               "is_full_sentence": true
             },
-            "timestamp": "2025-11-06T13:17:18.346093",
+            "timestamp": "2025-11-08T23:02:28.875666",
             "is_learning_related": true
           },
           {
             "user_question": "user_input",
             "ai_response": "这段的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346094",
+            "timestamp": "2025-11-08T23:02:28.875668",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这个句子的主要结构是：'war kein Vorzeichen zu erkennen'（没有任何征兆可以被察觉）。这是一个德语中的无人称被动结构，字面意思是'在阴云密布的天空中没有奇怪而神秘事情的征兆可以被察觉'。'an dem wolkenverhangenen Himmel draußen' 是地点状语，'der merkwürdigen und geheimnisvollen Dinge' 是Vorzeichen的定语，说明是什么样的征兆。\"}",
-            "timestamp": "2025-11-06T13:17:18.346095",
+            "timestamp": "2025-11-08T23:02:28.875669",
             "is_learning_related": true
           },
           {
@@ -3765,7 +3765,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346096",
+            "timestamp": "2025-11-08T23:02:28.875672",
             "is_learning_related": true
           }
         ],
@@ -3773,13 +3773,13 @@
           {
             "user_question": "user_input",
             "ai_response": "给我讲讲这句话中的独立主格结构",
-            "timestamp": "2025-11-06T13:17:18.346097",
+            "timestamp": "2025-11-08T23:02:28.875675",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '这句话中没有独立主格结构。德语中独立主格结构（Absoluter Nominativ）通常由名词+分词构成，表示伴随状况。而这里的\"die Gedanken wieder bei den Bohrern\"是一个省略了动词的独立短语，用来描述Dursley先生的心理状态，意思是\"思绪又回到了钻孔机上\"。这是一种文学性的表达方式，不是语法上的独立主格结构。'}",
-            "timestamp": "2025-11-06T13:17:18.346098",
+            "timestamp": "2025-11-08T23:02:28.875677",
             "is_learning_related": true
           },
           {
@@ -3813,7 +3813,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346101",
+            "timestamp": "2025-11-08T23:02:28.875679",
             "is_learning_related": true
           }
         ],
@@ -3821,13 +3821,13 @@
           {
             "user_question": "user_input",
             "ai_response": "为什么这个短语可以接在前面完整句后面并省略动词？",
-            "timestamp": "2025-11-06T13:17:18.346102",
+            "timestamp": "2025-11-08T23:02:28.875681",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': \"这个句子其实包含两个并列的动作：'bewegte sich'（动了动）和'fuhr...auf'（开进）。它们共享同一个主语'Mr Dursley'，所以第二个动作前省略了主语。这不是接在前面的完整句后面，而是用'und'连接的两个并列分句，描述连续发生的两个动作。\"}",
-            "timestamp": "2025-11-06T13:17:18.346103",
+            "timestamp": "2025-11-08T23:02:28.875683",
             "is_learning_related": true
           },
           {
@@ -3861,7 +3861,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346104",
+            "timestamp": "2025-11-08T23:02:28.875687",
             "is_learning_related": true
           }
         ],
@@ -3869,13 +3869,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346105",
+            "timestamp": "2025-11-08T23:02:28.875690",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '‘doch hatten’是德语中的倒装结构，doch表示‘但是/然而’，hatten是动词‘haben’（有）的过去时复数形式。当句子以doch等连词开头时，动词会提前到第二位，形成‘连词 + 动词 + 主语’的结构。例如‘Doch hatten sie...’意思是‘然而他们曾经有...’。'}",
-            "timestamp": "2025-11-06T13:17:18.346106",
+            "timestamp": "2025-11-08T23:02:28.875692",
             "is_learning_related": true
           },
           {
@@ -3893,7 +3893,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346106",
+            "timestamp": "2025-11-08T23:02:28.875693",
             "is_learning_related": true
           }
         ],
@@ -3901,13 +3901,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这句话的语法结构是什么？",
-            "timestamp": "2025-11-06T13:17:18.346108",
+            "timestamp": "2025-11-08T23:02:28.875696",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': '你引用的‘doch hatten’并不在提供的完整句子中。请确认你想问的是哪个部分的语法结构？是‘konnte nicht umhin zu bemerken’（忍不住注意到），还是‘dass...unterwegs waren’（从句结构）？'}",
-            "timestamp": "2025-11-06T13:17:18.346108",
+            "timestamp": "2025-11-08T23:02:28.875698",
             "is_learning_related": true
           },
           {
@@ -3925,7 +3925,7 @@
               "is_single_token": false,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346109",
+            "timestamp": "2025-11-08T23:02:28.875700",
             "is_learning_related": true
           }
         ]
@@ -3938,13 +3938,13 @@
           {
             "user_question": "user_input",
             "ai_response": "这个词是什么意思？",
-            "timestamp": "2025-11-06T13:17:18.346111",
+            "timestamp": "2025-11-08T23:02:28.875704",
             "is_learning_related": true
           },
           {
             "user_question": "ai_response",
             "ai_response": "{'answer': 'Ziergartenbau 是一个德语复合词，指“观赏园艺”或“装饰园艺”。在句子中表示俞孔坚在北京林业大学学习的专业领域。这是一个专业术语，可以作为一个整体来理解。'}",
-            "timestamp": "2025-11-06T13:17:18.346112",
+            "timestamp": "2025-11-08T23:02:28.875705",
             "is_learning_related": true
           },
           {
@@ -3961,7 +3961,69 @@
               "is_single_token": true,
               "is_full_sentence": false
             },
-            "timestamp": "2025-11-06T13:17:18.346113",
+            "timestamp": "2025-11-08T23:02:28.875707",
+            "is_learning_related": true
+          }
+        ],
+        "3": [
+          {
+            "user_question": "user_input",
+            "ai_response": "这个词是什么意思？",
+            "timestamp": "2025-11-08T23:02:28.875711",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "ai_response",
+            "ai_response": "{'answer': '1998是一个年份（1998年）。在句子中表示时间，指他创办公司的那一年。你是想问这个数字的含义，还是句子里其他部分？'}",
+            "timestamp": "2025-11-08T23:02:28.875715",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "selected_token",
+            "ai_response": {
+              "token_indices": [
+                1
+              ],
+              "token_text": "1998",
+              "sentence_body": "1998 gründete er sein weltweit agierendes und international ausgezeichnetes Landschaftsarchitekturbüro Turenscape[6] mit etwa 600 Angestellten.[7] Yu Kongjians Arbeit befasst sich mit Aufgabenstellungen aus der Architektur, Landschaftsarchitektur sowie Städtebau in allen Maßstabsebenen.",
+              "sentence_id": 3,
+              "text_id": 1758864042,
+              "token_count": 1,
+              "is_single_token": true,
+              "is_full_sentence": false
+            },
+            "timestamp": "2025-11-08T23:02:28.875717",
+            "is_learning_related": true
+          }
+        ],
+        "5": [
+          {
+            "user_question": "user_input",
+            "ai_response": "这个词是什么意思？",
+            "timestamp": "2025-11-08T23:02:28.875720",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "ai_response",
+            "ai_response": "{'answer': 'ökologische 是德语形容词，意思是“生态的”或“生态学的”。在句子中修饰 Infrastrukturen（基础设施），所以 ökologische Infrastrukturen 就是“生态基础设施”。'}",
+            "timestamp": "2025-11-08T23:02:28.875722",
+            "is_learning_related": true
+          },
+          {
+            "user_question": "selected_token",
+            "ai_response": {
+              "token_indices": [
+                16
+              ],
+              "token_text": "ökologische",
+              "sentence_body": "In seinen Projekten verfolgte Yu das Ziel, ökologische Infrastrukturen neu aufzubauen und entwickelte dabei eine neue Umwelt-Ästhetik basierend auf Grundpositionen der Umweltethik[8].",
+              "sentence_id": 5,
+              "text_id": 1758864042,
+              "token_count": 1,
+              "is_single_token": true,
+              "is_full_sentence": false
+            },
+            "timestamp": "2025-11-08T23:02:28.875724",
             "is_learning_related": true
           }
         ]

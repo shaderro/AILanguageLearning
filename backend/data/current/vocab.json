@@ -813,5 +813,23 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 42,
+    "vocab_body": "ökologische",
+    "explanation": "{'explanation': 'ökologische 是一个形容词，意为“生态的”或“生态学的”。它描述与生态系统、环境保护或生物与环境相互关系相关的事物。例如，它可以用于修饰基础设施、政策、农业等，强调环境友好和可持续发展的特性。该词源自德语名词 Ökologie（生态学），常用于科学、环保和日常语境中。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 42,
+        "text_id": 1758864042,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这句话中，'ökologische' 的意思是“生态的”，它描述了 'Infrastrukturen'（基础设施），指的是与环境保护和自然生态系统相关的设施。因此，'ökologische Infrastrukturen' 指的是旨在重建或改善生态平衡的基础设施，例如恢复湿地或绿化城市空间。\"}",
+        "token_indices": [
+          16
+        ]
+      }
+    ]
   }
 ]
