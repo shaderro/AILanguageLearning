@@ -1,0 +1,12 @@
+# 认证功能所需依赖
+# 安装命令: pip install -r AUTH_REQUIREMENTS.txt
+
+# 密码加密
+passlib[bcrypt]==1.7.4
+
+# JWT token
+python-jose[cryptography]==3.3.0
+
+# HTTP Bearer 认证（FastAPI 已包含）
+# python-multipart（如果需要表单数据）
+

@@ -247,6 +247,14 @@ if notation_router:
     app.include_router(notation_router)
     print("[OK] 注册新的标注API路由: /api/v2/notations")
 
+# 注册认证API路由
+try:
+    from backend.api.auth_routes import router as auth_router
+    app.include_router(auth_router)
+    print("[OK] 注册认证API路由: /api/auth")
+except ImportError as e:
+    print(f"Warning: Could not import auth_routes: {e}")
+
 # 注册文章API路由
 try:
     from backend.api.text_routes import router as text_router
@@ -496,6 +504,16 @@ async def reset_session_state(payload: dict):
         print(f"[Session] Error resetting session: {e}")
         return {"success": False, "error": str(e)}
 
+@app.post("/api/admin/sync-to-db")
+async def trigger_sync_to_db():
+    """手动触发 JSON 数据同步到数据库"""
+    try:
+        print("🔄 [Admin] Manual sync triggered")
+        _sync_to_database()
+        return {"success": True, "message": "Data synced to database"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 def _sync_to_database():
     """同步 JSON 数据到数据库"""
     try:
@@ -571,8 +589,18 @@ def _sync_to_database():
                     
                     # 同步 examples
                     print(f"🔍 [Sync] Vocab {vocab_body} 有 {len(examples)} 个 examples")
+                    added_examples = 0
+                    skipped_examples = 0
                     for ex in examples:
                         try:
+                            # 先检查text_id是否存在
+                            from database_system.business_logic.managers import TextManager
+                            text_mgr = TextManager(session)
+                            if not text_mgr.get_text(ex.text_id):
+                                print(f"  ⚠️ 跳过 example (text_id={ex.text_id} 不存在): sentence_id={ex.sentence_id}")
+                                skipped_examples += 1
+                                continue
+                            
                             vocab_db_mgr.add_vocab_example(
                                 vocab_id=new_vocab.vocab_id,
                                 text_id=ex.text_id,
@@ -581,14 +609,39 @@ def _sync_to_database():
                                 token_indices=getattr(ex, 'token_indices', [])
                             )
                             print(f"  ✅ 添加 example: text_id={ex.text_id}, sentence_id={ex.sentence_id}")
+                            added_examples += 1
                         except Exception as ex_err:
                             print(f"  ❌ Example 添加失败: {ex_err}")
+                            skipped_examples += 1
+                    
+                    if skipped_examples > 0:
+                        print(f"  ⚠️ {skipped_examples} 个 examples 被跳过（text_id不存在或其他错误）")
                 else:
-                    # 已存在的 vocab，同步新的 examples（静默处理）
+                    # 已存在的 vocab，同步新的 examples
                     existing_vocab_id = existing.vocab_id
+                    # 获取数据库中已有的examples，用于去重
+                    db_examples = vocab_db_mgr.get_examples_by_vocab_id(existing_vocab_id)
+                    db_example_keys = {(ex.text_id, ex.sentence_id) for ex in db_examples}
+                    
                     synced_examples = 0
+                    skipped_text_not_exist = 0
+                    skipped_duplicate = 0
+                    
                     for ex in examples:
+                        # 检查是否已存在（去重）
+                        example_key = (ex.text_id, ex.sentence_id)
+                        if example_key in db_example_keys:
+                            skipped_duplicate += 1
+                            continue
+                        
                         try:
+                            # 先检查text_id是否存在（避免外键约束错误）
+                            from database_system.business_logic.managers import TextManager
+                            text_mgr = TextManager(session)
+                            if not text_mgr.get_text(ex.text_id):
+                                skipped_text_not_exist += 1
+                                continue
+                            
                             vocab_db_mgr.add_vocab_example(
                                 vocab_id=existing_vocab_id,
                                 text_id=ex.text_id,
@@ -597,11 +650,16 @@ def _sync_to_database():
                                 token_indices=getattr(ex, 'token_indices', [])
                             )
                             synced_examples += 1
+                            db_example_keys.add(example_key)  # 更新已同步的key集合
                         except Exception as ex_err:
-                            # 静默处理重复或其他错误
+                            # 处理其他错误（如数据库约束）
                             pass
+                    
+                    # 只在真正添加了新examples时才打印
                     if synced_examples > 0:
                         print(f"ℹ️ [Sync] Vocab '{vocab_body}': 补充了 {synced_examples} 个 examples")
+                    if skipped_text_not_exist > 0:
+                        print(f"⚠️ [Sync] Vocab '{vocab_body}': 跳过 {skipped_text_not_exist} 个 examples (text_id不存在)")
             
             session.commit()
             print(f"✅ [Sync] 数据库同步完成: {synced_grammar} grammar rules, {synced_vocab} vocab expressions")

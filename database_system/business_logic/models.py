@@ -139,7 +139,7 @@ class AskedToken(Base):
     __tablename__ = 'asked_tokens'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(255), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
     sentence_token_id = Column(Integer, nullable=True)  # 改为可空：当 type='sentence' 时可以为空
@@ -163,7 +163,7 @@ class VocabNotation(Base):
     __tablename__ = 'vocab_notations'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(255), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
     token_id = Column(Integer, nullable=False)  # sentence_token_id
@@ -187,7 +187,7 @@ class GrammarNotation(Base):
     __tablename__ = 'grammar_notations'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(255), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
     grammar_id = Column(Integer, ForeignKey('grammar_rules.rule_id', ondelete='CASCADE'))
@@ -210,11 +210,14 @@ class GrammarNotation(Base):
 class User(Base):
     __tablename__ = 'users'
     
-    user_id = Column(Integer, primary_key=True, autoincrement=True)
-    password = Column(String(255), nullable=False)  # 存储哈希后的密码
+    user_id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    password_hash = Column(String(255), nullable=False)  # 存储哈希后的密码
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     
-    # 暂不需要关联关系，开发阶段数据共享
+    # 关联关系
+    asked_tokens = relationship('AskedToken', backref='user', cascade='all, delete-orphan')
+    vocab_notations = relationship('VocabNotation', backref='user', cascade='all, delete-orphan')
+    grammar_notations = relationship('GrammarNotation', backref='user', cascade='all, delete-orphan')
 
 
 def create_database_engine(database_url: str):

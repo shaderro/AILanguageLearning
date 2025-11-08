@@ -344,7 +344,10 @@
         "grammar_annotations": [
           6
         ],
-        "vocab_annotations": []
+        "vocab_annotations": [
+          40,
+          41
+        ]
       },
       {
         "text_id": 1,

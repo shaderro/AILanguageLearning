@@ -288,7 +288,19 @@ export const apiService = {
   deleteGrammar: (id) => api.delete(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}/`),
 
   // 获取语法注释列表
-  getGrammarNotations: (textId) => api.get(API_TARGET === 'mock' ? `/api/grammar_notations/${textId}` : `/api/v2/notations/grammar?text_id=${textId}`),
+  getGrammarNotations: (textId, userId) => {
+    // 🔧 如果没有传入 userId，从 localStorage 获取
+    if (!userId) {
+      const storedUserId = localStorage.getItem('user_id')
+      userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
+    }
+    
+    return api.get(
+      API_TARGET === 'mock' 
+        ? `/api/grammar_notations/${textId}` 
+        : `/api/v2/notations/grammar?text_id=${textId}&user_id=${userId}`
+    )
+  },
 
   // 获取句子的语法规则
   getSentenceGrammarRules: (textId, sentenceId) => 
@@ -297,7 +309,19 @@ export const apiService = {
       : `/api/v2/notations/grammar/${textId}/${sentenceId}`),
 
   // 获取词汇注释列表
-  getVocabNotations: (textId) => api.get(API_TARGET === 'mock' ? `/api/vocab_notations/${textId}` : `/api/v2/notations/vocab?text_id=${textId}`),
+  getVocabNotations: (textId, userId) => {
+    // 🔧 如果没有传入 userId，从 localStorage 获取
+    if (!userId) {
+      const storedUserId = localStorage.getItem('user_id')
+      userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
+    }
+    
+    return api.get(
+      API_TARGET === 'mock' 
+        ? `/api/vocab_notations/${textId}` 
+        : `/api/v2/notations/vocab?text_id=${textId}&user_id=${userId}`
+    )
+  },
 
   // 获取句子的词汇注释
   getSentenceVocabNotations: (textId, sentenceId) => 
@@ -306,7 +330,13 @@ export const apiService = {
       : `/api/v2/notations/vocab/${textId}/${sentenceId}`),
 
   // 创建词汇标注（新API）
-  createVocabNotation: (userId = 'default_user', textId, sentenceId, tokenId, vocabId = null) => {
+  createVocabNotation: (userId, textId, sentenceId, tokenId, vocabId = null) => {
+    // 🔧 如果没有传入 userId，从 localStorage 获取
+    if (!userId) {
+      const storedUserId = localStorage.getItem('user_id')
+      userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
+    }
+    
     console.log(`➕ [Frontend] Creating vocab notation: ${textId}:${sentenceId}:${tokenId}`, { userId, vocabId })
     return api.post(
       API_TARGET === 'mock' 
@@ -423,13 +453,25 @@ export const apiService = {
   // ==================== Asked Tokens API（JSON版本，保持不变）====================
   // 注意：这些端点仍然使用JSON文件存储，等数据结构最终确定后再迁移到数据库
   
-  getAskedTokens: (userId = 'default_user', textId) => {
+  getAskedTokens: (userId, textId) => {
+    // 🔧 如果没有传入 userId，从 localStorage 获取
+    if (!userId) {
+      const storedUserId = localStorage.getItem('user_id')
+      userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
+    }
+    
     console.log(`🔍 [Frontend] Getting asked tokens for user=${userId}, text=${textId}`);
     return api.get(`/api/user/asked-tokens?user_id=${userId}&text_id=${textId}`);
   },
 
-  markTokenAsked: (userId = 'default_user', textId, sentenceId, sentenceTokenId, vocabId = null, grammarId = null) => {
-    console.log(`🏷️ [Frontend] Marking token as asked: ${textId}:${sentenceId}:${sentenceTokenId}`, { vocabId, grammarId });
+  markTokenAsked: (userId, textId, sentenceId, sentenceTokenId, vocabId = null, grammarId = null) => {
+    // 🔧 如果没有传入 userId，从 localStorage 获取
+    if (!userId) {
+      const storedUserId = localStorage.getItem('user_id')
+      userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
+    }
+    
+    console.log(`🏷️ [Frontend] Marking token as asked: ${textId}:${sentenceId}:${sentenceTokenId}`, { userId, vocabId, grammarId });
     return api.post('/api/user/asked-tokens', {
       user_id: userId,
       text_id: textId,

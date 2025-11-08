@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
 import ReviewCard from '../shared/components/ReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import { useGrammarList, useToggleGrammarStar, useRefreshData } from '../../hooks/useApi'
+import { apiService } from '../../services/api'
 
 const GrammarDemo = () => {
   // 使用API获取语法数据
@@ -29,10 +30,33 @@ const GrammarDemo = () => {
   const list = allGrammar.filter((g) => (filterText ? g.rule_name.toLowerCase().includes(filterText.toLowerCase()) : true))
 
   const [selectedGrammar, setSelectedGrammar] = useState(null)
+  const [selectedGrammarId, setSelectedGrammarId] = useState(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [reviewItems, setReviewItems] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [results, setResults] = useState([])
+
+  // 🔧 新增：当选中语法时，获取完整的语法详情（包含examples）
+  useEffect(() => {
+    if (selectedGrammarId) {
+      setIsLoadingDetail(true)
+      console.log(`🔍 [GrammarDemo] Fetching grammar detail for ID: ${selectedGrammarId}`)
+      
+      apiService.getGrammarById(selectedGrammarId)
+        .then(response => {
+          console.log(`✅ [GrammarDemo] Grammar detail fetched:`, response)
+          // 处理API响应格式
+          const grammarData = response?.data || response
+          setSelectedGrammar(grammarData)
+          setIsLoadingDetail(false)
+        })
+        .catch(error => {
+          console.error(`❌ [GrammarDemo] Error fetching grammar detail:`, error)
+          setIsLoadingDetail(false)
+        })
+    }
+  }, [selectedGrammarId])
 
   const startReview = () => {
     const shuffled = [...allGrammar].sort(() => 0.5 - Math.random())
@@ -91,14 +115,18 @@ const GrammarDemo = () => {
   }
 
   // 详情页
-  if (selectedGrammar) {
+  if (selectedGrammarId) {
     return (
       <div className="h-full bg-gray-100 p-8">
         <div className="max-w-6xl mx-auto">
           <LearnDetailPage 
             type="grammar" 
-            data={selectedGrammar} 
-            onBack={() => setSelectedGrammar(null)}
+            data={selectedGrammar}
+            loading={isLoadingDetail}
+            onBack={() => {
+              setSelectedGrammar(null)
+              setSelectedGrammarId(null)
+            }}
             onToggleStar={handleToggleStar}
           />
         </div>
@@ -166,7 +194,7 @@ const GrammarDemo = () => {
           key={g.rule_id} 
           type="grammar" 
           data={g} 
-          onClick={() => setSelectedGrammar(g)}
+          onClick={() => setSelectedGrammarId(g.rule_id)}
           onToggleStar={handleToggleStar}
         />
       ))}

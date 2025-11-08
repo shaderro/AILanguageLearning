@@ -759,5 +759,59 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 39,
+    "vocab_body": "ziergartenbau",
+    "explanation": "{'explanation': \"Ziergartenbau 是一个德语复合名词，由 'Zier'（意为装饰、美化）、'Garten'（花园）和 'Bau'（建造、建筑）组成。它指的是园艺学中的一个专业领域，专注于设计、建造和维护装饰性花园或景观，强调美学和艺术性，而非实用或农业用途。该词通常用于学术或专业语境中，描述与观赏植物、景观设计相关的学习和实践。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 39,
+        "text_id": 1758864042,
+        "sentence_id": 1,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Ziergartenbau' 指的是俞孔坚最初在北京林业大学学习的专业领域。它具体描述了他早期教育的内容，即专注于装饰性园艺或景观美化，而不是其他类型的园艺（如农业或实用园艺）。\"}",
+        "token_indices": [
+          9
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 40,
+    "vocab_body": "stau",
+    "explanation": "{'explanation': \"Stau 是一个德语名词，意思是交通堵塞或拥堵，通常指车辆在道路上因事故、施工或高峰时段而无法顺利通行的情况。它也可以引申为其他类型的堵塞，比如人流或物流的停滞。在用法上，Stau 常与介词如 'im'（在...中）连用，例如 'im Stau stehen' 表示被困在交通堵塞中。这个词没有复数形式，但在某些语境下可以用于抽象概念，如信息堵塞。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 40,
+        "text_id": 1,
+        "sentence_id": 34,
+        "context_explanation": "{\"explanation\": \"在这个句子中，“Stau”指的是“交通堵塞”。句子描述了“他坐在早晨常见的交通堵塞中”，说明他因为车辆拥堵而无法前进。\"}",
+        "token_indices": [
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 41,
+    "vocab_body": "umhin können",
+    "explanation": "{'explanation': \"umhin können 是一个德语固定表达，通常与否定词 'nicht' 连用，构成 'nicht umhin können'，意思是 '不能避免'、'忍不住' 或 '不得不'。它表示某人无法控制地做某事或产生某种想法，强调一种不由自主的反应。词性上，'können' 是情态动词，表示能力或可能性，而 'umhin' 是一个副词，常用于固定搭配中。用法：通常后接带 'zu' 的不定式结构，例如 'nicht umhin können, etwas zu tun'（忍不住做某事）。这个表达没有其他常见意思，主要用于描述情感或认知上的不可避免性。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 41,
+        "text_id": 1,
+        "sentence_id": 34,
+        "context_explanation": "{\"explanation\": \"在这句话中，'umhin' 与 'konnte nicht' 连用，意思是“他无法避免注意到”或“他忍不住注意到”。它强调了尽管他困在早高峰堵车中，但还是不由自主地观察到有很多穿着奇怪的人在路上。\"}",
+        "token_indices": [
+          21
+        ]
+      }
+    ]
   }
 ]

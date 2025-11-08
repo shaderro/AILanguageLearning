@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useVocabList, useWordInfo, useToggleVocabStar, useRefreshData } from '../../hooks/useApi'
+import { apiService } from '../../services/api'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
@@ -8,6 +9,8 @@ import ReviewResults from '../shared/components/ReviewResults'
 
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
+  const [selectedWordId, setSelectedWordId] = useState(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [reviewWords, setReviewWords] = useState([])
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0)
@@ -26,8 +29,30 @@ function WordDemo() {
   // 数据刷新功能
   const { refreshVocab } = useRefreshData()
 
+  // 🔧 新增：当选中词汇时，获取完整的词汇详情（包含examples）
+  useEffect(() => {
+    if (selectedWordId) {
+      setIsLoadingDetail(true)
+      console.log(`🔍 [WordDemo] Fetching vocab detail for ID: ${selectedWordId}`)
+      
+      apiService.getVocabById(selectedWordId)
+        .then(response => {
+          console.log(`✅ [WordDemo] Vocab detail fetched:`, response)
+          // 处理API响应格式
+          const vocabData = response?.data || response
+          setSelectedWord(vocabData)
+          setIsLoadingDetail(false)
+        })
+        .catch(error => {
+          console.error(`❌ [WordDemo] Error fetching vocab detail:`, error)
+          setIsLoadingDetail(false)
+        })
+    }
+  }, [selectedWordId])
+
   const handleWordSelect = (word) => {
-    setSelectedWord(word)
+    // 🔧 修改：设置 ID 触发详情加载，而不是直接使用列表数据
+    setSelectedWordId(word.vocab_id)
   }
 
   const handleStartReview = () => {
@@ -58,6 +83,7 @@ function WordDemo() {
   const handleBackToWords = () => {
     setIsReviewMode(false)
     setSelectedWord(null)
+    setSelectedWordId(null)
   }
 
   const handleFilterChange = (filterId, value) => {
@@ -120,14 +146,18 @@ function WordDemo() {
   }
 
   // 详情页面
-  if (selectedWord) {
+  if (selectedWordId) {
     return (
       <div className="h-full bg-gray-100 p-8">
         <div className="max-w-6xl mx-auto">
           <LearnDetailPage
             type="vocab"
             data={selectedWord}
-            onBack={() => setSelectedWord(null)}
+            loading={isLoadingDetail}
+            onBack={() => {
+              setSelectedWord(null)
+              setSelectedWordId(null)
+            }}
             onToggleStar={handleToggleStar}
           />
         </div>
