@@ -640,11 +640,15 @@ def _sync_to_database(user_id: int = None):
                             # 调试：打印example的完整信息
                             print(f"  🔍 [Debug] Example详情: text_id={ex.text_id}, sentence_id={ex.sentence_id}, type={type(ex.text_id)}")
                             
-                            # 先检查text_id是否存在
+                            # 先检查text_id是否存在且属于当前用户
                             from database_system.business_logic.managers import TextManager
-                            text_mgr = TextManager(session)
-                            if not text_mgr.get_text(ex.text_id):
-                                print(f"  ⚠️ 跳过 example (text_id={ex.text_id} 不存在): sentence_id={ex.sentence_id}")
+                            from database_system.business_logic.models import OriginalText
+                            text_model = session.query(OriginalText).filter(
+                                OriginalText.text_id == ex.text_id,
+                                OriginalText.user_id == user_id
+                            ).first()
+                            if not text_model:
+                                print(f"  ⚠️ 跳过 example (text_id={ex.text_id} 不存在或不属于用户 {user_id}): sentence_id={ex.sentence_id}")
                                 skipped_examples += 1
                                 continue
                             
@@ -942,13 +946,20 @@ async def get_stats():
         return create_error_response(f"获取统计数据失败: {str(e)}")
 
 @app.get("/api/articles", response_model=ApiResponse)
-async def list_articles():
-    """获取文章列表摘要（优先使用文件系统，兼容 *_processed_*.json 与 text_<id>/ 结构）"""
+async def list_articles(current_user: User = Depends(get_current_user)):
+    """
+    获取文章列表摘要（文件系统版本，已废弃，建议使用 /api/v2/texts/）
+    
+    ⚠️ 警告：此端点没有用户隔离，返回所有文件系统中的文章。
+    建议使用 /api/v2/texts/ 端点，它有完整的用户隔离。
+    """
     try:
+        # 即使使用文件系统，也记录用户信息（用于调试）
+        print(f"⚠️ [API] /api/articles 被调用（用户 {current_user.user_id}），此端点没有用户隔离")
         summaries = _collect_articles_summary()
         return create_success_response(
             data=summaries,
-            message=f"成功获取文章列表，共 {len(summaries)} 篇"
+            message=f"成功获取文章列表，共 {len(summaries)} 篇（⚠️ 注意：包含所有用户的文章）"
         )
     except Exception as e:
         return create_error_response(f"获取文章列表失败: {str(e)}")
@@ -1002,10 +1013,21 @@ async def get_article_detail(article_id: int):
 @app.post("/api/upload/file", response_model=ApiResponse)
 async def upload_file(
     file: UploadFile = File(...),
-    title: str = Form("Untitled Article")
+    title: str = Form("Untitled Article"),
+    current_user: User = Depends(get_current_user)
 ):
-    """上传文件并进行预处理"""
+    """
+    上传文件并进行预处理（需要认证）
+    
+    - **file**: 上传的文件（支持 .txt, .md 格式）
+    - **title**: 文章标题（可选）
+    
+    需要认证：是
+    """
     try:
+        user_id = current_user.user_id
+        print(f"📤 [Upload] 用户 {user_id} 上传文件: {file.filename}, 标题: {title}")
+        
         # 读取文件内容
         content = await file.read()
         
@@ -1023,18 +1045,22 @@ async def upload_file(
         
         # 使用简单文章处理器处理文章
         if process_article:
-            print(f"📝 开始处理文章: {title}")
+            print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id})")
             result = process_article(text_content, article_id, title)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
+            
+            # TODO: 保存到数据库（需要实现）
+            # 这里应该调用数据库API保存文章、句子和tokens
             
             return create_success_response(
                 data={
                     "article_id": article_id,
                     "title": title,
                     "total_sentences": result['total_sentences'],
-                    "total_tokens": result['total_tokens']
+                    "total_tokens": result['total_tokens'],
+                    "user_id": user_id
                 },
                 message=f"文件上传并处理成功: {title}"
             )
@@ -1042,18 +1068,35 @@ async def upload_file(
             return create_error_response("预处理系统未初始化")
             
     except Exception as e:
+        print(f"❌ [Upload] 文件上传处理失败: {e}")
+        import traceback
+        traceback.print_exc()
         return create_error_response(f"文件上传处理失败: {str(e)}")
 
 # 新增：URL内容抓取API
 @app.post("/api/upload/url", response_model=ApiResponse)
 async def upload_url(
     url: str = Form(...),
-    title: str = Form("URL Article")
+    title: str = Form("URL Article"),
+    current_user: User = Depends(get_current_user)
 ):
-    """从URL抓取内容并进行预处理"""
+    """
+    从URL抓取内容并进行预处理（需要认证）
+    
+    - **url**: 要抓取的URL
+    - **title**: 文章标题（可选）
+    
+    需要认证：是
+    """
     try:
-        # 抓取URL内容
-        response = requests.get(url, timeout=30)
+        user_id = current_user.user_id
+        print(f"📤 [Upload] 用户 {user_id} 上传URL: {url}, 标题: {title}")
+        
+        # 抓取URL内容（添加User-Agent避免被网站阻止）
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, timeout=30, headers=headers)
         response.raise_for_status()
         
         # 简单提取文本内容（这里可以集成更复杂的HTML解析）
@@ -1064,11 +1107,14 @@ async def upload_url(
         
         # 使用简单文章处理器处理文章
         if process_article:
-            print(f"📝 开始处理URL文章: {title}")
+            print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id})")
             result = process_article(text_content, article_id, title)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
+            
+            # TODO: 保存到数据库（需要实现）
+            # 这里应该调用数据库API保存文章、句子和tokens
             
             return create_success_response(
                 data={
@@ -1076,7 +1122,8 @@ async def upload_url(
                     "title": title,
                     "url": url,
                     "total_sentences": result['total_sentences'],
-                    "total_tokens": result['total_tokens']
+                    "total_tokens": result['total_tokens'],
+                    "user_id": user_id
                 },
                 message=f"URL内容抓取并处理成功: {title}"
             )
@@ -1084,16 +1131,30 @@ async def upload_url(
             return create_error_response("预处理系统未初始化")
             
     except Exception as e:
+        print(f"❌ [Upload] URL内容抓取失败: {e}")
+        import traceback
+        traceback.print_exc()
         return create_error_response(f"URL内容抓取失败: {str(e)}")
 
 # 新增：文字输入处理API
 @app.post("/api/upload/text", response_model=ApiResponse)
 async def upload_text(
     text: str = Form(...),
-    title: str = Form("Text Article")
+    title: str = Form("Text Article"),
+    current_user: User = Depends(get_current_user)
 ):
-    """直接处理文字内容"""
+    """
+    直接处理文字内容（需要认证）
+    
+    - **text**: 文章文本内容
+    - **title**: 文章标题（可选）
+    
+    需要认证：是
+    """
     try:
+        user_id = current_user.user_id
+        print(f"📤 [Upload] 用户 {user_id} 上传文本, 标题: {title}")
+        
         if not text.strip():
             return create_error_response("文字内容不能为空")
         
@@ -1102,18 +1163,22 @@ async def upload_text(
         
         # 使用简单文章处理器处理文章
         if process_article:
-            print(f"📝 开始处理文字内容: {title}")
+            print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id})")
             result = process_article(text, article_id, title)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
+            
+            # TODO: 保存到数据库（需要实现）
+            # 这里应该调用数据库API保存文章、句子和tokens
             
             return create_success_response(
                 data={
                     "article_id": article_id,
                     "title": title,
                     "total_sentences": result['total_sentences'],
-                    "total_tokens": result['total_tokens']
+                    "total_tokens": result['total_tokens'],
+                    "user_id": user_id
                 },
                 message=f"文字内容处理成功: {title}"
             )
@@ -1121,6 +1186,9 @@ async def upload_text(
             return create_error_response("预处理系统未初始化")
             
     except Exception as e:
+        print(f"❌ [Upload] 文字内容处理失败: {e}")
+        import traceback
+        traceback.print_exc()
         return create_error_response(f"文字内容处理失败: {str(e)}")
 
 # ==================== Asked Tokens API ====================

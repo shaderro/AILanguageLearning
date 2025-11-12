@@ -12,6 +12,14 @@ export function useAskedTokens(articleId, userId = 'default_user') {
   // 获取已提问的tokens
   useEffect(() => {
     if (!articleId) return
+    
+    // 🔧 检查articleId是否为有效数字（上传模式下可能是字符串'upload'）
+    const textId = typeof articleId === 'string' && articleId === 'upload' ? null : articleId
+    if (!textId || (typeof textId === 'string' && isNaN(parseInt(textId)))) {
+      // 跳过无效的textId（如上载模式）
+      setAskedTokenKeys(new Set())
+      return
+    }
 
     const fetchAskedTokens = async () => {
       setIsLoading(true)
@@ -19,7 +27,7 @@ export function useAskedTokens(articleId, userId = 'default_user') {
       
       try {
         // 移除详细日志（已通过测试，减少不必要的日志输出）
-        const response = await apiService.getAskedTokens(userId, articleId)
+        const response = await apiService.getAskedTokens(userId, textId)
         
         if (response.success && response.data?.asked_tokens) {
           const tokens = new Set(response.data.asked_tokens)
@@ -67,9 +75,16 @@ export function useAskedTokens(articleId, userId = 'default_user') {
 
   // 刷新asked tokens（从服务器重新获取）
   const refreshAskedTokens = async () => {
+    // 🔧 检查articleId是否为有效数字
+    const textId = typeof articleId === 'string' && articleId === 'upload' ? null : articleId
+    if (!textId || (typeof textId === 'string' && isNaN(parseInt(textId)))) {
+      console.warn('⚠️ [AskedTokens] Cannot refresh: invalid articleId', articleId)
+      return false
+    }
+    
     try {
       console.log('🔄 [AskedTokens] Refreshing asked tokens...')
-      const response = await apiService.getAskedTokens(userId, articleId)
+      const response = await apiService.getAskedTokens(userId, textId)
       
       if (response.success && response.data?.asked_tokens) {
         const tokens = new Set(response.data.asked_tokens)

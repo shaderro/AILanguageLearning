@@ -43,6 +43,12 @@ api.interceptors.request.use(
       console.log("⚠️ No access token found in localStorage");
     }
     
+    // 🔧 如果是 FormData，移除 Content-Type 让浏览器自动设置（包含 boundary）
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+      console.log("📎 FormData detected, letting browser set Content-Type");
+    }
+    
     return config;
   },
   (error) => {
@@ -299,6 +305,11 @@ export const apiService = {
 
   // 获取语法注释列表
   getGrammarNotations: (textId, userId) => {
+    // 🔧 验证textId是否为有效数字（上传模式下可能是字符串'upload'）
+    if (typeof textId === 'string' && (textId === 'upload' || isNaN(parseInt(textId)))) {
+      console.warn(`⚠️ [Frontend] Invalid textId for getGrammarNotations: ${textId}`);
+      return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
+    }
     // 🔧 如果没有传入 userId，从 localStorage 获取
     if (!userId) {
       const storedUserId = localStorage.getItem('user_id')
@@ -320,6 +331,11 @@ export const apiService = {
 
   // 获取词汇注释列表
   getVocabNotations: (textId, userId) => {
+    // 🔧 验证textId是否为有效数字（上传模式下可能是字符串'upload'）
+    if (typeof textId === 'string' && (textId === 'upload' || isNaN(parseInt(textId)))) {
+      console.warn(`⚠️ [Frontend] Invalid textId for getVocabNotations: ${textId}`);
+      return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
+    }
     // 🔧 如果没有传入 userId，从 localStorage 获取
     if (!userId) {
       const storedUserId = localStorage.getItem('user_id')
@@ -380,18 +396,16 @@ export const apiService = {
       if (API_TARGET === 'mock') {
         return api.get("/api/articles");
       } else {
-        // 数据库模式：优先尝试 v2 API，失败则回退到文件系统
+        // 数据库模式：只使用 v2 API（有用户隔离），不再回退到文件系统
+        // 文件系统API没有用户隔离，会导致显示不属于当前用户的文章
         try {
           const response = await api.get("/api/v2/texts/");
-          // 如果数据库返回空，回退到文件系统
-          if (response?.data?.texts && response.data.texts.length > 0) {
-            return response;
-          }
-          console.log('🔄 [API] 数据库为空，回退到文件系统');
-          return api.get("/api/articles");
+          // 即使数据库返回空，也不回退到文件系统（避免显示其他用户的文章）
+          return response;
         } catch (dbError) {
-          console.log('🔄 [API] 数据库API失败，回退到文件系统:', dbError.message);
-          return api.get("/api/articles");
+          console.error('❌ [API] 数据库API失败:', dbError.message);
+          // 不再回退到文件系统，直接抛出错误
+          throw dbError;
         }
       }
     } catch (e) {
@@ -475,6 +489,12 @@ export const apiService = {
     if (!userId) {
       const storedUserId = localStorage.getItem('user_id')
       userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
+    }
+    
+    // 🔧 验证textId是否为有效数字（上传模式下可能是字符串'upload'）
+    if (typeof textId === 'string' && (textId === 'upload' || isNaN(parseInt(textId)))) {
+      console.warn(`⚠️ [Frontend] Invalid textId for getAskedTokens: ${textId}`);
+      return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
     }
     
     console.log(`🔍 [Frontend] Getting asked tokens for user=${userId}, text=${textId}`);
@@ -565,7 +585,54 @@ export const apiService = {
   refreshVocab: () => {
     console.log('🔄 [Frontend] Refreshing vocab data');
     return api.post("/api/vocab/refresh");
-  }
+  },
+
+  // ==================== Upload API ====================
+  
+  // 上传文件
+  uploadFile: async (file, title = "Untitled Article") => {
+    console.log('📤 [Frontend] Uploading file:', file.name, 'title:', title);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
+    
+    // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+    return api.post("/api/upload/file", formData, {
+      headers: {
+        // 移除 Content-Type，让 axios 自动处理 FormData
+      },
+    });
+  },
+
+  // 上传URL
+  uploadUrl: async (url, title = "URL Article") => {
+    console.log('📤 [Frontend] Uploading URL:', url, 'title:', title);
+    const formData = new FormData();
+    formData.append('url', url);
+    formData.append('title', title);
+    
+    // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+    return api.post("/api/upload/url", formData, {
+      headers: {
+        // 移除 Content-Type，让 axios 自动处理 FormData
+      },
+    });
+  },
+
+  // 上传文本
+  uploadText: async (text, title = "Text Article") => {
+    console.log('📤 [Frontend] Uploading text, title:', title, 'length:', text.length);
+    const formData = new FormData();
+    formData.append('text', text);
+    formData.append('title', title);
+    
+    // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+    return api.post("/api/upload/text", formData, {
+      headers: {
+        // 移除 Content-Type，让 axios 自动处理 FormData
+      },
+    });
+  },
 };
 
 export default api;

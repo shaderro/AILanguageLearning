@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { apiService } from '../../../services/api'
 
 const UploadInterface = ({ onUploadStart }) => {
   const [dragActive, setDragActive] = useState(false)
@@ -18,31 +19,88 @@ const UploadInterface = ({ onUploadStart }) => {
     }
   }
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-    setUploadMethod('drop')
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      console.log('File dropped:', e.dataTransfer.files[0])
-      // 触发上传进度
-      setTimeout(() => {
+      const file = e.dataTransfer.files[0]
+      console.log('📁 [Upload] File dropped:', file.name, 'size:', file.size, 'type:', file.type)
+      setUploadMethod('drop')
+      
+      // 验证文件类型
+      const validExtensions = ['.txt', '.md']
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
+      if (!validExtensions.includes(fileExtension)) {
+        alert(`不支持的文件格式: ${fileExtension}。请上传 .txt 或 .md 文件。`)
+        return
+      }
+      
+      try {
+        console.log('🚀 [Frontend] 发送拖拽文件上传请求...')
         setShowProgress(true)
         onUploadStart && onUploadStart()
-      }, 500)
+        
+        // 使用统一的apiService（自动添加认证头）
+        const response = await apiService.uploadFile(file, file.name.replace(/\.[^/.]+$/, ""))
+        
+        console.log('✅ [Frontend] 拖拽文件上传成功:', response)
+        
+        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        if (response.data && response.data.success) {
+          console.log('📄 [Upload] 文章已创建:', response.data.data)
+        }
+      } catch (error) {
+        console.error('❌ [Frontend] 拖拽文件上传失败:', error)
+        setShowProgress(false)
+        const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+        alert(`文件上传失败: ${errorMessage}`)
+      }
     }
   }
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      console.log('File selected:', e.target.files[0])
+      const file = e.target.files[0]
+      console.log('📁 [Upload] File selected:', file.name, 'size:', file.size, 'type:', file.type)
       setUploadMethod('file')
-      // 触发上传进度
-      setTimeout(() => {
+      
+      // 验证文件类型
+      const validExtensions = ['.txt', '.md']
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
+      if (!validExtensions.includes(fileExtension)) {
+        alert(`不支持的文件格式: ${fileExtension}。请上传 .txt 或 .md 文件。`)
+        // 清空文件选择
+        e.target.value = ''
+        return
+      }
+      
+      try {
+        console.log('🚀 [Frontend] 发送文件上传请求...')
         setShowProgress(true)
         onUploadStart && onUploadStart()
-      }, 500)
+        
+        // 使用统一的apiService（自动添加认证头）
+        const response = await apiService.uploadFile(file, file.name.replace(/\.[^/.]+$/, ""))
+        
+        console.log('✅ [Frontend] 文件上传成功:', response)
+        
+        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        if (response.data && response.data.success) {
+          console.log('📄 [Upload] 文章已创建:', response.data.data)
+        }
+        
+        // 清空文件选择，允许再次选择同一文件
+        e.target.value = ''
+      } catch (error) {
+        console.error('❌ [Frontend] 文件上传失败:', error)
+        setShowProgress(false)
+        const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+        alert(`文件上传失败: ${errorMessage}`)
+        // 清空文件选择
+        e.target.value = ''
+      }
     }
   }
 
@@ -50,46 +108,39 @@ const UploadInterface = ({ onUploadStart }) => {
     e.preventDefault()
     const url = e.target.url.value.trim()
     if (url) {
-      console.log('URL submitted:', url)
+      console.log('🌐 [Upload] URL submitted:', url)
       setUploadMethod('url')
       
+      // 基本URL验证
       try {
-        // 创建FormData对象
-        const formData = new FormData()
-        formData.append('url', url)
-        formData.append('title', 'URL Article')
-        
+        new URL(url)
+      } catch {
+        alert('请输入有效的URL地址')
+        return
+      }
+      
+      try {
         console.log('🚀 [Frontend] 发送URL处理请求...')
-        console.log('📤 [Frontend] FormData内容:')
-        for (let [key, value] of formData.entries()) {
-          console.log(`  ${key}: ${value}`)
+        setShowProgress(true)
+        onUploadStart && onUploadStart()
+        
+        // 使用统一的apiService（自动添加认证头）
+        const response = await apiService.uploadUrl(url, 'URL Article')
+        
+        console.log('✅ [Frontend] URL处理成功:', response)
+        
+        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        if (response.data && response.data.success) {
+          console.log('📄 [Upload] 文章已创建:', response.data.data)
         }
         
-        // 调用后端API
-        const response = await fetch('http://localhost:8000/api/upload/url', {
-          method: 'POST',
-          body: formData
-        })
-        
-        console.log('📡 [Frontend] 收到响应状态:', response.status, response.statusText)
-        
-        if (response.ok) {
-          const result = await response.json()
-          console.log('✅ [Frontend] URL处理成功:', result)
-          
-          // 触发上传进度
-          setTimeout(() => {
-            setShowProgress(true)
-            onUploadStart && onUploadStart()
-          }, 500)
-        } else {
-          const errorText = await response.text()
-          console.error('❌ [Frontend] URL处理失败:', response.status, errorText)
-          alert(`URL处理失败: ${response.status} - ${errorText}`)
-        }
+        // 清空URL输入
+        e.target.url.value = ''
       } catch (error) {
-        console.error('💥 [Frontend] 网络错误:', error)
-        alert(`网络错误: ${error.message}`)
+        console.error('❌ [Frontend] URL处理失败:', error)
+        setShowProgress(false)
+        const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+        alert(`URL处理失败: ${errorMessage}`)
       }
     }
   }
@@ -97,46 +148,32 @@ const UploadInterface = ({ onUploadStart }) => {
   const handleTextSubmit = async (e) => {
     e.preventDefault()
     if (textContent.trim()) {
-      console.log('Text submitted:', { title: textTitle, content: textContent })
+      console.log('📝 [Upload] Text submitted:', { title: textTitle, contentLength: textContent.length })
       setUploadMethod('text')
       
       try {
-        // 创建FormData对象
-        const formData = new FormData()
-        formData.append('text', textContent)
-        formData.append('title', textTitle || 'Text Article')
-        
         console.log('🚀 [Frontend] 发送文字处理请求...')
-        console.log('📤 [Frontend] FormData内容:')
-        for (let [key, value] of formData.entries()) {
-          console.log(`  ${key}: ${value}`)
+        setShowProgress(true)
+        onUploadStart && onUploadStart()
+        
+        // 使用统一的apiService（自动添加认证头）
+        const response = await apiService.uploadText(textContent, textTitle || 'Text Article')
+        
+        console.log('✅ [Frontend] 文字处理成功:', response)
+        
+        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        if (response.data && response.data.success) {
+          console.log('📄 [Upload] 文章已创建:', response.data.data)
         }
         
-        // 调用后端API
-        const response = await fetch('http://localhost:8000/api/upload/text', {
-          method: 'POST',
-          body: formData
-        })
-        
-        console.log('📡 [Frontend] 收到响应状态:', response.status, response.statusText)
-        
-        if (response.ok) {
-          const result = await response.json()
-          console.log('✅ [Frontend] 文字处理成功:', result)
-          
-          // 触发上传进度
-          setTimeout(() => {
-            setShowProgress(true)
-            onUploadStart && onUploadStart()
-          }, 500)
-        } else {
-          const errorText = await response.text()
-          console.error('❌ [Frontend] 文字处理失败:', response.status, errorText)
-          alert(`文字处理失败: ${response.status} - ${errorText}`)
-        }
+        // 清空文本输入
+        setTextContent('')
+        setTextTitle('')
       } catch (error) {
-        console.error('💥 [Frontend] 网络错误:', error)
-        alert(`网络错误: ${error.message}`)
+        console.error('❌ [Frontend] 文字处理失败:', error)
+        setShowProgress(false)
+        const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+        alert(`文字处理失败: ${errorMessage}`)
       }
     }
   }

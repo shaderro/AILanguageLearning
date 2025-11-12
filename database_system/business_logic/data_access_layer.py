@@ -132,13 +132,13 @@ class TextDataAccessLayer:
         """根据ID获取文章"""
         return self._crud.get_text_by_id(text_id)
     
-    def get_all_texts(self):
-        """获取所有文章"""
-        return self._crud.get_all_texts()
+    def get_all_texts(self, user_id: int = None):
+        """获取所有文章（可选用户过滤）"""
+        return self._crud.get_all_texts(user_id=user_id)
     
-    def search_texts(self, keyword: str):
-        """搜索文章"""
-        return self._crud.search_texts(keyword)
+    def search_texts(self, keyword: str, user_id: int = None):
+        """搜索文章（可选用户过滤）"""
+        return self._crud.search_texts(keyword, user_id=user_id)
     
     def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
                        difficulty_level: Optional[str] = None):

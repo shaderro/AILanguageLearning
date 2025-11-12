@@ -108,12 +108,13 @@ class OriginalTextManager:
         
         return TextAdapter.model_to_dto(text_model, include_sentences=include_sentences)
     
-    def get_all_texts(self, include_sentences: bool = False) -> List[TextDTO]:
+    def get_all_texts(self, include_sentences: bool = False, user_id: int = None) -> List[TextDTO]:
         """
-        获取所有文章
+        获取所有文章（可选用户过滤）
         
         参数:
             include_sentences: 是否包含句子（默认不包含，提升性能）
+            user_id: 用户ID（如果提供，只返回该用户的文章）
             
         返回:
             List[TextDTO]: 文章列表
@@ -123,8 +124,11 @@ class OriginalTextManager:
             texts = text_manager.get_all_texts()
             for text in texts:
                 print(f"{text.text_id}: {text.text_title}")
+            
+            # 获取特定用户的文章
+            texts = text_manager.get_all_texts(user_id=1)
         """
-        text_models = self.db_manager.list_texts()
+        text_models = self.db_manager.list_texts(user_id=user_id)
         return TextAdapter.models_to_dtos(text_models, include_sentences=include_sentences)
     
     def list_texts(self) -> List[TextDTO]:
@@ -136,12 +140,13 @@ class OriginalTextManager:
         """
         return self.get_all_texts(include_sentences=False)
     
-    def search_texts(self, keyword: str) -> List[TextDTO]:
+    def search_texts(self, keyword: str, user_id: int = None) -> List[TextDTO]:
         """
-        搜索文章（根据标题）
+        搜索文章（根据标题，可选用户过滤）
         
         参数:
             keyword: 搜索关键词
+            user_id: 用户ID（如果提供，只搜索该用户的文章）
             
         返回:
             List[TextDTO]: 匹配的文章列表
@@ -150,8 +155,11 @@ class OriginalTextManager:
             results = text_manager.search_texts("德语")
             for text in results:
                 print(f"{text.text_id}: {text.text_title}")
+            
+            # 搜索特定用户的文章
+            results = text_manager.search_texts("德语", user_id=1)
         """
-        text_models = self.db_manager.search_texts(keyword)
+        text_models = self.db_manager.search_texts(keyword, user_id=user_id)
         return TextAdapter.models_to_dtos(text_models, include_sentences=False)
     
     def add_sentence_to_text(self, text_id: int, sentence_text: str,
@@ -308,9 +316,12 @@ class OriginalTextManager:
                 sentence_model.grammar_annotations = grammar_annotations
                 self.session.commit()
     
-    def get_text_stats(self) -> dict:
+    def get_text_stats(self, user_id: int = None) -> dict:
         """
-        获取文章统计信息
+        获取文章统计信息（可选用户过滤）
+        
+        参数:
+            user_id: 用户ID（如果提供，只统计该用户的文章）
         
         返回:
             dict: 统计信息
@@ -321,8 +332,11 @@ class OriginalTextManager:
             stats = text_manager.get_text_stats()
             print(f"总文章: {stats['total_texts']}")
             print(f"总句子: {stats['total_sentences']}")
+            
+            # 统计特定用户的文章
+            stats = text_manager.get_text_stats(user_id=1)
         """
-        return self.db_manager.get_text_stats()
+        return self.db_manager.get_text_stats(user_id=user_id)
     
     def get_new_text_id(self) -> int:
         """

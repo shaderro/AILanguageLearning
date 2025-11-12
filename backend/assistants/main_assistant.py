@@ -730,6 +730,25 @@ class MainAssistant:
                     
                     # 检查text_id是否存在，如果不存在则跳过添加example
                     try:
+                        # 🔧 先检查text_id是否存在于数据库中且属于当前用户
+                        user_id = getattr(self.session_state, 'user_id', None)
+                        if user_id:
+                            from database_system.database_manager import DatabaseManager
+                            from database_system.business_logic.models import OriginalText
+                            db_manager = DatabaseManager('development')
+                            session = db_manager.get_session()
+                            try:
+                                text_model = session.query(OriginalText).filter(
+                                    OriginalText.text_id == current_sentence.text_id,
+                                    OriginalText.user_id == user_id
+                                ).first()
+                                if not text_model:
+                                    print(f"⚠️ [DEBUG] 跳过添加vocab_example，因为text_id={current_sentence.text_id}不存在或不属于用户{user_id}")
+                                    print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                                    continue
+                            finally:
+                                session.close()
+                        
                         vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab)
                         # 🔧 获取 token_indices（从 session_state 中的 selected_token）
                         token_indices = self._get_token_indices_from_selection(current_sentence)

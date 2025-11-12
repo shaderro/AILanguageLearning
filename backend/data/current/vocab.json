@@ -1045,5 +1045,31 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 56,
+    "vocab_body": "absolvieren",
+    "explanation": "{'explanation': 'Absolvieren 是一个德语动词，意思是“完成”或“结束”，通常用于描述成功完成学业、课程、考试或培训等正式活动。它的词性为弱变化动词（规则动词），过去式为 absolvierte，过去分词为 absolviert。常见用法包括 absolvieren + 名词（如 ein Studium absolvieren，表示完成学业），强调达到要求或获得资格。这个词没有多重含义，始终指完成某项任务或过程。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 56,
+        "text_id": 1758864042,
+        "sentence_id": 1,
+        "context_explanation": "{\"explanation\": \"在这句话中，'absolvierte' 表示俞孔坚成功完成了哈佛大学设计研究生院的硕士和博士学习，强调他顺利毕业并获得了学位。\"}",
+        "token_indices": [
+          21
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 57,
+    "vocab_body": "promovieren",
+    "explanation": "{'explanation': \"动词 'promovieren' 是德语中的一个动词，意思是“获得博士学位”或“完成博士学业”。它通常用于描述某人成功通过博士论文答辩并取得博士学位的过程。这个词可以是不及物动词（如 'er promovierte'，表示他获得了博士学位），也可以是及物动词（如 'er promovierte zum Thema'，表示他在某个主题上获得了博士学位）。在学术语境中，它强调完成博士研究并正式毕业。注意，'promovieren' 与英语中的 'to earn a doctorate' 或 'to graduate with a PhD' 类似，但更正式和专业。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": []
   }
 ]

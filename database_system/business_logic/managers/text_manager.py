@@ -22,13 +22,13 @@ class TextManager:
         """获取文章"""
         return self.dal.get_text_by_id(text_id)
     
-    def list_texts(self) -> List[OriginalText]:
-        """列出所有文章"""
-        return self.dal.get_all_texts()
+    def list_texts(self, user_id: int = None) -> List[OriginalText]:
+        """列出所有文章（可选用户过滤）"""
+        return self.dal.get_all_texts(user_id=user_id)
     
-    def search_texts(self, keyword: str) -> List[OriginalText]:
-        """搜索文章"""
-        return self.dal.search_texts(keyword)
+    def search_texts(self, keyword: str, user_id: int = None) -> List[OriginalText]:
+        """搜索文章（可选用户过滤）"""
+        return self.dal.search_texts(keyword, user_id=user_id)
     
     def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
                        difficulty_level: Optional[str] = None) -> Sentence:
@@ -63,9 +63,9 @@ class TextManager:
             ]
         }
     
-    def get_text_stats(self) -> Dict[str, int]:
-        """获取文章统计"""
-        texts = self.list_texts()
+    def get_text_stats(self, user_id: int = None) -> Dict[str, int]:
+        """获取文章统计（可选用户过滤）"""
+        texts = self.list_texts(user_id=user_id)
         total_texts = len(texts)
         total_sentences = sum(len(self.get_sentences(t.text_id)) for t in texts)
         

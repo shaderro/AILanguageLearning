@@ -10,6 +10,10 @@ from pydantic import BaseModel, Field
 
 # 导入数据库管理器
 from database_system.database_manager import DatabaseManager
+from database_system.business_logic.models import User, OriginalText
+
+# 导入认证依赖
+from backend.api.auth_routes import get_current_user
 
 # 导入数据库版本的 OriginalTextManager
 from backend.data_managers import OriginalTextManagerDB
@@ -104,16 +108,20 @@ router = APIRouter(
 @router.get("/", summary="获取所有文章")
 async def get_all_texts(
     include_sentences: bool = Query(default=False, description="是否包含句子列表"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    获取所有文章
+    获取当前用户的所有文章
     
     - **include_sentences**: 是否包含句子（默认不包含，提升性能）
+    
+    需要认证：是
     """
     try:
         text_manager = OriginalTextManagerDB(session)
-        texts = text_manager.get_all_texts(include_sentences=include_sentences)
+        # 只获取当前用户的文章
+        texts = text_manager.get_all_texts(include_sentences=include_sentences, user_id=current_user.user_id)
         
         return {
             "success": True,
@@ -145,16 +153,30 @@ async def get_all_texts(
 async def get_text(
     text_id: int,
     include_sentences: bool = Query(default=True, description="是否包含句子列表"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    根据 ID 获取文章
+    根据 ID 获取文章（仅限当前用户）
     
     - **text_id**: 文章ID
     - **include_sentences**: 是否包含句子
+    
+    需要认证：是
     """
     try:
-        print(f"[API] Getting text {text_id}, include_sentences={include_sentences}")
+        print(f"[API] Getting text {text_id}, include_sentences={include_sentences}, user_id={current_user.user_id}")
+        
+        # 先验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            print(f"[API] Text {text_id} not found for user {current_user.user_id}")
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
         text_manager = OriginalTextManagerDB(session)
         text = text_manager.get_text_by_id(text_id, include_sentences=include_sentences)
         
@@ -204,18 +226,21 @@ async def get_text(
 @router.post("/", summary="创建新文章", status_code=201)
 async def create_text(
     request: TextCreateRequest,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    创建新文章
+    创建新文章（属于当前用户）
     
     - **text_title**: 文章标题
+    
+    需要认证：是
     """
     try:
         text_manager = OriginalTextManagerDB(session)
         
-        # 创建文章
-        text = text_manager.add_text(request.text_title)
+        # 创建文章（关联到当前用户）
+        text = text_manager.add_text(request.text_title, user_id=current_user.user_id)
         
         return {
             "success": True,
@@ -233,16 +258,20 @@ async def create_text(
 @router.get("/search/", summary="搜索文章")
 async def search_texts(
     keyword: str = Query(..., description="搜索关键词"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    搜索文章（根据标题）
+    搜索文章（根据标题，仅限当前用户）
     
     - **keyword**: 搜索关键词
+    
+    需要认证：是
     """
     try:
         text_manager = OriginalTextManagerDB(session)
-        texts = text_manager.search_texts(keyword)
+        # 只搜索当前用户的文章
+        texts = text_manager.search_texts(keyword, user_id=current_user.user_id)
         
         return {
             "success": True,
@@ -268,16 +297,28 @@ async def add_sentence_to_text(
     text_id: int,
     sentence_body: str = Query(..., description="句子内容"),
     difficulty_level: Optional[str] = Query(None, description="难度等级：easy/hard"),
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    为文章添加句子
+    为文章添加句子（仅限当前用户的文章）
     
     - **text_id**: 文章ID
     - **sentence_body**: 句子内容
     - **difficulty_level**: 难度等级（可选）
+    
+    需要认证：是
     """
     try:
+        # 先验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
         text_manager = OriginalTextManagerDB(session)
         
         # 检查文章是否存在
@@ -311,14 +352,26 @@ async def add_sentence_to_text(
 @router.get("/{text_id}/sentences", summary="获取文章的所有句子")
 async def get_text_sentences(
     text_id: int,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    获取文章的所有句子
+    获取文章的所有句子（仅限当前用户的文章）
     
     - **text_id**: 文章ID
+    
+    需要认证：是
     """
     try:
+        # 先验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
         text_manager = OriginalTextManagerDB(session)
         
         # 检查文章是否存在
@@ -356,15 +409,27 @@ async def get_text_sentences(
 async def get_sentence(
     text_id: int,
     sentence_id: int,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    获取指定句子
+    获取指定句子（仅限当前用户的文章）
     
     - **text_id**: 文章ID
     - **sentence_id**: 句子ID
+    
+    需要认证：是
     """
     try:
+        # 先验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
         text_manager = OriginalTextManagerDB(session)
         sentence = text_manager.get_sentence(text_id, sentence_id)
         
@@ -393,18 +458,21 @@ async def get_sentence(
 
 @router.get("/stats/summary", summary="获取文章统计")
 async def get_text_stats(
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    获取文章统计信息
+    获取文章统计信息（仅限当前用户）
     
     返回：
     - total_texts: 总文章数
     - total_sentences: 总句子数
+    
+    需要认证：是
     """
     try:
         text_manager = OriginalTextManagerDB(session)
-        stats = text_manager.get_text_stats()
+        stats = text_manager.get_text_stats(user_id=current_user.user_id)
         
         return {
             "success": True,

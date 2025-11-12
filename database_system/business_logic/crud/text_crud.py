@@ -26,15 +26,21 @@ class TextCRUD:
             OriginalText.text_id == text_id
         ).first()
     
-    def get_all_texts(self) -> List[OriginalText]:
-        """获取所有文章"""
-        return self.session.query(OriginalText).all()
+    def get_all_texts(self, user_id: int = None) -> List[OriginalText]:
+        """获取所有文章（可选用户过滤）"""
+        query = self.session.query(OriginalText)
+        if user_id is not None:
+            query = query.filter(OriginalText.user_id == user_id)
+        return query.all()
     
-    def search_texts(self, keyword: str) -> List[OriginalText]:
-        """搜索文章"""
-        return self.session.query(OriginalText).filter(
+    def search_texts(self, keyword: str, user_id: int = None) -> List[OriginalText]:
+        """搜索文章（可选用户过滤）"""
+        query = self.session.query(OriginalText).filter(
             OriginalText.text_title.contains(keyword)
-        ).all()
+        )
+        if user_id is not None:
+            query = query.filter(OriginalText.user_id == user_id)
+        return query.all()
     
     def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
                        difficulty_level: Optional[str] = None) -> Sentence:

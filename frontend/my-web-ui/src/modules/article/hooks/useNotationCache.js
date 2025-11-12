@@ -22,6 +22,15 @@ export function useNotationCache(articleId) {
   // 预加载所有数据
   const loadAllNotations = useCallback(async (textId) => {
     if (!textId) return
+    
+    // 🔧 检查textId是否为有效数字（上传模式下可能是字符串'upload'）
+    const validTextId = typeof textId === 'string' && textId === 'upload' ? null : textId
+    if (!validTextId || (typeof validTextId === 'string' && isNaN(parseInt(validTextId)))) {
+      // 跳过无效的textId（如上载模式）
+      console.log('⚠️ [useNotationCache] Skipping load: invalid textId', textId)
+      setIsInitialized(true)
+      return
+    }
 
     // 移除详细日志（已通过测试，减少不必要的日志输出）
     setIsLoading(true)
@@ -30,8 +39,8 @@ export function useNotationCache(articleId) {
     try {
       // 并行加载grammar notations和vocab notations
       const [grammarResponse, vocabResponse] = await Promise.all([
-        apiService.getGrammarNotations(textId),
-        apiService.getVocabNotations(textId)
+        apiService.getGrammarNotations(validTextId),
+        apiService.getVocabNotations(validTextId)
       ])
 
       // 移除详细响应日志（功能已通过测试）
