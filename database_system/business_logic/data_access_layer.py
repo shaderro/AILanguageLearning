@@ -31,9 +31,9 @@ class VocabDataAccessLayer:
         return self._crud.get_all(skip, limit)
     
     def add_vocab(self, vocab_body: str, explanation: str, 
-                  source: str = "auto", is_starred: bool = False) -> VocabExpression:
+                  source: str = "auto", is_starred: bool = False, user_id: int = None) -> VocabExpression:
         """添加新词汇"""
-        return self._crud.create(vocab_body, explanation, source, is_starred)
+        return self._crud.create(vocab_body, explanation, source, is_starred, user_id)
     
     def get_vocab_with_examples(self, vocab_id: int) -> Optional[Dict[str, Any]]:
         """获取词汇及其例句"""
@@ -96,9 +96,9 @@ class GrammarDataAccessLayer:
         return self._crud.get_all(skip, limit)
     
     def add_grammar_rule(self, rule_name: str, rule_summary: str,
-                        source: str = "auto", is_starred: bool = False) -> GrammarRule:
+                        source: str = "auto", is_starred: bool = False, user_id: int = None) -> GrammarRule:
         """添加新语法规则"""
-        return self._crud.create(rule_name, rule_summary, source, is_starred)
+        return self._crud.create(rule_name, rule_summary, source, is_starred, user_id)
     
     def search_grammar_rules(self, keyword: str) -> List[GrammarRule]:
         """搜索语法规则"""
@@ -124,9 +124,9 @@ class TextDataAccessLayer:
         self.session = session
         self._crud = TextCRUD(session)
     
-    def create_text(self, text_title: str):
+    def create_text(self, text_title: str, user_id: int = None):
         """创建文章"""
-        return self._crud.create_text(text_title)
+        return self._crud.create_text(text_title, user_id)
     
     def get_text_by_id(self, text_id: int):
         """根据ID获取文章"""

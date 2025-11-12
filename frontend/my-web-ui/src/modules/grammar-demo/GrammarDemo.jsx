@@ -6,10 +6,14 @@ import ReviewCard from '../shared/components/ReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import { useGrammarList, useToggleGrammarStar, useRefreshData } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
+import { useUser } from '../../contexts/UserContext'
 
 const GrammarDemo = () => {
-  // 使用API获取语法数据
-  const { data: grammarData, isLoading, isError, error } = useGrammarList()
+  // 从 UserContext 获取当前用户
+  const { userId, isGuest, isAuthenticated } = useUser()
+  
+  // 使用API获取语法数据 - 传入 userId 和 isGuest
+  const { data: grammarData, isLoading, isError, error } = useGrammarList(userId, isGuest)
   const toggleStarMutation = useToggleGrammarStar()
   const { refreshGrammar } = useRefreshData()
 

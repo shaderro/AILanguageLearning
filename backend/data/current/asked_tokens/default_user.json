@@ -1,0 +1,110 @@
+[
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": 62,
+    "type": "token",
+    "vocab_id": 44,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 9,
+    "sentence_token_id": 32,
+    "type": "token",
+    "vocab_id": 28,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 13,
+    "sentence_token_id": 24,
+    "type": "token",
+    "vocab_id": 45,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 44,
+    "sentence_token_id": 25,
+    "type": "token",
+    "vocab_id": 46,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 13,
+    "sentence_token_id": 45,
+    "type": "token",
+    "vocab_id": 47,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1758864042,
+    "sentence_id": 4,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 11
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 14,
+    "sentence_token_id": 39,
+    "type": "token",
+    "vocab_id": 48,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 14,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 4
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1758864042,
+    "sentence_id": 3,
+    "sentence_token_id": 11,
+    "type": "token",
+    "vocab_id": 49,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 28,
+    "sentence_token_id": 21,
+    "type": "token",
+    "vocab_id": 52,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 12
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_token_id": 33,
+    "type": "token",
+    "vocab_id": 53,
+    "grammar_id": null
+  }
+]

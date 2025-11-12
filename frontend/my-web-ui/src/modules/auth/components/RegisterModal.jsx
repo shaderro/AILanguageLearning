@@ -3,14 +3,17 @@
  * 显示注册表单
  */
 import { useState } from 'react'
-import authService from '../services/authService'
+import { useUser } from '../../../contexts/UserContext'
 
-const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSuccess }) => {
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [registeredUserId, setRegisteredUserId] = useState(null)
+  
+  // 从 UserContext 获取注册方法
+  const { register } = useUser()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,29 +33,22 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSuccess }) 
     setIsLoading(true)
 
     try {
-      // 调用真实 API
       console.log('📝 [Register] Attempting registration')
-      const result = await authService.register(password)
       
-      console.log('✅ [Register] Registration successful:', result)
+      // 使用 UserContext 的 register 方法
+      const result = await register(password)
       
-      // 显示成功页面（会显示用户ID）
-      setRegisteredUserId(result.user_id)
-      
-      // 自动保存认证信息（用户可以直接使用，无需再次登录）
-      authService.saveAuth(result.user_id, result.access_token)
-      
-      // 保存密码映射（仅用于开发调试）
-      authService.savePasswordMapping(result.user_id, password)
-      
-      // 通知父组件注册成功
-      if (onRegisterSuccess) {
-        onRegisterSuccess(result.user_id, result.access_token, password)
+      if (result.success) {
+        console.log('✅ [Register] Registration successful')
+        
+        // 显示成功页面（会显示用户ID）
+        setRegisteredUserId(result.userId)
+      } else {
+        setError(result.error)
       }
     } catch (error) {
       console.error('❌ [Register] Registration failed:', error)
-      const errorMessage = error.response?.data?.detail || error.message || '注册失败，请重试'
-      setError(errorMessage)
+      setError('注册失败，请重试')
     } finally {
       setIsLoading(false)
     }

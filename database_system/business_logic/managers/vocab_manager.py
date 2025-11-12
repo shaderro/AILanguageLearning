@@ -29,9 +29,9 @@ class VocabManager:
         return self.dal.list_all_vocabs(skip, limit)
     
     def add_vocab(self, vocab_body: str, explanation: str, 
-                  source: str = "auto", is_starred: bool = False) -> VocabExpression:
+                  source: str = "auto", is_starred: bool = False, user_id: int = None) -> VocabExpression:
         """添加词汇"""
-        return self.dal.add_vocab(vocab_body, explanation, source, is_starred)
+        return self.dal.add_vocab(vocab_body, explanation, source, is_starred, user_id)
     
     def search_vocabs(self, keyword: str) -> List[VocabExpression]:
         """搜索词汇"""

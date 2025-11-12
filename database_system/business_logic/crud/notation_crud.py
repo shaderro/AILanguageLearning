@@ -37,14 +37,19 @@ class VocabNotationCRUD:
             VocabNotation.token_id == token_id
         ).first()
     
-    def get_by_text(self, text_id: int, user_id: Optional[str] = None) -> List[VocabNotation]:
+    def get_by_text(self, text_id: int, user_id = None) -> List[VocabNotation]:
         """获取文章的所有词汇标注"""
+        print(f"[VocabNotationCRUD] get_by_text called: text_id={text_id}, user_id={user_id}, user_id_type={type(user_id)}")
         query = self.session.query(VocabNotation).filter(
             VocabNotation.text_id == text_id
         )
-        if user_id:
+        if user_id is not None:
+            print(f"[VocabNotationCRUD] Adding user_id filter: {user_id}")
             query = query.filter(VocabNotation.user_id == user_id)
-        return query.all()
+        
+        results = query.all()
+        print(f"[VocabNotationCRUD] Found {len(results)} notations")
+        return results
     
     def get_by_sentence(self, text_id: int, sentence_id: int, 
                         user_id: Optional[str] = None) -> List[VocabNotation]:
@@ -110,12 +115,12 @@ class GrammarNotationCRUD:
             GrammarNotation.sentence_id == sentence_id
         ).first()
     
-    def get_by_text(self, text_id: int, user_id: Optional[str] = None) -> List[GrammarNotation]:
+    def get_by_text(self, text_id: int, user_id = None) -> List[GrammarNotation]:
         """获取文章的所有语法标注"""
         query = self.session.query(GrammarNotation).filter(
             GrammarNotation.text_id == text_id
         )
-        if user_id:
+        if user_id is not None:
             query = query.filter(GrammarNotation.user_id == user_id)
         return query.all()
     

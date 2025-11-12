@@ -25,13 +25,14 @@ class VocabCRUD:
             return SourceType.AUTO
     
     def create(self, vocab_body: str, explanation: str, 
-               source: str = "auto", is_starred: bool = False) -> VocabExpression:
+               source: str = "auto", is_starred: bool = False, user_id: int = None) -> VocabExpression:
         """创建词汇"""
         vocab = VocabExpression(
             vocab_body=vocab_body,
             explanation=explanation,
             source=self._coerce_source(source),
-            is_starred=is_starred
+            is_starred=is_starred,
+            user_id=user_id
         )
         self.session.add(vocab)
         self.session.commit()
@@ -39,14 +40,15 @@ class VocabCRUD:
         return vocab
     
     def get_or_create(self, vocab_body: str, explanation: str,
-                      source: str = "auto", is_starred: bool = False) -> VocabExpression:
+                      source: str = "auto", is_starred: bool = False, user_id: int = None) -> VocabExpression:
         """获取或创建词汇"""
         existing = self.session.query(VocabExpression).filter(
-            VocabExpression.vocab_body == vocab_body
+            VocabExpression.vocab_body == vocab_body,
+            VocabExpression.user_id == user_id
         ).first()
         if existing:
             return existing
-        return self.create(vocab_body, explanation, source, is_starred)
+        return self.create(vocab_body, explanation, source, is_starred, user_id)
     
     def get_by_id(self, vocab_id: int) -> Optional[VocabExpression]:
         """根据ID获取词汇"""

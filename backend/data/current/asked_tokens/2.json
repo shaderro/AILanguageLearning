@@ -1,0 +1,29 @@
+[
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": 74,
+    "type": "token",
+    "vocab_id": 54,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 12
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 8,
+    "sentence_token_id": 14,
+    "type": "token",
+    "vocab_id": 55,
+    "grammar_id": null
+  }
+]

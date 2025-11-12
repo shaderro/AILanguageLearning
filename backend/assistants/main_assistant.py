@@ -396,9 +396,12 @@ class MainAssistant:
                                 notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                                 print(f"🔍 [DEBUG] notation_manager创建成功: {type(notation_manager)}")
                                 
+                                # 获取user_id（优先使用session_state中的user_id）
+                                user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
+                                
                                 print(f"🔍 [DEBUG] 调用mark_notation参数:")
                                 print(f"  - notation_type: grammar")
-                                print(f"  - user_id: default_user")
+                                print(f"  - user_id: {user_id_for_notation}")
                                 print(f"  - text_id: {current_sentence.text_id}")
                                 print(f"  - sentence_id: {current_sentence.sentence_id}")
                                 print(f"  - grammar_id: {existing_rule_id}")
@@ -406,7 +409,7 @@ class MainAssistant:
                                 
                                 success = notation_manager.mark_notation(
                                     notation_type="grammar",
-                                    user_id="default_user",
+                                    user_id=user_id_for_notation,
                                     text_id=current_sentence.text_id,
                                     sentence_id=current_sentence.sentence_id,
                                     grammar_id=existing_rule_id,
@@ -520,11 +523,15 @@ class MainAssistant:
                                 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
                                 notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                                 token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
-                                print(f"🔍 [DEBUG] 创建vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={existing_vocab_id}")
+                                
+                                # 获取user_id（优先使用session_state中的user_id）
+                                user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
+                                print(f"🔍 [DEBUG] 创建vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={existing_vocab_id}, user_id={user_id_for_notation}")
+                                
                                 if token_id is not None:
                                     v_ok = notation_manager.mark_notation(
                                         notation_type="vocab",
-                                        user_id="default_user",
+                                        user_id=user_id_for_notation,
                                         text_id=current_sentence.text_id,
                                         sentence_id=current_sentence.sentence_id,
                                         token_id=token_id,
@@ -621,14 +628,17 @@ class MainAssistant:
                             print(f"🔍 [DEBUG] token_indices类型: {type(token_indices)}")
                             print(f"🔍 [DEBUG] token_indices长度: {len(token_indices) if token_indices else 0}")
                             
-                            # 使用unified_notation_manager创建grammar notation
+                            # 使用unified_notation_manager创建grammar notation（使用数据库）
                             from backend.data_managers.unified_notation_manager import get_unified_notation_manager
-                            notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                            notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                             print(f"🔍 [DEBUG] notation_manager创建成功: {type(notation_manager)}")
+                            
+                            # 获取user_id（优先使用session_state中的user_id）
+                            user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
                             
                             print(f"🔍 [DEBUG] 调用mark_notation参数:")
                             print(f"  - notation_type: grammar")
-                            print(f"  - user_id: default_user")
+                            print(f"  - user_id: {user_id_for_notation}")
                             print(f"  - text_id: {current_sentence.text_id}")
                             print(f"  - sentence_id: {current_sentence.sentence_id}")
                             print(f"  - grammar_id: {grammar_rule_id}")
@@ -636,7 +646,7 @@ class MainAssistant:
                             
                             success = notation_manager.mark_notation(
                                 notation_type="grammar",
-                                user_id="default_user",
+                                user_id=user_id_for_notation,
                                 text_id=current_sentence.text_id,
                                 sentence_id=current_sentence.sentence_id,
                                 grammar_id=grammar_rule_id,
@@ -733,16 +743,20 @@ class MainAssistant:
                         )
                         print(f"✅ [DEBUG] vocab_example添加成功")
 
-                        # 🔧 新增：为新词汇创建 vocab notation（用于前端实时显示绿色下划线）
+                        # 🔧 新增：为新词汇创建 vocab notation（用于前端实时显示绿色下划线，使用数据库）
                         try:
                             from backend.data_managers.unified_notation_manager import get_unified_notation_manager
-                            notation_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+                            notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                             token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
-                            print(f"🔍 [DEBUG] 创建新词汇的vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={vocab_id}")
+                            
+                            # 获取user_id（优先使用session_state中的user_id）
+                            user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
+                            print(f"🔍 [DEBUG] 创建新词汇的vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={vocab_id}, user_id={user_id_for_notation}")
+                            
                             if token_id is not None:
                                 v_ok = notation_manager.mark_notation(
                                     notation_type="vocab",
-                                    user_id="default_user",
+                                    user_id=user_id_for_notation,
                                     text_id=current_sentence.text_id,
                                     sentence_id=current_sentence.sentence_id,
                                     token_id=token_id,

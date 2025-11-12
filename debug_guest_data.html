@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>游客数据调试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { margin: 5px; padding: 10px 20px; }
+        pre { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>游客数据调试工具</h1>
+    
+    <div>
+        <h2>1. 当前游客ID</h2>
+        <pre id="guestId"></pre>
+    </div>
+    
+    <div>
+        <h2>2. localStorage 中的数据</h2>
+        <button onclick="showAllData()">查看所有数据</button>
+        <pre id="allData"></pre>
+    </div>
+    
+    <div>
+        <h2>3. 添加测试数据</h2>
+        <button onclick="addTestData()">添加测试词汇和语法</button>
+        <pre id="addResult"></pre>
+    </div>
+    
+    <div>
+        <h2>4. 检查游客数据</h2>
+        <button onclick="checkGuestData()">检查</button>
+        <pre id="checkResult"></pre>
+    </div>
+    
+    <script type="module">
+        // 显示游客ID
+        const guestId = localStorage.getItem('guest_user_id')
+        document.getElementById('guestId').textContent = guestId || '未找到'
+        
+        window.showAllData = () => {
+            const result = {}
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i)
+                if (key.startsWith('guest_')) {
+                    result[key] = localStorage.getItem(key)
+                }
+            }
+            document.getElementById('allData').textContent = JSON.stringify(result, null, 2)
+        }
+        
+        window.addTestData = () => {
+            const guestId = localStorage.getItem('guest_user_id')
+            if (!guestId) {
+                document.getElementById('addResult').textContent = '错误：未找到游客ID'
+                return
+            }
+            
+            // 添加词汇
+            const vocabs = [
+                {vocab_id: Date.now(), vocab_body: 'hello', explanation: '你好', is_starred: false},
+                {vocab_id: Date.now() + 1, vocab_body: 'world', explanation: '世界', is_starred: false}
+            ]
+            localStorage.setItem(`guest_data_${guestId}_vocab`, JSON.stringify(vocabs))
+            
+            // 添加语法
+            const grammars = [
+                {rule_id: Date.now(), rule_name: '现在进行时', rule_summary: 'be + doing', is_starred: false}
+            ]
+            localStorage.setItem(`guest_data_${guestId}_grammar`, JSON.stringify(grammars))
+            
+            document.getElementById('addResult').textContent = '✅ 已添加：2条词汇，1条语法\n刷新页面后生效'
+        }
+        
+        window.checkGuestData = () => {
+            const guestId = localStorage.getItem('guest_user_id')
+            if (!guestId) {
+                document.getElementById('checkResult').textContent = '错误：未找到游客ID'
+                return
+            }
+            
+            const vocabKey = `guest_data_${guestId}_vocab`
+            const grammarKey = `guest_data_${guestId}_grammar`
+            
+            const vocabs = localStorage.getItem(vocabKey)
+            const grammars = localStorage.getItem(grammarKey)
+            
+            const result = {
+                guest_id: guestId,
+                vocab_key: vocabKey,
+                vocab_data: vocabs ? JSON.parse(vocabs) : [],
+                grammar_key: grammarKey,
+                grammar_data: grammars ? JSON.parse(grammars) : []
+            }
+            
+            document.getElementById('checkResult').textContent = JSON.stringify(result, null, 2)
+        }
+    </script>
+</body>
+</html>
+

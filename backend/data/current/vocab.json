@@ -831,5 +831,219 @@
         ]
       }
     ]
+  },
+  {
+    "vocab_id": 43,
+    "vocab_body": "nichtsnutz",
+    "explanation": "{'explanation': 'Nichtsnutz 是一个德语名词，意为“无用之人”或“废物”，用来形容一个懒惰、无能或毫无价值的人。这个词带有贬义，常用于非正式场合，表达对某人行为或性格的强烈不满。它也可以作为形容词使用，意为“无用的”或“毫无价值的”，但更常见的是作为名词。例如，在描述一个人时，可以说“Er ist ein Nichtsnutz”，意思是“他是个无用之人”。这个词强调缺乏生产力或贡献，常与负面评价相关。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": []
+  },
+  {
+    "vocab_id": 44,
+    "vocab_body": "gartenzaun",
+    "explanation": "{'explanation': \"Gartenzaun 是一个德语复合名词，由 'Garten'（花园）和 'Zaun'（栅栏、篱笆）组成，字面意思是'花园栅栏'或'花园篱笆'。它指围绕花园或庭院的围栏结构，通常由木材、金属或塑料制成，用于分隔私人空间、保护植物或提供隐私。在用法上，Gartenzaun 是阳性名词（der Gartenzaun），复数形式为 Gartenzäune。这个词常用于描述住宅或公共空间中的围栏，没有其他常见引申含义。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 44,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Gartenzaun' 指的是花园的栅栏或篱笆，它是句子中描述德思礼太太伸长脖子偷看邻居的背景。原文说 'den Hals über den Gartenzaun recken'，意思是 '伸长脖子越过花园栅栏'，这显示了栅栏作为一个物理障碍，她需要越过它来窥视邻居。\"}",
+        "token_indices": [
+          62
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 45,
+    "vocab_body": "fernhalten",
+    "explanation": "{'explanation': \"fernhalten 是一个德语可分动词，由前缀 'fern-'（意为“远离”）和词干 'halten'（意为“保持”）组成。它的基本含义是“使某人或某物远离某事物”或“避免接触”。\\n\\n主要用法：\\n1. 作为反身动词：sich fernhalten von + Dativ（第三格），表示“自己远离...”或“避免接触...”\\n2. 作为及物动词：jemanden/etwas fernhalten von + Dativ，表示“使某人/某物远离...”\\n\\n词性：可分动词 (trennbares Verb)\\n\\n时态变化示例：\\n- 现在时：ich halte fern\\n- 过去时：ich hielt fern\\n- 完成时：ich habe ferngehalten\\n\\n这个词常用于表达预防性的保持距离，既可以指物理距离，也可以比喻避免某种情况或影响。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 45,
+        "text_id": 1,
+        "sentence_id": 13,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'fernzuhalten' 的意思是“保持距离”或“远离”。它描述了说话者想避免与 Potters 一家接触，具体原因是 'dieser Junge war ein guter Grund'（这个男孩是一个很好的理由），因此他们不希望 'ihr Dudley'（他们的达力）与 'einem solchen Kind'（这样一个孩子）有任何接触，即 'nicht in Berührung kommen'（不接触到",
+        "token_indices": [
+          24
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 46,
+    "vocab_body": "rücken",
+    "explanation": "{'explanation': 'Rücken 是一个德语名词，意思是“背部”或“后背”，指人或动物的身体后部从颈部到腰部的区域。它也可以指物体的背面或后部，如椅子的靠背。作为动词时，rücken 表示“移动”或“推移”，通常用于描述缓慢或轻微的位移，例如将物体推近或调整位置。在词性上，它可以是名词（der Rücken）或动词（rücken）。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 46,
+        "text_id": 1,
+        "sentence_id": 44,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Rücken' 指的是 Mr Dursley 的背部。句子描述他 'saß immer mit dem Rücken zum Fenster'，意思是 '他总是背对着窗户坐着'。所以，'Rücken' 在这里表示他的背部位置，强调他坐着的方向是背朝窗户的。\"}",
+        "token_indices": [
+          25
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 47,
+    "vocab_body": "berührung",
+    "explanation": "{'explanation': 'Berührung 是一个德语名词，意思是“接触”或“触碰”。它通常指物理上的接触，比如身体或物体的直接碰触。此外，它也可以引申为抽象意义上的接触，例如在社交、情感或思想上的互动或联系。作为名词，它常用于固定表达中，如“in Berührung kommen”（意为“发生接触”或“接触到”）。这个词没有复数形式，在句子中通常作为主语或宾语使用。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 47,
+        "text_id": 1,
+        "sentence_id": 13,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Berührung' 的意思是 '接触'，具体指身体或社交上的接触。句子 'mit einem solchen Kind sollte ihr Dudley nicht in Berührung kommen' 可以翻译为 '他们的达力不应该和这样一个孩子接触'，这里强调达力应该避免与那个男孩有任何互动或联系，以保持距离。\"}",
+        "token_indices": [
+          45
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 48,
+    "vocab_body": "aufschlagen",
+    "explanation": "{'explanation': 'aufschlagen 是一个德语动词，具有多种含义。\\n1. 基本含义：打开或展开某物，例如打开一本书或展开一张地图。\\n2. 在体育或物理语境中：指球或其他物体弹起或反弹，例如网球落地后弹起。\\n3. 在烹饪或日常用语中：指打碎或敲开某物，例如打碎鸡蛋或敲开坚果。\\n4. 在军事或比喻语境中：指建立营地或临时住所，例如搭帐篷。\\n5. 在商业或价格语境中：指提高价格或费用。\\n该动词是规则动词，词形变化为 aufschlagen、schlug auf、aufgeschlagen。使用时需注意上下文以确定具体含义。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 48,
+        "text_id": 1,
+        "sentence_id": 14,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'aufschlugen' 是动词 'aufschlagen' 的过去式，意思是 '睁开' 或 '张开'。它描述了 Dursley 夫妇在故事开始的星期二早上醒来时睁开眼睛的动作。因此，'die Augen aufschlugen' 可以理解为 '睁开了眼睛'，表示他们从睡眠中醒来。\"}",
+        "token_indices": [
+          39
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 49,
+    "vocab_body": "agieren",
+    "explanation": "{'explanation': 'agieren 是一个德语动词，意思是“行动、操作、活动”，常用于描述人或组织在特定领域或情境中的行为方式。它强调主动参与或执行任务，通常带有专业或正式色彩。例如，在商业或专业语境中，它可以表示公司或个人的全球性运作。该词是弱变化动词，过去式为 agierte，过去分词为 agiert。它没有明显的多义词义，主要表示主动行动或运作。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 49,
+        "text_id": 1758864042,
+        "sentence_id": 3,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'agierendes' 是动词 'agieren' 的现在分词形式，用作形容词来描述 'Landschaftsarchitekturbüro Turenscape'。它的意思是 '活跃运作的' 或 '开展业务的'，强调这个景观建筑设计公司在全球范围内积极运营和活动。例如，句子中 'weltweit agierendes' 可以翻译为 '在全球范围内活跃运作的'，表示该公司在国际上广泛开展业务",
+        "token_indices": [
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 50,
+    "vocab_body": "agieren",
+    "explanation": "{'explanation': 'agieren 是一个德语动词，意思是“行动、运作、活动”或“扮演角色”。它通常用于描述个人、组织或事物在特定情境下的行为方式，强调主动性和动态过程。在商业或专业语境中，它可以表示“在全球范围内运作”或“积极从事某项活动”。这个词的词性是动词，常见形式包括 agieren（不定式）、agiert（过去分词）等。agieren 可以用于各种场景，如描述公司运营、个人行为或戏剧表演中的角色扮演，没有固定的搭配限制。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": []
+  },
+  {
+    "vocab_id": 51,
+    "vocab_body": "maßstabsebenen",
+    "explanation": "{'explanation': 'Maßstabsebenen 是一个德语复合名词，由 Maßstab（尺度、比例）和 Ebenen（层面、层次）组成。它指的是在不同尺度或规模上的层次或级别，常用于描述规划、设计或分析中的多个规模范围。例如，在建筑、景观设计或城市规划中，它可以涵盖从微观（如单个建筑细节）到宏观（如整个城市或区域规划）的不同尺度层面。这个词强调工作或研究覆盖了广泛的规模层次，而不是单一尺度。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 51,
+        "text_id": 1758873454,
+        "sentence_id": 3,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'Maßstabsebenen' 指的是俞孔坚的工作涉及建筑、景观建筑和城市规划的 '所有规模层次'。它强调他的项目覆盖从小的细节（如单个建筑设计）到大的整体规划（如整个城市布局）的各种不同规模，体现了工作的全面性和多样性。\"}",
+        "token_indices": [
+          69
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 52,
+    "vocab_body": "entlangfahren",
+    "explanation": "{'explanation': \"entlangfahren 是一个德语可分动词，由前缀 'entlang' 和动词 'fahren' 组成。基本含义是 '沿着...行驶' 或 '顺着...开车'，通常用于描述车辆或人沿着某条路径（如街道、道路或路线）移动。它可以是及物动词（带宾语，如沿着某物行驶）或不及物动词（不带宾语，仅表示沿某个方向行驶）。在可分动词结构中，前缀 'entlang' 在句子中常置于句末，例如 'die Straße entlangfahren'（沿着街道行驶）。这个词强调移动的方向和路径，常见于日常对话和书面描述中。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 52,
+        "text_id": 1,
+        "sentence_id": 28,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'entlangfuhr' 的意思是 '沿着...行驶'，描述 Mr Dursley 在拐弯后继续沿着街道开车。句子中 'die Straße entlangfuhr' 可以翻译为 '沿着街道行驶'，表示他保持方向前进。\"}",
+        "token_indices": [
+          21
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 53,
+    "vocab_body": "prächtig",
+    "explanation": "{'explanation': 'prächtig 是一个德语形容词，意为“壮丽的”、“华丽的”、“极好的”或“出色的”。它通常用来形容事物或人非常优秀、令人印象深刻或外观华丽。例如，可以形容风景壮丽、建筑华丽或人的表现出色。这个词也可以用作副词，形式为 prächtiger（比较级）或 prächtigsten（最高级），表示程度上的增强。在用法上，它常与名词连用，如 prächtiger Junge（出色的男孩），强调积极和赞美的含义。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 53,
+        "text_id": 1,
+        "sentence_id": 6,
+        "context_explanation": "{\"explanation\": \"在这句话中，'prächtigeren' 的意思是 '更出色的' 或 '更棒的'，用来形容 Dursleys 认为他们的儿子 Dudley 比其他所有男孩都优秀。句子 'in ihren Augen gab es nirgendwo einen prächtigeren Jungen' 可以翻译为 '在他们眼中，没有哪个地方有更出色的男孩了'，这强调了 Dursleys 对 Dudley 的极度自豪和偏爱。\"}",
+        "token_indices": [
+          33
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 54,
+    "vocab_body": "hinüberspähen",
+    "explanation": "{'explanation': \"hinüberspähen 是一个德语动词，由前缀 'hinüber-' 和动词 'spähen' 组合而成。\\n- 基本含义：表示'窥视'、'偷看'或'张望'，通常指从某个位置向另一侧或远处看，带有小心、好奇或偷偷摸摸的意味。\\n- 用法：常用于描述跨越障碍（如篱笆、窗户或距离）的观察行为，强调动作的方向性（从这边到那边）。它是一个可分动词，在句子中前缀 'hinüber-' 可能分离，例如 'sie späht hinüber'。\\n- 词性：动词，不及物动词，需要与方向补语（如 'zu den Nachbarn'）连用，以明确看的目标。\\n- 其他含义：没有常见的多重含义，但 'spähen' 本身可泛指侦察或仔细观看，而 'hinüber-' 强化了跨越的意象。\"}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 54,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'hinüberspähen' 描述的是达力夫人伸长脖子越过花园篱笆的动作，意思是'窥视邻居们'。它结合了'hinüber'（越过）和'spähen'（窥视），生动地表现出她伸长脖子（'den Hals über den Gartenzaun recken'）去偷看邻居的行为。\"}",
+        "token_indices": [
+          74
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 55,
+    "vocab_body": "sache",
+    "explanation": "{'explanation': 'Sache 是一个德语名词，意思是“事情”、“事物”或“事务”。它通常指具体的事件、情况或物体，也可以泛指抽象的概念或问题。在用法上，Sache 常用于描述需要处理或讨论的事项，例如日常事务、法律案件或重要问题。这个词没有复数形式变化，但在特定语境下可以与其他词组合，如 Hauptsache（主要事情）。它强调客观性或重要性，适合在各种正式和非正式场合使用。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 55,
+        "text_id": 1,
+        "sentence_id": 8,
+        "context_explanation": "{\"explanation\": \"在这句话中，“Sache”指的是“与波特夫妇相关的事件或情况”。具体来说，它指代“die Sache mit den Potters”（与波特夫妇有关的事情），即如果这件事被揭露或公开，就会变得无法忍受。\"}",
+        "token_indices": [
+          14
+        ]
+      }
+    ]
   }
 ]

@@ -4,6 +4,8 @@ import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
 import { useSentenceInteraction } from '../hooks/useSentenceInteraction'
+import { useUser } from '../../../contexts/UserContext'
+import { useSelection } from '../selection/hooks/useSelection'
 import SentenceContainer from './SentenceContainer'
 
 /**
@@ -22,7 +24,8 @@ export default function ArticleViewer({
   onSentenceSelect
 }) {
   // Debug logging removed to improve performance
-  const { data, isLoading, isError, error } = useArticle(articleId)
+  const { userId } = useUser()
+  const { data, isLoading, isError, error } = useArticle(articleId, userId)
 
   // Asked tokens management - 现在从props接收，不再创建新的hook实例
   // const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId)
@@ -64,6 +67,9 @@ export default function ArticleViewer({
     isSentenceSelected
   } = useSentenceInteraction()
 
+  // Selection context (new system) - need to sync with old token selection system
+  const { clearSelection: clearSelectionContext, selectTokens: selectTokensInContext } = useSelection()
+
   // Token selection management
   const {
     selectedTokenIds,
@@ -72,7 +78,7 @@ export default function ArticleViewer({
     clearSelection,
     addSingle,
     emitSelection
-  } = useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceInteraction })
+  } = useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceSelection, selectTokensInContext })
 
   // Token drag selection management
   const {
@@ -89,7 +95,9 @@ export default function ArticleViewer({
     selectedTokenIds,
     activeSentenceRef,
     emitSelection,
-    clearSelection
+    clearSelection,
+    clearSentenceSelection,
+    clearSelectionContext
   })
 
   // Grammar notations management - 现在从props接收，不再创建新的hook实例

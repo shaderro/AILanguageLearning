@@ -141,9 +141,9 @@ async def get_all_grammar_rules(
                 "rules": [
                     {
                         "rule_id": r.rule_id,
-                        "name": r.name,
-                        "explanation": r.explanation,
-                        "source": r.source,
+                        "name": r.rule_name,  # 修复：字段名是 rule_name
+                        "explanation": r.rule_summary,  # 修复：字段名是 rule_summary
+                        "source": r.source.value if hasattr(r.source, 'value') else r.source,
                         "is_starred": r.is_starred
                     }
                     for r in rules

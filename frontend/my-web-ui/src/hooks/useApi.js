@@ -1,22 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api.js';
+import guestDataManager from '../utils/guestDataManager.js';
 
-// React Query 配置
+// React Query 配置 - 添加 userId 到 queryKeys
 export const queryKeys = {
   health: ['health'],
   word: (text) => ['word', text],
   vocab: {
-    all: ['vocab'],
-    detail: (id) => ['vocab', id],
+    all: (userId) => ['vocab', userId],  // 添加 userId
+    detail: (id, userId) => ['vocab', id, userId],  // 添加 userId
   },
   grammar: {
-    all: ['grammar'],
-    detail: (id) => ['grammar', id],
+    all: (userId) => ['grammar', userId],  // 添加 userId
+    detail: (id, userId) => ['grammar', id, userId],  // 添加 userId
   },
-  stats: ['stats'],
+  stats: (userId) => ['stats', userId],  // 添加 userId
   articles: {
-    all: ['articles'],
-    detail: (id) => ['articles', id],
+    all: (userId) => ['articles', userId],  // 添加 userId
+    detail: (id, userId) => ['articles', id, userId],  // 添加 userId
   },
 };
 
@@ -39,11 +40,17 @@ export const useWordInfo = (text) => {
   });
 };
 
-// 获取词汇列表 Hook
-export const useVocabList = () => {
+// 获取词汇列表 Hook - 支持游客模式
+export const useVocabList = (userId = null, isGuest = false) => {
   return useQuery({
-    queryKey: queryKeys.vocab.all,
-    queryFn: apiService.getVocabList,
+    queryKey: queryKeys.vocab.all(userId),
+    queryFn: isGuest ? async () => {
+      // 游客模式：从 localStorage 获取数据
+      const vocabs = guestDataManager.getVocabs(userId)
+      console.log('👤 [useVocabList] 游客模式，加载本地数据:', vocabs.length, '条')
+      return { data: vocabs }
+    } : apiService.getVocabList,
+    enabled: userId !== null,  // 游客和登录用户都可以查询
     staleTime: 5 * 60 * 1000, // 5分钟
   });
 };
@@ -58,11 +65,17 @@ export const useVocabDetail = (id) => {
   });
 };
 
-// 获取语法规则列表 Hook
-export const useGrammarList = () => {
+// 获取语法规则列表 Hook - 支持游客模式
+export const useGrammarList = (userId = null, isGuest = false) => {
   return useQuery({
-    queryKey: queryKeys.grammar.all,
-    queryFn: apiService.getGrammarList,
+    queryKey: queryKeys.grammar.all(userId),
+    queryFn: isGuest ? async () => {
+      // 游客模式：从 localStorage 获取数据
+      const grammars = guestDataManager.getGrammars(userId)
+      console.log('👤 [useGrammarList] 游客模式，加载本地数据:', grammars.length, '条')
+      return { data: grammars }
+    } : apiService.getGrammarList,
+    enabled: userId !== null,  // 游客和登录用户都可以查询
     staleTime: 5 * 60 * 1000, // 5分钟
   });
 };
@@ -78,9 +91,9 @@ export const useGrammarDetail = (id) => {
 };
 
 // 获取统计数据 Hook
-export const useStats = () => {
+export const useStats = (userId = null) => {
   return useQuery({
-    queryKey: queryKeys.stats,
+    queryKey: queryKeys.stats(userId),
     queryFn: apiService.getStats,
     staleTime: 2 * 60 * 1000, // 2分钟
   });
@@ -91,22 +104,23 @@ export const useRefreshData = () => {
   const queryClient = useQueryClient();
   
   const refreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.vocab.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.grammar.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.stats });
-    queryClient.invalidateQueries({ queryKey: queryKeys.articles.all });
+    // 刷新所有用户的缓存（使用部分匹配）
+    queryClient.invalidateQueries({ queryKey: ['vocab'] });
+    queryClient.invalidateQueries({ queryKey: ['grammar'] });
+    queryClient.invalidateQueries({ queryKey: ['stats'] });
+    queryClient.invalidateQueries({ queryKey: ['articles'] });
   };
   
   const refreshVocab = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.vocab.all });
+    queryClient.invalidateQueries({ queryKey: ['vocab'] });
   };
   
   const refreshGrammar = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.grammar.all });
+    queryClient.invalidateQueries({ queryKey: ['grammar'] });
   };
 
   const refreshArticles = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.articles.all });
+    queryClient.invalidateQueries({ queryKey: ['articles'] });
   };
   
   return {
@@ -117,19 +131,19 @@ export const useRefreshData = () => {
   };
 };
 
-// 获取文章列表 Hook
-export const useArticles = () => {
+// 获取文章列表 Hook - 支持 userId
+export const useArticles = (userId = null) => {
   return useQuery({
-    queryKey: queryKeys.articles.all,
+    queryKey: queryKeys.articles.all(userId),
     queryFn: apiService.getArticlesList,
     staleTime: 5 * 60 * 1000, // 5分钟
   });
 };
 
-// 获取文章详情 Hook
-export const useArticle = (id) => {
+// 获取文章详情 Hook - 支持 userId
+export const useArticle = (id, userId = null) => {
   return useQuery({
-    queryKey: queryKeys.articles.detail(id),
+    queryKey: queryKeys.articles.detail(id, userId),
     queryFn: () => apiService.getArticleById(id),
     enabled: !!id, // 只有当 id 存在时才执行查询
     staleTime: 10 * 60 * 1000, // 10分钟

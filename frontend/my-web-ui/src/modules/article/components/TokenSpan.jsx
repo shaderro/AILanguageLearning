@@ -166,7 +166,10 @@ export default function TokenSpan({
         }}
         onMouseDown={(e) => handleMouseDownToken(sentenceIdx, tokenIdx, token, e)}
         onMouseEnter={() => {
-          selOnEnter()
+          // 只有可选择的token才触发hover效果
+          if (selectable) {
+            selOnEnter()
+          }
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
@@ -178,7 +181,10 @@ export default function TokenSpan({
           handleMouseEnterToken(sentenceIdx, tokenIdx, token)
         }}
         onMouseLeave={() => {
-          selOnLeave()
+          // 只有可选择的token才清除hover效果
+          if (selectable) {
+            selOnLeave()
+          }
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(null)
           }
@@ -195,8 +201,9 @@ export default function TokenSpan({
             e.stopPropagation()
             return
           }
-          selOnClick()
+          // 只有可选择的token才响应点击
           if (selectable) { 
+            selOnClick()
             e.preventDefault(); 
             e.stopPropagation(); 
             addSingle(sentenceIdx, token) 

@@ -14,9 +14,9 @@ class TextManager:
         self.session = session
         self.dal = TextDataAccessLayer(session)
     
-    def create_text(self, text_title: str) -> OriginalText:
+    def create_text(self, text_title: str, user_id: int = None) -> OriginalText:
         """创建文章"""
-        return self.dal.create_text(text_title)
+        return self.dal.create_text(text_title, user_id)
     
     def get_text(self, text_id: int) -> Optional[OriginalText]:
         """获取文章"""

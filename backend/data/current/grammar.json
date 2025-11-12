@@ -150,6 +150,12 @@
         "text_id": 1,
         "sentence_id": 13,
         "explanation_context": "{\"explanation\": \"在这句话中，动词'fernzuhalten'由前缀'fern-'和动词'halten'构成，'fern-'表示'远离'的意思，整个词意为'保持距离'，生动地表达了说话者希望避免与Potters一家接触的意图。\"}"
+      },
+      {
+        "rule_id": 4,
+        "text_id": 1,
+        "sentence_id": 14,
+        "explanation_context": "{\"explanation\": \"在这句话中，动词'aufschlugen'由前缀'auf-'和词干'schlugen'构成，表示'睁开'眼睛的动作，前缀'auf-'强调了动作的起始或向上方向，使动词含义更具体。\"}"
       }
     ],
     "source": "qa",
@@ -246,6 +252,63 @@
         "text_id": 1,
         "sentence_id": 5,
         "explanation_context": "{\"explanation\": \"在这句话中，'gewesen wäre' 使用了虚拟式过去完成时，表示一个假设的情况：佩妮姨妈其实并不需要这么长的脖子，但作者用虚拟式来强调这是一种夸张的想象。而 'konnte' 是直陈式过去时，描述她实际能够做到的动作——伸长脖子偷看邻居。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 11,
+    "rule_name": "主谓宾结构",
+    "rule_summary": "句子通常由主语、谓语和宾语构成，主语执行动作，谓语表示动作，宾语是动作的对象。",
+    "examples": [
+      {
+        "rule_id": 11,
+        "text_id": 1758864042,
+        "sentence_id": 3,
+        "explanation_context": "{\"explanation\": \"在这个句子中，'Yu Kongjians Arbeit' 是主语，表示动作的执行者；'befasst sich mit' 是谓语，描述主语的动作；'Aufgabenstellungen aus der Architektur, Landschaftsarchitektur sowie Städtebau in allen Maßstabsebenen' 是宾语，表示动作涉及的对象。整个句子清晰地展示了谁在做什么以及涉及什么内容。\"}"
+      },
+      {
+        "rule_id": 11,
+        "text_id": 1758864042,
+        "sentence_id": 4,
+        "explanation_context": "{\"explanation\": \"在这句话中，'Er' 是主语，指代某个人；'war' 是谓语动词，表示'是'的状态；'Gastprofessor für Landschaftsarchitektur am Department of Landscape Architecture der Harvard Graduate School of Design' 是宾语，描述主语的身份和地点，整体构成一个完整的主谓宾结构，清晰地表达了'他曾经是哈佛设计研究生院景观设计系的景观建筑客座教授'的意思。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 12,
+    "rule_name": "德语形容词比较级构成",
+    "rule_summary": "形容词比较级由词根加比较级后缀 -er 和相应词尾构成，如 prächtigeren 来自 prächtig + -er + -en",
+    "examples": [
+      {
+        "rule_id": 12,
+        "text_id": 1,
+        "sentence_id": 6,
+        "explanation_context": "{\"explanation\": \"在这句话中，'prächtigeren' 是形容词 'prächtig'（华丽的）的比较级形式，用来表示在 Dursleys 眼中，没有比 Dudley 更出色的男孩了，强调了他们的偏爱。\"}"
+      },
+      {
+        "rule_id": 12,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这句话中，'doppelt so viel Hals, wie notwendig gewesen wäre' 使用了形容词比较级结构。'notwendig'（必要的）在这里通过比较级形式 'notwendig gewesen wäre' 表示‘本来必要的’，用来对比杜斯利夫人实际拥有的‘双倍脖子长度’，突出了夸张的描写效果。\"}"
+      }
+    ],
+    "source": "qa",
+    "is_starred": false
+  },
+  {
+    "rule_id": 13,
+    "rule_name": "原因从句",
+    "rule_summary": "使用 'denn' 引导的原因从句，解释主句动作的原因",
+    "examples": [
+      {
+        "rule_id": 13,
+        "text_id": 1,
+        "sentence_id": 5,
+        "explanation_context": "{\"explanation\": \"在这句话中，'denn so konnte sie den Hals über den Gartenzaun recken und zu den Nachbarn hinüberspähen' 是一个原因从句，它解释了为什么Dursley太太的长脖子很有用——因为它让她能够伸长脖子越过花园篱笆窥视邻居。\"}"
       }
     ],
     "source": "qa",

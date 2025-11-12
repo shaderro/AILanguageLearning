@@ -18,7 +18,7 @@ function getApiTarget() {
   return 'mock';
 }
 const API_TARGET = getApiTarget();
-const BASE_URL = API_TARGET === "mock" ? "http://localhost:8000" : "http://localhost:8001";
+const BASE_URL = "http://localhost:8000";  // 统一使用8000端口（mock和db都在8000）
 
 // 创建 axios 实例
 const api = axios.create({
@@ -408,7 +408,14 @@ export const apiService = {
       } else {
         // 数据库模式：优先尝试 v2 API，失败则回退到文件系统
         try {
-          return await api.get(`/api/v2/texts/${id}?include_sentences=true`);
+          const dbResult = await api.get(`/api/v2/texts/${id}?include_sentences=true`);
+          // 检查是否有句子数据，如果没有则回退到文件系统
+          const sentenceCount = dbResult?.data?.sentence_count ?? dbResult?.data?.sentences?.length ?? 0;
+          if (sentenceCount === 0) {
+            console.log('🔄 [API] 数据库中无句子数据，回退到文件系统');
+            return api.get(`/api/articles/${id}`);
+          }
+          return dbResult;
         } catch (dbError) {
           console.log('🔄 [API] 数据库API失败，回退到文件系统:', dbError.message);
           return api.get(`/api/articles/${id}`);
@@ -494,7 +501,7 @@ export const apiService = {
 
   // ==================== Session 和 Chat API（需要Mock服务器）====================
   // ⚠️ 注意：这些功能依赖Mock服务器的SessionState
-  // 如果只启动数据库API（8001），这些功能可能不可用
+  // 如果只启动数据库API（8000），这些功能可能不可用
   // 需要同时启动Mock服务器（8000）或将这些功能迁移到数据库版本
   
   // Session 管理

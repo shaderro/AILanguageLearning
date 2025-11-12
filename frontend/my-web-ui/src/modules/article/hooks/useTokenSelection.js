@@ -4,7 +4,7 @@ import { getTokenId } from '../utils/tokenUtils'
 /**
  * Custom hook to manage token selection state
  */
-export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceInteraction }) {
+export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceSelection, selectTokensInContext }) {
   const [selectedTokenIds, setSelectedTokenIds] = useState(() => new Set())
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(null)
   const activeSentenceRef = useRef(null)
@@ -91,6 +91,18 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
         contextTokens: context?.tokens?.length
       })
       onTokenSelect(lastTokenText, set, selectedTexts, context)
+      
+      // 同步更新新选择系统（SelectionContext）以显示句子边框
+      if (typeof selectTokensInContext === 'function' && context && set.size > 0) {
+        const textId = context.sentence.text_id
+        const sentenceId = context.sentence.sentence_id
+        const tokenIds = context.tokens.map(t => t.sentence_token_id)
+        console.log('🔄 [useTokenSelection.emitSelection] 同步到新系统:', { textId, sentenceId, tokenIds })
+        selectTokensInContext(textId, sentenceId, tokenIds)
+      } else if (set.size === 0 && typeof selectTokensInContext === 'function') {
+        // 如果清空了选择，也需要清空新系统（这个已经在clearSelection中处理了）
+        console.log('🧹 [useTokenSelection.emitSelection] 选择已清空，但新系统已在clearSelection中处理')
+      }
     }
   }
 
@@ -105,15 +117,27 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
     activeSentenceRef.current = null
     setActiveSentenceIndex(null)
     // 清除句子交互状态
-    if (clearSentenceInteraction) {
-      clearSentenceInteraction()
+    if (clearSentenceSelection) {
+      clearSentenceSelection()
     }
   }
 
   const addSingle = (sIdx, token) => {
+    console.log('🎯 [useTokenSelection.addSingle] 开始执行')
+    console.log('  - sIdx:', sIdx, 'token:', token?.token_body)
+    console.log('  - clearSentenceSelection 类型:', typeof clearSentenceSelection)
+    
     // 任何 token 选择都应取消句子级选择（避免整句与token同时高亮/上报）
-    if (typeof clearSentenceInteraction === 'function') {
-      try { clearSentenceInteraction() } catch {}
+    if (typeof clearSentenceSelection === 'function') {
+      console.log('🧹 [useTokenSelection.addSingle] 准备调用 clearSentenceSelection')
+      try { 
+        clearSentenceSelection()
+        console.log('✅ [useTokenSelection.addSingle] clearSentenceSelection 调用完成')
+      } catch (e) {
+        console.error('❌ [useTokenSelection.addSingle] clearSentenceSelection 调用出错:', e)
+      }
+    } else {
+      console.warn('⚠️ [useTokenSelection.addSingle] clearSentenceSelection 不是函数!')
     }
     // 如果选择了其他句子的token，先清除当前选择，然后设置新句子为活跃状态
     if (activeSentenceRef.current != null && activeSentenceRef.current !== sIdx) {

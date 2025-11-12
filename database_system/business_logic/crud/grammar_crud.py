@@ -25,13 +25,14 @@ class GrammarCRUD:
             return SourceType.AUTO
     
     def create(self, rule_name: str, rule_summary: str,
-               source: str = "auto", is_starred: bool = False) -> GrammarRule:
+               source: str = "auto", is_starred: bool = False, user_id: int = None) -> GrammarRule:
         """创建语法规则"""
         rule = GrammarRule(
             rule_name=rule_name,
             rule_summary=rule_summary,
             source=self._coerce_source(source),
-            is_starred=is_starred
+            is_starred=is_starred,
+            user_id=user_id
         )
         self.session.add(rule)
         self.session.commit()
@@ -39,14 +40,15 @@ class GrammarCRUD:
         return rule
     
     def get_or_create(self, rule_name: str, rule_summary: str,
-                      source: str = "auto", is_starred: bool = False) -> GrammarRule:
+                      source: str = "auto", is_starred: bool = False, user_id: int = None) -> GrammarRule:
         """获取或创建语法规则"""
         existing = self.session.query(GrammarRule).filter(
-            GrammarRule.rule_name == rule_name
+            GrammarRule.rule_name == rule_name,
+            GrammarRule.user_id == user_id
         ).first()
         if existing:
             return existing
-        return self.create(rule_name, rule_summary, source, is_starred)
+        return self.create(rule_name, rule_summary, source, is_starred, user_id)
     
     def get_by_id(self, rule_id: int) -> Optional[GrammarRule]:
         """根据ID获取语法规则"""

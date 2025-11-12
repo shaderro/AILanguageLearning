@@ -9,7 +9,9 @@ export function useTokenDrag({
   selectedTokenIds, 
   activeSentenceRef,
   emitSelection,
-  clearSelection 
+  clearSelection,
+  clearSentenceSelection,
+  clearSelectionContext
 }) {
   const isDraggingRef = useRef(false)
   const wasDraggingRef = useRef(false)
@@ -24,6 +26,29 @@ export function useTokenDrag({
   const handleMouseDownToken = (sIdx, tIdx, token, e) => {
     console.log('🖱️ [useTokenDrag] mouseDown:', { sIdx, tIdx, token: token?.token_body, selectable: token?.selectable })
     if (!token?.selectable) return
+    
+    // 任何 token 选择都应取消句子级选择（清除两个选择系统）
+    if (typeof clearSentenceSelection === 'function') {
+      console.log('🧹 [useTokenDrag] 准备清除句子选择（旧系统）')
+      try { 
+        clearSentenceSelection()
+        console.log('✅ [useTokenDrag] 句子选择已清除（旧系统）')
+      } catch (e) {
+        console.error('❌ [useTokenDrag] 清除句子选择时出错（旧系统）:', e)
+      }
+    }
+    
+    // 清除新选择系统的状态
+    if (typeof clearSelectionContext === 'function') {
+      console.log('🧹 [useTokenDrag] 准备清除选择（新系统SelectionContext）')
+      try { 
+        clearSelectionContext()
+        console.log('✅ [useTokenDrag] 选择已清除（新系统）')
+      } catch (e) {
+        console.error('❌ [useTokenDrag] 清除选择时出错（新系统）:', e)
+      }
+    }
+    
     if (activeSentenceRef.current != null && activeSentenceRef.current !== sIdx) {
       e.preventDefault()
       console.log('🔄 [useTokenDrag] Switching to new sentence, clearing previous selection')

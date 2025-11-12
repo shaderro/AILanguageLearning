@@ -64,10 +64,18 @@ export function useNotationCache(articleId) {
       }
 
       // 处理vocab notations（新API）
+      console.log('🔍 [useNotationCache] Vocab response:', vocabResponse)
+      console.log('🔍 [useNotationCache] vocabResponse.success:', vocabResponse?.success)
+      console.log('🔍 [useNotationCache] vocabResponse.data:', vocabResponse?.data)
+      
       if (vocabResponse && vocabResponse.success && vocabResponse.data) {
         // 新API返回格式：{ success: true, data: { notations: [...], count: N } }
         const vocabData = vocabResponse.data.notations || vocabResponse.data
         const vocabList = Array.isArray(vocabData) ? vocabData : []
+        
+        console.log('📝 [useNotationCache] vocabData:', vocabData)
+        console.log('📝 [useNotationCache] vocabList length:', vocabList.length)
+        console.log('📝 [useNotationCache] vocabList:', vocabList)
         
         // 转换为前端使用的格式（确保有token_index字段）
         const formattedVocabNotations = vocabList.map(notation => ({
@@ -80,6 +88,7 @@ export function useNotationCache(articleId) {
           created_at: notation.created_at
         }))
         
+        console.log('✅ [useNotationCache] Formatted vocab notations:', formattedVocabNotations)
         setVocabNotations(formattedVocabNotations)
         // 不再预加载所有 examples：改为按需懒加载 + 新建后单次写缓存
       } else if (vocabResponse && vocabResponse.data) {

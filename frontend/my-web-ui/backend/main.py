@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import json
@@ -242,6 +242,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 添加请求日志中间件（用于调试）
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print(f"📥 [Request] {request.method} {request.url.path}")
+    response = await call_next(request)
+    print(f"📤 [Response] {request.method} {request.url.path} -> {response.status_code}")
+    return response
+
 # 注册新的标注API路由
 if notation_router:
     app.include_router(notation_router)
@@ -249,11 +257,16 @@ if notation_router:
 
 # 注册认证API路由
 try:
-    from backend.api.auth_routes import router as auth_router
+    from backend.api.auth_routes import router as auth_router, get_current_user
+    from database_system.business_logic.models import User
     app.include_router(auth_router)
     print("[OK] 注册认证API路由: /api/auth")
 except ImportError as e:
     print(f"Warning: Could not import auth_routes: {e}")
+    # 如果导入失败，提供一个占位函数
+    def get_current_user():
+        raise HTTPException(status_code=500, detail="认证系统未加载")
+    User = None
 
 # 注册文章API路由
 try:
@@ -436,6 +449,11 @@ async def update_session_context(payload: dict):
         # 更新句子
         if 'sentence' in payload:
             sentence_data = payload['sentence']
+            print(f"🔍 [SessionState] 设置句子上下文:")
+            print(f"  - text_id: {sentence_data.get('text_id')} (type: {type(sentence_data.get('text_id'))})")
+            print(f"  - sentence_id: {sentence_data.get('sentence_id')}")
+            print(f"  - sentence_body: {sentence_data.get('sentence_body', '')[:50]}...")
+            
             current_sentence = NewSentence(
                 text_id=sentence_data['text_id'],
                 sentence_id=sentence_data['sentence_id'],
@@ -514,8 +532,12 @@ async def trigger_sync_to_db():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def _sync_to_database():
-    """同步 JSON 数据到数据库"""
+def _sync_to_database(user_id: int = None):
+    """同步 JSON 数据到数据库
+    
+    参数:
+        user_id: 当前用户ID，用于关联新创建的数据
+    """
     try:
         from database_system.database_manager import DatabaseManager
         from backend.data_managers import GrammarRuleManagerDB, VocabManagerDB
@@ -524,19 +546,35 @@ def _sync_to_database():
         session = db_manager.get_session()
         
         try:
+            from backend.data_managers import OriginalTextManagerDB
             grammar_db_mgr = GrammarRuleManagerDB(session)
             vocab_db_mgr = VocabManagerDB(session)
+            text_db_mgr = OriginalTextManagerDB(session)
             
-            # 同步 Grammar Rules（只处理新增的）
+            # 首先同步文章数据（必须先同步，因为grammar/vocab examples依赖于texts表）
+            print("📄 [Sync] 同步文章数据...")
+            synced_texts = 0
+            for text_id, text_obj in global_dc.text_manager.original_texts.items():
+                # 检查文章是否已存在
+                existing_text = text_db_mgr.get_text_by_id(text_id, include_sentences=False)
+                if not existing_text:
+                    # 文章不存在，创建基本记录（句子数据通过文章上传API处理）
+                    title = getattr(text_obj, 'text_title', f'Article {text_id}')
+                    new_text = text_db_mgr.add_text(title, user_id=user_id)
+                    print(f"✅ [Sync] 新增文章占位符: {title} (ID: {new_text.text_id})")
+                    print(f"  ℹ️  句子数据需要通过文章上传API导入")
+                    synced_texts += 1
+                else:
+                    print(f"📝 [Sync] 文章已存在: {existing_text.text_title} (ID: {text_id})")
+            
+            print(f"✅ [Sync] 文章同步完成: {synced_texts} 个新文章基本信息")
+            
+            # 同步 Grammar Rules（只同步本轮新增的）
+            print(f"📚 [Sync] 同步本轮新增的 Grammar Rules (共{len(session_state.grammar_to_add)}个)...")
             synced_grammar = 0
-            for rule_id, bundle in global_dc.grammar_manager.grammar_bundles.items():
-                # GrammarBundle 结构：bundle.rule (GrammarRule), bundle.examples (list)
-                rule = bundle.rule if hasattr(bundle, 'rule') else bundle
-                rule_name = rule.name if hasattr(rule, 'name') else getattr(bundle, 'rule_name', None)
-                rule_explanation = rule.explanation if hasattr(rule, 'explanation') else getattr(bundle, 'rule_explanation', None)
-                
-                if not rule_name:
-                    continue
+            for grammar_item in session_state.grammar_to_add:
+                rule_name = grammar_item.rule_name
+                rule_explanation = grammar_item.rule_explanation
                 
                 # 检查是否已存在
                 existing = grammar_db_mgr.get_rule_by_name(rule_name)
@@ -545,44 +583,50 @@ def _sync_to_database():
                     new_rule = grammar_db_mgr.add_new_rule(
                         name=rule_name,
                         explanation=rule_explanation or '',
-                        source='auto'
+                        source='auto',
+                        user_id=user_id
                     )
                     print(f"✅ [Sync] 新增 grammar rule: {rule_name} (ID: {new_rule.rule_id})")
                     synced_grammar += 1
                     
-                    # 同步 examples
-                    examples = bundle.examples if hasattr(bundle, 'examples') else []
-                    for ex in examples:
-                        grammar_db_mgr.add_grammar_example(
-                            rule_id=new_rule.rule_id,
-                            text_id=ex.text_id,
-                            sentence_id=ex.sentence_id,
-                            explanation_context=ex.explanation_context
-                        )
+                    # 同步本轮的grammar notation（如果有）
+                    for notation in session_state.created_grammar_notations:
+                        # 只同步与当前rule相关的notation（通过grammar_id匹配）
+                        # 注意：此时新rule刚创建，需要在assistant中先记录rule_id
+                        pass  # TODO: 需要从assistant中传递grammar_id映射
+                else:
+                    print(f"📝 [Sync] Grammar rule已存在: {rule_name}")
             
-            # 同步 Vocab Expressions
+            # 同步 Vocab Expressions（只同步本轮新增的）
+            print(f"📖 [Sync] 同步本轮新增的 Vocab Expressions (共{len(session_state.vocab_to_add)}个)...")
             synced_vocab = 0
-            for vocab_id, bundle in global_dc.vocab_manager.vocab_bundles.items():
-                # VocabExpressionBundle 可能直接包含字段或嵌套在 vocab_expression 中
-                vocab_body = getattr(bundle, 'vocab_body', None)
-                explanation = getattr(bundle, 'explanation', '')
+            
+            # 从session_state获取本轮新增的vocab
+            for vocab_item in session_state.vocab_to_add:
+                vocab_body = vocab_item.vocab
                 
-                if not vocab_body:
-                    print(f"⚠️ [Sync] 跳过无 vocab_body 的 vocab (ID: {vocab_id})")
+                # 在global_dc中查找对应的bundle
+                bundle = None
+                for vid, vb in global_dc.vocab_manager.vocab_bundles.items():
+                    if getattr(vb, 'vocab_body', None) == vocab_body:
+                        bundle = vb
+                        break
+                
+                if not bundle:
+                    print(f"⚠️ [Sync] 在内存中找不到vocab: {vocab_body}")
                     continue
                 
-                # 🔧 获取 examples（兼容新旧结构）
-                # 新结构：vocab.examples (复数)
-                # 旧结构：bundle.example (单数)
+                explanation = getattr(bundle, 'explanation', '')
                 examples = getattr(bundle, 'examples', None) or getattr(bundle, 'example', [])
                 
-                # 检查是否已存在
+                # 检查是否已存在于数据库
                 existing = vocab_db_mgr.get_vocab_by_body(vocab_body)
                 if not existing:
                     # 添加新的 vocab
                     new_vocab = vocab_db_mgr.add_new_vocab(
                         vocab_body=vocab_body,
-                        explanation=explanation
+                        explanation=explanation,
+                        user_id=user_id
                     )
                     print(f"✅ [Sync] 新增 vocab: {vocab_body} (ID: {new_vocab.vocab_id})")
                     synced_vocab += 1
@@ -593,6 +637,9 @@ def _sync_to_database():
                     skipped_examples = 0
                     for ex in examples:
                         try:
+                            # 调试：打印example的完整信息
+                            print(f"  🔍 [Debug] Example详情: text_id={ex.text_id}, sentence_id={ex.sentence_id}, type={type(ex.text_id)}")
+                            
                             # 先检查text_id是否存在
                             from database_system.business_logic.managers import TextManager
                             text_mgr = TextManager(session)
@@ -617,49 +664,7 @@ def _sync_to_database():
                     if skipped_examples > 0:
                         print(f"  ⚠️ {skipped_examples} 个 examples 被跳过（text_id不存在或其他错误）")
                 else:
-                    # 已存在的 vocab，同步新的 examples
-                    existing_vocab_id = existing.vocab_id
-                    # 获取数据库中已有的examples，用于去重
-                    db_examples = vocab_db_mgr.get_examples_by_vocab_id(existing_vocab_id)
-                    db_example_keys = {(ex.text_id, ex.sentence_id) for ex in db_examples}
-                    
-                    synced_examples = 0
-                    skipped_text_not_exist = 0
-                    skipped_duplicate = 0
-                    
-                    for ex in examples:
-                        # 检查是否已存在（去重）
-                        example_key = (ex.text_id, ex.sentence_id)
-                        if example_key in db_example_keys:
-                            skipped_duplicate += 1
-                            continue
-                        
-                        try:
-                            # 先检查text_id是否存在（避免外键约束错误）
-                            from database_system.business_logic.managers import TextManager
-                            text_mgr = TextManager(session)
-                            if not text_mgr.get_text(ex.text_id):
-                                skipped_text_not_exist += 1
-                                continue
-                            
-                            vocab_db_mgr.add_vocab_example(
-                                vocab_id=existing_vocab_id,
-                                text_id=ex.text_id,
-                                sentence_id=ex.sentence_id,
-                                context_explanation=getattr(ex, 'context_explanation', ''),
-                                token_indices=getattr(ex, 'token_indices', [])
-                            )
-                            synced_examples += 1
-                            db_example_keys.add(example_key)  # 更新已同步的key集合
-                        except Exception as ex_err:
-                            # 处理其他错误（如数据库约束）
-                            pass
-                    
-                    # 只在真正添加了新examples时才打印
-                    if synced_examples > 0:
-                        print(f"ℹ️ [Sync] Vocab '{vocab_body}': 补充了 {synced_examples} 个 examples")
-                    if skipped_text_not_exist > 0:
-                        print(f"⚠️ [Sync] Vocab '{vocab_body}': 跳过 {skipped_text_not_exist} 个 examples (text_id不存在)")
+                    print(f"📝 [Sync] Vocab已存在，跳过: {vocab_body}")
             
             session.commit()
             print(f"✅ [Sync] 数据库同步完成: {synced_grammar} grammar rules, {synced_vocab} vocab expressions")
@@ -673,15 +678,20 @@ def _sync_to_database():
         traceback.print_exc()
 
 @app.post("/api/chat")
-async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
+async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     """聊天功能（完整 MainAssistant 集成）"""
     try:
         import time
         request_id = int(time.time() * 1000) % 10000
+        user_id = current_user.user_id  # 获取当前用户ID
+        
+        # 设置session_state的user_id
+        session_state.user_id = user_id
         
         print("\n" + "="*80)
         print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")
         print(f"📥 [Chat #{request_id}] Payload: {payload}")
+        print(f"👤 [Chat #{request_id}] User ID: {user_id}")
         print("="*80)
         
         # 从 session_state 获取上下文信息
@@ -691,6 +701,8 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
         
         print(f"📋 [Chat #{request_id}] Session State Info:")
         print(f"  - current_input: {current_input}")
+        print(f"  - current_sentence text_id: {current_sentence.text_id if current_sentence else 'None'}")
+        print(f"  - current_sentence sentence_id: {current_sentence.sentence_id if current_sentence else 'None'}")
         print(f"  - current_sentence: {current_sentence.sentence_body[:50] if current_sentence else 'None'}...")
         print(f"  - current_selected_token: {current_selected_token}")
         if current_selected_token:
@@ -774,7 +786,7 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                 
                 # 🔧 同步到数据库（在内存数据还在时立即同步）
                 print("\n💾 [Background] 同步新数据到数据库...")
-                _sync_to_database()
+                _sync_to_database(user_id=user_id)
                 
                 # 保存到 JSON 文件（保持兼容）
                 save_data_async(
@@ -1310,10 +1322,21 @@ async def unmark_token_asked(payload: dict):
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # 打印所有注册的路由（调试用）
     print("\n" + "="*80)
+    print("📋 已注册的API路由：")
+    print("="*80)
+    for route in app.routes:
+        if hasattr(route, 'path') and hasattr(route, 'methods'):
+            methods = ', '.join(route.methods) if route.methods else 'N/A'
+            print(f"  {methods:8} {route.path}")
+    print("="*80 + "\n")
+    
+    print("="*80)
     print("🚀 启动数据库后端服务器（含 Chat/Session/MainAssistant）")
     print("="*80)
-    print("📡 端口: 8001")
+    print("📡 端口: 8000")
     print("📊 功能:")
     print("  ✅ Session 管理")
     print("  ✅ Chat 聊天（MainAssistant）")
@@ -1321,4 +1344,4 @@ if __name__ == "__main__":
     print("  ✅ Notation 管理（主 ORM）")
     print("  ✅ Articles 上传与查看")
     print("="*80 + "\n")
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

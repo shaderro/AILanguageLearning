@@ -174,6 +174,8 @@ async def get_vocab(
     需要认证：是
     """
     try:
+        print(f"[API] Getting vocab {vocab_id}, include_examples={include_examples}, user_id={current_user.user_id}")
+        
         # 验证词汇属于当前用户
         vocab_model = session.query(VocabExpression).filter(
             VocabExpression.vocab_id == vocab_id,
@@ -181,19 +183,22 @@ async def get_vocab(
         ).first()
         
         if not vocab_model:
+            print(f"[API] Vocab {vocab_id} not found for user {current_user.user_id}")
             raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
         
-        if not vocab:
-            raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
+        print(f"[API] Found vocab: {vocab_model.vocab_body}, examples count: {len(vocab_model.examples)}")
+        if vocab_model.examples:
+            for ex in vocab_model.examples:
+                print(f"  - Example: text_id={ex.text_id}, sentence_id={ex.sentence_id}")
         
-        return {
+        result = {
             "success": True,
             "data": {
-                "vocab_id": vocab.vocab_id,
-                "vocab_body": vocab.vocab_body,
-                "explanation": vocab.explanation,
-                "source": vocab.source,
-                "is_starred": vocab.is_starred,
+                "vocab_id": vocab_model.vocab_id,
+                "vocab_body": vocab_model.vocab_body,
+                "explanation": vocab_model.explanation,
+                "source": vocab_model.source.value if hasattr(vocab_model.source, 'value') else vocab_model.source,
+                "is_starred": vocab_model.is_starred,
                 "examples": [
                     {
                         "vocab_id": ex.vocab_id,
@@ -202,10 +207,12 @@ async def get_vocab(
                         "context_explanation": ex.context_explanation,
                         "token_indices": ex.token_indices
                     }
-                    for ex in vocab.examples
+                    for ex in vocab_model.examples
                 ] if include_examples else []
             }
         }
+        print(f"[API] Returning vocab with {len(result['data']['examples'])} examples")
+        return result
     except HTTPException:
         raise
     except Exception as e:

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useVocabList, useWordInfo, useToggleVocabStar, useRefreshData } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
+import { useUser } from '../../contexts/UserContext'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
@@ -15,9 +16,12 @@ function WordDemo() {
   const [reviewWords, setReviewWords] = useState([])
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0)
   const [reviewResults, setReviewResults] = useState([])
+  
+  // 从 UserContext 获取当前用户
+  const { userId, isGuest, isAuthenticated } = useUser()
 
-  // 使用 React Query 获取词汇数据
-  const { data: vocabData, isLoading, isError, error } = useVocabList()
+  // 使用 React Query 获取词汇数据 - 传入 userId 和 isGuest
+  const { data: vocabData, isLoading, isError, error } = useVocabList(userId, isGuest)
 
   // 单词查询功能
   const [searchTerm, setSearchTerm] = useState('')

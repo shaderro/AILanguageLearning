@@ -29,11 +29,17 @@ export function useSentenceInteraction() {
    * @param {number} sentenceIndex - Index of the sentence
    */
   const handleSentenceClick = (sentenceIndex) => {
+    console.log('📝 [useSentenceInteraction.handleSentenceClick] 句子点击')
+    console.log('  - sentenceIndex:', sentenceIndex)
+    console.log('  - 当前 selectedSentenceIndex:', selectedSentenceIndex)
+    
     setClickedSentenceIndex(sentenceIndex)
     // 切换句子选择状态
     if (selectedSentenceIndex === sentenceIndex) {
+      console.log('  → 取消选择（相同句子）')
       setSelectedSentenceIndex(null) // 取消选择
     } else {
+      console.log('  → 选择句子', sentenceIndex)
       setSelectedSentenceIndex(sentenceIndex) // 选择句子
     }
   }
@@ -48,10 +54,15 @@ export function useSentenceInteraction() {
   }
 
   /**
-   * Clear only sentence selection (keep hover/click states)
+   * Clear only sentence selection (also clear click state to remove UI highlight)
    */
   const clearSentenceSelection = () => {
+    console.log('🧹 [useSentenceInteraction.clearSentenceSelection] 被调用')
+    console.log('  - 清除前 selectedSentenceIndex:', selectedSentenceIndex)
+    console.log('  - 清除前 clickedSentenceIndex:', clickedSentenceIndex)
     setSelectedSentenceIndex(null)
+    setClickedSentenceIndex(null)
+    console.log('✅ [useSentenceInteraction.clearSentenceSelection] 已调用setState设置为null')
   }
 
   /**
@@ -63,6 +74,14 @@ export function useSentenceInteraction() {
     const isHovered = hoveredSentenceIndex === sentenceIndex
     const isClicked = clickedSentenceIndex === sentenceIndex
     const isSelected = selectedSentenceIndex === sentenceIndex
+
+    // 只为有交互状态的句子打印日志
+    if (isSelected || isClicked || isHovered) {
+      console.log(`🎨 [useSentenceInteraction.getSentenceBackgroundStyle] 句子 ${sentenceIndex}:`)
+      console.log('  - isHovered:', isHovered, '(hoveredSentenceIndex:', hoveredSentenceIndex, ')')
+      console.log('  - isClicked:', isClicked, '(clickedSentenceIndex:', clickedSentenceIndex, ')')
+      console.log('  - isSelected:', isSelected, '(selectedSentenceIndex:', selectedSentenceIndex, ')')
+    }
 
     if (isSelected) {
       return 'bg-blue-100 border border-blue-300 rounded-md' // 选中的句子用蓝色背景

@@ -4,15 +4,31 @@
 提供 VocabNotation 和 GrammarNotation 的 API 端点
 """
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 # 导入统一管理器
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from data_managers.unified_notation_manager import get_unified_notation_manager
+from database_system.database_manager import DatabaseManager
+
+# 依赖注入：数据库Session
+def get_db_session():
+    """提供数据库Session"""
+    db_manager = DatabaseManager('development')
+    session = db_manager.get_session()
+    try:
+        yield session
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 router = APIRouter(prefix="/api/v2/notations", tags=["notations"])
 
@@ -81,31 +97,35 @@ async def create_vocab_notation(request: VocabNotationRequest):
 @router.get("/vocab", response_model=NotationResponse)
 async def get_vocab_notations(
     text_id: int = Query(..., description="文章ID"),
-    user_id: Optional[str] = Query(None, description="用户ID")
+    user_id: Optional[int] = Query(None, description="用户ID"),
+    session: Session = Depends(get_db_session)
 ):
-    """获取词汇标注（使用 JSON 模式，稳定可靠）"""
+    """获取词汇标注（使用数据库模式）"""
     try:
         print(f"[API] Getting vocab notations: text_id={text_id}, user_id={user_id}")
         
-        # 暂时回退到 JSON 模式（数据库表结构待稳定）
-        manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=True)
+        # 使用数据库ORM获取
+        from database_system.business_logic.crud.notation_crud import VocabNotationCRUD
         
-        # 获取所有 vocab notations 的详细信息
-        from backend.data_managers.vocab_notation_manager import get_vocab_notation_manager
-        vocab_mgr = get_vocab_notation_manager(use_database=False)
+        crud = VocabNotationCRUD(session)
         
-        # 读取 JSON 文件
-        import json
-        import os
-        user_id_to_use = user_id or "default_user"
-        json_file = vocab_mgr._get_json_file_path(user_id_to_use)
+        # 获取该文章下的所有vocab notations
+        all_notations = crud.get_by_text(text_id, user_id)
         
-        notation_list = []
-        if os.path.exists(json_file):
-            with open(json_file, 'r', encoding='utf-8') as f:
-                all_notations = json.load(f)
-            # 过滤该文章的 notations
-            notation_list = [n for n in all_notations if n.get('text_id') == text_id]
+        notation_list = [
+            {
+                "notation_id": n.id,
+                "user_id": n.user_id,
+                "text_id": n.text_id,
+                "sentence_id": n.sentence_id,
+                "token_id": n.token_id,
+                "vocab_id": n.vocab_id,
+                "created_at": n.created_at.isoformat() if n.created_at else None
+            }
+            for n in all_notations
+        ]
+        
+        print(f"[API] Found {len(notation_list)} vocab notations")
         
         return NotationResponse(
             success=True,
@@ -113,7 +133,7 @@ async def get_vocab_notations(
                 "notations": notation_list,
                 "count": len(notation_list),
                 "type": "vocab",
-                "source": "json"
+                "source": "database"
             },
             message=f"成功获取 {len(notation_list)} 个词汇标注"
         )
@@ -243,28 +263,35 @@ async def create_grammar_notation(request: GrammarNotationRequest):
 @router.get("/grammar", response_model=NotationResponse)
 async def get_grammar_notations(
     text_id: int = Query(..., description="文章ID"),
-    user_id: Optional[str] = Query(None, description="用户ID")
+    user_id: Optional[int] = Query(None, description="用户ID"),
+    session: Session = Depends(get_db_session)
 ):
-    """获取语法标注（使用 JSON 模式，稳定可靠）"""
+    """获取语法标注（使用数据库模式）"""
     try:
         print(f"[API] Getting grammar notations: text_id={text_id}, user_id={user_id}")
         
-        # 暂时回退到 JSON 模式
-        from backend.data_managers.grammar_notation_manager import get_grammar_notation_manager
-        grammar_mgr = get_grammar_notation_manager(use_database=False)
+        # 使用数据库ORM获取
+        from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
         
-        # 读取 JSON 文件
-        import json
-        import os
-        user_id_to_use = user_id or "default_user"
-        json_file = grammar_mgr._get_json_file_path(user_id_to_use)
+        crud = GrammarNotationCRUD(session)
         
-        notation_list = []
-        if os.path.exists(json_file):
-            with open(json_file, 'r', encoding='utf-8') as f:
-                all_notations = json.load(f)
-            # 过滤该文章的 notations
-            notation_list = [n for n in all_notations if n.get('text_id') == text_id]
+        # 获取该文章下的所有grammar notations
+        all_notations = crud.get_by_text(text_id, user_id)
+        
+        notation_list = [
+            {
+                "notation_id": n.id,
+                "user_id": n.user_id,
+                "text_id": n.text_id,
+                "sentence_id": n.sentence_id,
+                "grammar_id": n.grammar_id,
+                "marked_token_ids": n.marked_token_ids or [],
+                "created_at": n.created_at.isoformat() if n.created_at else None
+            }
+            for n in all_notations
+        ]
+        
+        print(f"[API] Found {len(notation_list)} grammar notations")
         
         return NotationResponse(
             success=True,
@@ -272,7 +299,7 @@ async def get_grammar_notations(
                 "notations": notation_list,
                 "count": len(notation_list),
                 "type": "grammar",
-                "source": "json"
+                "source": "database"
             },
             message=f"成功获取 {len(notation_list)} 个语法标注"
         )

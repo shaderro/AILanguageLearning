@@ -44,6 +44,7 @@ class SessionState:
         self.vocab_to_add: List[VocabToAdd] = []
         self.created_grammar_notations: List[dict] = []  # 新增：本轮创建的 grammar notations
         self.created_vocab_notations: List[dict] = []  # 新增：本轮创建的 vocab notations
+        self.user_id: Optional[int] = None  # 新增：当前用户ID
     
     def set_current_sentence(self, sentence: SentenceType):
         """

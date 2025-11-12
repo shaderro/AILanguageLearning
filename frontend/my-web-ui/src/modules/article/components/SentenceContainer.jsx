@@ -113,7 +113,7 @@ export default function SentenceContainer({
     <div 
       ref={sentenceRef}
       key={`s-${sentenceIndex}`} 
-      className={`select-none relative transition-all duration-200 hover:bg-gray-100 ${selectionSentenceClass}`}
+      className={`select-none relative transition-all duration-200 ${backgroundStyle} ${selectionSentenceClass}`}
       data-sentence="1"
       onMouseEnter={(e) => { selOnEnter(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseEnter(e) }}
       onMouseLeave={(e) => { selOnLeave(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseLeave(e) }}

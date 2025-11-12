@@ -2,9 +2,11 @@ import { useState } from 'react'
 import ArticleList from './components/ArticleList'
 import FilterBar from '../shared/components/FilterBar'
 import { useArticles } from '../../hooks/useApi'
+import { useUser } from '../../contexts/UserContext'
 
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
-  const { data, isLoading, isError, error } = useArticles()
+  const { userId } = useUser()
+  const { data, isLoading, isError, error } = useArticles(userId)
   const summaries = Array.isArray(data?.data) ? data.data : []
   // 将后端摘要映射为列表卡片需要的结构
   const mappedArticles = summaries.map((s) => ({

@@ -12,9 +12,9 @@ class TextCRUD:
     def __init__(self, session: Session):
         self.session = session
     
-    def create_text(self, text_title: str) -> OriginalText:
+    def create_text(self, text_title: str, user_id: int = None) -> OriginalText:
         """创建文章"""
-        text = OriginalText(text_title=text_title)
+        text = OriginalText(text_title=text_title, user_id=user_id)
         self.session.add(text)
         self.session.commit()
         self.session.refresh(text)

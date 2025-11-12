@@ -3,13 +3,16 @@
  * 显示登录表单
  */
 import { useState } from 'react'
-import authService from '../services/authService'
+import { useUser } from '../../../contexts/UserContext'
 
-const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }) => {
+const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  
+  // 从 UserContext 获取登录方法
+  const { login } = useUser()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,44 +20,31 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }) => 
     setIsLoading(true)
 
     try {
-      // 调用真实 API
       const userIdInt = parseInt(userId)
       console.log('🔐 [Login] Attempting login:', { 
         userId: userIdInt, 
         passwordLength: password.length 
       })
       
-      const result = await authService.login(userIdInt, password)
+      // 使用 UserContext 的 login 方法
+      const result = await login(userIdInt, password)
       
-      console.log('✅ [Login] Login successful:', result)
-      
-      // 保存认证信息到 localStorage
-      authService.saveAuth(result.user_id, result.access_token)
-      
-      // 保存密码映射（仅用于开发调试）
-      authService.savePasswordMapping(result.user_id, password)
-      
-      // 通知父组件登录成功
-      if (onLoginSuccess) {
-        onLoginSuccess(result.user_id, result.access_token, password)
+      if (result.success) {
+        console.log('✅ [Login] Login successful')
+        
+        // 关闭模态框
+        onClose()
+        
+        // 清空表单
+        setUserId('')
+        setPassword('')
+      } else {
+        // 显示错误
+        setError(result.error)
       }
-      
-      // 关闭模态框
-      onClose()
-      
-      // 清空表单
-      setUserId('')
-      setPassword('')
     } catch (error) {
       console.error('❌ [Login] Login failed:', error)
-      console.error('❌ [Login] Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      })
-      
-      const errorMessage = error.response?.data?.detail || error.message || '登录失败，请检查用户ID和密码'
-      setError(errorMessage)
+      setError('登录失败，请重试')
     } finally {
       setIsLoading(false)
     }

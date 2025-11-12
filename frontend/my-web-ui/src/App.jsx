@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState } from 'react'
 import { ApiDemo } from './components/ApiDemo'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
@@ -9,68 +9,36 @@ import LoginModal from './modules/auth/components/LoginModal'
 import RegisterModal from './modules/auth/components/RegisterModal'
 import UserAvatar from './modules/auth/components/UserAvatar'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
-import authService from './modules/auth/services/authService'
+import DataMigrationModal from './components/DataMigrationModal'
+import { UserProvider, useUser } from './contexts/UserContext'
 
-function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState('article')
   const [selectedArticleId, setSelectedArticleId] = useState(null)
   const [isUploadMode, setIsUploadMode] = useState(false)
   
-  // 认证状态（先用简单的 state，后续可以改为 Context）
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentUserId, setCurrentUserId] = useState(null)
-  const [currentUserPassword, setCurrentUserPassword] = useState(null) // 仅开发调试用
-  
   // 模态框状态
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
+  
+  // 从 UserContext 获取用户信息和方法
+  const { 
+    userId: currentUserId,
+    password: currentUserPassword,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    pendingGuestId,
+    showMigrationDialog,
+    setShowMigrationDialog
+  } = useUser()
 
-  // 自动登录：页面加载时检查 localStorage
-  useEffect(() => {
-    const { userId, token } = authService.getAuth()
-    
-    if (userId && token) {
-      console.log('🔍 [App] 检测到已保存的登录信息，尝试自动登录...')
-      
-      // 验证 token 是否有效
-      authService.getCurrentUser(token)
-        .then((user) => {
-          console.log('✅ [App] 自动登录成功:', user)
-          setIsAuthenticated(true)
-          setCurrentUserId(parseInt(userId))
-        })
-        .catch((error) => {
-          console.log('⚠️ [App] 自动登录失败，token可能已过期:', error)
-          authService.clearAuth()
-        })
-    }
-  }, [])
-
-  // 处理登录
-  const handleLogin = (userId, token, password) => {
-    setIsAuthenticated(true)
-    setCurrentUserId(userId)
-    setCurrentUserPassword(password) // 保存密码仅用于 debug
-    setShowLoginModal(false)
-    console.log('✅ [App] 登录成功:', { userId, token: token.substring(0, 20) + '...' })
-  }
-
-  // 处理注册
-  const handleRegister = (userId, token, password) => {
-    setIsAuthenticated(true)
-    setCurrentUserId(userId)
-    setCurrentUserPassword(password) // 保存密码仅用于 debug
-    setShowRegisterModal(false)
-    console.log('✅ [App] 注册成功:', { userId, token: token.substring(0, 20) + '...' })
-  }
-
-  // 处理登出
+  // 处理登出 - 使用 UserContext
   const handleLogout = () => {
-    authService.clearAuth()
-    setIsAuthenticated(false)
-    setCurrentUserId(null)
-    setCurrentUserPassword(null)
-    console.log('👋 [App] 已登出')
+    logout()
+    console.log('👋 [App] 已登出，数据将自动清空')
+    // 不需要刷新页面，组件会自动响应 isAuthenticated 变化
   }
 
   const navButton = (id, label) => (
@@ -133,7 +101,6 @@ function App() {
           setShowLoginModal(false)
           setShowRegisterModal(true)
         }}
-        onLoginSuccess={handleLogin}
       />
 
       {/* 注册模态框 */}
@@ -144,7 +111,17 @@ function App() {
           setShowRegisterModal(false)
           setShowLoginModal(true)
         }}
-        onRegisterSuccess={handleRegister}
+      />
+
+      {/* 数据迁移模态框 */}
+      <DataMigrationModal
+        isOpen={showMigrationDialog}
+        onClose={() => setShowMigrationDialog(false)}
+        guestId={pendingGuestId}
+        onMigrationComplete={(count) => {
+          console.log(`✅ [App] 数据迁移完成，共 ${count} 条`)
+          setShowMigrationDialog(false)
+        }}
       />
 
       <div className={`max-w-7xl mx-auto sm:px-6 lg:px-8 ${
@@ -192,6 +169,15 @@ function App() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 使用 UserProvider 包装 AppContent
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
   )
 }
 
