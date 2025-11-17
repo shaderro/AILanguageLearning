@@ -45,8 +45,9 @@ class UnifiedNotationManager:
         self.grammar_manager = get_grammar_notation_manager(use_database=use_database)
         
         # 如果需要向后兼容，也初始化 AskedTokensManager
+        # 🔧 asked_tokens 现在是 legacy 系统，只使用 JSON 文件，不使用数据库
         if use_legacy_compatibility:
-            self.asked_tokens_manager = get_asked_tokens_manager(use_database=use_database)
+            self.asked_tokens_manager = get_asked_tokens_manager(use_database=False)
         
         print(f"[INFO] [UnifiedNotation] Initialized with database={use_database}, legacy={use_legacy_compatibility}")
     

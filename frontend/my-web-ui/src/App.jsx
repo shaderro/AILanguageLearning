@@ -11,6 +11,7 @@ import UserAvatar from './modules/auth/components/UserAvatar'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('article')
@@ -33,6 +34,9 @@ function AppContent() {
     showMigrationDialog,
     setShowMigrationDialog
   } = useUser()
+  
+  // 从 LanguageContext 获取语言选择
+  const { selectedLanguage, setSelectedLanguage } = useLanguage()
 
   // 处理登出 - 使用 UserContext
   const handleLogout = () => {
@@ -72,8 +76,26 @@ function AppContent() {
               </div>
             </div>
 
-            {/* 右侧：登录/用户信息 */}
-            <div className="flex items-center space-x-3">
+            {/* 右侧：语言切换和登录/用户信息 */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* 语言切换下拉选项 - 全局显示 */}
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <label htmlFor="language-select" className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
+                  语言:
+                </label>
+                <select
+                  id="language-select"
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className="px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+                >
+                  <option value="all">全部</option>
+                  <option value="中文">中文</option>
+                  <option value="英文">英文</option>
+                  <option value="德文">德文</option>
+                </select>
+              </div>
+              
               {isAuthenticated ? (
                 <>
                   {/* Debug 按钮（仅开发环境） */}
@@ -125,9 +147,9 @@ function AppContent() {
       />
 
       <div className={`max-w-7xl mx-auto sm:px-6 lg:px-8 ${
-        currentPage === 'article' ? 'h-[calc(100vh-64px)] overflow-hidden' : 'min-h-[calc(100vh-64px)]'
+        currentPage === 'article' ? 'h-[calc(100vh-64px)] overflow-y-auto' : 'min-h-[calc(100vh-64px)]'
       }`}>
-        <div className={`px-4 sm:px-0 ${currentPage === 'article' ? 'h-full' : ''}`}>
+        <div className={`px-4 sm:px-0 ${currentPage === 'article' ? '' : ''}`}>
           {/* Pages */}
           {currentPage === 'apiDemo' && (
             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -172,11 +194,13 @@ function AppContent() {
   )
 }
 
-// 使用 UserProvider 包装 AppContent
+// 使用 UserProvider 和 LanguageProvider 包装 AppContent
 function App() {
   return (
     <UserProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </UserProvider>
   )
 }

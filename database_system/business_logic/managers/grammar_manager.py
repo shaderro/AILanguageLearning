@@ -29,9 +29,10 @@ class GrammarManager:
         return self.dal.list_all_grammar_rules(skip, limit)
     
     def add_grammar_rule(self, rule_name: str, rule_summary: str,
-                        source: str = "auto", is_starred: bool = False, user_id: int = None) -> GrammarRule:
+                        source: str = "auto", is_starred: bool = False, user_id: int = None,
+                        language: str = None) -> GrammarRule:
         """添加语法规则"""
-        return self.dal.add_grammar_rule(rule_name, rule_summary, source, is_starred, user_id)
+        return self.dal.add_grammar_rule(rule_name, rule_summary, source, is_starred, user_id, language)
     
     def search_grammar_rules(self, keyword: str) -> List[GrammarRule]:
         """搜索语法规则"""

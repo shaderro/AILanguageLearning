@@ -18,7 +18,8 @@ from typing import Optional, List
 from database_system.business_logic.models import (
     GrammarRule as GrammarModel,
     GrammarExample as GrammarExampleModel,
-    SourceType as ModelSourceType
+    SourceType as ModelSourceType,
+    LearnStatus as ModelLearnStatus
 )
 from backend.data_managers.data_classes_new import (
     GrammarRule as GrammarDTO,
@@ -80,6 +81,26 @@ class GrammarAdapter:
             return ModelSourceType.AUTO
     
     @staticmethod
+    def _convert_learn_status_to_dto(model_status: ModelLearnStatus) -> str:
+        """
+        枚举转换：Model LearnStatus → DTO 字符串
+        Model: LearnStatus.NOT_MASTERED → DTO: "not_mastered"
+        """
+        return model_status.value.lower()
+    
+    @staticmethod
+    def _convert_learn_status_to_model(dto_status: str) -> ModelLearnStatus:
+        """
+        枚举转换：DTO 字符串 → Model LearnStatus
+        DTO: "not_mastered" → Model: LearnStatus.NOT_MASTERED
+        容错处理：未知值默认为 NOT_MASTERED
+        """
+        try:
+            return ModelLearnStatus(dto_status.lower())
+        except (ValueError, AttributeError):
+            return ModelLearnStatus.NOT_MASTERED
+    
+    @staticmethod
     def model_to_dto(model: GrammarModel, include_examples: bool = True) -> GrammarDTO:
         """
         ORM Model → DTO
@@ -111,8 +132,10 @@ class GrammarAdapter:
             rule_id=model.rule_id,
             name=model.rule_name,  # 注意字段映射
             explanation=model.rule_summary,  # 注意字段映射
+            language=model.language,
             source=GrammarAdapter._convert_source_to_dto(model.source),
             is_starred=model.is_starred,
+            learn_status=GrammarAdapter._convert_learn_status_to_dto(model.learn_status) if model.learn_status else "not_mastered",
             examples=examples
         )
     
@@ -143,8 +166,10 @@ class GrammarAdapter:
         model = GrammarModel(
             rule_name=dto.name,  # 注意字段映射
             rule_summary=dto.explanation,  # 注意字段映射
+            language=dto.language,
             source=GrammarAdapter._convert_source_to_model(dto.source),
-            is_starred=dto.is_starred
+            is_starred=dto.is_starred,
+            learn_status=GrammarAdapter._convert_learn_status_to_model(getattr(dto, 'learn_status', 'not_mastered'))
         )
         
         # 如果提供了 rule_id，设置它（用于更新场景）

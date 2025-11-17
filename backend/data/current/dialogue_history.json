@@ -13,10 +13,1370 @@
             "sentence_id": 2,
             "sentence_body": "Er wurde 1995 an der Harvard University promoviert zum Thema \"Security Patterns in Landscape Planning: With a Case in South China\".[4] Er war ab 1997 Professor für Urban and Regional Planning an der Peking University, sowie Gründer und Dekan der School of Landscape Architecture an der PKU,[5] heute College of Architecture and Landscape Architecture.",
             "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491878",
+          "data_type": "old"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1762942413": {
+      "text_title": "Text 1762942413",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇的词义和用法，包括名词（如Krapfen、Nichtsnutz）、动词（如holen、behauptete）、形容词（如merkwürdige）和复合词（如Straßenecke）等。在语法方面，AI分析了并列句、复合句、虚拟语气等结构，解释了时间状语、比较从句、关系从句等语法成分。还涉及词根词",
+      "messages": [
+        {
+          "user": "这句话是什么意思？",
+          "ai": "{'answer': '这句话是德语的维基百科页面底部信息，主要说明：页面内容采用“知识共享署名-相同方式共享”许可协议；嵌入的媒体文件（如图片、视频）的版权信息通常可以通过点击它们查看。你是对哪个具体部分不理解？比如某个德语词汇，还是句子结构？'}",
+          "sentence_id": 176,
+          "quote": {
+            "text_id": 1762942413,
+            "sentence_id": 176,
+            "sentence_body": "September 2024 um 18:59 Uhr bearbeitet.</li>\n\t<li id=\"footer-info-copyright\"><div id=\"footer-info-copyright-stats\" class=\"noprint\"><a rel=\"nofollow\" class=\"external text\" href=\"https://pageviews.wmcloud.org/?pages=Schloss_Kartlow&amp;project=de.wikipedia.org\">Abrufstatistik</a>&#160;· <a rel=\"nofollow\" class=\"external text\" href=\"https://xtools.wmcloud.org/authorship/de.wikipedia.org/Schloss_Kartlow?uselang=de\">Autoren</a> </div><div id=\"footer-info-copyright-separator\"><br /></div><div id=\"footer-info-copyright-info\">\n<p>Der Text ist unter der Lizenz <a rel=\"nofollow\" class=\"external text\" href=\"https://creativecommons.org/licenses/by-sa/4.0/deed.de\">„Creative-Commons Namensnennung – Weitergabe unter gleichen Bedingungen“</a> verfügbar; Informationen zu den Urhebern und zum Lizenzstatus eingebundener Mediendateien (etwa Bilder oder Videos) können im Regelfall durch Anklicken dieser abgerufen werden.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491895",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话是什么意思？",
+          "ai": "{'answer': '这句话是德语的维基百科页面底部信息，主要说明：页面内容采用\"知识共享署名-相同方式共享\"许可协议；媒体文件的版权信息通常可以通过点击文件查看。你是对哪个具体部分不理解？比如某个德语词汇还是句子结构？'}",
+          "sentence_id": 176,
+          "quote": {
+            "text_id": 1762942413,
+            "sentence_id": 176,
+            "sentence_body": "September 2024 um 18:59 Uhr bearbeitet.</li>\n\t<li id=\"footer-info-copyright\"><div id=\"footer-info-copyright-stats\" class=\"noprint\"><a rel=\"nofollow\" class=\"external text\" href=\"https://pageviews.wmcloud.org/?pages=Schloss_Kartlow&amp;project=de.wikipedia.org\">Abrufstatistik</a>&#160;· <a rel=\"nofollow\" class=\"external text\" href=\"https://xtools.wmcloud.org/authorship/de.wikipedia.org/Schloss_Kartlow?uselang=de\">Autoren</a> </div><div id=\"footer-info-copyright-separator\"><br /></div><div id=\"footer-info-copyright-info\">\n<p>Der Text ist unter der Lizenz <a rel=\"nofollow\" class=\"external text\" href=\"https://creativecommons.org/licenses/by-sa/4.0/deed.de\">„Creative-Commons Namensnennung – Weitergabe unter gleichen Bedingungen“</a> verfügbar; Informationen zu den Urhebern und zum Lizenzstatus eingebundener Mediendateien (etwa Bilder oder Videos) können im Regelfall durch Anklicken dieser abgerufen werden.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491900",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个德语复合句，主要结构是：'Der Text ist unter der Lizenz verfügbar'（文本在许可下可用），后面用分号连接了另一个独立分句'Informationen...können...abgerufen werden'（信息...可以被获取）。句子包含多个介词短语、关系从句和插入成分。你是想了解具体的某个语法点吗？比如分号的用法，还是某个从句的结构？\"}",
+          "sentence_id": 176,
+          "quote": {
+            "text_id": 1762942413,
+            "sentence_id": 176,
+            "sentence_body": "September 2024 um 18:59 Uhr bearbeitet.</li>\n\t<li id=\"footer-info-copyright\"><div id=\"footer-info-copyright-stats\" class=\"noprint\"><a rel=\"nofollow\" class=\"external text\" href=\"https://pageviews.wmcloud.org/?pages=Schloss_Kartlow&amp;project=de.wikipedia.org\">Abrufstatistik</a>&#160;· <a rel=\"nofollow\" class=\"external text\" href=\"https://xtools.wmcloud.org/authorship/de.wikipedia.org/Schloss_Kartlow?uselang=de\">Autoren</a> </div><div id=\"footer-info-copyright-separator\"><br /></div><div id=\"footer-info-copyright-info\">\n<p>Der Text ist unter der Lizenz <a rel=\"nofollow\" class=\"external text\" href=\"https://creativecommons.org/licenses/by-sa/4.0/deed.de\">„Creative-Commons Namensnennung – Weitergabe unter gleichen Bedingungen“</a> verfügbar; Informationen zu den Urhebern und zum Lizenzstatus eingebundener Mediendateien (etwa Bilder oder Videos) können im Regelfall durch Anklicken dieser abgerufen werden.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491903",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个德语复合句，主要结构是：'Der Text ist unter der Lizenz verfügbar'（文本在许可下可用），后面用分号连接了另一个独立分句。句子包含多个从句和插入语，比如'Informationen...können...abgerufen werden'（信息...可以被获取）。这是典型的德语长句结构，通过连接词和标点将多个信息组合在一起。\"}",
+          "sentence_id": 176,
+          "quote": {
+            "text_id": 1762942413,
+            "sentence_id": 176,
+            "sentence_body": "September 2024 um 18:59 Uhr bearbeitet.</li>\n\t<li id=\"footer-info-copyright\"><div id=\"footer-info-copyright-stats\" class=\"noprint\"><a rel=\"nofollow\" class=\"external text\" href=\"https://pageviews.wmcloud.org/?pages=Schloss_Kartlow&amp;project=de.wikipedia.org\">Abrufstatistik</a>&#160;· <a rel=\"nofollow\" class=\"external text\" href=\"https://xtools.wmcloud.org/authorship/de.wikipedia.org/Schloss_Kartlow?uselang=de\">Autoren</a> </div><div id=\"footer-info-copyright-separator\"><br /></div><div id=\"footer-info-copyright-info\">\n<p>Der Text ist unter der Lizenz <a rel=\"nofollow\" class=\"external text\" href=\"https://creativecommons.org/licenses/by-sa/4.0/deed.de\">„Creative-Commons Namensnennung – Weitergabe unter gleichen Bedingungen“</a> verfügbar; Informationen zu den Urhebern und zum Lizenzstatus eingebundener Mediendateien (etwa Bilder oder Videos) können im Regelfall durch Anklicken dieser abgerufen werden.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491907",
+          "data_type": "old"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1762952885": {
+      "text_title": "Text 1762952885",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇的词义和用法，包括名词（如Krapfen、Nichtsnutz）、动词（如holen、behauptete）、形容词（如merkwürdige）和复合词（如Straßenecke）等。在语法方面，AI分析了并列句、复合句、虚拟语气等结构，解释了时间状语、比较从句、关系从句等语法成分。还涉及词根词",
+      "messages": [
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Herrenhaus 在这里是一个德语专有名词，指一种特定的建筑类型，可以理解为\"庄园宅邸\"或\"贵族府邸\"。在这个句子里，它描述 Schloss Kartlow 这座建筑的类别，你可以把它当作一个整体名词来理解。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 1,
+            "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491912",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Herrenhaus 是一个德语专有名词，指庄园宅邸或领主宅邸。在句子中它表示一种建筑类型，你可以把它当作一个整体词汇来理解。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 1,
+            "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491915",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Landkreis 是德语中的一个专有名词，指“县”或“行政区”，通常用于地名中，可以作为一个整体来理解。在这个句子里，它表示地点所属的行政区域。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 1,
+            "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491919",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Landkreis 是德语中的一个专有名词，指“县”或“行政区”这类行政区域单位。在句子中，它作为地名的一部分，可以忽略具体含义，记为一个整体即可。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 1,
+            "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491922",
+          "data_type": "old"
+        },
+        {
+          "user": "这些词是什么意思？",
+          "ai": "{'answer': \"这些是德语地名：'Kruckower Ortsteil Kartlow' 意思是'克鲁科沃的卡尔特洛分区'。在德语中，'Ortsteil' 指一个地方的行政区划分区，'Kartlow' 是分区名，'Kruckower' 表示这个分区属于克鲁科沃。你可以把它们当作专有名词来理解，不需要深究具体地理位置。\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 1,
+            "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491926",
+          "data_type": "old"
+        },
+        {
+          "user": "这些词是什么意思？",
+          "ai": "{'answer': '这些是德语地名：Kruckower Ortsteil Kartlow 意思是“克鲁科沃的卡尔特洛分区”。在德语中，Ortsteil 指一个地方的子分区或区域，Kruckow 和 Kartlow 都是专有地名。你可以把它们当作整体地名来理解，不需要拆解每个词的意思。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 1,
+            "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491929",
+          "data_type": "old"
+        },
+        {
+          "user": "这些词是什么意思？",
+          "ai": "{'answer': '这句话不完整，看起来是德语。\"gab\" 是动词 \"geben\"（给）的过去式，\"in der Mitte\" 意思是\"在中间\"，\"des 19.\" 可能是 \"des 19. Jahrhunderts\"（19世纪）的缩写。整句大意是\"Woldemar von Heyden 在19世纪中叶给出了...\"。你是想问某个具体词的意思吗？'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 2,
+            "sentence_body": "Woldemar von Heyden gab in der Mitte des 19.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491933",
+          "data_type": "old"
+        },
+        {
+          "user": "这些词是什么意思？",
+          "ai": "{'answer': \"这个句子不完整，看起来是德语。'gab' 是动词geben（给）的过去式，'in der Mitte' 意思是'在中间'，'des 19.' 是'19世纪'的缩写。整个片段意思是'Woldemar von Heyden在19世纪中叶给了...'，但句子被截断了。Woldemar von Heyden是一个人名专有名词。\"}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 2,
+            "sentence_body": "Woldemar von Heyden gab in der Mitte des 19.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491936",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Woldemar 是一个人名，属于专有名词。在德语中，人名通常不需要理解具体含义，可以当作一个整体来记。这里 Woldemar von Heyden 指的是一个叫这个名字的人。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 2,
+            "sentence_body": "Woldemar von Heyden gab in der Mitte des 19.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491939",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Entwurf 在德语中是“设计、草图、草案”的意思。在这个句子里指的是“景观公园的设计”。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 4,
+            "sentence_body": "Der Entwurf des Landschaftsparks stammt von Peter Joseph Lenné.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491943",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Landschaftsparks 是一个德语专有名词，指某种特定类型的公园。在这句话中，它指的是这个公园项目的名称，可以当作一个整体名称来理解。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 4,
+            "sentence_body": "Der Entwurf des Landschaftsparks stammt von Peter Joseph Lenné.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491946",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Nachdem 是德语中的一个连词，意思是“在...之后”，用来引导时间状语从句，表示主句的动作发生在从句动作完成之后。例如在这个句子里，它连接了两个事件：先是在东德时期建立了公寓和商店，之后城堡变成了私有财产。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 6,
+            "sentence_body": "Nachdem während der DDR-Zeit Wohnungen und ein Konsum eingerichtet worden waren, befindet sich das Schloss heute in Privatbesitz.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491950",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Auftrag 是德语名词，意思是“委托”或“任务”。在这个句子里，den Auftrag zum Bau 表示“建造的委托”，指有人委托按照 Friedrich Hitzig 的设计建造这座府邸。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 3,
+            "sentence_body": "Jahrhunderts den Auftrag zum Bau des Herrenhauses nach Plänen Friedrich Hitzigs.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491954",
+          "data_type": "old"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1763024389": {
+      "text_title": "Text 1763024389",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇的词义和用法，包括名词（如Krapfen、Nichtsnutz）、动词（如holen、behauptete）、形容词（如merkwürdige）和复合词（如Straßenecke）等。在语法方面，AI分析了并列句、复合句、虚拟语气等结构，解释了时间状语、比较从句、关系从句等语法成分。还涉及词根词",
+      "messages": [
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'demolished 意思是“拆除、拆毁”。在这个句子里，它表示这座大楼是被主动拆除的，而不是因为自然灾害或其他原因倒塌的。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 5,
+            "sentence_body": "At the time of its destruction, the Union Carbide Building was the tallest voluntarily demolished building in the world.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491959",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'demolished 意思是“拆除、拆毁”，指人为地将建筑物完全推倒破坏。在这个句子里，它描述的是这座大楼是被主动决定拆除的。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 5,
+            "sentence_body": "At the time of its destruction, the Union Carbide Building was the tallest voluntarily demolished building in the world.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491962",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个复合句，主句是'About two-thirds of 270 Park Avenue was built atop two levels of underground railroad tracks'，后面跟着一个非限制性定语从句'which feed directly into Grand Central Terminal to the south'，用which指代前面的railroad tracks。主句是主谓结构，说明建筑物建在铁轨上方；从句补充说明这些铁轨通向中央车站。\"}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 8,
+            "sentence_body": "About two-thirds of 270 Park Avenue was built atop two levels of underground railroad tracks, which feed directly into Grand Central Terminal to the south.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491966",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个复合句，主句是'About two-thirds of 270 Park Avenue was built atop two levels of underground railroad tracks'，后面跟着一个非限制性定语从句'which feed directly into Grand Central Terminal to the south'，用which引导，修饰前面的railroad tracks。\"}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 8,
+            "sentence_body": "About two-thirds of 270 Park Avenue was built atop two levels of underground railroad tracks, which feed directly into Grand Central Terminal to the south.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491970",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个由'not only...but also...'连接的并列句。第一部分是'This not only prevented a basement from being built under most of the site'，第二部分是'(but also) required that the lobby be one story above ground level'。两个动词'prevented'和'required'共享主语'This'。\"}",
+          "sentence_id": 9,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 9,
+            "sentence_body": "This not only prevented a basement from being built under most of the site but also required that the lobby be one story above ground level.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491974",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个由 'not only... but also...' 连接的并列句，表示'不仅...而且...'。第一个分句是 'This not only prevented a basement from being built under most of the site'，第二个分句是 '(this) also required that the lobby be one story above ground level'。注意第二个分句中 'required that... be...' 是虚拟语气，表示要求。\"}",
+          "sentence_id": 9,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 9,
+            "sentence_body": "This not only prevented a basement from being built under most of the site but also required that the lobby be one story above ground level.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491978",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这句话是典型的主系表结构：主语是'270 Park Avenue'，后面用'was'连接表语'a skyscraper'，中间插入了一个过去分词短语'also known as...'作为主语的补充说明，最后用介词短语'in...'说明建筑物的位置。\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 1,
+            "sentence_body": "270 Park Avenue, also known as the JPMorgan Chase Tower and the Union Carbide Building, was a skyscraper in the Midtown Manhattan neighborhood of New York City.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491981",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个简单句，基本结构是：主语（270 Park Avenue） + 系动词（was） + 表语（a skyscraper...）。开头的'also known as...'是插入语，用来补充说明这座建筑的其他名称，'in the Midtown...'是地点状语说明位置。\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 1,
+            "sentence_body": "270 Park Avenue, also known as the JPMorgan Chase Tower and the Union Carbide Building, was a skyscraper in the Midtown Manhattan neighborhood of New York City.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491985",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'skyscraper 意思是“摩天大楼”，指非常高的多层建筑。这个词由sky（天空）和scraper（刮擦物）组成，形象地描述高楼仿佛能擦到天空。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 1,
+            "sentence_body": "270 Park Avenue, also known as the JPMorgan Chase Tower and the Union Carbide Building, was a skyscraper in the Midtown Manhattan neighborhood of New York City.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491988",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': \"在这个句子里，'feed' 的意思是'连接'或'通向'。它形象地描述了地下铁路轨道直接连接到南边的中央车站，就像管道输送东西一样自然。这里是一个常见的比喻用法，表示一个系统或通道与另一个相连。\"}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 8,
+            "sentence_body": "About two-thirds of 270 Park Avenue was built atop two levels of underground railroad tracks, which feed directly into Grand Central Terminal to the south.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.491991",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'bounded 在这里是动词 bound 的过去分词形式，意思是“被...环绕”或“以...为边界”。这句话是说这座建筑占据了整个街区，被麦迪逊大道、48街、公园大道和47街所环绕。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 6,
+            "sentence_body": "The building occupied a full city block bounded by Madison Avenue, 48th Street, Park Avenue, and 47th Street.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492008",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'annex在这里是“附属建筑”的意思，指主楼旁边相连的次要建筑。在这个句子里，12-story annex就是指12层高的附属楼。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1763024389,
+            "sentence_id": 7,
+            "sentence_body": "It was composed of two sections: a 52-story tower facing Park Avenue to the east and a 12-story annex facing Madison Avenue to the west, both surrounded by public plazas.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492011",
+          "data_type": "old"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1763025147": {
+      "text_title": "Text 1763025147",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇的词义和用法，包括名词（如Krapfen、Nichtsnutz）、动词（如holen、behauptete）、形容词（如merkwürdige）和复合词（如Straßenecke）等。在语法方面，AI分析了并列句、复合句、虚拟语气等结构，解释了时间状语、比较从句、关系从句等语法成分。还涉及词根词",
+      "messages": [
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Carbide在这里是公司名称Union Carbide的一部分。在英语中，Union Carbide是一个专有名词，指一家公司，你可以把它当作一个整体来理解，不需要拆开解释每个词的意思。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 2,
+            "sentence_body": "Union Carbide leased the land from New York Central Railroad (later Penn Central) and announced plans for the building in 1955.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492015",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Carbide在这里是一个公司名称Union Carbide的一部分。在英语中，Union Carbide是一个专有名词，指一家公司，你可以把它当作一个整体来理解，不需要单独解释Carbide的意思。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 2,
+            "sentence_body": "Union Carbide leased the land from New York Central Railroad (later Penn Central) and announced plans for the building in 1955.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492018",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'preservationists 意思是\"保护主义者\"，指那些主张保护历史建筑或自然环境的人。在句子里，他们反对拆除联合碳化物大楼。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 7,
+            "sentence_body": "Despite preservationists' objections, the Union Carbide Building was demolished from 2019 to 2021.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492021",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'preservationists 指的是“保护主义者”，就是那些主张保护历史建筑或自然环境不被破坏的人。在这个句子里，他们反对拆除联合碳化物大楼。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 7,
+            "sentence_body": "Despite preservationists' objections, the Union Carbide Building was demolished from 2019 to 2021.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492024",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'acquired 在这里是“获得、购得”的意思。在这个句子中，Union Carbide 在1976年获得了（买下了）这块土地。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492027",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'acquired 在这里是“获得、取得”的意思。在句子中表示联合碳化物公司在1976年获得了这块土地的所有权。这个词常用于商业或法律语境中，表示通过购买、交易等方式获得某物。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492030",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'mergers 意思是“合并”，指两个或多个公司或组织结合成一个。在这个句子里，它表示制造商汉诺威银行通过几次合并，最终成为了摩根大通的一部分。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 6,
+            "sentence_body": "Through several mergers, Manufacturers Hanover became part of JPMorgan Chase, which announced plans to demolish the building in 2018.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492032",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'mergers 是“合并”的意思，指两个或多个公司结合成一个新公司。在这个句子里，它表示制造商汉诺威银行通过多次合并，最终成为了摩根大通的一部分。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 6,
+            "sentence_body": "Through several mergers, Manufacturers Hanover became part of JPMorgan Chase, which announced plans to demolish the building in 2018.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492035",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个复合句，主句是'Manufacturers Hanover became part of JPMorgan Chase'，前面有介词短语'Through several mergers'作状语，后面有which引导的非限制性定语从句'which announced plans to demolish the building in 2018'修饰JPMorgan Chase。\"}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 6,
+            "sentence_body": "Through several mergers, Manufacturers Hanover became part of JPMorgan Chase, which announced plans to demolish the building in 2018.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492036",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个复合句，包含主句和定语从句。主句是'Through several mergers, Manufacturers Hanover became part of JPMorgan Chase'（通过几次合并，Manufacturers Hanover成为了JPMorgan Chase的一部分），后面的'which announced plans to demolish the building in 2018'是一个非限制性定语从句，修饰前面的JPMorgan Chase，说明这家公司在2018年宣布了拆除该建筑的计划。\"}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 6,
+            "sentence_body": "Through several mergers, Manufacturers Hanover became part of JPMorgan Chase, which announced plans to demolish the building in 2018.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492039",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个由主句和after引导的时间状语从句组成的复合句。主句是'Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976'，描述了两个连续动作。'after Penn Central went bankrupt'说明第二个动作发生的时间背景。\"}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492041",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': \"这是一个由主句加时间状语从句组成的复合句。主句是'Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976'，包含两个并列动作。'after Penn Central went bankrupt'是时间状语从句，说明收购土地这个动作发生在Penn Central破产之后。\"}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492043",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'bankrupt 是破产的意思，指公司或个人无法偿还债务的状态。在这个句子里，意思是Penn Central公司破产后，Union Carbide收购了这块土地。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492045",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'bankrupt 是破产的意思，指公司或个人无法偿还债务的状态。在这个句子里，Penn Central 公司破产后，Union Carbide 才收购了这块土地。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492047",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'acquired 在这里是“获得、购得”的意思。整句是说：联合碳化物公司在1960年搬入总部，并在1976年宾州中央铁路公司破产后购得了这块土地的所有权。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492050",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'acquired 在这里是“获得、购得”的意思。在这个句子中，Union Carbide 公司在1976年获得了（acquired）这块土地的所有权。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 3,
+            "sentence_body": "Union Carbide moved into its headquarters in 1960 and acquired the underlying land in 1976 after Penn Central went bankrupt.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492053",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'occupied在这里的意思是“被占用”或“被占据”。这句话是说：这个地方在1917到1957年间被Marguery酒店占用着。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 1,
+            "sentence_body": "The site was occupied by the Hotel Marguery between 1917 and 1957.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492056",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'occupied在这里是“被占据、被使用”的意思。这句话是说：这个地方在1917到1957年间被Hotel Marguery（马格瑞酒店）占据使用着。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 1,
+            "sentence_body": "The site was occupied by the Hotel Marguery between 1917 and 1957.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492060",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Manufacturers 在这里是专有名词的一部分，指公司名称 Manufacturers Hanover。在英语中，这种专有名词通常不需要拆开理解，可以整体记作一个名称。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 6,
+            "sentence_body": "Through several mergers, Manufacturers Hanover became part of JPMorgan Chase, which announced plans to demolish the building in 2018.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492063",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'negotiations 意思是“谈判”，指双方或多方为了达成协议而进行的讨论。在这个句子里，它表示经过三年的谈判后，联合碳化物公司才同意出售大楼。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 4,
+            "sentence_body": "After three years of negotiations, Union Carbide agreed in 1978 to sell the building to Manufacturers Hanover Corporation.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492067",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'renovated 是 renovate 的过去式，意思是“翻新、整修”，指对建筑物进行改造或装修使其变得更好。在这个句子里，就是制造商汉诺威公司对这座大楼进行了翻新改造。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1763025147,
+            "sentence_id": 5,
+            "sentence_body": "Manufacturers Hanover moved into 270 Park Avenue in 1980 and renovated the building.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492070",
+          "data_type": "old"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1763019461": {
+      "text_title": "Text 1763019461",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇的词义和用法，包括名词（如Krapfen、Nichtsnutz）、动词（如holen、behauptete）、形容词（如merkwürdige）和复合词（如Straßenecke）等。在语法方面，AI分析了并列句、复合句、虚拟语气等结构，解释了时间状语、比较从句、关系从句等语法成分。还涉及词根词",
+      "messages": [
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Aufklärung 是一个德语专有名词，指代一个特定的历史或文化概念，在语言学习中通常可以作为一个整体来理解，不需要深究其具体历史含义。在这个句子里，它表示一个思想运动或时期。'}",
+          "sentence_id": 9,
+          "quote": {
+            "text_id": 1763019461,
+            "sentence_id": 9,
+            "sentence_body": "Jahrhunderts sowie einer der wichtigsten Vordenker der Aufklärung.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492074",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '“Berater”是德语名词，意思是“顾问”。在句子中，“politischer Berater”就是“政治顾问”的意思。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1763019461,
+            "sentence_id": 6,
+            "sentence_body": "November 1716 in Hannover, Kurfürstentum Braunschweig-Lüneburg) war ein deutscher Philosoph, Mathematiker, Physiker, Jurist, Historiker und politischer Berater der frühen Aufklärung.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492077",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'ausgehenden 是德语形容词，意思是“结束的、末期的”。在这里修饰 17. Jahrhundert（17世纪），表示“17世纪末期的”。整个短语 des ausgehenden 17. Jahrhunderts 就是“17世纪末期的”。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1763019461,
+            "sentence_id": 7,
+            "sentence_body": "Er gilt als der universale Geist seiner Zeit und war einer der bedeutendsten Philosophen des ausgehenden 17.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492081",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Vordenker 是一个德语复合名词，由 vor（前）和 Denker（思考者）组成，字面意思是“先驱思想家”或“思想先锋”。在这个句子里，它指的是启蒙运动（Aufklärung）中重要的思想先驱之一。你可以把它理解为一个领域的早期重要贡献者。'}",
+          "sentence_id": 9,
+          "quote": {
+            "text_id": 1763019461,
+            "sentence_id": 9,
+            "sentence_body": "Jahrhunderts sowie einer der wichtigsten Vordenker der Aufklärung.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492084",
+          "data_type": "old"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1": {
+      "text_title": "Text 1",
+      "current_summary": "用户主要询问德语词汇含义和句子语法结构。AI解释了多个德语词汇的词义和用法，包括名词（如Krapfen、Nichtsnutz）、动词（如holen、behauptete）、形容词（如merkwürdige）和复合词（如Straßenecke）等。在语法方面，AI分析了并列句、复合句、虚拟语气等结构，解释了时间状语、比较从句、关系从句等语法成分。还涉及词根词",
+      "messages": [
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'schauderten 是德语动词 schaudern 的过去时形式，意思是“不寒而栗、打寒颤”。在句子里表示德思礼夫妇想到邻居们可能会说的话时，感到一阵害怕或恐惧。'}",
+          "sentence_id": 11,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 11,
+            "sentence_body": "Die Dursleys schauderten beim Gedanken \ndaran, was die Nachbarn sagen würden, sollten die Potters eines Tages in ihrer \nStraße aufkreuzen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492089",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘Nichtsnutz’是德语中的一个名词，意思是‘废物、没用的人’。在句子中，‘Nichtsnutz von einem Mann’可以理解为‘废物般的男人’，用来形容这个人毫无用处。'}",
+          "sentence_id": 10,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 10,
+            "sentence_body": "Mrs Dursley behauptete sogar, dass sie gar keine Schwester \nhätte, denn diese und deren Nichtsnutz von einem Mann waren so undursleyhaft, \nwie man es sich nur denken konnte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492092",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘besaß’是德语动词‘besitzen’的过去时形式，意思是‘拥有’或‘具有’。在这个句子里，它描述Dursley夫人‘拥有’了比实际需要多一倍的脖子长度。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492096",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'gewesen 是德语动词 sein（是/在）的过去分词形式，这里与 wäre 构成第二虚拟式 gewesen wäre，表示与事实相反的假设，意思是“本来会是/本来需要是”。整句意思是“...比本来需要的脖子多出一倍”。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492099",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘aufdecken’ 在德语中的意思是‘揭露’或‘发现’。在这个句子里，‘jemand aufdecken könnte’ 表示‘有人可能会揭露（这个秘密）’，指把隐藏的事情公开或发现真相。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492103",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'fernzuhalten 是德语动词 fernhalten 的不定式形式，意思是“保持距离、远离”。在句子中，sich von den Potters fernzuhalten 表示“远离波特一家”。'}",
+          "sentence_id": 13,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 13,
+            "sentence_body": "Auch dieser Junge war ein guter Grund, \nsich von den Potters fernzuhalten; mit einem solchen Kind sollte ihr Dudley nicht in \nBerührung kommen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492107",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘verstricken’在这里是‘卷入、陷入’的意思。整句意思是：没人会想到他们可能卷入一个奇怪神秘的事件，因为他们不想跟这种无稽之谈有任何关系。这是一个德语动词，表示被动地陷入某种情况。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492111",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'merkwürdige 是德语形容词，意思是“奇怪的、奇特的”。在这个句子里，merkwürdige und geheimnisvolle Geschichte 意思是“奇怪而神秘的故事”。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492114",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'prächtigeren 是形容词 prächtig（华丽的、出色的）的比较级形式，意思是“更出色的、更棒的”。在句子中表示“在他们眼中，没有比这更出色的男孩了”。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 6,
+            "sentence_body": "Die Dursleys hatten einen kleinen Sohn namens Dudley und in \nihren Augen gab es nirgendwo einen prächtigeren Jungen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492117",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘bullig’在德语中形容人身材壮实、魁梧，像公牛一样强壮。在这个句子里描述一个人高大壮硕。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492121",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': \"这里的'darauf'是一个代词，指代前面提到的'ganz und gar normal zu sein'（完全正常这件事）。意思是：德思礼夫妇为这件事感到骄傲。在德语中，'darauf'经常与动词如'stolz sein'（感到骄傲）搭配使用，表示'为此感到骄傲'。\"}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 1,
+            "sentence_body": "Mr und Mrs Dursley im Ligusterweg Nummer 4 waren stolz darauf, ganz und gar \nnormal zu sein, sehr stolz sogar.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492123",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'dafür 在这里表示转折对比，意思是“但是/不过/取而代之的是”。整个句子可以理解为：他高大壮实，几乎没有脖子，但是（dafür）有一把非常大的胡子。'}",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 4,
+            "sentence_body": "Er war groß und bullig und hatte fast keinen Hals, dafür aber einen sehr \ngroßen Schnurrbart.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492126",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'besaßen 是德语动词 besitzen 的过去时形式，意思是“拥有”或“占有”。在这个句子里，它表示Dursleys一家过去拥有他们想要的一切。'}",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 7,
+            "sentence_body": "Die Dursleys besaßen alles, was sie wollten, doch sie hatten auch ein Geheimnis, \nund dass es jemand aufdecken könnte, war ihre größte Sorge.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492128",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'herauskommen 在这里是“被揭露、曝光”的意思。整个句子的意思是：如果关于Potters的事情被曝光，那就简直无法忍受了。'}",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 8,
+            "sentence_body": "Einfach unerträglich \nwäre es, wenn die Sache mit den Potters herauskommen würde.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492130",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'grauen 是德语形容词，意思是“灰色的”或“灰暗的”。在句子中形容星期二（Dienstag）的天气阴沉灰暗。'}",
+          "sentence_id": 14,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 14,
+            "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492132",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'trüben 是形容词，意思是“阴沉的”、“昏暗的”，用来形容天气灰蒙蒙的、不明亮。在这个句子里，它和 grau（灰色的）一起描述那个星期二的天气状况。'}",
+          "sentence_id": 14,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 14,
+            "sentence_body": "Als Mr und Mrs Dursley an dem trüben und grauen Dienstag, an dem unsere \nGeschichte beginnt, die Augen aufschlugen, war an dem wolkenverhangenen \nHimmel draußen kein Vorzeichen der merkwürdigen und geheimnisvollen Dinge zu \nerkennen, die bald überall im Land geschehen sollten.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492134",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘daneben’在这里意思是‘没打中’或‘没中’。在句子中表示‘那一击没打中，因为Dudley正在发脾气’。这是一个副词，常用来表示动作偏离目标。'}",
+          "sentence_id": 18,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 18,
+            "sentence_body": "Der ging jedoch daneben, weil Dudley gerade einen Wutanfall hatte und die Wände \nmit seinem Haferbrei bewarf.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492137",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '“Schlingel”是德语中的一个词，意思是“小淘气”或“调皮鬼”，通常带有亲昵的语气。在这个句子里，它被用来称呼某人，类似于英语中的“little rascal”。'}",
+          "sentence_id": 19,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 19,
+            "sentence_body": "»Kleiner Schlingel«, gluckste Mr Dursley, während er \nnach draußen ging.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492139",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'gluckste 是德语动词 glucken 的过去时形式，意思是\"咯咯地笑\"或\"发出咯咯声\"。在这句话中，\"gluckste Mr Dursley\" 表示德思礼先生发出了咯咯的笑声。'}",
+          "sentence_id": 19,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 19,
+            "sentence_body": "»Kleiner Schlingel«, gluckste Mr Dursley, während er \nnach draußen ging.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492141",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘fiel’是德语动词‘fallen’的过去时形式，意思是‘想起’或‘突然想到’。在句子‘Dursley先生突然想起...’中，它表示一个想法突然进入脑海。'}",
+          "sentence_id": 42,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 42,
+            "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492143",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘wohl’在这里是一个语气词，表示推测或不确定，相当于‘大概’、‘可能’的意思。在句子中表达说话人不太确定的猜测。'}",
+          "sentence_id": 42,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 42,
+            "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492146",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Verkleidung 是德语名词，意思是“伪装”或“装扮”。在这个句子里，它指的是那些人奇怪的穿着打扮，Mr Dursley 认为那可能是一种疯狂的伪装或服装。句子意思是：但突然 Dursley 先生想到，这肯定是一种疯狂的装扮——那些人显然是在为某事募捐……对，一定是这样。'}",
+          "sentence_id": 42,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 42,
+            "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492148",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘sammelten’ 是德语动词 ‘sammeln’ 的过去时复数形式，意思是‘收集’或‘募集’。在这个句子里，‘die Leute sammelten’ 表示‘人们在收集/募集（某物）’。'}",
+          "sentence_id": 42,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 42,
+            "sentence_body": "Doch dann fiel Mr Dursley \nplötzlich ein, dass dies wohl eine verrückte Verkleidung sein musste – die Leute \nsammelten offenbar für irgendetwas … ja, so musste es sein.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492150",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'smaragdgrünen 是德语词，意思是“祖母绿色的”或“翠绿色的”。它由 smaragd（祖母绿宝石）和 grün（绿色）组成，用来形容像祖母绿宝石那样的鲜绿色。'}",
+          "sentence_id": 40,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 40,
+            "sentence_body": "Erzürnt stellte Mr Dursley fest, dass einige von ihnen überhaupt nicht \njung waren; nanu, dieser Mann dort musste älter sein als er und trug einen \nsmaragdgrünen Umhang!",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492152",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Erzürnt 是德语形容词，意思是“生气的”、“愤怒的”。在句子中描述Dursley先生很生气地发现那些人中有一些根本不年轻。'}",
+          "sentence_id": 40,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 40,
+            "sentence_body": "Erzürnt stellte Mr Dursley fest, dass einige von ihnen überhaupt nicht \njung waren; nanu, dieser Mann dort musste älter sein als er und trug einen \nsmaragdgrünen Umhang!",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492155",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'Direktor 是德语词，意思是“经理”或“主管”。在这个句子里，它表示 Dursley 先生是一家公司的负责人。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 3,
+            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492157",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'herstellte 是德语动词 herstellen 的过去时形式，意思是“制造、生产”。在这个句子里，die Bohrmaschinen herstellte 意思是“生产钻孔机”。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 3,
+            "sentence_body": "Mr Dursley war Direktor einer Firma namens Grunnings, die Bohrmaschinen \nherstellte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492159",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘summte’是德语动词‘summen’的过去式，意思是‘低声哼唱’或‘嗡嗡作响’。在这里描述Dursley先生一边低声哼唱一边做事情。德语中‘vor sich hin’是一个固定搭配，表示‘自顾自地’做某事。'}",
+          "sentence_id": 15,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 15,
+            "sentence_body": "Mr Dursley summte vor sich \nhin und suchte sich für die Arbeit seine langweiligste Krawatte aus, und Mrs \nDursley schwatzte munter vor sich hin, während sie mit dem schreienden Dudley \nrangelte und ihn in seinen Hochstuhl zwängte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492161",
+          "data_type": "old"
+        },
+        {
+          "user": "这些词是什么意思？",
+          "ai": "{'answer': 'vor sich hin 是一个德语固定搭配，意思是“自顾自地”、“轻声地”或“心不在焉地”。在句子中，summte vor sich hin 表示“自顾自地哼着歌”，schwatzte munter vor sich hin 表示“愉快地自言自语”。这个短语用来描述一个人在做某事时不太在意周围环境的状态。'}",
+          "sentence_id": 15,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 15,
+            "sentence_body": "Mr Dursley summte vor sich \nhin und suchte sich für die Arbeit seine langweiligste Krawatte aus, und Mrs \nDursley schwatzte munter vor sich hin, während sie mit dem schreienden Dudley \nrangelte und ihn in seinen Hochstuhl zwängte.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492163",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'gekommen是德语动词kommen（来）的过去分词，意思是“来”。在这个句子中，它与wäre auf die Idee gekommen构成固定搭配，意思是“没有人会想到”。完整的短语wäre auf die Idee gekommen表示“会产生这个想法”或“会想到”。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492165",
+          "data_type": "old"
+        },
+        {
+          "user": "这些词是什么意思？",
+          "ai": "{'answer': '‘denn’是连词，意思是‘因为’，表示原因；‘solchem’是代词‘solch’（这样的）的与格形式，在这里指代前文提到的‘eine merkwürdige und geheimnisvolle Geschichte’（一个奇怪神秘的故事）。整个短语‘denn solchem Unsinn’意思是‘因为这样的胡闹’。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492167",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘nirgendwo’ 是德语词，意思是‘在任何地方都不’或‘没有地方’。在这个句子里，‘nirgendwo ... einen prächtigeren Jungen’ 表示‘没有地方有更棒的男孩’，强调他们认为自己的儿子是最好的。'}",
+          "sentence_id": 6,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 6,
+            "sentence_body": "Die Dursleys hatten einen kleinen Sohn namens Dudley und in \nihren Augen gab es nirgendwo einen prächtigeren Jungen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492169",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘notwendig’是德语词，意思是‘必要的’或‘必需的’。在这个句子里，‘wie notwendig gewesen wäre’表示‘比必要的还要多’，用来形容德思礼太太的脖子特别长。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492172",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'gewesen 是德语动词 sein（是）的第二虚拟式过去分词，在这里与 wäre 构成第二虚拟式完成时态，表示假设或非现实的情况。gewesen wäre 意思是‘本来会是/本来需要是’，整句说的是‘本来需要有的两倍脖子长度’这种夸张说法。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492174",
+          "data_type": "old"
+        },
+        {
+          "user": "gewesen ware这两词本来的意思是什么",
+          "ai": "{'answer': '‘gewesen’是德语动词‘sein’（是/在）的过去分词，相当于英语的‘been’。‘wäre’是‘sein’的虚拟式过去时形式，相当于英语的‘would have been’。在句子中‘notwendig gewesen wäre’意思是‘本来会是必要的’，表达一个假设的情况。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492176",
+          "data_type": "old"
+        },
+        {
+          "user": "所以gewesen和ware两个词都是sein吗？",
+          "ai": "{'answer': \"是的，gewesen和wäre都是德语动词sein（是/存在）的不同形式。gewesen是sein的过去分词，wäre是sein的第二虚拟式（表示假设情况）。在这个句子里，它们一起构成虚拟语气，表示'如果必要的话本来应该是'的意思。\"}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492178",
+          "data_type": "old"
+        },
+        {
+          "user": "这是虚拟语气的固定搭配吗",
+          "ai": "{'answer': '是的，这里的‘gewesen wäre’是德语虚拟式第二式(Konjunktiv II)的完成时形式，表示非现实或假设的情况。这个结构‘wie notwendig gewesen wäre’意思是‘像本来有必要的那样’，用来描述一个假设性的比较。'}",
+          "sentence_id": 5,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 5,
+            "sentence_body": "Mrs Dursley war dünn und blond und besaß doppelt so viel \nHals, wie notwendig gewesen wäre, was allerdings sehr nützlich war, denn so \nkonnte sie den Hals über den Gartenzaun recken und zu den Nachbarn \nhinüberspähen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-17T12:30:13.492180",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "{'answer': 'darauf 是一个德语复合词，由 da-（这里，这个）和 r-（代指前文）+ auf（在...上）组成。da- 常与介词组合成代副词，这里 darauf 指代前文说的‘ganz und gar normal zu sein’这件事。可以理解为‘对此’或‘在这件事上’。'}",
+          "sentence_id": 1,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 1,
+            "sentence_body": "Mr und Mrs Dursley im Ligusterweg Nummer 4 waren stolz darauf, ganz und gar \nnormal zu sein, sehr stolz sogar.",
+            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-11-12T11:44:34.553848",
+          "timestamp": "2025-11-17T12:30:13.492187",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': '‘verstricken’在这里是‘卷入、陷入’的意思。整句话是说：没人会想到他们可能卷入一个奇怪神秘的事件，因为他们不想和这种无聊的事情扯上关系。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-11-17T12:30:13.492191",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "{'answer': 'verstricken 由前缀 ver- 和词根 stricken 构成。ver- 表示动作的完成或转变，stricken 意为“编织、缠绕”，合起来就是“卷入、陷入”的意思。'}",
+          "sentence_id": 2,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 2,
+            "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null
+          },
+          "timestamp": "2025-11-17T12:30:13.492194",
           "data_type": "new"
         }
       ],

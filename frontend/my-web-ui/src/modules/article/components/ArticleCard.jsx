@@ -2,6 +2,7 @@ const ArticleCard = ({
   id,
   title, 
   description, 
+  language, 
   difficulty, 
   wordCount, 
   estimatedTime, 
@@ -10,8 +11,21 @@ const ArticleCard = ({
   onSelect,
   className = ""
 }) => {
+  const getLanguageColor = (language) => {
+    switch (language) {
+      case '中文':
+        return 'bg-red-100 text-red-800'
+      case '英文':
+        return 'bg-blue-100 text-blue-800'
+      case '德文':
+        return 'bg-yellow-100 text-yellow-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   const getDifficultyColor = (difficulty) => {
-    switch (difficulty.toLowerCase()) {
+    switch (difficulty?.toLowerCase()) {
       case 'beginner':
         return 'bg-green-100 text-green-800'
       case 'intermediate':
@@ -24,7 +38,7 @@ const ArticleCard = ({
   }
 
   const getCategoryColor = (category) => {
-    switch (category.toLowerCase()) {
+    switch (category?.toLowerCase()) {
       case 'programming':
         return 'bg-blue-100 text-blue-800'
       case 'technology':
@@ -41,23 +55,39 @@ const ArticleCard = ({
       className={`
         bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 
         cursor-pointer transform hover:scale-105 border border-gray-200
+        relative
         ${className}
       `}
       onClick={() => onSelect(id)}
     >
+      {/* 语言标签 - 绝对定位在左上角 */}
+      {language && (
+        <div className="absolute top-3 left-3 z-10">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${getLanguageColor(language)}`}>
+            {language}
+          </span>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-xl font-semibold text-gray-900 line-clamp-2">
+          <h3 className="text-xl font-semibold text-gray-900 line-clamp-2 flex-1 pr-2">
             {title}
           </h3>
-          <div className="flex space-x-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`}>
-              {difficulty}
-            </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(category)}`}>
-              {category}
-            </span>
+          <div className="flex space-x-2 flex-shrink-0 ml-2">
+            {/* 难度标签 - 可选显示 */}
+            {difficulty && difficulty !== 'N/A' && (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`}>
+                {difficulty}
+              </span>
+            )}
+            {/* 分类标签 */}
+            {category && (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(category)}`}>
+                {category}
+              </span>
+            )}
           </div>
         </div>
         

@@ -5,12 +5,13 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, String
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
 # 导入数据库管理器
 from database_system.database_manager import DatabaseManager
-from database_system.business_logic.models import User, VocabExpression
+from database_system.business_logic.models import User, VocabExpression, Sentence
 
 # 导入认证依赖
 from backend.api.auth_routes import get_current_user
@@ -55,6 +56,7 @@ class VocabCreateRequest(BaseModel):
     """创建词汇请求"""
     vocab_body: str = Field(..., description="词汇内容", example="challenging")
     explanation: str = Field(..., description="词汇解释", example="具有挑战性的")
+    language: Optional[str] = Field(None, description="语言：中文、英文、德文")
     source: str = Field(default="manual", description="来源：auto/qa/manual")
     is_starred: bool = Field(default=False, description="是否收藏")
 
@@ -63,8 +65,10 @@ class VocabUpdateRequest(BaseModel):
     """更新词汇请求"""
     vocab_body: Optional[str] = Field(None, description="词汇内容")
     explanation: Optional[str] = Field(None, description="词汇解释")
+    language: Optional[str] = Field(None, description="语言：中文、英文、德文")
     source: Optional[str] = Field(None, description="来源")
     is_starred: Optional[bool] = Field(None, description="是否收藏")
+    learn_status: Optional[str] = Field(None, description="学习状态：mastered/not_mastered")
 
 
 class VocabExampleCreateRequest(BaseModel):
@@ -81,6 +85,7 @@ class VocabResponse(BaseModel):
     vocab_id: int
     vocab_body: str
     explanation: str
+    language: Optional[str] = None
     source: str
     is_starred: bool
     examples: List[dict] = []
@@ -113,6 +118,9 @@ async def get_all_vocabs(
     skip: int = Query(default=0, ge=0, description="跳过的记录数"),
     limit: int = Query(default=100, ge=1, le=1000, description="返回的最大记录数"),
     starred_only: bool = Query(default=False, description="是否只返回收藏的词汇"),
+    language: Optional[str] = Query(default=None, description="语言过滤：中文、英文、德文"),
+    learn_status: Optional[str] = Query(default=None, description="学习状态过滤：all/mastered/not_mastered"),
+    text_id: Optional[int] = Query(default=None, description="文章ID过滤：只返回有该文章example的词汇"),
     session: Session = Depends(get_db_session),
     current_user: 'User' = Depends(get_current_user)
 ):
@@ -122,11 +130,15 @@ async def get_all_vocabs(
     - **skip**: 跳过的记录数（用于分页）
     - **limit**: 返回的最大记录数
     - **starred_only**: 是否只返回收藏的词汇
+    - **language**: 语言过滤（中文、英文、德文），None表示不过滤
+    - **learn_status**: 学习状态过滤（all/mastered/not_mastered），None或'all'表示不过滤
     
     需要认证：是
     """
     try:
-        from database_system.business_logic.models import VocabExpression
+        from database_system.business_logic.models import VocabExpression, LearnStatus
+        
+        print(f"🔍 [VocabAPI] 查询参数: user_id={current_user.user_id}, language={language}, learn_status={learn_status}, starred_only={starred_only}, text_id={text_id}")
         
         # 查询当前用户的词汇
         query = session.query(VocabExpression).filter(VocabExpression.user_id == current_user.user_id)
@@ -134,28 +146,67 @@ async def get_all_vocabs(
         if starred_only:
             query = query.filter(VocabExpression.is_starred == True)
         
+        # 语言过滤
+        if language and language != 'all':
+            query = query.filter(VocabExpression.language == language)
+            print(f"🔍 [VocabAPI] 应用语言过滤: {language}")
+        
+        # 学习状态过滤
+        # 🔧 修复：SQLite 中 Enum 存储为字符串，使用 cast 转换为字符串进行比较
+        if learn_status and learn_status != 'all':
+            if learn_status == 'mastered':
+                # 将 Enum 列转换为字符串进行比较
+                query = query.filter(cast(VocabExpression.learn_status, String) == 'mastered')
+                print(f"🔍 [VocabAPI] 应用学习状态过滤: mastered")
+            elif learn_status == 'not_mastered':
+                # 将 Enum 列转换为字符串进行比较
+                query = query.filter(cast(VocabExpression.learn_status, String) == 'not_mastered')
+                print(f"🔍 [VocabAPI] 应用学习状态过滤: not_mastered")
+        else:
+            print(f"🔍 [VocabAPI] 不应用学习状态过滤 (learn_status={learn_status})")
+        
+        # 文章过滤：只返回有该文章example的词汇
+        if text_id is not None:
+            from database_system.business_logic.models import VocabExpressionExample
+            # 使用 exists 子查询或 join 来过滤
+            # 方法1：使用 exists 子查询（更高效）
+            from sqlalchemy import exists
+            query = query.filter(
+                exists().where(
+                    VocabExpressionExample.vocab_id == VocabExpression.vocab_id,
+                    VocabExpressionExample.text_id == text_id
+                )
+            )
+            print(f"🔍 [VocabAPI] 应用文章过滤: text_id={text_id}")
+        
         vocabs = query.offset(skip).limit(limit).all()
+        print(f"🔍 [VocabAPI] 查询结果: {len(vocabs)} 个词汇")
         
         return {
             "success": True,
-            "data": {
-                "vocabs": [
-                    {
-                        "vocab_id": v.vocab_id,
-                        "vocab_body": v.vocab_body,
-                        "explanation": v.explanation,
-                        "source": v.source,
-                        "is_starred": v.is_starred
-                    }
-                    for v in vocabs
-                ],
-                "count": len(vocabs),
-                "skip": skip,
-                "limit": limit
-            }
+            "data": [
+                {
+                    "vocab_id": v.vocab_id,
+                    "vocab_body": v.vocab_body,
+                    "explanation": v.explanation,
+                    "language": v.language,
+                    "source": v.source.value if hasattr(v.source, 'value') else str(v.source),
+                    "is_starred": v.is_starred,
+                    "learn_status": v.learn_status.value if hasattr(v.learn_status, 'value') else (str(v.learn_status) if v.learn_status else "not_mastered")
+                }
+                for v in vocabs
+            ],
+            "count": len(vocabs),
+            "skip": skip,
+            "limit": limit
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_detail = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"❌ [VocabAPI] 错误详情: {error_detail}")
+        print(f"❌ [VocabAPI] 错误堆栈:\n{traceback_str}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @router.get("/{vocab_id}", summary="获取单个词汇")
@@ -191,24 +242,42 @@ async def get_vocab(
             for ex in vocab_model.examples:
                 print(f"  - Example: text_id={ex.text_id}, sentence_id={ex.sentence_id}")
         
+        # 为每个 example 尝试查找原句
+        examples_data = []
+        if include_examples and vocab_model.examples:
+            for ex in vocab_model.examples:
+                original_sentence = None
+                try:
+                    if ex.text_id is not None and ex.sentence_id is not None:
+                        sentence_obj = session.query(Sentence).filter(
+                            Sentence.text_id == ex.text_id,
+                            Sentence.sentence_id == ex.sentence_id
+                        ).first()
+                        if sentence_obj:
+                            original_sentence = sentence_obj.sentence_body
+                except Exception as se:
+                    # 不影响主流程，记录日志即可
+                    print(f"⚠️ [VocabAPI] 获取例句原句失败: text_id={ex.text_id}, sentence_id={ex.sentence_id}, error={se}")
+
+                examples_data.append({
+                    "vocab_id": ex.vocab_id,
+                    "text_id": ex.text_id,
+                    "sentence_id": ex.sentence_id,
+                    "original_sentence": original_sentence,
+                    "context_explanation": ex.context_explanation,
+                    "token_indices": ex.token_indices,
+                })
+
         result = {
             "success": True,
             "data": {
                 "vocab_id": vocab_model.vocab_id,
                 "vocab_body": vocab_model.vocab_body,
                 "explanation": vocab_model.explanation,
+                "language": vocab_model.language,
                 "source": vocab_model.source.value if hasattr(vocab_model.source, 'value') else vocab_model.source,
                 "is_starred": vocab_model.is_starred,
-                "examples": [
-                    {
-                        "vocab_id": ex.vocab_id,
-                        "text_id": ex.text_id,
-                        "sentence_id": ex.sentence_id,
-                        "context_explanation": ex.context_explanation,
-                        "token_indices": ex.token_indices
-                    }
-                    for ex in vocab_model.examples
-                ] if include_examples else []
+                "examples": examples_data if include_examples else []
             }
         }
         print(f"[API] Returning vocab with {len(result['data']['examples'])} examples")
@@ -254,6 +323,7 @@ async def create_vocab(
             user_id=current_user.user_id,
             vocab_body=request.vocab_body,
             explanation=request.explanation,
+            language=request.language,
             source=SourceType(request.source),
             is_starred=request.is_starred
         )
@@ -268,7 +338,8 @@ async def create_vocab(
                 "vocab_id": vocab.vocab_id,
                 "vocab_body": vocab.vocab_body,
                 "explanation": vocab.explanation,
-                "source": vocab.source,
+                "language": vocab.language,
+                "source": vocab.source.value if hasattr(vocab.source, 'value') else str(vocab.source),
                 "is_starred": vocab.is_starred
             }
         }
@@ -294,6 +365,8 @@ async def update_vocab(
     需要认证：是
     """
     try:
+        from database_system.business_logic.models import LearnStatus
+        
         # 验证词汇属于当前用户
         vocab = session.query(VocabExpression).filter(
             VocabExpression.vocab_id == vocab_id,
@@ -311,8 +384,27 @@ async def update_vocab(
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
         
+        print(f"🔍 [VocabAPI] 更新词汇 {vocab_id}, 更新数据: {update_data}")
+        
+        # 处理 learn_status：将字符串转换为枚举
+        if 'learn_status' in update_data:
+            learn_status_str = update_data['learn_status']
+            print(f"🔍 [VocabAPI] 处理 learn_status: {learn_status_str}")
+            if learn_status_str == 'mastered':
+                update_data['learn_status'] = LearnStatus.MASTERED
+            elif learn_status_str == 'not_mastered':
+                update_data['learn_status'] = LearnStatus.NOT_MASTERED
+            else:
+                # 尝试直接使用字符串值查找枚举
+                try:
+                    update_data['learn_status'] = LearnStatus(learn_status_str)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail=f"Invalid learn_status: {learn_status_str}")
+            print(f"🔍 [VocabAPI] 转换后的 learn_status: {update_data['learn_status']}")
+        
         # 更新词汇
         for key, value in update_data.items():
+            print(f"🔍 [VocabAPI] 设置 {key} = {value} (type: {type(value)})")
             setattr(vocab, key, value)
         
         session.commit()
@@ -321,6 +413,8 @@ async def update_vocab(
         if not vocab:
             raise HTTPException(status_code=404, detail=f"Vocab ID {vocab_id} not found")
         
+        print(f"✅ [VocabAPI] 词汇 {vocab_id} 更新成功")
+        
         return {
             "success": True,
             "message": "Vocab updated successfully",
@@ -328,14 +422,20 @@ async def update_vocab(
                 "vocab_id": vocab.vocab_id,
                 "vocab_body": vocab.vocab_body,
                 "explanation": vocab.explanation,
-                "source": vocab.source,
-                "is_starred": vocab.is_starred
+                "source": vocab.source.value if hasattr(vocab.source, 'value') else str(vocab.source),
+                "is_starred": vocab.is_starred,
+                "learn_status": vocab.learn_status.value if hasattr(vocab.learn_status, 'value') else (str(vocab.learn_status) if vocab.learn_status else "not_mastered")
             }
         }
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_detail = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"❌ [VocabAPI] 更新词汇错误详情: {error_detail}")
+        print(f"❌ [VocabAPI] 更新词汇错误堆栈:\n{traceback_str}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @router.delete("/{vocab_id}", summary="删除词汇")

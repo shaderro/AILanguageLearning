@@ -1,59 +1,56 @@
-import { useState } from 'react'
 import ArticleList from './components/ArticleList'
-import FilterBar from '../shared/components/FilterBar'
 import { useArticles } from '../../hooks/useApi'
 import { useUser } from '../../contexts/UserContext'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
-  const { userId } = useUser()
-  const { data, isLoading, isError, error } = useArticles(userId)
-  const summaries = Array.isArray(data?.data) ? data.data : []
+  const { userId, isGuest } = useUser()
+  const { selectedLanguage } = useLanguage()
+  // 使用API获取文章数据 - 传入 userId、isGuest 和 language（后端过滤或本地过滤）
+  const { data, isLoading, isError, error } = useArticles(userId, selectedLanguage, isGuest)
+  
+  // 处理游客模式和登录模式的数据格式
+  let summaries = []
+  if (isGuest) {
+    // 游客模式：data.data 是文章数组
+    summaries = Array.isArray(data?.data) ? data.data : []
+  } else {
+    // 登录模式：data.data.texts 是文章数组，或者 data.data 本身就是数组
+    const responseData = data?.data
+    if (Array.isArray(responseData)) {
+      summaries = responseData
+    } else if (responseData?.texts && Array.isArray(responseData.texts)) {
+      summaries = responseData.texts
+    } else {
+      summaries = []
+    }
+  }
+  
   // 将后端摘要映射为列表卡片需要的结构
-  const mappedArticles = summaries.map((s) => ({
-    id: s.text_id,
-    title: s.text_title || `Article ${s.text_id}`,
-    description: `Sentences: ${s.total_sentences} • Tokens: ${s.total_tokens} • Selectable: ${s.text_tokens}`,
-    difficulty: 'N/A',
-    wordCount: s.total_tokens || 0,
-    estimatedTime: `${Math.max(1, Math.ceil((s.total_sentences || 1) / 5))} min`,
-    category: 'Article',
-    tags: []
-  }))
-
-  const [filteredArticles, setFilteredArticles] = useState(mappedArticles)
-
-  // 同步远端变化
-  if (filteredArticles !== mappedArticles && summaries.length > 0 && filteredArticles.length === 0) {
-    // 初次加载后填充一次
-    // 注：保持简单，避免引入 useEffect 以最少改动接入
-    setFilteredArticles(mappedArticles)
-  }
-
-  const handleFilterChange = (filterId, value) => {
-    console.log('Filter changed:', filterId, value)
+  // 注意：language过滤已经在API层面完成（登录模式）或本地完成（游客模式），这里只需要映射数据
+  const mappedArticles = summaries.map((s) => {
+    // 处理游客模式和登录模式的数据格式
+    const textId = s.text_id || s.article_id || s.id
+    const textTitle = s.text_title || s.title || `Article ${textId}`
+    const totalSentences = s.total_sentences || s.sentence_count || 0
+    const totalTokens = s.total_tokens || s.wordCount || 0
+    const language = s.language || null
     
-    // 简单的筛选逻辑
-    let filtered = [...mappedArticles]
-    
-    if (filterId === 'category' && value !== 'all') {
-      filtered = filtered.filter(article => 
-        article.category.toLowerCase() === value.toLowerCase()
-      )
+    return {
+      id: textId,
+      title: textTitle,
+      description: `Sentences: ${totalSentences} • Tokens: ${totalTokens}`,
+      language: language, // 从后端获取语言字段，null表示未设置
+      difficulty: 'N/A',
+      wordCount: totalTokens,
+      estimatedTime: `${Math.max(1, Math.ceil((totalSentences || 1) / 5))} min`,
+      category: 'Article',
+      tags: []
     }
-    
-    if (filterId === 'difficulty' && value !== 'all') {
-      filtered = filtered.filter(article => 
-        article.difficulty.toLowerCase() === value.toLowerCase()
-      )
-    }
-    
-    if (filterId === 'status' && value !== 'all') {
-      // 这里可以根据实际需求实现状态筛选
-      // 目前保持所有文章
-    }
-    
-    setFilteredArticles(filtered)
-  }
+  })
+
+  // 文章已经在后端过滤，直接使用mappedArticles
+  const filteredArticles = mappedArticles
 
   const handleArticleSelect = (articleId) => {
     console.log('Article selected:', articleId)
@@ -68,44 +65,53 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Filter Bar */}
-      <FilterBar onFilterChange={handleFilterChange} />
-      
-      {/* Main Content */}
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Choose an Article
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Select an article to start reading and chatting with our AI assistant. 
-              Each article covers different topics and difficulty levels.
-            </p>
+    <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+      {/* Main Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                Choose an Article
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Select an article to start reading and chatting with our AI assistant. 
+                {selectedLanguage !== 'all' && (
+                  <span className="block mt-2 text-blue-600 font-medium">
+                    当前筛选：{selectedLanguage}
+                  </span>
+                )}
+              </p>
+            </div>
+
+            {/* Loading / Error */}
+            {isLoading && (
+              <div className="text-center text-gray-600 py-8">Loading articles...</div>
+            )}
+            {isError && (
+              <div className="text-center text-red-600 py-8">{String(error)}</div>
+            )}
+
+            {/* Article Count */}
+            <div className="mb-6">
+              <p className="text-gray-600">
+                {selectedLanguage === 'all' 
+                  ? `Showing ${filteredArticles.length} articles`
+                  : `Showing ${filteredArticles.length} articles (${selectedLanguage})`
+                }
+              </p>
+            </div>
+
+            {/* Article List */}
+            <ArticleList 
+              articles={filteredArticles}
+              onArticleSelect={handleArticleSelect}
+            />
+            
+            {/* Bottom padding for fixed button */}
+            <div className="pb-24"></div>
           </div>
-
-          {/* Loading / Error */}
-          {isLoading && (
-            <div className="text-center text-gray-600 py-8">Loading articles...</div>
-          )}
-          {isError && (
-            <div className="text-center text-red-600 py-8">{String(error)}</div>
-          )}
-
-          {/* Article Count */}
-          <div className="mb-6">
-            <p className="text-gray-600">
-              Showing {filteredArticles.length} of {mappedArticles.length} articles
-            </p>
-          </div>
-
-          {/* Article List */}
-          <ArticleList 
-            articles={filteredArticles}
-            onArticleSelect={handleArticleSelect}
-          />
         </div>
       </div>
 

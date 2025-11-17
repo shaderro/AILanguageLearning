@@ -27,6 +27,7 @@ const ArticleList = ({
           id={article.id}
           title={article.title}
           description={article.description}
+          language={article.language}
           difficulty={article.difficulty}
           wordCount={article.wordCount}
           estimatedTime={article.estimatedTime}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef, useMemo } from 'react'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
@@ -228,22 +228,48 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   }
 
   // 构建 NotationContext 的值
-  const notationContextValue = {
-    // Grammar 相关
+  // 🔧 添加 vocabNotations 和 grammarNotations 到依赖，确保缓存更新时 Context 值也更新
+  const notationContextValue = useMemo(() => {
+    console.log('🔄 [ArticleChatView] NotationContext 值更新:', {
+      vocabNotationsCount: vocabNotations.length,
+      grammarNotationsCount: grammarNotations.length,
+      vocabNotations: vocabNotations,
+      grammarNotations: grammarNotations
+    })
+    
+    return {
+      // Grammar 相关
+      getGrammarNotationsForSentence,
+      getGrammarRuleById,
+      hasGrammarNotation,
+      
+      // Vocab 相关
+      getVocabNotationsForSentence,
+      getVocabExampleForToken,
+      hasVocabNotation,
+      
+      // 兼容层（暂时保留用于向后兼容）
+      isTokenAsked,
+      getNotationContent,
+      setNotationContent,
+      
+      // 🔧 添加缓存数据本身，确保缓存更新时 Context 值也更新
+      vocabNotations,
+      grammarNotations
+    }
+  }, [
     getGrammarNotationsForSentence,
     getGrammarRuleById,
     hasGrammarNotation,
-    
-    // Vocab 相关
     getVocabNotationsForSentence,
     getVocabExampleForToken,
     hasVocabNotation,
-    
-    // 兼容层（暂时保留用于向后兼容）
     isTokenAsked,
     getNotationContent,
-    setNotationContent
-  }
+    setNotationContent,
+    vocabNotations,  // 🔧 添加依赖
+    grammarNotations  // 🔧 添加依赖
+  ])
 
   return (
     <ChatEventProvider>

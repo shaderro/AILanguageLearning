@@ -45,12 +45,16 @@ class SentenceAdapter:
         if include_tokens and model.tokens:
             tokens = tuple([
                 TokenDTO(
-                    text_id=t.text_id,
-                    sentence_id=t.sentence_id,
-                    sentence_token_id=t.sentence_token_id,
                     token_body=t.token_body,
                     token_type=t.token_type.value if t.token_type else 'TEXT',
-                    difficulty_level=t.difficulty_level.value.lower() if t.difficulty_level else None
+                    difficulty_level=t.difficulty_level.value.lower() if t.difficulty_level else None,
+                    # 可选字段按需映射（如果 ORM 上存在这些属性）
+                    global_token_id=getattr(t, "global_token_id", None),
+                    sentence_token_id=t.sentence_token_id,
+                    pos_tag=getattr(t, "pos_tag", None),
+                    lemma=getattr(t, "lemma", None),
+                    is_grammar_marker=getattr(t, "is_grammar_marker", False),
+                    linked_vocab_id=getattr(t, "linked_vocab_id", None),
                 )
                 for t in sorted(model.tokens, key=lambda x: x.sentence_token_id)
             ])
@@ -124,16 +128,24 @@ class TextAdapter:
         """
         # 转换句子（如果需要）
         sentences = []
-        if include_sentences and model.sentences:
-            sentences = [
-                SentenceAdapter.model_to_dto(s, include_tokens=True)
-                for s in sorted(model.sentences, key=lambda x: x.sentence_id)
-            ]
+        if include_sentences:
+            try:
+                # 🔧 安全访问 sentences 关系（可能未加载或为 None）
+                model_sentences = model.sentences if hasattr(model, 'sentences') and model.sentences else []
+                sentences = [
+                    SentenceAdapter.model_to_dto(s, include_tokens=True)
+                    for s in sorted(model_sentences, key=lambda x: x.sentence_id)
+                ]
+            except Exception as e:
+                # 如果访问 sentences 关系失败，返回空列表
+                print(f"⚠️ [TextAdapter] 访问 sentences 关系失败: {e}")
+                sentences = []
         
         return TextDTO(
             text_id=model.text_id,
             text_title=model.text_title,
-            text_by_sentence=sentences
+            text_by_sentence=sentences,
+            language=model.language
         )
     
     @staticmethod
@@ -157,7 +169,8 @@ class TextAdapter:
             - text_id 为 None 时表示新建，有值时表示更新
         """
         model = TextModel(
-            text_title=dto.text_title
+            text_title=dto.text_title,
+            language=dto.language
         )
         
         # 如果提供了 text_id，设置它（用于更新场景）

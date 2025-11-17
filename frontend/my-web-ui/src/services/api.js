@@ -78,7 +78,61 @@ api.interceptors.response.use(
       const innerData = response.data.data;
       console.log("🔍 [DEBUG] Inner data:", innerData);
       
+      // 🔧 特殊处理：如果 innerData 是 undefined，说明响应格式是 { success: true, message: '...' }
+      // 这种情况下直接返回整个 response.data
+      if (innerData === undefined) {
+        console.log("🔍 [DEBUG] innerData is undefined, returning full response.data");
+        return response.data;
+      }
+      
+      // 🔧 Chat API 特殊处理：优先检查并保留 created_grammar_notations 和 created_vocab_notations
+      // 必须在检查其他字段之前处理，避免提前返回导致丢失数据
+      if (innerData && typeof innerData === 'object' && 
+          (innerData.created_grammar_notations !== undefined || innerData.created_vocab_notations !== undefined)) {
+        console.log("🔍 [DEBUG] Chat API detected - preserving created_grammar_notations and created_vocab_notations");
+        console.log("🔍 [DEBUG] innerData 完整内容:", JSON.stringify(innerData, null, 2));
+        console.log("🔍 [DEBUG] created_grammar_notations:", innerData.created_grammar_notations);
+        console.log("🔍 [DEBUG] created_grammar_notations 类型:", typeof innerData.created_grammar_notations);
+        console.log("🔍 [DEBUG] created_grammar_notations 长度:", Array.isArray(innerData.created_grammar_notations) ? innerData.created_grammar_notations.length : 'not array');
+        console.log("🔍 [DEBUG] created_vocab_notations:", innerData.created_vocab_notations);
+        console.log("🔍 [DEBUG] created_vocab_notations 类型:", typeof innerData.created_vocab_notations);
+        console.log("🔍 [DEBUG] created_vocab_notations 长度:", Array.isArray(innerData.created_vocab_notations) ? innerData.created_vocab_notations.length : 'not array');
+        console.log("🔍 [DEBUG] 返回 innerData（保留所有字段）");
+        return innerData;
+      }
+      
       // 进一步提取列表数据（如果存在）
+      // 🔧 优先检查数组格式（因为数组也是 object 类型）
+      if (Array.isArray(innerData)) {
+        // 检查是否是 vocab 数组（有 vocab_id 字段）
+        if (innerData.length > 0 && innerData[0].vocab_id !== undefined) {
+          console.log("🔍 [DEBUG] Found vocab array, returning as is");
+          return {
+            data: innerData,
+            count: innerData.length
+          };
+        }
+        // 检查是否是 grammar 数组（有 rule_id 字段）
+        if (innerData.length > 0 && innerData[0].rule_id !== undefined) {
+          console.log("🔍 [DEBUG] Found grammar array, returning as is");
+          return {
+            data: innerData,
+            count: innerData.length
+          };
+        }
+        // Texts API - 如果直接是数组（向后兼容）
+        console.log("🔍 [DEBUG] Found texts array, applying field mapping");
+        const mappedTexts = innerData.map(text => ({
+          ...text,
+          id: text.text_id,
+          title: text.text_title
+        }));
+        return {
+          data: mappedTexts,
+          count: innerData.length
+        };
+      }
+      
       // API返回 { vocabs: [...], count: X } -> 提取vocabs数组
       if (innerData && typeof innerData === 'object') {
         console.log("🔍 [DEBUG] Inner data keys:", Object.keys(innerData));
@@ -227,13 +281,26 @@ export const apiService = {
   
   // 获取词汇列表
   // Vocab
-  getVocabList: async () => {
+  getVocabList: async (language = null, learnStatus = null, textId = null) => {
     try {
       if (API_TARGET === 'mock') {
         return api.get("/api/vocab");
       } else {
         try {
-          return await api.get("/api/v2/vocab/");
+          const params = new URLSearchParams();
+          if (language && language !== 'all') {
+            params.append('language', language);
+          }
+          if (learnStatus && learnStatus !== 'all') {
+            params.append('learn_status', learnStatus);
+          }
+          if (textId && textId !== 'all') {
+            params.append('text_id', textId);
+          }
+          const queryString = params.toString();
+          const url = queryString ? `/api/v2/vocab/?${queryString}` : '/api/v2/vocab/';
+          console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+          return await api.get(url);
         } catch (dbError) {
           console.log('🔄 [API] v2 vocab API失败，回退到兼容端点:', dbError.message);
           return api.get("/api/vocab");
@@ -258,7 +325,7 @@ export const apiService = {
   createVocab: (vocabData) => api.post(API_TARGET === 'mock' ? "/api/vocab" : "/api/v2/vocab/", vocabData),
 
   // 更新词汇
-  updateVocab: (id, vocabData) => api.put(API_TARGET === 'mock' ? `/api/vocab/${id}` : `/api/v2/vocab/${id}/`, vocabData),
+  updateVocab: (id, vocabData) => api.put(API_TARGET === 'mock' ? `/api/vocab/${id}` : `/api/v2/vocab/${id}`, vocabData),
 
   // 删除词汇
   deleteVocab: (id) => api.delete(API_TARGET === 'mock' ? `/api/vocab/${id}` : `/api/v2/vocab/${id}/`),
@@ -267,13 +334,26 @@ export const apiService = {
   
   // 获取语法规则列表
   // Grammar
-  getGrammarList: async () => {
+  getGrammarList: async (language = null, learnStatus = null, textId = null) => {
     try {
       if (API_TARGET === 'mock') {
         return api.get("/api/grammar");
       } else {
         try {
-          return await api.get("/api/v2/grammar/");
+          const params = new URLSearchParams();
+          if (language && language !== 'all') {
+            params.append('language', language);
+          }
+          if (learnStatus && learnStatus !== 'all') {
+            params.append('learn_status', learnStatus);
+          }
+          if (textId && textId !== 'all') {
+            params.append('text_id', textId);
+          }
+          const queryString = params.toString();
+          const url = queryString ? `/api/v2/grammar/?${queryString}` : '/api/v2/grammar/';
+          console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+          return await api.get(url);
         } catch (dbError) {
           console.log('🔄 [API] v2 grammar API失败，回退到兼容端点:', dbError.message);
           return api.get("/api/grammar");
@@ -298,7 +378,7 @@ export const apiService = {
   createGrammar: (grammarData) => api.post(API_TARGET === 'mock' ? "/api/grammar" : "/api/v2/grammar/", grammarData),
 
   // 更新语法规则
-  updateGrammar: (id, grammarData) => api.put(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}/`, grammarData),
+  updateGrammar: (id, grammarData) => api.put(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}`, grammarData),
 
   // 删除语法规则
   deleteGrammar: (id) => api.delete(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}/`),
@@ -391,7 +471,7 @@ export const apiService = {
   
   // 获取文章列表
   // Articles
-  getArticlesList: async () => {
+  getArticlesList: async (language = null) => {
     try {
       if (API_TARGET === 'mock') {
         return api.get("/api/articles");
@@ -399,7 +479,10 @@ export const apiService = {
         // 数据库模式：只使用 v2 API（有用户隔离），不再回退到文件系统
         // 文件系统API没有用户隔离，会导致显示不属于当前用户的文章
         try {
-          const response = await api.get("/api/v2/texts/");
+          const url = language && language !== 'all' 
+            ? `/api/v2/texts/?language=${encodeURIComponent(language)}`
+            : '/api/v2/texts/';
+          const response = await api.get(url);
           // 即使数据库返回空，也不回退到文件系统（避免显示其他用户的文章）
           return response;
         } catch (dbError) {
@@ -590,11 +673,12 @@ export const apiService = {
   // ==================== Upload API ====================
   
   // 上传文件
-  uploadFile: async (file, title = "Untitled Article") => {
-    console.log('📤 [Frontend] Uploading file:', file.name, 'title:', title);
+  uploadFile: async (file, title = "Untitled Article", language = "") => {
+    console.log('📤 [Frontend] Uploading file:', file.name, 'title:', title, 'language:', language);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
+    formData.append('language', language);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
     return api.post("/api/upload/file", formData, {
@@ -605,11 +689,12 @@ export const apiService = {
   },
 
   // 上传URL
-  uploadUrl: async (url, title = "URL Article") => {
-    console.log('📤 [Frontend] Uploading URL:', url, 'title:', title);
+  uploadUrl: async (url, title = "URL Article", language = "") => {
+    console.log('📤 [Frontend] Uploading URL:', url, 'title:', title, 'language:', language);
     const formData = new FormData();
     formData.append('url', url);
     formData.append('title', title);
+    formData.append('language', language);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
     return api.post("/api/upload/url", formData, {
@@ -620,11 +705,12 @@ export const apiService = {
   },
 
   // 上传文本
-  uploadText: async (text, title = "Text Article") => {
-    console.log('📤 [Frontend] Uploading text, title:', title, 'length:', text.length);
+  uploadText: async (text, title = "Text Article", language = "") => {
+    console.log('📤 [Frontend] Uploading text, title:', title, 'length:', text.length, 'language:', language);
     const formData = new FormData();
     formData.append('text', text);
     formData.append('title', title);
+    formData.append('language', language);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
     return api.post("/api/upload/text", formData, {

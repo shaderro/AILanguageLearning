@@ -1,6 +1,6 @@
 from sqlalchemy import (
     create_engine, Column, Integer, String, Text, Boolean, DateTime,
-    ForeignKey, JSON, Enum, ForeignKeyConstraint, UniqueConstraint
+    ForeignKey, JSON, Enum, ForeignKeyConstraint, UniqueConstraint, TypeDecorator
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime
@@ -26,6 +26,46 @@ class AskedTokenType(enum.Enum):
     TOKEN = 'token'      # 标记的是单词（需要 sentence_token_id）
     SENTENCE = 'sentence'  # 标记的是句子（sentence_token_id 可为空）
 
+class LearnStatus(enum.Enum):
+    """学习状态枚举"""
+    NOT_MASTERED = 'not_mastered'  # 未掌握
+    MASTERED = 'mastered'  # 已掌握
+
+
+class EnumType(TypeDecorator):
+    """自定义枚举类型，用于 SQLite 兼容性"""
+    impl = String
+    cache_ok = True
+    
+    def __init__(self, enum_class, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.enum_class = enum_class
+    
+    def process_bind_param(self, value, dialect):
+        """将枚举对象转换为字符串存储"""
+        if value is None:
+            return None
+        if isinstance(value, enum.Enum):
+            return value.value
+        return str(value)
+    
+    def process_result_value(self, value, dialect):
+        """将字符串值转换回枚举对象"""
+        if value is None:
+            return None
+        if isinstance(value, self.enum_class):
+            return value
+        # 尝试通过值查找枚举
+        for enum_item in self.enum_class:
+            if enum_item.value == value:
+                return enum_item
+        # 如果找不到，尝试通过名称查找
+        try:
+            return self.enum_class[value]
+        except KeyError:
+            # 如果都找不到，返回默认值
+            return list(self.enum_class)[0] if self.enum_class else None
+
 class VocabExpression(Base):
     __tablename__ = 'vocab_expressions'
 
@@ -33,8 +73,10 @@ class VocabExpression(Base):
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
     vocab_body = Column(String(255), nullable=False)
     explanation = Column(Text, nullable=False)
-    source = Column(Enum(SourceType), default=SourceType.AUTO, nullable=False)
+    language = Column(String(50), nullable=True)  # 语言：中文、英文、德文
+    source = Column(EnumType(SourceType, length=50), default=SourceType.AUTO, nullable=False)
     is_starred = Column(Boolean, default=False, nullable=False)
+    learn_status = Column(EnumType(LearnStatus, length=50), default=LearnStatus.NOT_MASTERED, nullable=False)  # 学习状态：未掌握/已掌握
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
@@ -53,8 +95,10 @@ class GrammarRule(Base):
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
     rule_name = Column(String(255), nullable=False)
     rule_summary = Column(Text, nullable=False)
-    source = Column(Enum(SourceType), default=SourceType.AUTO, nullable=False)
+    language = Column(String(50), nullable=True)  # 语言：中文、英文、德文
+    source = Column(EnumType(SourceType, length=50), default=SourceType.AUTO, nullable=False)
     is_starred = Column(Boolean, default=False, nullable=False)
+    learn_status = Column(EnumType(LearnStatus, length=50), default=LearnStatus.NOT_MASTERED, nullable=False)  # 学习状态：未掌握/已掌握
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
@@ -71,6 +115,7 @@ class OriginalText(Base):
     text_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
     text_title = Column(String(500), nullable=False)
+    language = Column(String(50), nullable=True)  # 语言：中文、英文、德文
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
@@ -84,7 +129,7 @@ class Sentence(Base):
     sentence_id = Column(Integer, nullable=False)
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_body = Column(Text, nullable=False)
-    sentence_difficulty_level = Column(Enum(DifficultyLevel))
+    sentence_difficulty_level = Column(EnumType(DifficultyLevel, length=50))
     grammar_annotations = Column(JSON)
     vocab_annotations = Column(JSON)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
@@ -128,8 +173,8 @@ class Token(Base):
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
     token_body = Column(String(255), nullable=False)
-    token_type = Column(Enum(TokenType), nullable=False)
-    difficulty_level = Column(Enum(DifficultyLevel))
+    token_type = Column(EnumType(TokenType, length=50), nullable=False)
+    difficulty_level = Column(EnumType(DifficultyLevel, length=50))
     global_token_id = Column(Integer)
     sentence_token_id = Column(Integer)
     pos_tag = Column(String(50))
@@ -157,7 +202,7 @@ class AskedToken(Base):
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
     sentence_token_id = Column(Integer, nullable=True)  # 改为可空：当 type='sentence' 时可以为空
-    type = Column(Enum(AskedTokenType), default=AskedTokenType.TOKEN, nullable=False)  # 新增：标记类型
+    type = Column(EnumType(AskedTokenType, length=50), default=AskedTokenType.TOKEN, nullable=False)  # 新增：标记类型
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     __table_args__ = (

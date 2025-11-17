@@ -1,6 +1,76 @@
 import { useState, useEffect } from 'react'
 import { apiService } from '../../../../services/api'
 
+// 解析和格式化解释文本
+const parseExplanation = (text) => {
+  if (!text) return ''
+  
+  let cleanText = text
+  
+  // 1. 处理字典格式的字符串（如 "{'explanation': '...'}" 或 '{"explanation": "..."}'）
+  if (text.includes("'explanation'") || text.includes('"explanation"')) {
+    try {
+      // 尝试解析 JSON 格式
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[0]
+        // 先尝试标准 JSON 解析
+        try {
+          const parsed = JSON.parse(jsonStr)
+          cleanText = parsed.explanation || parsed.definition || text
+        } catch (e) {
+          // 如果不是标准 JSON，尝试处理 Python 字典格式（单引号）
+          // 使用更智能的方法：只替换键和字符串分隔符的单引号
+          // 先尝试直接提取 explanation 字段的值（支持多行和转义字符）
+          const explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
+          if (explanationMatch) {
+            cleanText = explanationMatch[1]
+              .replace(/\\n/g, '\n')  // 处理转义的换行符
+              .replace(/\\'/g, "'")   // 处理转义的单引号
+              .replace(/\\"/g, '"')   // 处理转义的双引号
+          } else {
+            // 如果正则匹配失败，尝试将单引号替换为双引号（简单处理）
+            const normalized = jsonStr.replace(/'/g, '"')
+            try {
+              const parsed = JSON.parse(normalized)
+              cleanText = parsed.explanation || parsed.definition || text
+            } catch (e2) {
+              // 如果还是失败，使用原始文本
+              cleanText = text
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // 解析失败，使用原始文本
+    }
+  }
+  
+  // 2. 处理代码块格式（```json ... ```）
+  if (cleanText.includes('```json') && cleanText.includes('```')) {
+    try {
+      const jsonMatch = cleanText.match(/```json\n(.*?)\n```/s)
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[1]
+        const parsed = JSON.parse(jsonStr)
+        cleanText = parsed.explanation || parsed.definition || cleanText
+      }
+    } catch (e) {
+      // 解析失败，继续使用 cleanText
+    }
+  }
+  
+  // 3. 清理多余的转义字符和格式化
+  // 将 \n 转换为实际的换行
+  cleanText = cleanText.replace(/\\n/g, '\n')
+  // 移除多余的空白行（连续两个以上的换行符）
+  cleanText = cleanText.replace(/\n{3,}/g, '\n\n')
+  // 去除首尾空白
+  cleanText = cleanText.trim()
+  
+  return cleanText
+}
+
 /**
  * GrammarNotationCard - 语法注释卡片组件（从 components/ 迁移至 notation/）
  */
@@ -35,14 +105,7 @@ export default function GrammarNotationCard({
               Number(ex.sentence_id) === Number(notation.sentence_id)
             )
             if (matchingExample) {
-              let explanationText = matchingExample.explanation_context || ''
-              try {
-                const parsed = JSON.parse(explanationText)
-                if (parsed && parsed.explanation) {
-                  explanationText = parsed.explanation
-                }
-              } catch (e) {}
-              contextExplanation = explanationText
+              contextExplanation = matchingExample.explanation_context || ''
             }
           }
           const result = {
@@ -246,9 +309,10 @@ export default function GrammarNotationCard({
                     marginTop: '4px', 
                     paddingLeft: '8px', 
                     borderLeft: '2px solid #dbeafe',
-                    padding: '4px 0 4px 8px'
+                    padding: '4px 0 4px 8px',
+                    whiteSpace: 'pre-wrap'
                   }}>
-                    {rule.rule_summary || rule.explanation}
+                    {parseExplanation(rule.rule_summary || rule.explanation || '')}
                   </div>
                 </div>
                 {rule.context_explanation && (
@@ -258,9 +322,10 @@ export default function GrammarNotationCard({
                       marginTop: '4px', 
                       paddingLeft: '8px', 
                       borderLeft: '2px solid #dcfce7',
-                      padding: '4px 0 4px 8px'
+                      padding: '4px 0 4px 8px',
+                      whiteSpace: 'pre-wrap'
                     }}>
-                      {rule.context_explanation}
+                      {parseExplanation(rule.context_explanation || '')}
                     </div>
                   </div>
                 )}

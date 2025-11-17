@@ -14,7 +14,8 @@ from typing import Optional, List
 from database_system.business_logic.models import (
     VocabExpression as VocabModel,
     VocabExpressionExample as VocabExampleModel,
-    SourceType as ModelSourceType
+    SourceType as ModelSourceType,
+    LearnStatus as ModelLearnStatus
 )
 from backend.data_managers.data_classes_new import (
     VocabExpression as VocabDTO,
@@ -78,6 +79,26 @@ class VocabAdapter:
             return ModelSourceType.AUTO
     
     @staticmethod
+    def _convert_learn_status_to_dto(model_status: ModelLearnStatus) -> str:
+        """
+        枚举转换：Model LearnStatus → DTO 字符串
+        Model: LearnStatus.NOT_MASTERED → DTO: "not_mastered"
+        """
+        return model_status.value.lower()
+    
+    @staticmethod
+    def _convert_learn_status_to_model(dto_status: str) -> ModelLearnStatus:
+        """
+        枚举转换：DTO 字符串 → Model LearnStatus
+        DTO: "not_mastered" → Model: LearnStatus.NOT_MASTERED
+        容错处理：未知值默认为 NOT_MASTERED
+        """
+        try:
+            return ModelLearnStatus(dto_status.lower())
+        except (ValueError, AttributeError):
+            return ModelLearnStatus.NOT_MASTERED
+    
+    @staticmethod
     def model_to_dto(model: VocabModel, include_examples: bool = True) -> VocabDTO:
         """
         ORM Model → DTO
@@ -105,8 +126,10 @@ class VocabAdapter:
             vocab_id=model.vocab_id,
             vocab_body=model.vocab_body,
             explanation=model.explanation,
+            language=model.language,
             source=VocabAdapter._convert_source_to_dto(model.source),
             is_starred=model.is_starred,
+            learn_status=VocabAdapter._convert_learn_status_to_dto(model.learn_status) if model.learn_status else "not_mastered",
             examples=examples
         )
     
@@ -133,8 +156,10 @@ class VocabAdapter:
         model = VocabModel(
             vocab_body=dto.vocab_body,
             explanation=dto.explanation,
+            language=dto.language,
             source=VocabAdapter._convert_source_to_model(dto.source),
-            is_starred=dto.is_starred
+            is_starred=dto.is_starred,
+            learn_status=VocabAdapter._convert_learn_status_to_model(getattr(dto, 'learn_status', 'not_mastered'))
         )
         
         # 如果提供了 vocab_id，设置它（用于更新场景）

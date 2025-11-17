@@ -244,6 +244,13 @@ class MainAssistant:
         """
         处理与语法和词汇相关的操作。
         """
+        # 🔧 保存 selected_token 的引用（避免在后续处理中被清空）
+        saved_selected_token = self.session_state.current_selected_token
+        print(f"🔍 [DEBUG] [handle_grammar_vocab_function] 保存 selected_token 引用: {saved_selected_token is not None}")
+        if saved_selected_token:
+            print(f"🔍 [DEBUG] [handle_grammar_vocab_function] selected_token.token_text: '{getattr(saved_selected_token, 'token_text', None)}'")
+            print(f"🔍 [DEBUG] [handle_grammar_vocab_function] selected_token.token_indices: {getattr(saved_selected_token, 'token_indices', None)}")
+        
         # 如果没有提供effective_sentence_body，使用完整句子
         if effective_sentence_body is None:
             effective_sentence_body = quoted_sentence.sentence_body
@@ -299,39 +306,173 @@ class MainAssistant:
             user_input = self.session_state.current_input if self.session_state.current_input else user_question
             ai_response_str = self.session_state.current_response if self.session_state.current_response else ai_response
             
-            vocab_summary = self.summarize_vocab_rule_assistant.run(
+            raw_vocab_summary = self.summarize_vocab_rule_assistant.run(
                 sentence_body,
                 user_input,
                 ai_response_str
             )
-            if isinstance(vocab_summary, dict):
-                self.session_state.add_vocab_summary(vocab_summary.get("vocab", "Unknown"))
-            elif isinstance(vocab_summary, list) and len(vocab_summary) > 0:
-                for vocab in vocab_summary:
-                    self.session_state.add_vocab_summary(
-                        vocab=vocab.get("vocab", "Unknown")
-                    )
+
+            # 🔧 修复：避免跨多轮累积过多 vocab，总是只针对当前轮的词汇进行处理
+            # 支持两种返回形式：单个 dict 或 list[dict]
+            # 并且优先聚焦于当前 selected_token 对应的词汇；如果过滤后结果为空，则回退为“接受本轮所有 vocab”
+            self.session_state.summarized_results.clear()
+            current_token_text = getattr(self.session_state.current_selected_token, "token_text", None)
+
+            def _accept_vocab(vocab_str: str) -> bool:
+                """根据当前选中的 token 文本过滤 vocab，避免一次性处理多个无关词。"""
+                if not vocab_str:
+                    return False
+                if not current_token_text:
+                    # 没有选中具体 token 时，接受本轮所有 vocab
+                    return True
+                # 宽松匹配：忽略大小写，允许屈折/派生形式（包含关系）
+                v = str(vocab_str).strip()
+                t = str(current_token_text).strip()
+                v_lower = v.lower()
+                t_lower = t.lower()
+                return v_lower == t_lower or v_lower in t_lower or t_lower in v_lower
+
+            # 统一成 list 形式处理
+            vocab_items = []
+            if isinstance(raw_vocab_summary, dict):
+                vocab_items = [raw_vocab_summary]
+            elif isinstance(raw_vocab_summary, list):
+                vocab_items = raw_vocab_summary[:]
+
+            # 🔧 如果 summarizer 完全没有返回任何 vocab，但当前 clearly 有选中的 token，
+            # 则回退为：直接把当前选中的单词当作本轮的唯一 vocab
+            if not vocab_items and current_token_text:
+                print(f"🆕 [DEBUG] summarizer 未返回 vocab，回退使用当前选中单词: '{current_token_text}'")
+                vocab_items = [{"vocab": current_token_text}]
+
+            filtered_items = []
+            seen = set()
+            for item in vocab_items:
+                vocab_str = item.get("vocab", "Unknown")
+                if not _accept_vocab(vocab_str):
+                    continue
+                key = vocab_str.strip().lower()
+                if key in seen:
+                    # 🔧 去重：同一轮中同一个词只处理一次，避免重复添加 example
+                    continue
+                seen.add(key)
+                filtered_items.append(vocab_str)
+
+            # 如果根据当前 token 过滤后一个都没有，但确实有 vocab，总体退回“接受全部”
+            if not filtered_items and vocab_items:
+                filtered_items = []
+                seen = set()
+                for item in vocab_items:
+                    vocab_str = item.get("vocab", "Unknown")
+                    key = vocab_str.strip().lower()
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    filtered_items.append(vocab_str)
+
+            for vocab_str in filtered_items:
+                self.session_state.add_vocab_summary(vocab_str)
 
         # 语法处理：检查相似度，为现有规则添加例句或添加新规则
         if DISABLE_GRAMMAR_FEATURES:
             print("⏸️ [MainAssistant] Grammar compare/new-rule flow disabled — skipping grammar pipeline")
-            current_grammar_rule_names = []
+            current_grammar_rules = []
             new_grammar_summaries = []
+            article_language = None
         else:
             print("🔍 处理语法规则：检查相似度...")
-        
-            current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
-            print(f"📚 当前已有 {len(current_grammar_rule_names)} 个语法规则")
-            print(f"📚 现有语法规则列表: {current_grammar_rule_names}")
+            
+            # 🔧 获取当前文章的language字段
+            current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
+            article_language = None
+            user_id = getattr(self.session_state, 'user_id', None)
+            
+            if current_sentence and hasattr(current_sentence, 'text_id') and user_id:
+                try:
+                    from database_system.database_manager import DatabaseManager
+                    from database_system.business_logic.models import OriginalText
+                    db_manager = DatabaseManager('development')
+                    session = db_manager.get_session()
+                    try:
+                        text_model = session.query(OriginalText).filter(
+                            OriginalText.text_id == current_sentence.text_id,
+                            OriginalText.user_id == user_id
+                        ).first()
+                        if text_model:
+                            article_language = text_model.language
+                            print(f"🔍 [DEBUG] 获取文章language: {article_language} (text_id={current_sentence.text_id})")
+                        else:
+                            print(f"⚠️ [DEBUG] 文章不存在: text_id={current_sentence.text_id}, user_id={user_id}")
+                    finally:
+                        session.close()
+                except Exception as e:
+                    print(f"⚠️ [DEBUG] 获取文章language失败: {e}")
+            
+            # 🔧 获取所有现有语法规则（包含language信息），而不是只获取名称
+            current_grammar_rules = []
+            if user_id:
+                try:
+                    from database_system.database_manager import DatabaseManager
+                    from database_system.business_logic.models import GrammarRule
+                    db_manager = DatabaseManager('development')
+                    session = db_manager.get_session()
+                    try:
+                        # 🔧 直接查询数据库，只获取当前用户的语法规则
+                        grammar_models = session.query(GrammarRule).filter(
+                            GrammarRule.user_id == user_id
+                        ).all()
+                        # 构建规则字典：{name, rule_id, language}
+                        for rule_model in grammar_models:
+                            current_grammar_rules.append({
+                                'name': rule_model.rule_name,
+                                'rule_id': rule_model.rule_id,
+                                'language': rule_model.language
+                            })
+                        print(f"📚 当前已有 {len(current_grammar_rules)} 个语法规则（包含language信息，user_id={user_id}）")
+                    finally:
+                        session.close()
+                except Exception as e:
+                    print(f"⚠️ [DEBUG] 从数据库获取语法规则失败: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # 回退到文件系统管理器
+                    current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
+                    current_grammar_rules = [{'name': name, 'rule_id': None, 'language': None} for name in current_grammar_rule_names]
+            else:
+                # 没有user_id，使用文件系统管理器
+                current_grammar_rule_names = self.data_controller.grammar_manager.get_all_rules_name()
+                current_grammar_rules = [{'name': name, 'rule_id': None, 'language': None} for name in current_grammar_rule_names]
+            
+            print(f"📚 现有语法规则列表: {[r['name'] for r in current_grammar_rules]}")
             new_grammar_summaries = []
         
         for result in self.session_state.summarized_results:
             if isinstance(result, GrammarSummary):
-                print(f"🔍 检查语法规则: {result.grammar_rule_name}")
+                print(f"🔍 检查语法规则: {result.grammar_rule_name} (文章language: {article_language})")
                 has_similar = False
                 
-                # 检查是否与现有语法相似
-                for existing_rule in current_grammar_rule_names:
+                # 🔧 仅对比相同语言的语法规则
+                for existing_rule_info in current_grammar_rules:
+                    existing_rule = existing_rule_info['name']
+                    existing_rule_language = existing_rule_info.get('language')
+                    
+                    # 🔧 语言过滤逻辑：
+                    # 1. 如果现有规则没有language字段，直接跳过（不参与对比）
+                    if existing_rule_language is None:
+                        print(f"🔍 [DEBUG] 跳过无language的语法规则: '{existing_rule}' (现有规则无language字段，不参与对比)")
+                        continue
+                    
+                    # 2. 如果现有规则有language，但文章没有language，跳过（避免混淆）
+                    if article_language is None:
+                        print(f"🔍 [DEBUG] 跳过对比：文章无language，现有规则有language='{existing_rule_language}'")
+                        continue
+                    
+                    # 3. 如果文章和现有规则都有language，只对比相同语言的
+                    if article_language != existing_rule_language:
+                        print(f"🔍 [DEBUG] 跳过不同语言的语法规则: '{existing_rule}' (language={existing_rule_language}) vs 文章language={article_language}")
+                        continue
+                    
+                    # 4. 只有文章和现有规则的language相同，才进行对比
                     print(f"🔍 [DEBUG] 比较语法规则: '{existing_rule}' vs '{result.grammar_rule_name}'")
                     compare_result = self.compare_grammar_rule_assistant.run(
                         existing_rule,
@@ -359,9 +500,16 @@ class MainAssistant:
                     print(f"🔍 [DEBUG] 最终相似度判断: {is_similar}")
                     
                     if is_similar:
-                        print(f"✅ 语法规则 '{result.grammar_rule_name}' 与现有规则 '{existing_rule}' 相似")
+                        print(f"✅ 语法规则 '{result.grammar_rule_name}' 与现有规则 '{existing_rule}' 相似 (language={existing_rule_language})")
                         has_similar = True
-                        existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
+                        # 🔧 使用从数据库获取的rule_id，如果没有则回退到文件系统管理器
+                        existing_rule_id = existing_rule_info.get('rule_id')
+                        if existing_rule_id is None:
+                            try:
+                                existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
+                            except ValueError:
+                                print(f"⚠️ [DEBUG] 无法获取rule_id: {existing_rule}")
+                                continue
                         
                         # 为现有语法规则添加新例句
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
@@ -422,25 +570,74 @@ class MainAssistant:
                                 if success:
                                     print(f"✅ [DEBUG] 现有语法的grammar_notation创建成功")
                                     # 记录到 session_state 以便返回给前端
+                                    # 🔧 使用实际的 user_id（整数）而不是字符串
+                                    actual_user_id = getattr(self.session_state, 'user_id', None)
                                     self.session_state.add_created_grammar_notation(
                                         text_id=current_sentence.text_id,
                                         sentence_id=current_sentence.sentence_id,
                                         grammar_id=existing_rule_id,
-                                        marked_token_ids=token_indices
+                                        marked_token_ids=token_indices,
+                                        user_id=actual_user_id
                                     )
                                     print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建完成 ==========")
                                 else:
                                     print(f"❌ [DEBUG] 现有语法的grammar_notation创建失败")
                                     print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建失败 ==========")
                                 
-                                # 然后添加grammar example
-                                self.data_controller.add_grammar_example(
-                                    rule_id=existing_rule_id,
-                                    text_id=current_sentence.text_id,
-                                    sentence_id=current_sentence.sentence_id,
-                                    explanation_context=example_explanation
-                                )
-                                print(f"✅ [DEBUG] 现有语法的grammar_example添加成功")
+                                # 🔧 修复：如果使用数据库管理器创建了 grammar，也应该使用数据库管理器创建 example
+                                user_id = getattr(self.session_state, 'user_id', None)
+                                if user_id:
+                                    try:
+                                        from database_system.database_manager import DatabaseManager
+                                        from backend.data_managers import GrammarRuleManagerDB
+                                        from database_system.business_logic.models import OriginalText
+                                        db_manager = DatabaseManager('development')
+                                        session = db_manager.get_session()
+                                        try:
+                                            # 🔧 先检查text_id是否存在于数据库中且属于当前用户
+                                            text_model = session.query(OriginalText).filter(
+                                                OriginalText.text_id == current_sentence.text_id,
+                                                OriginalText.user_id == user_id
+                                            ).first()
+                                            if not text_model:
+                                                print(f"⚠️ [DEBUG] 跳过添加grammar_example，因为text_id={current_sentence.text_id}不存在或不属于用户{user_id}")
+                                                continue
+                                            
+                                            grammar_db_manager = GrammarRuleManagerDB(session)
+                                            grammar_db_manager.add_grammar_example(
+                                                rule_id=existing_rule_id,
+                                                text_id=current_sentence.text_id,
+                                                sentence_id=current_sentence.sentence_id,
+                                                explanation_context=example_explanation
+                                            )
+                                            print(f"✅ [DEBUG] 现有语法的grammar_example已添加到数据库: rule_id={existing_rule_id}, text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                                        finally:
+                                            session.close()
+                                    except Exception as e:
+                                        print(f"❌ [DEBUG] 使用数据库管理器创建grammar_example失败: {e}")
+                                        import traceback
+                                        traceback.print_exc()
+                                        # 回退到文件系统管理器
+                                        print(f"⚠️ [DEBUG] 回退到文件系统管理器")
+                                        if existing_rule_id in self.data_controller.grammar_manager.grammar_bundles:
+                                            self.data_controller.add_grammar_example(
+                                                rule_id=existing_rule_id,
+                                                text_id=current_sentence.text_id,
+                                                sentence_id=current_sentence.sentence_id,
+                                                explanation_context=example_explanation
+                                            )
+                                            print(f"✅ [DEBUG] 现有语法的grammar_example添加成功（文件系统）")
+                                        else:
+                                            print(f"⚠️ [DEBUG] rule_id={existing_rule_id} 不在 global_dc 中，跳过添加到文件系统")
+                                else:
+                                    # 没有user_id，使用文件系统管理器
+                                    self.data_controller.add_grammar_example(
+                                        rule_id=existing_rule_id,
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        explanation_context=example_explanation
+                                    )
+                                    print(f"✅ [DEBUG] 现有语法的grammar_example添加成功（文件系统）")
                                     
                             except ValueError as e:
                                 print(f"⚠️ [DEBUG] 跳过添加现有语法的grammar_example，因为: {e}")
@@ -448,9 +645,9 @@ class MainAssistant:
                                 print(f"❌ [DEBUG] 添加现有语法的grammar_example时发生错误: {e}")
                         break
                 
-                # 如果没有相似的，添加为新语法
+                # 🔧 如果没有相似的（在相同语言中），添加为新语法（继承文章的language）
                 if not has_similar:
-                    print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加为新规则")
+                    print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加为新规则 (继承文章language: {article_language})")
                     new_grammar_summaries.append(result)
         
         # 将新语法添加到 grammar_to_add
@@ -470,7 +667,39 @@ class MainAssistant:
         for i, result in enumerate(self.session_state.summarized_results):
             print(f"  {i}: {type(result)} - {result}")
         
-        current_vocab_list = self.data_controller.vocab_manager.get_all_vocab_body()
+        # 🔧 修复：优先使用数据库管理器获取当前用户的词汇列表
+        user_id = getattr(self.session_state, 'user_id', None)
+        current_vocab_list = []
+        vocab_id_map = {}  # vocab_body -> vocab_id 映射
+        
+        if user_id:
+            try:
+                from database_system.database_manager import DatabaseManager
+                from database_system.business_logic.models import VocabExpression
+                db_manager = DatabaseManager('development')
+                session = db_manager.get_session()
+                try:
+                    # 🔧 直接查询数据库，按 user_id 过滤
+                    vocab_models = session.query(VocabExpression).filter(
+                        VocabExpression.user_id == user_id
+                    ).all()
+                    current_vocab_list = [vocab.vocab_body for vocab in vocab_models]
+                    vocab_id_map = {vocab.vocab_body: vocab.vocab_id for vocab in vocab_models}
+                    print(f"🔍 [DEBUG] 从数据库获取当前用户词汇列表 (user_id={user_id}): {len(current_vocab_list)} 个词汇")
+                finally:
+                    session.close()
+            except Exception as e:
+                print(f"⚠️ [DEBUG] 使用数据库管理器获取词汇列表失败: {e}")
+                import traceback
+                traceback.print_exc()
+                # 回退到文件系统管理器
+                current_vocab_list = self.data_controller.vocab_manager.get_all_vocab_body()
+                print(f"🔍 [DEBUG] 回退到文件系统管理器，获取词汇列表: {len(current_vocab_list)} 个词汇")
+        else:
+            # 没有 user_id，使用文件系统管理器
+            current_vocab_list = self.data_controller.vocab_manager.get_all_vocab_body()
+            print(f"🔍 [DEBUG] 当前词汇列表 (文件系统): {len(current_vocab_list)} 个词汇")
+        
         print(f"🔍 [DEBUG] 当前词汇列表: {current_vocab_list}")
         
         new_vocab = []
@@ -490,7 +719,13 @@ class MainAssistant:
                     if compare_result:
                         print(f"✅ 词汇 '{vocab}' 与现有词汇 '{result.vocab}' 相似")
                         has_similar = True
-                        existing_vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab)
+                        # 🔧 修复：优先使用数据库管理器的 vocab_id_map，否则回退到文件系统管理器
+                        if vocab in vocab_id_map:
+                            existing_vocab_id = vocab_id_map[vocab]
+                            print(f"🔍 [DEBUG] 从数据库获取 vocab_id: {existing_vocab_id} (vocab='{vocab}')")
+                        else:
+                            existing_vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab)
+                            print(f"🔍 [DEBUG] 从文件系统获取 vocab_id: {existing_vocab_id} (vocab='{vocab}')")
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
                         # 验证句子完整性
                         self._ensure_sentence_integrity(current_sentence, "Vocab Explanation 调用")
@@ -506,23 +741,110 @@ class MainAssistant:
                         
                         # 检查text_id是否存在，如果不存在则跳过添加example
                         try:
-                            # 🔧 获取 token_indices（从 session_state 中的 selected_token）
+                            # 🔧 获取 token_indices（优先使用保存的 selected_token，如果不存在则从 session_state 获取）
+                            # 临时恢复 selected_token（如果它被清空了）
+                            if not self.session_state.current_selected_token and saved_selected_token:
+                                print(f"🔍 [DEBUG] 临时恢复 selected_token（在 handle_grammar_vocab_function 中）")
+                                self.session_state.set_current_selected_token(saved_selected_token)
+                            
                             token_indices = self._get_token_indices_from_selection(current_sentence)
                             print(f"🔍 [DEBUG] 尝试添加现有词汇的vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={existing_vocab_id}, token_indices={token_indices}")
-                            self.data_controller.add_vocab_example(
-                                vocab_id=existing_vocab_id,
-                                text_id=current_sentence.text_id,
-                                sentence_id=current_sentence.sentence_id,
-                                context_explanation=example_explanation,
-                                token_indices=token_indices
-                            )
-                            print(f"✅ [DEBUG] 现有词汇的vocab_example添加成功")
+                            
+                            # 🔧 修复：如果使用数据库管理器获取了 vocab_id，也应该使用数据库管理器添加 example
+                            if user_id and vocab in vocab_id_map:
+                                try:
+                                    from database_system.database_manager import DatabaseManager
+                                    from backend.data_managers import VocabManagerDB
+                                    db_manager = DatabaseManager('development')
+                                    session = db_manager.get_session()
+                                    try:
+                                        vocab_db_manager = VocabManagerDB(session)
+                                        # 🔧 确保 token_indices 是列表格式
+                                        final_token_indices = token_indices if isinstance(token_indices, list) else (list(token_indices) if token_indices else [])
+                                        print(f"🔍 [DEBUG] 最终存储的 token_indices: {final_token_indices}")
+                                        vocab_db_manager.add_vocab_example(
+                                            vocab_id=existing_vocab_id,
+                                            text_id=current_sentence.text_id,
+                                            sentence_id=current_sentence.sentence_id,
+                                            context_explanation=example_explanation,
+                                            token_indices=final_token_indices
+                                        )
+                                        print(f"✅ [DEBUG] 现有词汇的vocab_example已添加到数据库: vocab_id={existing_vocab_id}, text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_indices={final_token_indices}")
+                                    finally:
+                                        session.close()
+                                except Exception as e:
+                                    print(f"❌ [DEBUG] 使用数据库管理器添加vocab_example失败: {e}")
+                                    import traceback
+                                    traceback.print_exc()
+                                    # 回退到文件系统管理器
+                                    print(f"⚠️ [DEBUG] 回退到文件系统管理器")
+                                    self.data_controller.add_vocab_example(
+                                        vocab_id=existing_vocab_id,
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        context_explanation=example_explanation,
+                                        token_indices=token_indices
+                                    )
+                                    print(f"✅ [DEBUG] 现有词汇的vocab_example添加成功（文件系统）")
+                            else:
+                                # 没有 user_id 或不在 vocab_id_map 中，使用文件系统管理器
+                                self.data_controller.add_vocab_example(
+                                    vocab_id=existing_vocab_id,
+                                    text_id=current_sentence.text_id,
+                                    sentence_id=current_sentence.sentence_id,
+                                    context_explanation=example_explanation,
+                                    token_indices=token_indices
+                                )
+                                print(f"✅ [DEBUG] 现有词汇的vocab_example添加成功（文件系统）")
 
                             # 🔧 新增：为现有词汇创建 vocab notation（用于前端实时显示绿色下划线）
                             try:
                                 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
                                 notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                                 token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
+                                
+                                # 🔧 如果 token_id 为空，尝试从句子中查找匹配的 token
+                                if token_id is None and hasattr(current_sentence, 'tokens') and current_sentence.tokens:
+                                    # 获取词汇名称（从 result.vocab 或从数据库查询）
+                                    vocab_body = getattr(result, 'vocab', None)
+                                    if not vocab_body:
+                                        # 尝试从数据库获取词汇名称
+                                        try:
+                                            user_id = getattr(self.session_state, 'user_id', None)
+                                            if user_id:
+                                                from database_system.database_manager import DatabaseManager
+                                                from database_system.business_logic.models import VocabExpression
+                                                db_manager = DatabaseManager('development')
+                                                session = db_manager.get_session()
+                                                try:
+                                                    vocab_model = session.query(VocabExpression).filter(
+                                                        VocabExpression.vocab_id == existing_vocab_id,
+                                                        VocabExpression.user_id == user_id
+                                                    ).first()
+                                                    if vocab_model:
+                                                        vocab_body = vocab_model.vocab_body
+                                                finally:
+                                                    session.close()
+                                        except Exception as e:
+                                            print(f"⚠️ [DEBUG] 无法获取词汇名称: {e}")
+                                    
+                                    if vocab_body:
+                                        vocab_body_lower = vocab_body.lower().strip()
+                                        import string
+                                        def strip_punctuation(text: str) -> str:
+                                            return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+                                        
+                                        vocab_clean = strip_punctuation(vocab_body_lower)
+                                        print(f"🔍 [DEBUG] 尝试从句子中查找匹配的token（现有词汇），vocab='{vocab_body}' (清理后='{vocab_clean}')")
+                                        
+                                        for token in current_sentence.tokens:
+                                            if hasattr(token, 'token_type') and token.token_type == 'text':
+                                                if hasattr(token, 'token_body') and hasattr(token, 'sentence_token_id'):
+                                                    token_clean = strip_punctuation(token.token_body.lower())
+                                                    if token_clean == vocab_clean and token.sentence_token_id is not None:
+                                                        token_id = token.sentence_token_id
+                                                        print(f"✅ [DEBUG] 在句子中找到匹配的token（现有词汇）: '{token.token_body}' → sentence_token_id={token_id}")
+                                                        break
                                 
                                 # 获取user_id（优先使用session_state中的user_id）
                                 user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
@@ -540,16 +862,21 @@ class MainAssistant:
                                     print(f"✅ [DEBUG] vocab_notation创建结果: {v_ok}")
                                     if v_ok:
                                         # 记录到 session_state
+                                        # 🔧 使用实际的 user_id（整数）而不是字符串
+                                        actual_user_id = getattr(self.session_state, 'user_id', None)
                                         self.session_state.add_created_vocab_notation(
                                             text_id=current_sentence.text_id,
                                             sentence_id=current_sentence.sentence_id,
                                             token_id=token_id,
-                                            vocab_id=existing_vocab_id
+                                            vocab_id=existing_vocab_id,
+                                            user_id=actual_user_id
                                         )
                                 else:
-                                    print("⚠️ [DEBUG] 无法创建vocab notation：token_id为空")
+                                    print("⚠️ [DEBUG] 无法创建vocab notation：token_id为空（已尝试从句子中查找但未找到匹配的token）")
                             except Exception as vn_err:
                                 print(f"❌ [DEBUG] 创建vocab_notation时发生错误: {vn_err}")
+                                import traceback
+                                traceback.print_exc()
                         except ValueError as e:
                             print(f"⚠️ [DEBUG] 跳过添加现有词汇的vocab_example，因为: {e}")
                             print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
@@ -577,6 +904,39 @@ class MainAssistant:
         print(f"🔍 [DEBUG] grammar_to_add 长度: {len(self.session_state.grammar_to_add) if self.session_state.grammar_to_add else 0}")
         print(f"🔍 [DEBUG] vocab_to_add 长度: {len(self.session_state.vocab_to_add) if self.session_state.vocab_to_add else 0}")
         
+        # 🔧 保存 selected_token 的引用（避免在后续处理中被清空）
+        saved_selected_token = self.session_state.current_selected_token
+        print(f"🔍 [DEBUG] 保存 selected_token 引用: {saved_selected_token is not None}")
+        if saved_selected_token:
+            print(f"🔍 [DEBUG] selected_token.token_text: '{getattr(saved_selected_token, 'token_text', None)}'")
+            print(f"🔍 [DEBUG] selected_token.token_indices: {getattr(saved_selected_token, 'token_indices', None)}")
+        
+        # 🔧 获取当前文章的language字段
+        current_sentence = self.session_state.current_sentence
+        article_language = None
+        user_id = getattr(self.session_state, 'user_id', None)
+        
+        if current_sentence and hasattr(current_sentence, 'text_id') and user_id:
+            try:
+                from database_system.database_manager import DatabaseManager
+                from database_system.business_logic.models import OriginalText
+                db_manager = DatabaseManager('development')
+                session = db_manager.get_session()
+                try:
+                    text_model = session.query(OriginalText).filter(
+                        OriginalText.text_id == current_sentence.text_id,
+                        OriginalText.user_id == user_id
+                    ).first()
+                    if text_model:
+                        article_language = text_model.language
+                        print(f"🔍 [DEBUG] 获取文章language: {article_language} (text_id={current_sentence.text_id})")
+                    else:
+                        print(f"⚠️ [DEBUG] 文章不存在: text_id={current_sentence.text_id}, user_id={user_id}")
+                finally:
+                    session.close()
+            except Exception as e:
+                print(f"⚠️ [DEBUG] 获取文章language失败: {e}")
+        
         if DISABLE_GRAMMAR_FEATURES:
             print("⏸️ [MainAssistant] Grammar add/new-example disabled — skip grammar_to_add processing")
         elif self.session_state.grammar_to_add:
@@ -584,12 +944,51 @@ class MainAssistant:
             for grammar in self.session_state.grammar_to_add:
                 print(f"🔍 [DEBUG] 处理新语法: {grammar.rule_name}")
                 
-                # 添加新语法规则
-                self.data_controller.add_new_grammar_rule(
-                    rule_name=grammar.rule_name,
-                    rule_explanation=grammar.rule_explanation
-                )
-                print(f"✅ [DEBUG] 新语法规则已添加")
+                # 🔧 直接使用数据库管理器创建语法规则（传递language参数）
+                grammar_rule_id = None
+                if user_id:
+                    try:
+                        from database_system.database_manager import DatabaseManager
+                        from backend.data_managers import GrammarRuleManagerDB
+                        db_manager = DatabaseManager('development')
+                        session = db_manager.get_session()
+                        try:
+                            grammar_db_manager = GrammarRuleManagerDB(session)
+                            grammar_dto = grammar_db_manager.add_new_rule(
+                                name=grammar.rule_name,
+                                explanation=grammar.rule_explanation,
+                                source="qa",
+                                is_starred=False,
+                                user_id=user_id,
+                                language=article_language  # 🔧 传递文章的language字段
+                            )
+                            grammar_rule_id = grammar_dto.rule_id
+                            print(f"✅ [DEBUG] 新语法规则已添加到数据库: rule_id={grammar_rule_id}, language={article_language}")
+                        finally:
+                            session.close()
+                    except Exception as e:
+                        print(f"❌ [DEBUG] 使用数据库管理器创建语法规则失败: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        # 回退到文件系统管理器
+                        print(f"⚠️ [DEBUG] 回退到文件系统管理器")
+                        grammar_rule_id = self.data_controller.add_new_grammar_rule(
+                            rule_name=grammar.rule_name,
+                            rule_explanation=grammar.rule_explanation
+                        )
+                else:
+                    # 没有user_id，使用文件系统管理器
+                    grammar_rule_id = self.data_controller.add_new_grammar_rule(
+                        rule_name=grammar.rule_name,
+                        rule_explanation=grammar.rule_explanation
+                    )
+                    print(f"✅ [DEBUG] 新语法规则已添加到文件系统: rule_id={grammar_rule_id}")
+                
+                if grammar_rule_id is None:
+                    print(f"❌ [DEBUG] 无法获取grammar_rule_id，跳过添加例句")
+                    continue
+                
+                print(f"✅ [DEBUG] 新语法规则已添加: rule_id={grammar_rule_id}")
                 
                 # 为这个语法规则生成例句
                 current_sentence = self.session_state.current_sentence
@@ -605,15 +1004,68 @@ class MainAssistant:
                     
                     # 添加语法例句
                     try:
-                        grammar_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(grammar.rule_name)
+                        # 🔧 直接使用创建时获取的grammar_rule_id
+                        
                         print(f"🔍 [DEBUG] 尝试添加grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={grammar_rule_id}")
-                        self.data_controller.add_grammar_example(
-                            rule_id=grammar_rule_id,
-                            text_id=current_sentence.text_id,
-                            sentence_id=current_sentence.sentence_id,
-                            explanation_context=example_explanation
-                        )
-                        print(f"✅ [DEBUG] grammar_example添加成功")
+                        # 🔧 修复：如果使用数据库管理器创建了 grammar，也应该使用数据库管理器创建 example
+                        user_id = getattr(self.session_state, 'user_id', None)
+                        if user_id:
+                            try:
+                                from database_system.database_manager import DatabaseManager
+                                from backend.data_managers import GrammarRuleManagerDB
+                                from database_system.business_logic.models import OriginalText
+                                db_manager = DatabaseManager('development')
+                                session = db_manager.get_session()
+                                try:
+                                    # 🔧 先检查text_id是否存在于数据库中且属于当前用户
+                                    text_model = session.query(OriginalText).filter(
+                                        OriginalText.text_id == current_sentence.text_id,
+                                        OriginalText.user_id == user_id
+                                    ).first()
+                                    if not text_model:
+                                        print(f"⚠️ [DEBUG] 跳过添加grammar_example，因为text_id={current_sentence.text_id}不存在或不属于用户{user_id}")
+                                        continue
+                                    
+                                    # 🔧 如果grammar_rule_id还没有获取，说明创建失败，跳过
+                                    if grammar_rule_id is None:
+                                        print(f"❌ [DEBUG] 无法获取grammar_rule_id，跳过添加例句")
+                                        continue
+                                    
+                                    grammar_db_manager = GrammarRuleManagerDB(session)
+                                    grammar_db_manager.add_grammar_example(
+                                        rule_id=grammar_rule_id,
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        explanation_context=example_explanation
+                                    )
+                                    print(f"✅ [DEBUG] grammar_example已添加到数据库: rule_id={grammar_rule_id}, text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                                finally:
+                                    session.close()
+                            except Exception as e:
+                                print(f"❌ [DEBUG] 使用数据库管理器创建grammar_example失败: {e}")
+                                import traceback
+                                traceback.print_exc()
+                                # 回退到文件系统管理器
+                                print(f"⚠️ [DEBUG] 回退到文件系统管理器")
+                                if grammar_rule_id in self.data_controller.grammar_manager.grammar_bundles:
+                                    self.data_controller.add_grammar_example(
+                                        rule_id=grammar_rule_id,
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        explanation_context=example_explanation
+                                    )
+                                    print(f"✅ [DEBUG] grammar_example添加成功（文件系统）")
+                                else:
+                                    print(f"⚠️ [DEBUG] rule_id={grammar_rule_id} 不在 global_dc 中，跳过添加到文件系统")
+                        else:
+                            # 没有user_id，使用文件系统管理器
+                            self.data_controller.add_grammar_example(
+                                rule_id=grammar_rule_id,
+                                text_id=current_sentence.text_id,
+                                sentence_id=current_sentence.sentence_id,
+                                explanation_context=example_explanation
+                            )
+                            print(f"✅ [DEBUG] grammar_example添加成功（文件系统）")
                         
                         # 🔧 新增：创建grammar notation
                         try:
@@ -659,11 +1111,14 @@ class MainAssistant:
                             if success:
                                 print(f"✅ [DEBUG] grammar_notation创建成功")
                                 # 记录到 session_state 以便返回给前端
+                                # 🔧 使用实际的 user_id（整数）而不是字符串
+                                actual_user_id = getattr(self.session_state, 'user_id', None)
                                 self.session_state.add_created_grammar_notation(
                                     text_id=current_sentence.text_id,
                                     sentence_id=current_sentence.sentence_id,
                                     grammar_id=grammar_rule_id,
-                                    marked_token_ids=token_indices
+                                    marked_token_ids=token_indices,
+                                    user_id=actual_user_id
                                 )
                                 print(f"🔍 [DEBUG] ========== 新语法grammar notation创建完成 ==========")
                             else:
@@ -700,21 +1155,67 @@ class MainAssistant:
                     )
                     print(f"🔍 [DEBUG] vocab_explanation结果: {vocab_explanation}")
                     # 解析JSON响应
-                    if isinstance(vocab_explanation, str):
+                    if isinstance(vocab_explanation, dict):
+                        # 如果已经是字典，直接提取 explanation 字段
+                        explanation_text = vocab_explanation.get("explanation", "No explanation provided")
+                    elif isinstance(vocab_explanation, str):
+                        # 如果是字符串，尝试解析 JSON
                         try:
                             import json
+                            # 尝试解析可能是字典格式的字符串（如 "{'explanation': '...'}" 或 '{"explanation": "..."}'）
+                            # 先尝试直接解析 JSON
                             explanation_data = json.loads(vocab_explanation)
                             explanation_text = explanation_data.get("explanation", "No explanation provided")
-                        except:
-                            explanation_text = vocab_explanation
+                        except json.JSONDecodeError:
+                            # 如果不是标准 JSON，尝试处理 Python 字典格式的字符串
+                            try:
+                                # 处理单引号格式的字典字符串
+                                import ast
+                                explanation_data = ast.literal_eval(vocab_explanation)
+                                if isinstance(explanation_data, dict):
+                                    explanation_text = explanation_data.get("explanation", "No explanation provided")
+                                else:
+                                    explanation_text = vocab_explanation
+                            except:
+                                explanation_text = vocab_explanation
                     else:
+                        # 其他类型，转换为字符串
                         explanation_text = str(vocab_explanation)
                 else:
                     explanation_text = "No explanation provided"
                 
                 print(f"🔍 [DEBUG] 添加新词汇到数据库: {vocab.vocab}")
-                # 添加新词汇
-                self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation=explanation_text)
+                # 🔧 直接使用数据库管理器创建词汇（传递language参数）
+                vocab_id = None
+                if user_id:
+                    try:
+                        from database_system.database_manager import DatabaseManager
+                        from backend.data_managers import VocabManagerDB
+                        db_manager = DatabaseManager('development')
+                        session = db_manager.get_session()
+                        try:
+                            vocab_db_manager = VocabManagerDB(session)
+                            vocab_dto = vocab_db_manager.add_new_vocab(
+                                vocab_body=vocab.vocab,
+                                explanation=explanation_text,
+                                source="qa",
+                                is_starred=False,
+                                user_id=user_id,
+                                language=article_language  # 🔧 传递文章的language字段
+                            )
+                            vocab_id = vocab_dto.vocab_id
+                            print(f"✅ [DEBUG] 新词汇已添加到数据库: vocab_id={vocab_id}, language={article_language}")
+                        finally:
+                            session.close()
+                    except Exception as e:
+                        print(f"❌ [DEBUG] 使用数据库管理器创建词汇失败: {e}")
+                        # 回退到文件系统管理器
+                        print(f"⚠️ [DEBUG] 回退到文件系统管理器")
+                        vocab_id = self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation=explanation_text)
+                else:
+                    # 没有user_id，使用文件系统管理器
+                    vocab_id = self.data_controller.add_new_vocab(vocab_body=vocab.vocab, explanation=explanation_text)
+                    print(f"✅ [DEBUG] 新词汇已添加到文件系统: vocab_id={vocab_id}")
                 
                 # 生成词汇例句解释
                 if current_sentence:
@@ -749,24 +1250,98 @@ class MainAssistant:
                             finally:
                                 session.close()
                         
-                        vocab_id = self.data_controller.vocab_manager.get_id_by_vocab_body(vocab.vocab)
-                        # 🔧 获取 token_indices（从 session_state 中的 selected_token）
+                        # 🔧 如果vocab_id还没有获取，说明创建失败，跳过
+                        if vocab_id is None:
+                            print(f"❌ [DEBUG] 无法获取vocab_id，跳过添加例句")
+                            continue
+                        
+                        # 🔧 获取 token_indices（优先使用保存的 selected_token，如果不存在则从 session_state 获取）
+                        # 临时恢复 selected_token（如果它被清空了）
+                        if not self.session_state.current_selected_token and saved_selected_token:
+                            print(f"🔍 [DEBUG] 临时恢复 selected_token（在 add_new_to_data 中）")
+                            self.session_state.set_current_selected_token(saved_selected_token)
+                        
                         token_indices = self._get_token_indices_from_selection(current_sentence)
                         print(f"🔍 [DEBUG] 尝试添加vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={vocab_id}, token_indices={token_indices}")
-                        self.data_controller.add_vocab_example(
-                            vocab_id=vocab_id,
-                            text_id=current_sentence.text_id,
-                            sentence_id=current_sentence.sentence_id,
-                            context_explanation=example_explanation,
-                            token_indices=token_indices
-                        )
+                        print(f"🔍 [DEBUG] token_indices 类型: {type(token_indices)}, 值: {token_indices}")
+                        
+                        # 🔧 修复：如果使用数据库管理器创建了 vocab，也应该使用数据库管理器创建 example
+                        if user_id:
+                            try:
+                                from database_system.database_manager import DatabaseManager
+                                from backend.data_managers import VocabManagerDB
+                                db_manager = DatabaseManager('development')
+                                session = db_manager.get_session()
+                                try:
+                                    vocab_db_manager = VocabManagerDB(session)
+                                    # 🔧 确保 token_indices 是列表格式
+                                    final_token_indices = token_indices if isinstance(token_indices, list) else (list(token_indices) if token_indices else [])
+                                    print(f"🔍 [DEBUG] 最终存储的 token_indices: {final_token_indices}")
+                                    vocab_db_manager.add_vocab_example(
+                                        vocab_id=vocab_id,
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        context_explanation=example_explanation,
+                                        token_indices=final_token_indices
+                                    )
+                                    print(f"✅ [DEBUG] vocab_example 已添加到数据库: vocab_id={vocab_id}, text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_indices={final_token_indices}")
+                                finally:
+                                    session.close()
+                            except Exception as e:
+                                print(f"❌ [DEBUG] 使用数据库管理器创建vocab_example失败: {e}")
+                                import traceback
+                                traceback.print_exc()
+                                # 回退到文件系统管理器
+                                print(f"⚠️ [DEBUG] 回退到文件系统管理器")
+                                # 🔧 注意：如果 vocab 在数据库中，但不在 global_dc 中，这里会失败
+                                # 所以需要先检查 vocab_id 是否在 global_dc 中
+                                if vocab_id in self.data_controller.vocab_manager.vocab_bundles:
+                                    self.data_controller.add_vocab_example(
+                                        vocab_id=vocab_id,
+                                        text_id=current_sentence.text_id,
+                                        sentence_id=current_sentence.sentence_id,
+                                        context_explanation=example_explanation,
+                                        token_indices=token_indices
+                                    )
+                                else:
+                                    print(f"⚠️ [DEBUG] vocab_id={vocab_id} 不在 global_dc 中，跳过添加到文件系统")
+                        else:
+                            # 没有user_id，使用文件系统管理器
+                            self.data_controller.add_vocab_example(
+                                vocab_id=vocab_id,
+                                text_id=current_sentence.text_id,
+                                sentence_id=current_sentence.sentence_id,
+                                context_explanation=example_explanation,
+                                token_indices=token_indices
+                            )
                         print(f"✅ [DEBUG] vocab_example添加成功")
 
                         # 🔧 新增：为新词汇创建 vocab notation（用于前端实时显示绿色下划线，使用数据库）
                         try:
                             from backend.data_managers.unified_notation_manager import get_unified_notation_manager
                             notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
-                            token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
+                            # 🔧 确保使用和 vocab_example 相同的 token_indices
+                            token_id = token_indices[0] if isinstance(token_indices, list) and len(token_indices) > 0 else None
+                            print(f"🔍 [DEBUG] 创建 vocab notation 使用的 token_id: {token_id} (来自 token_indices={token_indices})")
+                            
+                            # 🔧 如果 token_id 为空，尝试从句子中查找匹配的 token
+                            if token_id is None and hasattr(current_sentence, 'tokens') and current_sentence.tokens:
+                                vocab_body_lower = vocab.vocab.lower().strip()
+                                import string
+                                def strip_punctuation(text: str) -> str:
+                                    return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+                                
+                                vocab_clean = strip_punctuation(vocab_body_lower)
+                                print(f"🔍 [DEBUG] 尝试从句子中查找匹配的token，vocab='{vocab.vocab}' (清理后='{vocab_clean}')")
+                                
+                                for token in current_sentence.tokens:
+                                    if hasattr(token, 'token_type') and token.token_type == 'text':
+                                        if hasattr(token, 'token_body') and hasattr(token, 'sentence_token_id'):
+                                            token_clean = strip_punctuation(token.token_body.lower())
+                                            if token_clean == vocab_clean and token.sentence_token_id is not None:
+                                                token_id = token.sentence_token_id
+                                                print(f"✅ [DEBUG] 在句子中找到匹配的token: '{token.token_body}' → sentence_token_id={token_id}")
+                                                break
                             
                             # 获取user_id（优先使用session_state中的user_id）
                             user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
@@ -784,16 +1359,21 @@ class MainAssistant:
                                 print(f"✅ [DEBUG] 新词汇 vocab_notation创建结果: {v_ok}")
                                 if v_ok:
                                     # 记录到 session_state
+                                    # 🔧 使用实际的 user_id（整数）而不是字符串
+                                    actual_user_id = getattr(self.session_state, 'user_id', None)
                                     self.session_state.add_created_vocab_notation(
                                         text_id=current_sentence.text_id,
                                         sentence_id=current_sentence.sentence_id,
                                         token_id=token_id,
-                                        vocab_id=vocab_id
+                                        vocab_id=vocab_id,
+                                        user_id=actual_user_id
                                     )
                             else:
-                                print("⚠️ [DEBUG] 无法创建新词汇 vocab notation：token_id为空")
+                                print("⚠️ [DEBUG] 无法创建新词汇 vocab notation：token_id为空（已尝试从句子中查找但未找到匹配的token）")
                         except Exception as vn_err:
                             print(f"❌ [DEBUG] 创建新词汇 vocab_notation时发生错误: {vn_err}")
+                            import traceback
+                            traceback.print_exc()
                     except ValueError as e:
                         print(f"⚠️ [DEBUG] 跳过添加vocab_example，因为: {e}")
                         print(f"🔍 [DEBUG] 句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")

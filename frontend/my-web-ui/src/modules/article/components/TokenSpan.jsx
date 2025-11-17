@@ -82,24 +82,48 @@ export default function TokenSpan({
 
   // 优先检查 vocab notation（从新API加载）
   // vocab notation是数据源，asked tokens只是兼容层
-  // 使用useMemo缓存计算结果，避免每次渲染都重新计算
-  const vocabNotationsForSentence = useMemo(() => {
-    return typeof getVocabNotationsForSentence === 'function'
-      ? getVocabNotationsForSentence(sentenceId)
-      : []
-  }, [getVocabNotationsForSentence, sentenceId])
+  // 🔧 移除 useMemo，直接调用函数，确保每次渲染都能获取最新数据
+  const vocabNotationsForSentence = typeof getVocabNotationsForSentence === 'function'
+    ? getVocabNotationsForSentence(sentenceId)
+    : []
+  
+  console.log('🔍 [TokenSpan] 渲染检查:', {
+    sentenceId,
+    tokenSentenceTokenId,
+    vocabNotationsForSentenceCount: vocabNotationsForSentence?.length || 0,
+    vocabNotationsForSentence: vocabNotationsForSentence,
+    getVocabNotationsForSentenceType: typeof getVocabNotationsForSentence
+  })
   
   // 使用useMemo缓存匹配结果，避免每次渲染都重新计算
   const hasVocabNotationForToken = useMemo(() => {
     if (!Array.isArray(vocabNotationsForSentence) || tokenSentenceTokenId == null) {
+      console.log('🔍 [TokenSpan] hasVocabNotationForToken: false (条件不满足)', {
+        isArray: Array.isArray(vocabNotationsForSentence),
+        tokenSentenceTokenId
+      })
       return false
     }
     const currentTokenId = Number(tokenSentenceTokenId)
-    return vocabNotationsForSentence.some(n => {
+    const result = vocabNotationsForSentence.some(n => {
       // 确保类型一致（数字比较）
       const notationTokenId = Number(n?.token_id ?? n?.token_index)
-      return notationTokenId === currentTokenId
+      const match = notationTokenId === currentTokenId
+      if (match) {
+        console.log('✅ [TokenSpan] 找到匹配的 notation:', {
+          currentTokenId,
+          notationTokenId,
+          notation: n
+        })
+      }
+      return match
     })
+    console.log('🔍 [TokenSpan] hasVocabNotationForToken 计算结果:', {
+      currentTokenId,
+      result,
+      vocabNotationsForSentenceCount: vocabNotationsForSentence.length
+    })
+    return result
   }, [vocabNotationsForSentence, tokenSentenceTokenId])
 
   // 优先使用vocab notation，asked tokens作为备用（向后兼容）

@@ -62,22 +62,23 @@ class OriginalTextManager:
         self.session = session
         self.db_manager = DBTextManager(session)
     
-    def add_text(self, text_title: str, user_id: int = None) -> TextDTO:
+    def add_text(self, text_title: str, user_id: int = None, language: str = None) -> TextDTO:
         """
         创建新文章
         
         参数:
             text_title: 文章标题
             user_id: 用户ID（必填，用于数据隔离）
+            language: 语言（中文、英文、德文），可选
             
         返回:
             TextDTO: 新创建的文章数据对象
             
         使用示例:
-            text = text_manager.add_text("我的第一篇德语文章", user_id=1)
+            text = text_manager.add_text("我的第一篇德语文章", user_id=1, language="德文")
             print(f"创建文章ID: {text.text_id}")
         """
-        text_model = self.db_manager.create_text(text_title, user_id)
+        text_model = self.db_manager.create_text(text_title, user_id, language)
         return TextAdapter.model_to_dto(text_model, include_sentences=False)
     
     def get_text_by_id(self, text_id: int, include_sentences: bool = True) -> Optional[TextDTO]:

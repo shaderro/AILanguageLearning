@@ -1,0 +1,987 @@
+{
+  "text_id": 1762952885,
+  "text_title": "Schloss Kartlow",
+  "text_by_sentence": [
+    {
+      "text_id": 1762952885,
+      "sentence_id": 1,
+      "sentence_body": "Schloss Kartlow ist ein Herrenhaus im Landkreis Vorpommern-Greifswald im Kruckower Ortsteil Kartlow.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Schloss",
+          "token_type": "text",
+          "global_token_id": 0,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "Kartlow",
+          "token_type": "text",
+          "global_token_id": 2,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 3,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "ist",
+          "token_type": "text",
+          "global_token_id": 4,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 5,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "ein",
+          "token_type": "text",
+          "global_token_id": 6,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 7,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Herrenhaus",
+          "token_type": "text",
+          "global_token_id": 8,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 9,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "im",
+          "token_type": "text",
+          "global_token_id": 10,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 11,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Landkreis",
+          "token_type": "text",
+          "global_token_id": 12,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 13,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "Vorpommern-Greifswald",
+          "token_type": "text",
+          "global_token_id": 14,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 15,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "im",
+          "token_type": "text",
+          "global_token_id": 16,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 17,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "Kruckower",
+          "token_type": "text",
+          "global_token_id": 18,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 19,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "Ortsteil",
+          "token_type": "text",
+          "global_token_id": 20,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 21,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "Kartlow",
+          "token_type": "text",
+          "global_token_id": 22,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 23,
+          "sentence_token_id": 24
+        }
+      ]
+    },
+    {
+      "text_id": 1762952885,
+      "sentence_id": 2,
+      "sentence_body": "Woldemar von Heyden gab in der Mitte des 19.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Woldemar",
+          "token_type": "text",
+          "global_token_id": 24,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 25,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "von",
+          "token_type": "text",
+          "global_token_id": 26,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 27,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "Heyden",
+          "token_type": "text",
+          "global_token_id": 28,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 29,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "gab",
+          "token_type": "text",
+          "global_token_id": 30,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 31,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "in",
+          "token_type": "text",
+          "global_token_id": 32,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 33,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 34,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 35,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Mitte",
+          "token_type": "text",
+          "global_token_id": 36,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 37,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "des",
+          "token_type": "text",
+          "global_token_id": 38,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 39,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "19",
+          "token_type": "text",
+          "global_token_id": 40,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 41,
+          "sentence_token_id": 18
+        }
+      ]
+    },
+    {
+      "text_id": 1762952885,
+      "sentence_id": 3,
+      "sentence_body": "Jahrhunderts den Auftrag zum Bau des Herrenhauses nach Plänen Friedrich Hitzigs.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Jahrhunderts",
+          "token_type": "text",
+          "global_token_id": 42,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 43,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "den",
+          "token_type": "text",
+          "global_token_id": 44,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 45,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "Auftrag",
+          "token_type": "text",
+          "global_token_id": 46,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 47,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "zum",
+          "token_type": "text",
+          "global_token_id": 48,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 49,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Bau",
+          "token_type": "text",
+          "global_token_id": 50,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 51,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "des",
+          "token_type": "text",
+          "global_token_id": 52,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 53,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Herrenhauses",
+          "token_type": "text",
+          "global_token_id": 54,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 55,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "nach",
+          "token_type": "text",
+          "global_token_id": 56,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 57,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "Plänen",
+          "token_type": "text",
+          "global_token_id": 58,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 59,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "Friedrich",
+          "token_type": "text",
+          "global_token_id": 60,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 61,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "Hitzigs",
+          "token_type": "text",
+          "global_token_id": 62,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 63,
+          "sentence_token_id": 22
+        }
+      ]
+    },
+    {
+      "text_id": 1762952885,
+      "sentence_id": 4,
+      "sentence_body": "Der Entwurf des Landschaftsparks stammt von Peter Joseph Lenné.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Der",
+          "token_type": "text",
+          "global_token_id": 64,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 65,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "Entwurf",
+          "token_type": "text",
+          "global_token_id": 66,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 67,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "des",
+          "token_type": "text",
+          "global_token_id": 68,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 69,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Landschaftsparks",
+          "token_type": "text",
+          "global_token_id": 70,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 71,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "stammt",
+          "token_type": "text",
+          "global_token_id": 72,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 73,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "von",
+          "token_type": "text",
+          "global_token_id": 74,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 75,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Peter",
+          "token_type": "text",
+          "global_token_id": 76,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 77,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "Joseph",
+          "token_type": "text",
+          "global_token_id": 78,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 79,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "Lenné",
+          "token_type": "text",
+          "global_token_id": 80,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 81,
+          "sentence_token_id": 18
+        }
+      ]
+    },
+    {
+      "text_id": 1762952885,
+      "sentence_id": 5,
+      "sentence_body": "Bis 1945 blieb das Herrenhaus im Besitz der Familie von Heyden.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Bis",
+          "token_type": "text",
+          "global_token_id": 82,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 83,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "1945",
+          "token_type": "text",
+          "global_token_id": 84,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 85,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "blieb",
+          "token_type": "text",
+          "global_token_id": 86,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 87,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "das",
+          "token_type": "text",
+          "global_token_id": 88,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 89,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Herrenhaus",
+          "token_type": "text",
+          "global_token_id": 90,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 91,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "im",
+          "token_type": "text",
+          "global_token_id": 92,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 93,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Besitz",
+          "token_type": "text",
+          "global_token_id": 94,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 95,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 96,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 97,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "Familie",
+          "token_type": "text",
+          "global_token_id": 98,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 99,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "von",
+          "token_type": "text",
+          "global_token_id": 100,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 101,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "Heyden",
+          "token_type": "text",
+          "global_token_id": 102,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 103,
+          "sentence_token_id": 22
+        }
+      ]
+    },
+    {
+      "text_id": 1762952885,
+      "sentence_id": 6,
+      "sentence_body": "Nachdem während der DDR-Zeit Wohnungen und ein Konsum eingerichtet worden waren, befindet sich das Schloss heute in Privatbesitz.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Nachdem",
+          "token_type": "text",
+          "global_token_id": 104,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 105,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "während",
+          "token_type": "text",
+          "global_token_id": 106,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 107,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 108,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 109,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "DDR-Zeit",
+          "token_type": "text",
+          "global_token_id": 110,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 111,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Wohnungen",
+          "token_type": "text",
+          "global_token_id": 112,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 113,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 114,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 115,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "ein",
+          "token_type": "text",
+          "global_token_id": 116,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 117,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "Konsum",
+          "token_type": "text",
+          "global_token_id": 118,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 119,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "eingerichtet",
+          "token_type": "text",
+          "global_token_id": 120,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 121,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "worden",
+          "token_type": "text",
+          "global_token_id": 122,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 123,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "waren",
+          "token_type": "text",
+          "global_token_id": 124,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 125,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 126,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "befindet",
+          "token_type": "text",
+          "global_token_id": 127,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 128,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "sich",
+          "token_type": "text",
+          "global_token_id": 129,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 130,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "das",
+          "token_type": "text",
+          "global_token_id": 131,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 132,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "Schloss",
+          "token_type": "text",
+          "global_token_id": 133,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 134,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "heute",
+          "token_type": "text",
+          "global_token_id": 135,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 136,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": "in",
+          "token_type": "text",
+          "global_token_id": 137,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 138,
+          "sentence_token_id": 35
+        },
+        {
+          "token_body": "Privatbesitz",
+          "token_type": "text",
+          "global_token_id": 139,
+          "sentence_token_id": 36
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 140,
+          "sentence_token_id": 37
+        }
+      ]
+    },
+    {
+      "text_id": 1762952885,
+      "sentence_id": 7,
+      "sentence_body": "Im Wirtschaftshof wird ein Gestüt betrieben.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Im",
+          "token_type": "text",
+          "global_token_id": 141,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 142,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "Wirtschaftshof",
+          "token_type": "text",
+          "global_token_id": 143,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 144,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "wird",
+          "token_type": "text",
+          "global_token_id": 145,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 146,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "ein",
+          "token_type": "text",
+          "global_token_id": 147,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 148,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Gestüt",
+          "token_type": "text",
+          "global_token_id": 149,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 150,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "betrieben",
+          "token_type": "text",
+          "global_token_id": 151,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 152,
+          "sentence_token_id": 12
+        }
+      ]
+    }
+  ]
+}

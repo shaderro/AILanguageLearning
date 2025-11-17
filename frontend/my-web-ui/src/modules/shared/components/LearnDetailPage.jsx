@@ -8,6 +8,75 @@ const LearnDetailPage = ({
   customContent = null,
   onToggleStar = null, // 新增收藏切换回调
 }) => {
+  // 解析和格式化解释文本（与 LearnCard 中的逻辑一致）
+  const parseExplanation = (text) => {
+    if (!text) return ''
+    
+    let cleanText = text
+    
+    // 1. 处理字典格式的字符串（如 "{'explanation': '...'}" 或 '{"explanation": "..."}'）
+    if (text.includes("'explanation'") || text.includes('"explanation"')) {
+      try {
+        // 尝试解析 JSON 格式
+        const jsonMatch = text.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          const jsonStr = jsonMatch[0]
+          // 先尝试标准 JSON 解析
+          try {
+            const parsed = JSON.parse(jsonStr)
+            cleanText = parsed.explanation || parsed.definition || text
+          } catch (e) {
+            // 如果不是标准 JSON，尝试处理 Python 字典格式（单引号）
+            // 使用更智能的方法：只替换键和字符串分隔符的单引号
+            // 先尝试直接提取 explanation 字段的值（支持多行和转义字符）
+            const explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
+            if (explanationMatch) {
+              cleanText = explanationMatch[1]
+                .replace(/\\n/g, '\n')  // 处理转义的换行符
+                .replace(/\\'/g, "'")   // 处理转义的单引号
+                .replace(/\\"/g, '"')   // 处理转义的双引号
+            } else {
+              // 如果正则匹配失败，尝试将单引号替换为双引号（简单处理）
+              const normalized = jsonStr.replace(/'/g, '"')
+              try {
+                const parsed = JSON.parse(normalized)
+                cleanText = parsed.explanation || parsed.definition || text
+              } catch (e2) {
+                // 如果还是失败，使用原始文本
+                cleanText = text
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // 解析失败，使用原始文本
+      }
+    }
+    
+    // 2. 处理代码块格式（```json ... ```）
+    if (cleanText.includes('```json') && cleanText.includes('```')) {
+      try {
+        const jsonMatch = cleanText.match(/```json\n(.*?)\n```/s)
+        if (jsonMatch) {
+          const jsonStr = jsonMatch[1]
+          const parsed = JSON.parse(jsonStr)
+          cleanText = parsed.explanation || parsed.definition || cleanText
+        }
+      } catch (e) {
+        // 解析失败，继续使用 cleanText
+      }
+    }
+    
+    // 3. 清理多余的转义字符和格式化
+    // 将 \n 转换为实际的换行
+    cleanText = cleanText.replace(/\\n/g, '\n')
+    // 移除多余的空白行（连续两个以上的换行符）
+    cleanText = cleanText.replace(/\n{3,}/g, '\n\n')
+    // 去除首尾空白
+    cleanText = cleanText.trim()
+    
+    return cleanText
+  }
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -94,7 +163,9 @@ const LearnDetailPage = ({
           <section>
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">完整解释</h3>
             <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-gray-800 leading-relaxed whitespace-pre-line">{data.explanation}</p>
+              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                {parseExplanation(data.explanation)}
+              </div>
             </div>
           </section>
         )}
@@ -114,9 +185,13 @@ const LearnDetailPage = ({
                       <span>句子ID: {example.sentence_id}</span>
                     </div>
                   </div>
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">
-                    {example.context_explanation}
-                  </p>
+                  <div className="text-sm text-gray-600 mb-1">
+                    <span className="font-medium">original sentence: </span>
+                    <span>{example.original_sentence ?? 'null'}</span>
+                  </div>
+                  <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                    {parseExplanation(example.context_explanation)}
+                  </div>
                   {example.token_indices && example.token_indices.length > 0 && (
                     <div className="mt-2 text-xs text-gray-500">
                       相关词汇位置: {example.token_indices.join(', ')}
@@ -151,7 +226,9 @@ const LearnDetailPage = ({
           <section>
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">规则解释</h3>
             <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-gray-800 leading-relaxed whitespace-pre-line">{data.rule_summary}</p>
+              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                {parseExplanation(data.rule_summary)}
+              </div>
             </div>
           </section>
         )}
@@ -171,9 +248,13 @@ const LearnDetailPage = ({
                       <span>句子ID: {example.sentence_id}</span>
                     </div>
                   </div>
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">
-                    {example.explanation_context}
-                  </p>
+                  <div className="text-sm text-gray-600 mb-1">
+                    <span className="font-medium">original sentence: </span>
+                    <span>{example.original_sentence ?? 'null'}</span>
+                  </div>
+                  <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                    {parseExplanation(example.explanation_context)}
+                  </div>
                 </div>
               ))}
             </div>

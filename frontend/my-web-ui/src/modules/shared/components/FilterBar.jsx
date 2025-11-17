@@ -66,6 +66,7 @@ const FilterBar = ({
                   label={filter.label}
                   options={filter.options}
                   placeholder={filter.placeholder}
+                  value={filter.value || 'all'}
                   onChange={(value) => handleFilterChange(filter.id, value)}
                   className="w-full"
                 />

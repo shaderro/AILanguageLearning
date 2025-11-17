@@ -5,6 +5,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, String
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -17,6 +18,7 @@ from backend.api.auth_routes import get_current_user
 
 # 导入数据库版本的 GrammarRuleManager
 from backend.data_managers import GrammarRuleManagerDB
+from database_system.business_logic.models import Sentence
 
 # 导入 DTO（用于类型提示和响应）
 from backend.data_managers.data_classes_new import (
@@ -57,6 +59,7 @@ class GrammarRuleCreateRequest(BaseModel):
     """创建语法规则请求"""
     name: str = Field(..., description="规则名称", example="德语定冠词变格")
     explanation: str = Field(..., description="规则解释", example="德语定冠词根据格、性、数变化")
+    language: Optional[str] = Field(None, description="语言：中文、英文、德文")
     source: str = Field(default="manual", description="来源：auto/qa/manual")
     is_starred: bool = Field(default=False, description="是否收藏")
 
@@ -65,8 +68,10 @@ class GrammarRuleUpdateRequest(BaseModel):
     """更新语法规则请求"""
     name: Optional[str] = Field(None, description="规则名称")
     explanation: Optional[str] = Field(None, description="规则解释")
+    language: Optional[str] = Field(None, description="语言：中文、英文、德文")
     source: Optional[str] = Field(None, description="来源")
     is_starred: Optional[bool] = Field(None, description="是否收藏")
+    learn_status: Optional[str] = Field(None, description="学习状态：mastered/not_mastered")
 
 
 class GrammarExampleCreateRequest(BaseModel):
@@ -82,6 +87,7 @@ class GrammarRuleResponse(BaseModel):
     rule_id: int
     name: str
     explanation: str
+    language: Optional[str] = None
     source: str
     is_starred: bool
     examples: List[dict] = []
@@ -114,6 +120,9 @@ async def get_all_grammar_rules(
     skip: int = Query(default=0, ge=0, description="跳过的记录数"),
     limit: int = Query(default=100, ge=1, le=1000, description="返回的最大记录数"),
     starred_only: bool = Query(default=False, description="是否只返回收藏的规则"),
+    language: Optional[str] = Query(default=None, description="语言过滤：中文、英文、德文"),
+    learn_status: Optional[str] = Query(default=None, description="学习状态过滤：all/mastered/not_mastered"),
+    text_id: Optional[int] = Query(default=None, description="文章ID过滤：只返回有该文章example的语法规则"),
     session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -123,35 +132,76 @@ async def get_all_grammar_rules(
     - **skip**: 跳过的记录数（用于分页）
     - **limit**: 返回的最大记录数
     - **starred_only**: 是否只返回收藏的规则
+    - **language**: 语言过滤（中文、英文、德文），None表示不过滤
+    - **learn_status**: 学习状态过滤（all/mastered/not_mastered），None或'all'表示不过滤
     
     需要认证：是
     """
     try:
+        from database_system.business_logic.models import LearnStatus
+        
+        print(f"🔍 [GrammarAPI] 查询参数: user_id={current_user.user_id}, language={language}, learn_status={learn_status}, starred_only={starred_only}, text_id={text_id}")
+        
         # 查询当前用户的语法规则
         query = session.query(GrammarRule).filter(GrammarRule.user_id == current_user.user_id)
         
         if starred_only:
             query = query.filter(GrammarRule.is_starred == True)
         
+        # 语言过滤
+        if language and language != 'all':
+            query = query.filter(GrammarRule.language == language)
+            print(f"🔍 [GrammarAPI] 应用语言过滤: {language}")
+        
+        # 学习状态过滤
+        # 🔧 修复：SQLite 中 Enum 存储为字符串，使用 cast 转换为字符串进行比较
+        if learn_status and learn_status != 'all':
+            if learn_status == 'mastered':
+                # 将 Enum 列转换为字符串进行比较
+                query = query.filter(cast(GrammarRule.learn_status, String) == 'mastered')
+                print(f"🔍 [GrammarAPI] 应用学习状态过滤: mastered")
+            elif learn_status == 'not_mastered':
+                # 将 Enum 列转换为字符串进行比较
+                query = query.filter(cast(GrammarRule.learn_status, String) == 'not_mastered')
+                print(f"🔍 [GrammarAPI] 应用学习状态过滤: not_mastered")
+        else:
+            print(f"🔍 [GrammarAPI] 不应用学习状态过滤 (learn_status={learn_status})")
+        
+        # 文章过滤：只返回有该文章example的语法规则
+        if text_id is not None:
+            from database_system.business_logic.models import GrammarExample
+            # 使用 exists 子查询来过滤
+            from sqlalchemy import exists
+            query = query.filter(
+                exists().where(
+                    GrammarExample.rule_id == GrammarRule.rule_id,
+                    GrammarExample.text_id == text_id
+                )
+            )
+            print(f"🔍 [GrammarAPI] 应用文章过滤: text_id={text_id}")
+        
         rules = query.offset(skip).limit(limit).all()
+        print(f"🔍 [GrammarAPI] 查询结果: {len(rules)} 个语法规则")
         
         return {
             "success": True,
-            "data": {
-                "rules": [
-                    {
-                        "rule_id": r.rule_id,
-                        "name": r.rule_name,  # 修复：字段名是 rule_name
-                        "explanation": r.rule_summary,  # 修复：字段名是 rule_summary
-                        "source": r.source.value if hasattr(r.source, 'value') else r.source,
-                        "is_starred": r.is_starred
-                    }
-                    for r in rules
-                ],
-                "count": len(rules),
-                "skip": skip,
-                "limit": limit
-            }
+            "data": [
+                {
+                    "rule_id": r.rule_id,
+                    "rule_name": r.rule_name,  # 前端期望的字段名
+                    "rule_summary": r.rule_summary,  # 前端期望的字段名
+                    "name": r.rule_name,  # 保留兼容性
+                    "explanation": r.rule_summary,  # 保留兼容性
+                    "language": r.language,
+                    "source": r.source.value if hasattr(r.source, 'value') else r.source,
+                    "is_starred": r.is_starred,
+                    "learn_status": r.learn_status.value if hasattr(r.learn_status, 'value') else (str(r.learn_status) if r.learn_status else "not_mastered")
+                }
+                for r in rules
+            ],
+            "count": len(rules),
+            "skip": skip,
+            "limit": limit
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -179,23 +229,45 @@ async def get_grammar_rule(
             raise HTTPException(status_code=404, detail=f"Grammar Rule ID {rule_id} not found")
         
         print(f"[API] Found grammar rule: {rule.name}")
+
+        # 为每个 example 尝试查找原句
+        examples_data = []
+        if include_examples and rule.examples:
+            for ex in rule.examples:
+                original_sentence = None
+                try:
+                    if ex.text_id is not None and ex.sentence_id is not None:
+                        sentence_obj = session.query(Sentence).filter(
+                            Sentence.text_id == ex.text_id,
+                            Sentence.sentence_id == ex.sentence_id
+                        ).first()
+                        if sentence_obj:
+                            original_sentence = sentence_obj.sentence_body
+                except Exception as se:
+                    print(f"⚠️ [GrammarAPI] 获取例句原句失败: text_id={ex.text_id}, sentence_id={ex.sentence_id}, error={se}")
+
+                examples_data.append({
+                    "rule_id": ex.rule_id,
+                    "text_id": ex.text_id,
+                    "sentence_id": ex.sentence_id,
+                    "original_sentence": original_sentence,
+                    "explanation_context": ex.explanation_context,
+                })
+
+        # 🔧 修复：返回前端期望的字段名（rule_name 和 rule_summary）
         return {
             "success": True,
             "data": {
                 "rule_id": rule.rule_id,
-                "name": rule.name,
-                "explanation": rule.explanation,
-                "source": rule.source,
+                "rule_name": rule.name,  # DTO 中是 name，前端期望 rule_name
+                "rule_summary": rule.explanation,  # DTO 中是 explanation，前端期望 rule_summary
+                "name": rule.name,  # 保留兼容性
+                "explanation": rule.explanation,  # 保留兼容性
+                "language": rule.language,
+                "source": rule.source.value if hasattr(rule.source, 'value') else rule.source,
                 "is_starred": rule.is_starred,
-                "examples": [
-                    {
-                        "rule_id": ex.rule_id,
-                        "text_id": ex.text_id,
-                        "sentence_id": ex.sentence_id,
-                        "explanation_context": ex.explanation_context
-                    }
-                    for ex in rule.examples
-                ] if include_examples else []
+                "learn_status": rule.learn_status.value if hasattr(rule.learn_status, 'value') else (str(rule.learn_status) if rule.learn_status else "not_mastered"),
+                "examples": examples_data if include_examples else []
             }
         }
     except HTTPException:
@@ -210,7 +282,8 @@ async def get_grammar_rule(
 @router.post("/", summary="创建新语法规则", status_code=201)
 async def create_grammar_rule(
     request: GrammarRuleCreateRequest,
-    session: Session = Depends(get_db_session)
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
 ):
     """
     创建新语法规则
@@ -235,8 +308,10 @@ async def create_grammar_rule(
         rule = grammar_manager.add_new_rule(
             name=request.name,
             explanation=request.explanation,
+            language=request.language,
             source=request.source,
-            is_starred=request.is_starred
+            is_starred=request.is_starred,
+            user_id=current_user.user_id
         )
         
         return {
@@ -246,6 +321,7 @@ async def create_grammar_rule(
                 "rule_id": rule.rule_id,
                 "name": rule.name,
                 "explanation": rule.explanation,
+                "language": rule.language,
                 "source": rule.source,
                 "is_starred": rule.is_starred
             }
@@ -269,6 +345,8 @@ async def update_grammar_rule(
     - 其他字段：要更新的内容（仅传需要更新的字段）
     """
     try:
+        from database_system.business_logic.models import LearnStatus
+        
         grammar_manager = GrammarRuleManagerDB(session)
         
         # 构建更新字典（只包含非 None 的字段）
@@ -279,11 +357,31 @@ async def update_grammar_rule(
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
         
+        print(f"🔍 [GrammarAPI] 更新语法规则 {rule_id}, 更新数据: {update_data}")
+        
+        # 处理 learn_status：将字符串转换为枚举
+        if 'learn_status' in update_data:
+            learn_status_str = update_data['learn_status']
+            print(f"🔍 [GrammarAPI] 处理 learn_status: {learn_status_str}")
+            if learn_status_str == 'mastered':
+                update_data['learn_status'] = LearnStatus.MASTERED
+            elif learn_status_str == 'not_mastered':
+                update_data['learn_status'] = LearnStatus.NOT_MASTERED
+            else:
+                # 尝试直接使用字符串值查找枚举
+                try:
+                    update_data['learn_status'] = LearnStatus(learn_status_str)
+                except ValueError:
+                    raise HTTPException(status_code=400, detail=f"Invalid learn_status: {learn_status_str}")
+            print(f"🔍 [GrammarAPI] 转换后的 learn_status: {update_data['learn_status']}")
+        
         # 更新规则
         rule = grammar_manager.update_rule(rule_id, **update_data)
         
         if not rule:
             raise HTTPException(status_code=404, detail=f"Grammar Rule ID {rule_id} not found")
+        
+        print(f"✅ [GrammarAPI] 语法规则 {rule_id} 更新成功")
         
         return {
             "success": True,
@@ -292,14 +390,20 @@ async def update_grammar_rule(
                 "rule_id": rule.rule_id,
                 "name": rule.name,
                 "explanation": rule.explanation,
-                "source": rule.source,
-                "is_starred": rule.is_starred
+                "source": rule.source.value if hasattr(rule.source, 'value') else str(rule.source),
+                "is_starred": rule.is_starred,
+                "learn_status": rule.learn_status.value if hasattr(rule.learn_status, 'value') else (str(rule.learn_status) if rule.learn_status else "not_mastered")
             }
         }
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_detail = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"❌ [GrammarAPI] 更新语法规则错误详情: {error_detail}")
+        print(f"❌ [GrammarAPI] 更新语法规则错误堆栈:\n{traceback_str}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @router.delete("/{rule_id}", summary="删除语法规则")

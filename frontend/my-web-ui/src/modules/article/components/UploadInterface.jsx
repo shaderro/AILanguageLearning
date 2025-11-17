@@ -1,13 +1,37 @@
 import { useState, useRef } from 'react'
 import { apiService } from '../../../services/api'
+import { useUser } from '../../../contexts/UserContext'
+import guestDataManager from '../../../utils/guestDataManager'
 
 const UploadInterface = ({ onUploadStart }) => {
+  const { userId, isGuest } = useUser()
   const [dragActive, setDragActive] = useState(false)
   const [uploadMethod, setUploadMethod] = useState(null) // 'url', 'file', 'drop', 'text'
   const [showProgress, setShowProgress] = useState(false)
   const [textContent, setTextContent] = useState('')
   const [textTitle, setTextTitle] = useState('')
+  const [language, setLanguage] = useState('') // 语言：中文、英文、德文
   const fileInputRef = useRef(null)
+
+  // 处理上传成功后的响应（包括游客模式保存到 localStorage）
+  const handleUploadSuccess = (responseData) => {
+    console.log('📄 [Upload] 文章已创建:', responseData)
+    
+    // 如果是游客模式，保存到 localStorage
+    if (responseData.is_guest && responseData.article_data) {
+      const guestId = userId
+      if (guestId) {
+        const saved = guestDataManager.saveArticle(guestId, {
+          article_id: responseData.article_id,
+          title: responseData.title || responseData.article_data.title,
+          ...responseData.article_data
+        })
+        if (saved) {
+          console.log('✅ [Upload] 游客文章已保存到 localStorage')
+        }
+      }
+    }
+  }
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -42,14 +66,21 @@ const UploadInterface = ({ onUploadStart }) => {
         setShowProgress(true)
         onUploadStart && onUploadStart()
         
+        // 检查语言是否已选择
+        if (!language) {
+          alert('请选择文章语言')
+          setShowProgress(false)
+          return
+        }
+        
         // 使用统一的apiService（自动添加认证头）
-        const response = await apiService.uploadFile(file, file.name.replace(/\.[^/.]+$/, ""))
+        const response = await apiService.uploadFile(file, file.name.replace(/\.[^/.]+$/, ""), language)
         
         console.log('✅ [Frontend] 拖拽文件上传成功:', response)
         
-        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        // 上传成功后，处理响应
         if (response.data && response.data.success) {
-          console.log('📄 [Upload] 文章已创建:', response.data.data)
+          handleUploadSuccess(response.data.data)
         }
       } catch (error) {
         console.error('❌ [Frontend] 拖拽文件上传失败:', error)
@@ -77,18 +108,24 @@ const UploadInterface = ({ onUploadStart }) => {
       }
       
       try {
+        // 检查语言是否已选择
+        if (!language) {
+          alert('请选择文章语言')
+          return
+        }
+        
         console.log('🚀 [Frontend] 发送文件上传请求...')
         setShowProgress(true)
         onUploadStart && onUploadStart()
         
         // 使用统一的apiService（自动添加认证头）
-        const response = await apiService.uploadFile(file, file.name.replace(/\.[^/.]+$/, ""))
+        const response = await apiService.uploadFile(file, file.name.replace(/\.[^/.]+$/, ""), language)
         
         console.log('✅ [Frontend] 文件上传成功:', response)
         
-        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        // 上传成功后，处理响应
         if (response.data && response.data.success) {
-          console.log('📄 [Upload] 文章已创建:', response.data.data)
+          handleUploadSuccess(response.data.data)
         }
         
         // 清空文件选择，允许再次选择同一文件
@@ -120,18 +157,24 @@ const UploadInterface = ({ onUploadStart }) => {
       }
       
       try {
+        // 检查语言是否已选择
+        if (!language) {
+          alert('请选择文章语言')
+          return
+        }
+        
         console.log('🚀 [Frontend] 发送URL处理请求...')
         setShowProgress(true)
         onUploadStart && onUploadStart()
         
         // 使用统一的apiService（自动添加认证头）
-        const response = await apiService.uploadUrl(url, 'URL Article')
+        const response = await apiService.uploadUrl(url, 'URL Article', language)
         
         console.log('✅ [Frontend] URL处理成功:', response)
         
-        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        // 上传成功后，处理响应
         if (response.data && response.data.success) {
-          console.log('📄 [Upload] 文章已创建:', response.data.data)
+          handleUploadSuccess(response.data.data)
         }
         
         // 清空URL输入
@@ -148,7 +191,13 @@ const UploadInterface = ({ onUploadStart }) => {
   const handleTextSubmit = async (e) => {
     e.preventDefault()
     if (textContent.trim()) {
-      console.log('📝 [Upload] Text submitted:', { title: textTitle, contentLength: textContent.length })
+      // 检查语言是否已选择
+      if (!language) {
+        alert('请选择文章语言')
+        return
+      }
+      
+      console.log('📝 [Upload] Text submitted:', { title: textTitle, contentLength: textContent.length, language })
       setUploadMethod('text')
       
       try {
@@ -157,13 +206,13 @@ const UploadInterface = ({ onUploadStart }) => {
         onUploadStart && onUploadStart()
         
         // 使用统一的apiService（自动添加认证头）
-        const response = await apiService.uploadText(textContent, textTitle || 'Text Article')
+        const response = await apiService.uploadText(textContent, textTitle || 'Text Article', language)
         
         console.log('✅ [Frontend] 文字处理成功:', response)
         
-        // 上传成功后，可以在这里处理响应（例如跳转到文章页面）
+        // 上传成功后，处理响应
         if (response.data && response.data.success) {
-          console.log('📄 [Upload] 文章已创建:', response.data.data)
+          handleUploadSuccess(response.data.data)
         }
         
         // 清空文本输入
@@ -189,6 +238,25 @@ const UploadInterface = ({ onUploadStart }) => {
   return (
     <div className="flex-1 min-w-0 flex flex-col gap-4 bg-white p-6 rounded-lg shadow-md overflow-y-auto h-full">
       <h2 className="text-xl font-semibold text-gray-800">Upload New Article</h2>
+      
+      {/* Language Selection - 在所有上传方式上方 */}
+      <div className="w-full max-w-md mx-auto mb-4">
+        <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-2">
+          语言 <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="language"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          required
+        >
+          <option value="">请选择语言</option>
+          <option value="中文">中文</option>
+          <option value="英文">英文</option>
+          <option value="德文">德文</option>
+        </select>
+      </div>
       
       <div className="flex-1 flex flex-col items-center justify-center space-y-8">
         {/* Upload URL */}
@@ -310,7 +378,7 @@ const UploadInterface = ({ onUploadStart }) => {
             />
             <button
               type="submit"
-              disabled={!textContent.trim()}
+              disabled={!textContent.trim() || !language}
               className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Process Text

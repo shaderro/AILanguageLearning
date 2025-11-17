@@ -6,17 +6,24 @@ import {
   useGrammarList, 
   useStats 
 } from '../hooks/useApi.js';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useUser } from '../contexts/UserContext';
 
 export const ApiDemo = () => {
   const [searchWord, setSearchWord] = useState('');
   const [searchedWord, setSearchedWord] = useState('');
+  
+  // 从 LanguageContext 获取选择的语言
+  const { selectedLanguage } = useLanguage();
+  // 从 UserContext 获取用户信息
+  const { userId, isGuest } = useUser();
 
-  // 使用 React Query hooks
+  // 使用 React Query hooks - 支持语言过滤
   const healthCheck = useHealthCheck();
   const wordInfo = useWordInfo(searchedWord);
-  const vocabList = useVocabList();
-  const grammarList = useGrammarList();
-  const stats = useStats();
+  const vocabList = useVocabList(userId, isGuest, selectedLanguage);
+  const grammarList = useGrammarList(userId, isGuest, selectedLanguage);
+  const stats = useStats(userId);
 
   const handleSearch = () => {
     if (searchWord.trim()) {

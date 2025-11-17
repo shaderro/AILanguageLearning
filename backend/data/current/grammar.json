@@ -81,6 +81,18 @@
         "text_id": 1,
         "sentence_id": 8,
         "explanation_context": "{\"explanation\": \"这是一个主从复合句，主句是'Einfach unerträglich wäre es'，从句是'wenn die Sache mit den Potters herauskommen würde'。从句以wenn引导，表示条件，整个句子结构是'如果...就会...'的关系。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1762942413,
+        "sentence_id": 176,
+        "explanation_context": "{\"explanation\": \"这句话是一个复合句，由主句“Der Text ist unter der Lizenz verfügbar”和从句“Informationen zu den Urhebern und zum Lizenzstatus eingebundener Mediendateien ... können im Regelfall durch Anklicken dieser abgerufen werden”组成，通过分号连接，说明文本的许可信息和获取媒体文件详情的方式。\"}"
+      },
+      {
+        "rule_id": 1,
+        "text_id": 1763025147,
+        "sentence_id": 3,
+        "explanation_context": "{\"explanation\": \"这个句子包含两个主要动作，通过连词'and'和'after'连接。'Union Carbide moved into its headquarters in 1960'是第一个事件，'acquired the underlying land in 1976'是第二个事件，而'after Penn Central went bankrupt'说明了第二个事件发生的时间条件，共同构成一个复合句。\"}"
       }
     ],
     "source": "qa",
@@ -237,6 +249,12 @@
         "text_id": 1,
         "sentence_id": 5,
         "explanation_context": "{\"explanation\": \"在这个句子中，'was allerdings sehr nützlich war' 是一个非限制性定语从句，它补充说明前面整个主句描述的情况（Mrs Dursley 拥有超长的脖子），指出这个特点实际上很有用。从句用逗号与主句隔开，去掉后不影响主句的基本意思，只是少了额外的解释。\"}"
+      },
+      {
+        "rule_id": 9,
+        "text_id": 1763025147,
+        "sentence_id": 6,
+        "explanation_context": "{\"explanation\": \"在这个句子中，非限制性定语从句 'which announced plans to demolish the building in 2018' 用来补充说明 JPMorgan Chase 在 2018 年宣布了拆除该建筑的计划。它提供了额外的背景信息，但即使去掉这个从句，主句 'Through several mergers, Manufacturers Hanover became part of JPMorgan Chase' 的意思仍然完整且独立。\"}"
       }
     ],
     "source": "qa",

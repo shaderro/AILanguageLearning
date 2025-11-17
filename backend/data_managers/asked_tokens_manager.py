@@ -419,9 +419,16 @@ class AskedTokensManager:
 # 全局实例（支持配置切换）
 _asked_tokens_manager = None
 
-def get_asked_tokens_manager(use_database: bool = True) -> AskedTokensManager:
-    """获取 AskedTokensManager 实例"""
+def get_asked_tokens_manager(use_database: bool = False) -> AskedTokensManager:
+    """
+    获取 AskedTokensManager 实例
+    
+    🔧 注意：asked_tokens 现在是 legacy 系统，默认只使用 JSON 文件，不使用数据库
+    即使传入 use_database=True，也会强制使用 JSON 模式
+    """
     global _asked_tokens_manager
+    # 🔧 强制使用 JSON 模式，因为 asked_tokens 是 legacy 系统
+    use_database = False
     if _asked_tokens_manager is None:
         _asked_tokens_manager = AskedTokensManager(use_database=use_database)
     return _asked_tokens_manager

@@ -111,24 +111,28 @@ class SessionState:
         self.created_vocab_notations.clear()
         # 保留：current_sentence、current_selected_token、current_input
     
-    def add_created_grammar_notation(self, text_id: int, sentence_id: int, grammar_id: int, marked_token_ids: list = None):
+    def add_created_grammar_notation(self, text_id: int, sentence_id: int, grammar_id: int, marked_token_ids: list = None, user_id: int = None):
         """记录本轮创建的 grammar notation"""
+        # 使用传入的 user_id，如果没有则使用 session_state 中的 user_id，最后回退到 'default_user'
+        final_user_id = user_id if user_id is not None else (getattr(self, 'user_id', None) or 'default_user')
         self.created_grammar_notations.append({
             'text_id': text_id,
             'sentence_id': sentence_id,
             'grammar_id': grammar_id,
             'marked_token_ids': marked_token_ids or [],
-            'user_id': 'default_user'
+            'user_id': final_user_id
         })
     
-    def add_created_vocab_notation(self, text_id: int, sentence_id: int, token_id: int, vocab_id: int):
+    def add_created_vocab_notation(self, text_id: int, sentence_id: int, token_id: int, vocab_id: int, user_id: int = None):
         """记录本轮创建的 vocab notation"""
+        # 使用传入的 user_id，如果没有则使用 session_state 中的 user_id，最后回退到 'default_user'
+        final_user_id = user_id if user_id is not None else (getattr(self, 'user_id', None) or 'default_user')
         self.created_vocab_notations.append({
             'text_id': text_id,
             'sentence_id': sentence_id,
             'token_id': token_id,
             'vocab_id': vocab_id,
-            'user_id': 'default_user'
+            'user_id': final_user_id
         })
 
     def get_current_sentence_info(self) -> dict:

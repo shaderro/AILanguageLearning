@@ -30,6 +30,7 @@ class OriginalText:
     text_id: int
     text_title: str
     text_by_sentence: list[Sentence]
+    language: Optional[str] = None  # 语言：中文、英文、德文
 
 @dataclass
 class GrammarExample:
@@ -43,8 +44,10 @@ class GrammarRule:
     rule_id: int
     name: str
     explanation: str
+    language: Optional[str] = None  # 语言：中文、英文、德文
     source: Literal["auto", "qa", "manual"] = "auto"
     is_starred: bool = False
+    learn_status: Literal["not_mastered", "mastered"] = "not_mastered"  # 学习状态：未掌握/已掌握
     examples: list[GrammarExample] = field(default_factory=list)
 
 @dataclass
@@ -60,8 +63,10 @@ class VocabExpression:
     vocab_id: int
     vocab_body: str
     explanation: str
+    language: Optional[str] = None  # 语言：中文、英文、德文
     source: Literal["auto", "qa", "manual"] = "auto"
     is_starred: bool = False
+    learn_status: Literal["not_mastered", "mastered"] = "not_mastered"  # 学习状态：未掌握/已掌握
     examples: list[VocabExpressionExample] = field(default_factory=list)
 
 @dataclass

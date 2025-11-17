@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useVocabList, useWordInfo, useToggleVocabStar, useRefreshData } from '../../hooks/useApi'
+import { useVocabList, useWordInfo, useToggleVocabStar, useRefreshData, useArticles } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
+import { useLanguage } from '../../contexts/LanguageContext'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
@@ -19,9 +20,62 @@ function WordDemo() {
   
   // 从 UserContext 获取当前用户
   const { userId, isGuest, isAuthenticated } = useUser()
+  
+  // 从 LanguageContext 获取选择的语言
+  const { selectedLanguage } = useLanguage()
 
-  // 使用 React Query 获取词汇数据 - 传入 userId 和 isGuest
-  const { data: vocabData, isLoading, isError, error } = useVocabList(userId, isGuest)
+  // 学习状态过滤
+  const [learnStatus, setLearnStatus] = useState('all')
+  
+  // 文章过滤
+  const [textId, setTextId] = useState('all')
+  
+  // 获取文章列表（使用 useArticles hook，它会处理响应格式）
+  const { data: articlesResponse, isLoading: articlesLoading } = useArticles(userId, selectedLanguage, isGuest)
+  
+  console.log('🔍 [WordDemo] useArticles 返回:', articlesResponse, 'loading:', articlesLoading)
+  
+  // 处理文章数据：提取数组并按字母顺序排序
+  const articlesData = (() => {
+    if (!articlesResponse) {
+      console.log('⚠️ [WordDemo] articlesResponse 为空')
+      return []
+    }
+    
+    console.log('🔍 [WordDemo] articlesResponse 类型:', typeof articlesResponse)
+    console.log('🔍 [WordDemo] articlesResponse.data 类型:', typeof articlesResponse?.data)
+    console.log('🔍 [WordDemo] articlesResponse.data 是否为数组:', Array.isArray(articlesResponse?.data))
+    
+    // useArticles 返回的格式：响应拦截器处理后是 { data: [...], count: ... }
+    let articles = []
+    if (Array.isArray(articlesResponse?.data)) {
+      articles = articlesResponse.data
+      console.log('🔍 [WordDemo] 从 articlesResponse.data 提取:', articles.length, '篇')
+    } else if (Array.isArray(articlesResponse)) {
+      articles = articlesResponse
+      console.log('🔍 [WordDemo] articlesResponse 直接是数组:', articles.length, '篇')
+    } else {
+      console.warn('⚠️ [WordDemo] 无法识别的 articlesResponse 格式:', articlesResponse)
+    }
+    
+    // 按标题字母顺序排序
+    if (articles.length > 0) {
+      const sorted = articles.sort((a, b) => {
+        const titleA = (a.title || a.text_title || '').toLowerCase()
+        const titleB = (b.title || b.text_title || '').toLowerCase()
+        return titleA.localeCompare(titleB)
+      })
+      console.log('🔍 [WordDemo] 排序后的文章:', sorted.length, '篇')
+      return sorted
+    }
+    console.log('⚠️ [WordDemo] 文章列表为空')
+    return []
+  })()
+  
+  console.log('🔍 [WordDemo] 最终文章数据:', articlesData.length, '篇', articlesData.length > 0 ? articlesData[0] : '')
+
+  // 使用 React Query 获取词汇数据 - 传入 userId、isGuest、language、learnStatus 和 textId
+  const { data: vocabData, isLoading, isError, error } = useVocabList(userId, isGuest, selectedLanguage, learnStatus, textId)
 
   // 单词查询功能
   const [searchTerm, setSearchTerm] = useState('')
@@ -60,19 +114,45 @@ function WordDemo() {
   }
 
   const handleStartReview = () => {
-    if (vocabData?.data) {
-      // 随机选择词汇进行复习
-      const shuffled = [...vocabData.data].sort(() => 0.5 - Math.random())
-      setReviewWords(shuffled.slice(0, 5)) // 选择5个词汇
-      setCurrentReviewIndex(0)
-      setReviewResults([])
-      setIsReviewMode(true)
+    // 使用当前filter后的所有词汇
+    const filteredVocabs = vocabData?.data || []
+    
+    if (filteredVocabs.length === 0) {
+      // 如果为空，显示提示（使用更友好的方式）
+      const message = '当前筛选条件下没有词汇，请更改筛选选项后再试'
+      if (window.confirm(message)) {
+        // 用户点击确定后不做任何操作，只是关闭提示
+      }
+      return
     }
+    
+    // 使用所有filter后的词汇进行复习（不限制数量）
+    const shuffled = [...filteredVocabs].sort(() => 0.5 - Math.random())
+    setReviewWords(shuffled)
+    setCurrentReviewIndex(0)
+    setReviewResults([])
+    setIsReviewMode(true)
   }
 
-  const handleReviewAnswer = (choice) => {
+  const handleReviewAnswer = async (choice) => {
     const currentWord = reviewWords[currentReviewIndex]
     setReviewResults((prev) => [...prev, { item: currentWord, choice }])
+    
+    // 如果用户选择"认识"，更新learn_status为mastered
+    if (choice === 'know' && currentWord.vocab_id) {
+      try {
+        console.log(`🔄 [WordDemo] 正在更新词汇 ${currentWord.vocab_id} 的学习状态为 mastered`)
+        const response = await apiService.updateVocab(currentWord.vocab_id, {
+          learn_status: 'mastered'
+        })
+        console.log(`✅ [WordDemo] 更新成功:`, response)
+        // 刷新数据
+        refreshVocab()
+      } catch (error) {
+        console.error(`❌ [WordDemo] 更新学习状态失败:`, error)
+        console.error(`❌ [WordDemo] 错误详情:`, error.response?.data || error.message)
+      }
+    }
   }
 
   const handleNextReview = () => {
@@ -84,6 +164,12 @@ function WordDemo() {
     }
   }
 
+  const handlePrevReview = () => {
+    if (currentReviewIndex > 0) {
+      setCurrentReviewIndex((prev) => prev - 1)
+    }
+  }
+
   const handleBackToWords = () => {
     setIsReviewMode(false)
     setSelectedWord(null)
@@ -91,7 +177,14 @@ function WordDemo() {
   }
 
   const handleFilterChange = (filterId, value) => {
-    // 这里可以根据需要在本地过滤 vocab 列表
+    // 处理学习状态过滤
+    if (filterId === 'learn_status') {
+      setLearnStatus(value)
+    }
+    // 处理文章过滤
+    if (filterId === 'text_id') {
+      setTextId(value)
+    }
   }
 
   const handleToggleStar = (item) => {
@@ -135,6 +228,9 @@ function WordDemo() {
               total={reviewWords.length}
               onAnswer={handleReviewAnswer}
               onNext={handleNextReview}
+              onBack={handleBackToWords}
+              onPrevCard={handlePrevReview}
+              onNextCard={handleNextReview}
             />
           </div>
         </div>
@@ -170,8 +266,48 @@ function WordDemo() {
   }
 
   // 主列表页面（使用统一布局）
-  const list = (vocabData?.data || [])
+  // 注意：language和learn_status过滤已经在API层面完成，这里只需要处理搜索过滤
+  const allVocabs = vocabData?.data || []
+  console.log(`🔍 [WordDemo] 当前过滤状态: learnStatus=${learnStatus}, language=${selectedLanguage}, 词汇数量=${allVocabs.length}`)
+  const list = allVocabs
     .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
+
+  // 配置过滤器
+  const articles = Array.isArray(articlesData) ? articlesData : []
+  console.log('🔍 [WordDemo] 文章数据:', articles.length, '篇', articles.length > 0 ? articles[0] : '')
+  
+  const articleOptions = [
+    { value: 'all', label: '全部文章' },
+    ...articles
+      .filter(article => article && (article.id || article.text_id)) // 过滤掉无效的文章
+      .map(article => ({
+        value: String(article.id || article.text_id),
+        label: article.title || article.text_title || `文章 ${article.id || article.text_id}`
+      }))
+  ]
+  
+  console.log('🔍 [WordDemo] 文章选项:', articleOptions.length, '个', articleOptions.map(opt => opt.label))
+  
+  const filters = [
+    {
+      id: 'learn_status',
+      label: '学习状态',
+      options: [
+        { value: 'all', label: '全部' },
+        { value: 'mastered', label: '已掌握' },
+        { value: 'not_mastered', label: '未掌握' }
+      ],
+      placeholder: '选择学习状态',
+      value: learnStatus
+    },
+    {
+      id: 'text_id',
+      label: '文章',
+      options: articleOptions,
+      placeholder: '选择文章',
+      value: textId
+    }
+  ]
 
   return (
     <LearnPageLayout
@@ -179,12 +315,22 @@ function WordDemo() {
       onStartReview={handleStartReview}
       onSearch={(value) => setSearchTerm(value)}
       onFilterChange={handleFilterChange}
+      filters={filters}
       onRefresh={handleRefreshData}
       showFilters={true}
       showSearch={true}
       showRefreshButton={true}
       backgroundClass="bg-gray-100"
     >
+      {/* 显示当前语言过滤状态 */}
+      {selectedLanguage !== 'all' && (
+        <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-700">
+            <span className="font-medium">当前筛选：</span>{selectedLanguage}
+            <span className="ml-2 text-gray-600">({list.length} 个词汇)</span>
+          </p>
+        </div>
+      )}
       {/* 搜索建议区域（可选） */}
       {wordInfo.isSuccess && wordInfo.data?.status === 'success' && (
         <div className="col-span-1 md:col-span-2 lg:col-span-3">

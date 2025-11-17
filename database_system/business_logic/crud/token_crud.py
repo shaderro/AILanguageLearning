@@ -3,8 +3,8 @@
 """
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from typing import List
-from ..models import Token
+from typing import List, Union
+from ..models import Token, TokenType
 
 
 class TokenCRUD:
@@ -14,13 +14,29 @@ class TokenCRUD:
         self.session = session
     
     def create(self, text_id: int, sentence_id: int, token_body: str,
-               token_type: str, **kwargs) -> Token:
-        """创建词汇标记"""
+               token_type: Union[str, TokenType], **kwargs) -> Token:
+        """创建词汇标记
+        
+        参数:
+            token_type: 可以是枚举名称字符串（'TEXT', 'PUNCTUATION', 'SPACE'）或 TokenType 枚举对象
+        """
+        # 如果传入的是字符串，尝试转换为枚举对象
+        if isinstance(token_type, str):
+            token_type_upper = token_type.upper()
+            if token_type_upper == 'TEXT':
+                token_type = TokenType.TEXT
+            elif token_type_upper == 'PUNCTUATION':
+                token_type = TokenType.PUNCTUATION
+            elif token_type_upper == 'SPACE':
+                token_type = TokenType.SPACE
+            else:
+                token_type = TokenType.TEXT  # 默认
+        
         token = Token(
             text_id=text_id,
             sentence_id=sentence_id,
             token_body=token_body,
-            token_type=token_type,
+            token_type=token_type,  # 传递枚举对象
             **kwargs
         )
         self.session.add(token)

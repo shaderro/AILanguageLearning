@@ -19,7 +19,7 @@ const DataMigrationModal = ({
   const queryClient = useQueryClient()
   
   // 获取游客数据
-  const guestData = guestId ? guestDataManager.getAllGuestData(guestId) : { vocabs: [], grammars: [] }
+  const guestData = guestId ? guestDataManager.getAllGuestData(guestId) : { vocabs: [], grammars: [], articles: [] }
   const hasData = guestId ? guestDataManager.hasGuestData(guestId) : false
   
   console.log('📦 [Migration] 游客数据:', guestData)
@@ -81,6 +81,24 @@ const DataMigrationModal = ({
         }
       }
       
+      // 迁移文章（需要重新上传文章数据）
+      for (const article of guestData.articles || []) {
+        try {
+          // 文章数据包含 sentences，需要重新构建文章文本
+          // 注意：这里简化处理，实际可能需要更复杂的逻辑
+          if (article.article_data && article.article_data.sentences) {
+            // 重新上传文章（使用文章标题和内容）
+            // 注意：这里需要根据实际情况调整
+            console.log('📄 [Migration] 准备迁移文章:', article.title || article.article_data?.title)
+            // TODO: 实现文章迁移逻辑（可能需要重新调用上传API或创建专门的导入API）
+            console.log('⚠️ [Migration] 文章迁移功能待实现:', article.article_id)
+            // 暂时跳过文章迁移
+          }
+        } catch (e) {
+          console.warn('⚠️ [Migration] 文章迁移失败:', article.article_id, e.message)
+        }
+      }
+      
       console.log(`✅ [Migration] 迁移完成，共 ${migratedCount} 条数据`)
       
       // 清空游客数据
@@ -90,6 +108,7 @@ const DataMigrationModal = ({
       console.log('🔄 [Migration] 刷新数据缓存...')
       queryClient.invalidateQueries({ queryKey: ['vocab'] })
       queryClient.invalidateQueries({ queryKey: ['grammar'] })
+      queryClient.invalidateQueries({ queryKey: ['articles'] })
       
       if (onMigrationComplete) {
         onMigrationComplete(migratedCount)
@@ -133,6 +152,10 @@ const DataMigrationModal = ({
             <div className="flex justify-between">
               <span>📖 语法规则:</span>
               <span className="font-semibold">{guestData.grammars.length} 条</span>
+            </div>
+            <div className="flex justify-between">
+              <span>📄 文章:</span>
+              <span className="font-semibold">{(guestData.articles || []).length} 篇</span>
             </div>
           </div>
         </div>

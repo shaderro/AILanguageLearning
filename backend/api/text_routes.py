@@ -108,6 +108,7 @@ router = APIRouter(
 @router.get("/", summary="获取所有文章")
 async def get_all_texts(
     include_sentences: bool = Query(default=False, description="是否包含句子列表"),
+    language: Optional[str] = Query(default=None, description="语言过滤：中文、英文、德文"),
     session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user)
 ):
@@ -115,34 +116,58 @@ async def get_all_texts(
     获取当前用户的所有文章
     
     - **include_sentences**: 是否包含句子（默认不包含，提升性能）
+    - **language**: 语言过滤（中文、英文、德文），None表示不过滤
     
     需要认证：是
     """
     try:
-        text_manager = OriginalTextManagerDB(session)
-        # 只获取当前用户的文章
-        texts = text_manager.get_all_texts(include_sentences=include_sentences, user_id=current_user.user_id)
+        from database_system.business_logic.models import Sentence, Token, OriginalText
+        from sqlalchemy import func
+        
+        # 直接使用数据库查询，支持语言过滤
+        query = session.query(OriginalText).filter(OriginalText.user_id == current_user.user_id)
+        
+        # 语言过滤
+        if language and language != 'all':
+            query = query.filter(OriginalText.language == language)
+        
+        text_models = query.all()
+        
+        # 为每篇文章计算句子数和token数
+        texts_with_stats = []
+        for t in text_models:
+            # 使用SQL查询统计句子数
+            sentence_count = session.query(func.count(Sentence.id)).filter(
+                Sentence.text_id == t.text_id
+            ).scalar() or 0
+            
+            # 使用SQL查询统计token数
+            token_count = session.query(func.count(Token.token_id)).filter(
+                Token.text_id == t.text_id
+            ).scalar() or 0
+            
+            texts_with_stats.append({
+                "text_id": t.text_id,
+                "text_title": t.text_title,
+                "language": t.language,
+                "total_sentences": sentence_count,
+                "total_tokens": token_count,
+                "sentence_count": sentence_count,  # 保持向后兼容
+                "sentences": [
+                    {
+                        "sentence_id": s.sentence_id,
+                        "sentence_body": s.sentence_body,
+                        "difficulty_level": s.sentence_difficulty_level
+                    }
+                    for s in t.text_by_sentence
+                ] if include_sentences and hasattr(t, 'text_by_sentence') else []
+            })
         
         return {
             "success": True,
             "data": {
-                "texts": [
-                    {
-                        "text_id": t.text_id,
-                        "text_title": t.text_title,
-                        "sentence_count": len(t.text_by_sentence) if include_sentences else 0,
-                        "sentences": [
-                            {
-                                "sentence_id": s.sentence_id,
-                                "sentence_body": s.sentence_body,
-                                "difficulty_level": s.sentence_difficulty_level
-                            }
-                            for s in t.text_by_sentence
-                        ] if include_sentences else []
-                    }
-                    for t in texts
-                ],
-                "count": len(texts)
+                "texts": texts_with_stats,
+                "count": len(texts_with_stats)
             }
         }
     except Exception as e:
@@ -184,14 +209,19 @@ async def get_text(
             print(f"[API] Text {text_id} not found")
             raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
         
-        print(f"[API] Found text {text_id}: {text.text_title}, sentences: {len(text.text_by_sentence)}")
+        # 🔧 安全处理 text_by_sentence（可能为 None 或空列表）
+        text_by_sentence = text.text_by_sentence if text.text_by_sentence else []
+        sentence_count = len(text_by_sentence) if text_by_sentence else 0
+        
+        print(f"[API] Found text {text_id}: {text.text_title}, sentences: {sentence_count}")
         
         result = {
             "success": True,
             "data": {
                 "text_id": text.text_id,
                 "text_title": text.text_title,
-                "sentence_count": len(text.text_by_sentence),
+                "language": text.language,
+                "sentence_count": sentence_count,
                 "sentences": [
                     {
                         "sentence_id": s.sentence_id,
@@ -199,16 +229,37 @@ async def get_text(
                         "difficulty_level": s.sentence_difficulty_level,
                         "grammar_annotations": list(s.grammar_annotations) if s.grammar_annotations else [],
                         "vocab_annotations": list(s.vocab_annotations) if s.vocab_annotations else [],
-                        "tokens": [
-                            {
-                                "text": t.token_body,
-                                "sentence_token_id": t.sentence_token_id,
-                                "is_text_token": t.token_type == 'TEXT'
-                            }
-                            for t in s.tokens
-                        ] if hasattr(s, 'tokens') and s.tokens else []
+                        # tokens：优先使用 DTO 自带的 tokens；如果为空，则按空格简单切分 sentence_body 生成 fallback tokens
+                        "tokens": (
+                            [
+                                {
+                                    # 与前端 TokenSpan 预期字段对齐
+                                    "token_body": t.token_body,
+                                    "sentence_token_id": t.sentence_token_id,
+                                    # 统一使用小写的 'text'，便于前端判断
+                                    "token_type": (
+                                        str(t.token_type).lower()
+                                        if t.token_type is not None
+                                        else "text"
+                                    ),
+                                    # 标记为可选择 token
+                                    "selectable": True,
+                                }
+                                for t in getattr(s, "tokens", []) or []
+                            ]
+                            if getattr(s, "tokens", None)
+                            else [
+                                {
+                                    "token_body": word,
+                                    "sentence_token_id": idx,
+                                    "token_type": "text",
+                                    "selectable": True,
+                                }
+                                for idx, word in enumerate((s.sentence_body or "").split())
+                            ]
+                        )
                     }
-                    for s in text.text_by_sentence
+                    for s in text_by_sentence
                 ] if include_sentences else []
             }
         }
@@ -248,6 +299,7 @@ async def create_text(
             "data": {
                 "text_id": text.text_id,
                 "text_title": text.text_title,
+                "language": text.language,
                 "sentence_count": len(text.text_by_sentence)
             }
         }

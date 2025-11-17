@@ -149,9 +149,22 @@ export function useNotationCache(articleId) {
     // 确保类型一致（数字比较）
     const sid = Number(sentenceId)
     
+    console.log('🔍 [useNotationCache] getVocabNotationsForSentence 被调用:', {
+      sentenceId,
+      sid,
+      vocabNotationsCount: vocabNotations.length,
+      vocabNotations: vocabNotations
+    })
+    
     const filtered = vocabNotations.filter(notation => 
       Number(notation.sentence_id) === sid
     )
+    
+    console.log('🔍 [useNotationCache] getVocabNotationsForSentence 返回:', {
+      sentenceId: sid,
+      filteredCount: filtered.length,
+      filtered: filtered
+    })
     
     return filtered
   }, [vocabNotations])
@@ -160,12 +173,56 @@ export function useNotationCache(articleId) {
   const getVocabExampleForToken = useCallback(async (textId, sentenceId, tokenIndex) => {
     const key = `${textId}:${sentenceId}:${tokenIndex}`
     
-    // 首先检查缓存
+    // 1. 先查本地缓存
     if (vocabExamplesCache.has(key)) {
       return vocabExamplesCache.get(key)
     }
-    
-    // 如果缓存中没有，通过API获取
+
+    // 2. 优先通过 vocab_notations 绑定的 vocab_id 精确查找
+    try {
+      const sid = Number(sentenceId)
+      const tid = Number(tokenIndex)
+
+      // 在当前缓存的 vocabNotations 中查找匹配的标注
+      const matchedNotation = vocabNotations.find(n => {
+        return Number(n.sentence_id) === sid && Number(n.token_id) === tid
+      })
+
+      if (matchedNotation && matchedNotation.vocab_id) {
+        const { apiService } = await import('../../../services/api')
+        // 通过 vocab_id 获取词汇详情（包含所有 examples）
+        const vocabResp = await apiService.getVocabById(matchedNotation.vocab_id)
+        const vocabData = vocabResp?.data || vocabResp
+
+        // 在该 vocab 的例句中，找到同一篇文章、同一句子的例句
+        const examples = Array.isArray(vocabData?.examples) ? vocabData.examples : []
+        const matchedExample = examples.find(ex => 
+          Number(ex.text_id) === Number(textId) && Number(ex.sentence_id) === sid
+        ) || examples[0]  // 退而求其次，取第一条
+
+        if (matchedExample) {
+          const normalized = {
+            vocab_id: vocabData.vocab_id,
+            text_id: matchedExample.text_id,
+            sentence_id: matchedExample.sentence_id,
+            token_index: tid,
+            context_explanation: matchedExample.context_explanation,
+            token_indices: matchedExample.token_indices || []
+          }
+          setVocabExamplesCache(prev => {
+            const newCache = new Map(prev)
+            newCache.set(key, normalized)
+            return newCache
+          })
+          return normalized
+        }
+      }
+    } catch (error) {
+      console.error('❌ [getVocabExampleForToken] Failed to fetch by vocab_id:', error)
+      // 不中断，继续走 tokenIndex 回退逻辑
+    }
+
+    // 3. 回退：使用按位置查询的老接口（可能存在 tokenIndex 不完全匹配的问题）
     try {
       const { apiService } = await import('../../../services/api')
       const axiosResp = await apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
@@ -192,10 +249,10 @@ export function useNotationCache(articleId) {
         return null
       }
     } catch (error) {
-      console.error('❌ [getVocabExampleForToken] API error:', error)
+      console.error('❌ [getVocabExampleForToken] API error (by location):', error)
       return null
     }
-  }, [vocabExamplesCache])
+  }, [vocabExamplesCache, vocabNotations])
 
   // 获取grammar rule详情
   const getGrammarRuleById = useCallback((grammarId) => {
@@ -217,13 +274,24 @@ export function useNotationCache(articleId) {
   }, [vocabNotations])
 
   // 刷新缓存（当有新的notation被创建时调用）
-  const refreshCache = useCallback(() => {
+  const refreshCache = useCallback(async () => {
     if (articleId) {
+      console.log('🔄 [useNotationCache] ========== 开始刷新缓存 ==========')
       console.log('🔄 [useNotationCache] Refreshing cache for articleId:', articleId)
+      console.log('🔄 [useNotationCache] 当前缓存状态:', {
+        vocabNotationsCount: vocabNotations.length,
+        grammarNotationsCount: grammarNotations.length
+      })
+      
       setIsInitialized(false)
-      loadAllNotations(articleId)
+      await loadAllNotations(articleId)
+      
+      console.log('✅ [useNotationCache] 缓存刷新完成')
+      console.log('🔄 [useNotationCache] ========== 缓存刷新结束 ==========')
+    } else {
+      console.warn('⚠️ [useNotationCache] 无法刷新缓存：articleId 为空')
     }
-  }, [articleId, loadAllNotations])
+  }, [articleId, loadAllNotations, vocabNotations.length, grammarNotations.length])
 
   // 添加新的grammar notation到缓存
   const addGrammarNotationToCache = useCallback((notation) => {
@@ -245,21 +313,35 @@ export function useNotationCache(articleId) {
 
   // 添加新的vocab notation到缓存
   const addVocabNotationToCache = useCallback((notation) => {
-    console.log('➕ [useNotationCache] Adding vocab notation to cache:', notation)
+    console.log('➕ [useNotationCache] ========== 开始添加 vocab notation 到缓存 ==========')
+    console.log('➕ [useNotationCache] 接收到的 notation:', JSON.stringify(notation, null, 2))
+    
     setVocabNotations(prev => {
+      console.log('➕ [useNotationCache] setVocabNotations 回调执行，prev 数量:', prev.length)
+      console.log('➕ [useNotationCache] prev 内容:', prev)
       // 检查是否已存在，避免重复添加
-      const exists = prev.some(n => 
-        n.text_id === notation.text_id && 
-        n.sentence_id === notation.sentence_id && 
-        n.token_index === notation.token_index
-      )
+      const exists = prev.some(n => {
+        const match = n.text_id === notation.text_id && 
+                     n.sentence_id === notation.sentence_id && 
+                     (n.token_index === notation.token_index || n.token_id === notation.token_id || n.token_id === notation.token_index)
+        if (match) {
+          console.log('⚠️ [useNotationCache] 发现重复的 notation:', n)
+        }
+        return match
+      })
       if (exists) {
-        console.log('⚠️ [useNotationCache] Vocab notation already exists in cache')
+        console.log('⚠️ [useNotationCache] Vocab notation already exists in cache, 不添加')
         return prev
       }
-      return [...prev, notation]
+      const newList = [...prev, notation]
+      console.log('✅ [useNotationCache] 添加成功，新列表数量:', newList.length)
+      console.log('✅ [useNotationCache] 新列表:', newList)
+      console.log('✅ [useNotationCache] 新列表 JSON:', JSON.stringify(newList, null, 2))
+      return newList
     })
-  }, [])
+    
+    console.log('➕ [useNotationCache] ========== 添加 vocab notation 完成 ==========')
+  }, [])  // 🔧 移除 vocabNotations 依赖，避免闭包问题
 
   // 添加新的grammar rule到缓存
   const addGrammarRuleToCache = useCallback((rule) => {

@@ -1,7 +1,7 @@
 """
 文章相关 CRUD 操作
 """
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from ..models import OriginalText, Sentence
 
@@ -12,17 +12,19 @@ class TextCRUD:
     def __init__(self, session: Session):
         self.session = session
     
-    def create_text(self, text_title: str, user_id: int = None) -> OriginalText:
+    def create_text(self, text_title: str, user_id: int = None, language: str = None) -> OriginalText:
         """创建文章"""
-        text = OriginalText(text_title=text_title, user_id=user_id)
+        text = OriginalText(text_title=text_title, user_id=user_id, language=language)
         self.session.add(text)
         self.session.commit()
         self.session.refresh(text)
         return text
     
     def get_text_by_id(self, text_id: int) -> Optional[OriginalText]:
-        """根据ID获取文章"""
-        return self.session.query(OriginalText).filter(
+        """根据ID获取文章（预加载sentences关系）"""
+        return self.session.query(OriginalText).options(
+            joinedload(OriginalText.sentences)
+        ).filter(
             OriginalText.text_id == text_id
         ).first()
     

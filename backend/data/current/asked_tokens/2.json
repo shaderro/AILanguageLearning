@@ -25,5 +25,392 @@
     "type": "token",
     "vocab_id": 55,
     "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762942413,
+    "sentence_id": 176,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 1
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763019461,
+    "sentence_id": 9,
+    "sentence_token_id": 15,
+    "type": "token",
+    "vocab_id": 80,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763019461,
+    "sentence_id": 6,
+    "sentence_token_id": 39,
+    "type": "token",
+    "vocab_id": 81,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 2,
+    "sentence_token_id": 1,
+    "type": "token",
+    "vocab_id": 81,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 4,
+    "sentence_token_id": 3,
+    "type": "token",
+    "vocab_id": 81,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 4,
+    "sentence_token_id": 7,
+    "type": "token",
+    "vocab_id": 84,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 6,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 16
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 6,
+    "sentence_token_id": 1,
+    "type": "token",
+    "vocab_id": 85,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 3,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 16
+  },
+  {
+    "user_id": 2,
+    "text_id": 1762952885,
+    "sentence_id": 3,
+    "sentence_token_id": 5,
+    "type": "token",
+    "vocab_id": 85,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763019461,
+    "sentence_id": 7,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 16
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763019461,
+    "sentence_id": 7,
+    "sentence_token_id": 31,
+    "type": "token",
+    "vocab_id": 85,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 11,
+    "sentence_token_id": 5,
+    "type": "token",
+    "vocab_id": 88,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 10,
+    "sentence_token_id": 31,
+    "type": "token",
+    "vocab_id": 43,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": 15,
+    "type": "token",
+    "vocab_id": 31,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": 30,
+    "type": "token",
+    "vocab_id": 35,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 7,
+    "sentence_token_id": 38,
+    "type": "token",
+    "vocab_id": 18,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 13,
+    "sentence_token_id": 24,
+    "type": "token",
+    "vocab_id": 45,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_token_id": 32,
+    "type": "token",
+    "vocab_id": 33,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_token_id": 24,
+    "type": "token",
+    "vocab_id": 27,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_token_id": 33,
+    "type": "token",
+    "vocab_id": 60,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763019461,
+    "sentence_id": 9,
+    "sentence_token_id": 11,
+    "type": "token",
+    "vocab_id": 89,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 4,
+    "sentence_token_id": 9,
+    "type": "token",
+    "vocab_id": 90,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 20
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_token_id": 21,
+    "type": "token",
+    "vocab_id": 91,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 4,
+    "sentence_token_id": 10,
+    "type": "token",
+    "vocab_id": 92,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 7,
+    "sentence_token_id": 2,
+    "type": "token",
+    "vocab_id": 92,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 8,
+    "sentence_token_id": 10,
+    "type": "token",
+    "vocab_id": 94,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 14,
+    "sentence_token_id": 7,
+    "type": "token",
+    "vocab_id": 94,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 18,
+    "sentence_token_id": 3,
+    "type": "token",
+    "vocab_id": 94,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 19,
+    "sentence_token_id": 1,
+    "type": "token",
+    "vocab_id": 94,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 19,
+    "sentence_token_id": 2,
+    "type": "token",
+    "vocab_id": 96,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 42,
+    "sentence_token_id": 9,
+    "type": "token",
+    "vocab_id": 100,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 42,
+    "sentence_token_id": 12,
+    "type": "token",
+    "vocab_id": 101,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 40,
+    "sentence_token_id": 0,
+    "type": "token",
+    "vocab_id": 102,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 15,
+    "sentence_token_id": 3,
+    "type": "token",
+    "vocab_id": 104,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_token_id": 5,
+    "type": "token",
+    "vocab_id": 105,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_token_id": 16,
+    "type": "token",
+    "vocab_id": 106,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_token_id": 14,
+    "type": "token",
+    "vocab_id": 107,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": 13,
+    "type": "token",
+    "vocab_id": 108,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_token_id": 14,
+    "type": "token",
+    "vocab_id": 109,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_token_id": 10,
+    "type": "token",
+    "vocab_id": 91,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_token_id": 15,
+    "type": "token",
+    "vocab_id": 112,
+    "grammar_id": null
   }
 ]

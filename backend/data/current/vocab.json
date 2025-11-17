@@ -631,6 +631,15 @@
         "token_indices": [
           5
         ]
+      },
+      {
+        "vocab_id": 31,
+        "text_id": 1,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这句话中，'besaß' 的意思是 '拥有' 或 '具有'，它用来描述德思礼夫人（Mrs Dursley）拥有一个特别长的脖子。具体来说，句子说 'besaß doppelt so viel Hals, wie notwendig gewesen wäre'，意思是她 '拥有的脖子长度是实际需要的两倍'，这突出了她脖子的夸张特征，为后文她伸长脖子窥视邻居的行为",
+        "token_indices": [
+          15
+        ]
       }
     ]
   },
@@ -838,7 +847,17 @@
     "explanation": "{'explanation': 'Nichtsnutz 是一个德语名词，意为“无用之人”或“废物”，用来形容一个懒惰、无能或毫无价值的人。这个词带有贬义，常用于非正式场合，表达对某人行为或性格的强烈不满。它也可以作为形容词使用，意为“无用的”或“毫无价值的”，但更常见的是作为名词。例如，在描述一个人时，可以说“Er ist ein Nichtsnutz”，意思是“他是个无用之人”。这个词强调缺乏生产力或贡献，常与负面评价相关。'}",
     "source": "qa",
     "is_starred": false,
-    "examples": []
+    "examples": [
+      {
+        "vocab_id": 43,
+        "text_id": 1,
+        "sentence_id": 10,
+        "context_explanation": "{\"explanation\": \"在这个句子中，“Nichtsnutz” 用来形容 Mrs Dursley 的姐夫，意思是“无用的人”或“废物”。它强调了这个人被认为毫无价值，与句子中“deren Nichtsnutz von einem Mann”（她的那个废物丈夫）相呼应，说明 Mrs Dursley 看不起他，觉得他和她的姐姐一样不符合 Dursley 家的标准。\"}",
+        "token_indices": [
+          31
+        ]
+      }
+    ]
   },
   {
     "vocab_id": 44,
@@ -1071,5 +1090,79 @@
     "source": "qa",
     "is_starred": false,
     "examples": []
+  },
+  {
+    "vocab_id": 58,
+    "vocab_body": "herrenhaus",
+    "explanation": "{'explanation': 'Herrenhaus 是一个德语名词，字面意思是“绅士的房子”或“领主宅邸”。它通常指历史上属于贵族、地主或富裕家庭的乡村庄园或豪宅，特别是在18至19世纪的欧洲。这种建筑往往规模较大，带有附属土地，用于居住和管理庄园事务。在现代语境中，它也可以泛指任何豪华的私人住宅，但更常见于历史或文化讨论中。该词为中性名词（das Herrenhaus），复数形式为 Herrenhäuser。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 58,
+        "text_id": 1762952885,
+        "sentence_id": 1,
+        "context_explanation": "{\"explanation\": \"在这句话中，'Herrenhaus' 指的是一个贵族或地主的住宅，通常带有庄园，这里描述 Schloss Kartlow 是一个这样的建筑。'Landkreis' 是德国的一个行政区划，相当于县或区，这里指 Vorpommern-Greifswald 这个县，表示 Schloss Kartlow 位于该县的 Kruckower Ortsteil Kartlow 地区。\"}",
+        "token_indices": [
+          13
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 59,
+    "vocab_body": "landkreis",
+    "explanation": "{'explanation': 'Landkreis 是一个德语名词，指德国的行政区划单位，相当于中国的“县”或“地区”。它通常用于表示一个较大的行政区域，包含多个市镇或村庄，负责管理地方事务如交通、教育和公共设施等。在德国，Landkreis 是州（Bundesland）下的次级行政单位。这个词没有复数形式变化，直接用作单数名词。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 59,
+        "text_id": 1762952885,
+        "sentence_id": 1,
+        "context_explanation": "{\"explanation\": \"在句子中，“Landkreis Vorpommern-Greifswald” 指的是一个行政区划（类似于县或区），而“Kruckower Ortsteil Kartlow” 表示 Kartlow 是 Kruckow 的一个分区。因此，“Landkreis Kruckower” 可能是一个误解；实际上，句子是说 Schloss Kartlow 位于 Vorpommern-Greifswald 县，具体在 Kruckow 的 Kartlow",
+        "token_indices": [
+          19,
+          21,
+          23
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 60,
+    "vocab_body": "demolish",
+    "explanation": "{'explanation': '动词，意为拆除、摧毁建筑物或其他结构。通常指有计划地、彻底地破坏建筑物使其完全消失。也可引申为彻底推翻、驳倒（理论、观点等）。过去式和过去分词形式为 demolished。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 60,
+        "text_id": 1763024389,
+        "sentence_id": 5,
+        "context_explanation": "{\"explanation\": \"在这个句子中，'demolished' 的意思是'被拆除'，它描述了联合碳化物大楼（the Union Carbide Building）被故意推倒的行为，强调这是主动进行的拆除，而不是意外或自然原因导致的破坏。\"}",
+        "token_indices": [
+          30
+        ]
+      }
+    ]
+  },
+  {
+    "vocab_id": 61,
+    "vocab_body": "preservationist",
+    "explanation": "{'explanation': 'preservationist 是一个名词，指致力于保护历史建筑、自然环境、文化遗产等免遭破坏或改变的人。他们通常支持维护和修复具有历史、文化或生态价值的场所，反对拆除、开发或现代化改造。这个词常用于环保、历史保护或城市规划的语境中。'}",
+    "source": "qa",
+    "is_starred": false,
+    "examples": [
+      {
+        "vocab_id": 61,
+        "text_id": 1763025147,
+        "sentence_id": 7,
+        "context_explanation": "{\"explanation\": \"在这句话中，“preservationists”指的是那些反对拆除联合碳化物大厦的人，因为他们认为这座建筑具有历史或文化价值，应当被保留和保护。他们的“objections”（反对意见）体现了对拆除行动的抵制。\"}",
+        "token_indices": [
+          3
+        ]
+      }
+    ]
   }
 ]

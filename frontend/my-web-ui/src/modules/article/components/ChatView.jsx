@@ -2,6 +2,7 @@
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
+import { useRefreshData } from '../../../hooks/useApi'
 
 export default function ChatView({ 
   quotedText, 
@@ -24,6 +25,7 @@ export default function ChatView({
   addVocabExampleToCache = null
 }) {
   const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
+  const { refreshGrammar, refreshVocab } = useRefreshData()  // 🔧 添加自动刷新功能
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
   ])
@@ -246,8 +248,11 @@ export default function ChatView({
       
       document.title = '收到响应，处理中...'
       console.log('✅ [Frontend] 步骤5: 收到响应')
+      console.log('🔍 [Frontend] 完整响应数据:', response)
+      console.log('🔍 [Frontend] response.created_grammar_notations:', response?.created_grammar_notations)
+      console.log('🔍 [Frontend] response.created_vocab_notations:', response?.created_vocab_notations)
       
-      // 🔧 立即显示 AI 回答和 notations（不等待标记操作）
+      // 🔧 立即显示 AI 回答（不等待后续流程）
       if (response && response.ai_response) {
         document.title = '显示 AI 回答...'
         const aiMessage = {
@@ -261,9 +266,9 @@ export default function ChatView({
         console.log('📺 [ChatView] AI 回答已立即显示')
       }
       
-      // 立即添加 notations 到缓存
+      // 🔧 立即添加 notations 到缓存（如果有）
       document.title = '添加 notations...'
-      if (response?.created_grammar_notations) {
+      if (response?.created_grammar_notations && response.created_grammar_notations.length > 0) {
         console.log('➕ Adding grammar notations:', response.created_grammar_notations)
         response.created_grammar_notations.forEach(n => {
           console.log('Adding notation:', n)
@@ -271,8 +276,110 @@ export default function ChatView({
         })
         document.title = `Added ${response.created_grammar_notations.length} grammar notations`
       }
-      if (response?.created_vocab_notations) {
-        response.created_vocab_notations.forEach(n => addVocabNotationToCache?.(n))
+      if (response?.created_vocab_notations && response.created_vocab_notations.length > 0) {
+        console.log('➕ [ChatView] ========== 开始处理 vocab notations ==========')
+        console.log('➕ [ChatView] 接收到的 created_vocab_notations:', JSON.stringify(response.created_vocab_notations, null, 2))
+        console.log('➕ [ChatView] addVocabNotationToCache 函数类型:', typeof addVocabNotationToCache)
+        console.log('➕ [ChatView] addVocabNotationToCache 函数:', addVocabNotationToCache)
+        
+        response.created_vocab_notations.forEach((n, index) => {
+          console.log(`➕ [ChatView] 处理第 ${index + 1} 个 vocab notation:`, n)
+          // 🔧 字段名映射：后端返回 token_id，前端期望 token_index
+          const mappedNotation = {
+            ...n,
+            token_index: n.token_id || n.token_index  // 添加 token_index 字段
+          }
+          console.log(`➕ [ChatView] 映射后的 notation ${index + 1}:`, mappedNotation)
+          
+          if (addVocabNotationToCache) {
+            console.log(`➕ [ChatView] 调用 addVocabNotationToCache 添加第 ${index + 1} 个 notation`)
+            addVocabNotationToCache(mappedNotation)
+            console.log(`✅ [ChatView] addVocabNotationToCache 调用完成（第 ${index + 1} 个）`)
+          } else {
+            console.error('❌ [ChatView] addVocabNotationToCache 函数不存在！')
+          }
+        })
+        console.log('➕ [ChatView] ========== vocab notations 处理完成 ==========')
+        document.title = `Added ${response.created_vocab_notations.length} vocab notations`
+      } else {
+        console.log('⚠️ [ChatView] 响应中没有 created_vocab_notations 或为空:', {
+          hasCreatedVocabNotations: !!response?.created_vocab_notations,
+          length: response?.created_vocab_notations?.length || 0,
+          created_vocab_notations: response?.created_vocab_notations
+        })
+      }
+      
+      // 🔧 如果响应中没有 notations，说明后台正在创建，启动轮询机制
+      const hasGrammarNotations = response?.created_grammar_notations && Array.isArray(response.created_grammar_notations) && response.created_grammar_notations.length > 0
+      const hasVocabNotations = response?.created_vocab_notations && Array.isArray(response.created_vocab_notations) && response.created_vocab_notations.length > 0
+      
+      console.log('🔍 [ChatView] 检查是否需要启动轮询:', {
+        hasGrammarNotations,
+        hasVocabNotations,
+        created_grammar_notations: response?.created_grammar_notations,
+        created_vocab_notations: response?.created_vocab_notations,
+        refreshGrammarNotations: typeof refreshGrammarNotations
+      })
+      
+      if (!hasGrammarNotations && !hasVocabNotations) {
+        console.log('🔄 [ChatView] ========== 响应中没有notations，启动轮询机制等待后台创建 ==========')
+        // 轮询获取新创建的notations（最多轮询15次，每次间隔500ms，更快响应）
+        let pollCount = 0
+        const maxPolls = 15
+        const pollInterval = 500  // 🔧 减少轮询间隔到500ms，更快响应
+        
+        const pollForNotations = setInterval(async () => {
+          pollCount++
+          console.log(`🔄 [ChatView] 轮询获取notations (${pollCount}/${maxPolls})...`)
+          
+          try {
+            // 刷新notations缓存
+            if (refreshGrammarNotations) {
+              console.log('🔄 [ChatView] 调用 refreshGrammarNotations() 刷新缓存...')
+              await refreshGrammarNotations()
+              console.log('✅ [ChatView] Notations缓存已刷新')
+            } else {
+              console.warn('⚠️ [ChatView] refreshGrammarNotations 函数不存在')
+            }
+          } catch (error) {
+            console.error('❌ [ChatView] 轮询刷新notations失败:', error)
+          }
+          
+          // 如果达到最大轮询次数，停止轮询
+          if (pollCount >= maxPolls) {
+            clearInterval(pollForNotations)
+            console.log('⏹️ [ChatView] 轮询结束（达到最大次数）')
+          }
+        }, pollInterval)
+        
+        // 7.5秒后自动停止轮询
+        setTimeout(() => {
+          clearInterval(pollForNotations)
+          console.log('⏹️ [ChatView] 轮询结束（超时）')
+        }, maxPolls * pollInterval)
+        
+        console.log('✅ [ChatView] 轮询机制已启动')
+      } else {
+        console.log('⏭️ [ChatView] 响应中已有notations，跳过轮询:', {
+          hasGrammarNotations,
+          hasVocabNotations
+        })
+      }
+      
+      // 🔧 自动刷新 grammar/vocab 列表（如果有新数据或新notations）
+      const hasNewGrammar = response?.grammar_to_add && response.grammar_to_add.length > 0
+      const hasNewVocab = response?.vocab_to_add && response.vocab_to_add.length > 0
+      
+      // 如果有新语法被创建，或者有新的 grammar notation（为现有语法添加例句），都刷新
+      if (hasNewGrammar || hasGrammarNotations) {
+        console.log('🔄 [ChatView] 检测到新语法或grammar notation，自动刷新 grammar 列表...')
+        refreshGrammar()
+      }
+      
+      // 如果有新词汇被创建，或者有新的 vocab notation（为现有词汇添加例句），都刷新
+      if (hasNewVocab || hasVocabNotations) {
+        console.log('🔄 [ChatView] 检测到新词汇或vocab notation，自动刷新 vocab 列表...')
+        refreshVocab()
       }
       
       // Toast
@@ -572,16 +679,7 @@ export default function ChatView({
         
         console.log('='.repeat(80) + '\n')
         
-        // 显示 AI 响应
-        if (ai_response) {
-          const aiMessage = {
-            id: Date.now() + 1,
-            text: ai_response,
-            isUser: false,
-            timestamp: new Date()
-          }
-          setMessages(prev => [...prev, aiMessage])
-        }
+        // 🔧 注意：AI 回答已在上面立即显示（第255-267行），这里不再重复显示
         
         // 显示总结的语法和词汇（通过 Toast）
         const summaryItems = []
@@ -650,9 +748,21 @@ export default function ChatView({
       } else if (error.message.includes('timeout')) {
         errorMessage = '请求超时，请检查网络连接或稍后重试。'
       } else if (error.response?.status === 500) {
-        errorMessage = '服务器内部错误，请稍后重试。'
+        // 尝试从响应中获取详细错误信息
+        const errorData = error.response?.data
+        if (errorData?.error) {
+          errorMessage = `服务器错误: ${errorData.error}`
+        } else if (errorData?.data?.error) {
+          errorMessage = `服务器错误: ${errorData.data.error}`
+        } else {
+          errorMessage = '服务器内部错误，请稍后重试。'
+        }
+        console.error('💥 [Frontend] 服务器错误详情:', errorData)
       } else if (error.response?.status === 503) {
         errorMessage = '服务暂时不可用，请稍后重试。'
+      } else if (error.response?.data?.error) {
+        // 尝试从响应中获取错误信息
+        errorMessage = error.response.data.error
       }
       
       // 显示错误消息
@@ -768,6 +878,135 @@ export default function ChatView({
       })
       
       console.log('✅ [Frontend] Chat response received:', response)
+      
+      // 🔧 立即显示 AI 回答（不等待后续流程）
+      if (response && response.ai_response) {
+        document.title = '显示 AI 回答...'
+        const aiMessage = {
+          id: Date.now() + 1,
+          text: response.ai_response,
+          isUser: false,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, aiMessage])
+        document.title = 'AI 回答已显示'
+        console.log('📺 [ChatView] AI 回答已立即显示（建议问题）')
+      }
+      
+      // 🔧 立即添加 notations 到缓存（如果有）
+      document.title = '添加 notations...'
+      if (response?.created_grammar_notations && response.created_grammar_notations.length > 0) {
+        console.log('➕ [ChatView] Adding grammar notations (建议问题):', response.created_grammar_notations)
+        response.created_grammar_notations.forEach(n => {
+          console.log('Adding notation:', n)
+          if (addGrammarNotationToCache) addGrammarNotationToCache(n)
+        })
+        document.title = `Added ${response.created_grammar_notations.length} grammar notations`
+      }
+      if (response?.created_vocab_notations && response.created_vocab_notations.length > 0) {
+        console.log('➕ [ChatView] ========== 开始处理 vocab notations (建议问题) ==========')
+        console.log('➕ [ChatView] 接收到的 created_vocab_notations:', JSON.stringify(response.created_vocab_notations, null, 2))
+        console.log('➕ [ChatView] addVocabNotationToCache 函数类型:', typeof addVocabNotationToCache)
+        
+        response.created_vocab_notations.forEach((n, index) => {
+          console.log(`➕ [ChatView] 处理第 ${index + 1} 个 vocab notation (建议问题):`, n)
+          // 🔧 字段名映射：后端返回 token_id，前端期望 token_index
+          const mappedNotation = {
+            ...n,
+            token_index: n.token_id || n.token_index  // 添加 token_index 字段
+          }
+          console.log(`➕ [ChatView] 映射后的 notation ${index + 1} (建议问题):`, mappedNotation)
+          
+          if (addVocabNotationToCache) {
+            console.log(`➕ [ChatView] 调用 addVocabNotationToCache 添加第 ${index + 1} 个 notation (建议问题)`)
+            addVocabNotationToCache(mappedNotation)
+            console.log(`✅ [ChatView] addVocabNotationToCache 调用完成（第 ${index + 1} 个，建议问题）`)
+          } else {
+            console.error('❌ [ChatView] addVocabNotationToCache 函数不存在（建议问题）！')
+          }
+        })
+        console.log('➕ [ChatView] ========== vocab notations 处理完成 (建议问题) ==========')
+        document.title = `Added ${response.created_vocab_notations.length} vocab notations`
+      } else {
+        console.log('⚠️ [ChatView] 响应中没有 created_vocab_notations 或为空 (建议问题):', {
+          hasCreatedVocabNotations: !!response?.created_vocab_notations,
+          length: response?.created_vocab_notations?.length || 0,
+          created_vocab_notations: response?.created_vocab_notations
+        })
+      }
+      
+      // 🔧 如果响应中没有 notations，说明后台正在创建，启动轮询机制
+      const hasGrammarNotations = response?.created_grammar_notations && Array.isArray(response.created_grammar_notations) && response.created_grammar_notations.length > 0
+      const hasVocabNotations = response?.created_vocab_notations && Array.isArray(response.created_vocab_notations) && response.created_vocab_notations.length > 0
+      
+      console.log('🔍 [ChatView] 检查是否需要启动轮询 (建议问题):', {
+        hasGrammarNotations,
+        hasVocabNotations,
+        created_grammar_notations: response?.created_grammar_notations,
+        created_vocab_notations: response?.created_vocab_notations,
+        refreshGrammarNotations: typeof refreshGrammarNotations
+      })
+      
+      if (!hasGrammarNotations && !hasVocabNotations) {
+        console.log('🔄 [ChatView] ========== 响应中没有notations，启动轮询机制等待后台创建 (建议问题) ==========')
+        // 轮询获取新创建的notations（最多轮询15次，每次间隔500ms，更快响应）
+        let pollCount = 0
+        const maxPolls = 15
+        const pollInterval = 500  // 🔧 减少轮询间隔到500ms，更快响应
+        
+        const pollForNotations = setInterval(async () => {
+          pollCount++
+          console.log(`🔄 [ChatView] 轮询获取notations (${pollCount}/${maxPolls})... (建议问题)`)
+          
+          try {
+            // 刷新notations缓存
+            if (refreshGrammarNotations) {
+              console.log('🔄 [ChatView] 调用 refreshGrammarNotations() 刷新缓存 (建议问题)...')
+              await refreshGrammarNotations()
+              console.log('✅ [ChatView] Notations缓存已刷新 (建议问题)')
+            } else {
+              console.warn('⚠️ [ChatView] refreshGrammarNotations 函数不存在 (建议问题)')
+            }
+          } catch (error) {
+            console.error('❌ [ChatView] 轮询刷新notations失败 (建议问题):', error)
+          }
+          
+          // 如果达到最大轮询次数，停止轮询
+          if (pollCount >= maxPolls) {
+            clearInterval(pollForNotations)
+            console.log('⏹️ [ChatView] 轮询结束（达到最大次数）(建议问题)')
+          }
+        }, pollInterval)
+        
+        // 7.5秒后自动停止轮询
+        setTimeout(() => {
+          clearInterval(pollForNotations)
+          console.log('⏹️ [ChatView] 轮询结束（超时）(建议问题)')
+        }, maxPolls * pollInterval)
+        
+        console.log('✅ [ChatView] 轮询机制已启动 (建议问题)')
+      } else {
+        console.log('⏭️ [ChatView] 响应中已有notations，跳过轮询 (建议问题):', {
+          hasGrammarNotations,
+          hasVocabNotations
+        })
+      }
+      
+      // 🔧 自动刷新 grammar/vocab 列表（如果有新数据或新notations）
+      const hasNewGrammar = response?.grammar_to_add && response.grammar_to_add.length > 0
+      const hasNewVocab = response?.vocab_to_add && response.vocab_to_add.length > 0
+      
+      // 如果有新语法被创建，或者有新的 grammar notation（为现有语法添加例句），都刷新
+      if (hasNewGrammar || hasGrammarNotations) {
+        console.log('🔄 [ChatView] 检测到新语法或grammar notation，自动刷新 grammar 列表 (建议问题)...')
+        refreshGrammar()
+      }
+      
+      // 如果有新词汇被创建，或者有新的 vocab notation（为现有词汇添加例句），都刷新
+      if (hasNewVocab || hasVocabNotations) {
+        console.log('🔄 [ChatView] 检测到新词汇或vocab notation，自动刷新 vocab 列表 (建议问题)...')
+        refreshVocab()
+      }
       
       // 标记选中的tokens为已提问
       console.log('🔍 [DEBUG] 检查标记条件（建议问题）:', {
@@ -1005,16 +1244,7 @@ export default function ChatView({
         
         console.log('='.repeat(80) + '\n')
         
-        // 显示 AI 响应
-        if (ai_response) {
-          const aiMessage = {
-            id: Date.now() + 1,
-            text: ai_response,
-            isUser: false,
-            timestamp: new Date()
-          }
-          setMessages(prev => [...prev, aiMessage])
-        }
+        // 🔧 注意：AI 回答已在上面立即显示（第255-267行），这里不再重复显示
         
         // 显示总结的语法和词汇（通过 Toast）
         const summaryItems = []
@@ -1082,9 +1312,21 @@ export default function ChatView({
       } else if (error.message.includes('timeout')) {
         errorMessage = '请求超时，请检查网络连接或稍后重试。'
       } else if (error.response?.status === 500) {
-        errorMessage = '服务器内部错误，请稍后重试。'
+        // 尝试从响应中获取详细错误信息
+        const errorData = error.response?.data
+        if (errorData?.error) {
+          errorMessage = `服务器错误: ${errorData.error}`
+        } else if (errorData?.data?.error) {
+          errorMessage = `服务器错误: ${errorData.data.error}`
+        } else {
+          errorMessage = '服务器内部错误，请稍后重试。'
+        }
+        console.error('💥 [Frontend] 服务器错误详情:', errorData)
       } else if (error.response?.status === 503) {
         errorMessage = '服务暂时不可用，请稍后重试。'
+      } else if (error.response?.data?.error) {
+        // 尝试从响应中获取错误信息
+        errorMessage = error.response.data.error
       }
       
       // 显示错误消息

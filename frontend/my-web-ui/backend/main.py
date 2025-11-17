@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends
+from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import json
@@ -246,6 +246,14 @@ app.add_middleware(
 @app.middleware("http")
 async def log_requests(request, call_next):
     print(f"📥 [Request] {request.method} {request.url.path}")
+    # 如果是 POST 请求，记录请求体大小
+    if request.method == "POST":
+        body = await request.body()
+        print(f"📦 [Request] Body size: {len(body)} bytes")
+        # 将 body 放回，以便后续处理
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
     response = await call_next(request)
     print(f"📤 [Response] {request.method} {request.url.path} -> {response.status_code}")
     return response
@@ -378,6 +386,170 @@ try:
 except Exception as e:
     print(f"⚠️ Global data loading failed: {e}")
     print("⚠️ Continuing with empty data")
+
+# 将处理后的文章数据导入到数据库
+def import_article_to_database(result: dict, article_id: int, user_id, language: str = None):
+    """
+    将处理后的文章数据导入到数据库或返回游客数据
+    
+    参数:
+        result: process_article返回的结果字典，包含sentences和tokens
+        article_id: 文章ID
+        user_id: 用户ID（整数表示正式用户，字符串表示游客）
+        language: 语言（中文、英文、德文），可选
+    
+    返回:
+        如果是正式用户: True/False（成功/失败）
+        如果是游客: 字典，包含文章数据，格式: {"is_guest": True, "article_data": {...}}
+    """
+    # 判断是游客还是正式用户
+    is_guest = isinstance(user_id, str) and user_id.startswith('guest_')
+    
+    if is_guest:
+        # 游客模式：返回文章数据，由前端保存到 localStorage
+        print(f"👤 [Import] 游客模式，返回文章数据供前端保存 (guest_id: {user_id}, language: {language})")
+        
+        article_data = {
+            "article_id": article_id,
+            "title": result.get('text_title', 'Untitled Article'),
+            "language": language,
+            "total_sentences": result.get('total_sentences', 0),
+            "total_tokens": result.get('total_tokens', 0),
+            "sentences": result.get('sentences', []),
+            "tokens": []  # tokens 包含在 sentences 中，不需要单独存储
+        }
+        
+        return {"is_guest": True, "article_data": article_data}
+    
+    # 正式用户模式：保存到数据库
+    try:
+        # 验证用户是否存在
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import User
+        
+        db_manager = DatabaseManager('development')
+        session = db_manager.get_session()
+        
+        try:
+            # 验证用户是否存在
+            user = session.query(User).filter(User.user_id == user_id).first()
+            if not user:
+                print(f"❌ [Import] 用户 {user_id} 不存在")
+                return False
+            
+            from backend.data_managers import OriginalTextManagerDB
+            from database_system.business_logic.crud import TokenCRUD
+            from database_system.business_logic.models import TokenType
+            
+            text_manager = OriginalTextManagerDB(session)
+            token_crud = TokenCRUD(session)
+            
+            # 1. 创建文章（使用指定的article_id）
+            # 先检查文章是否已存在且属于该用户
+            existing_text = text_manager.get_text_by_id(article_id, include_sentences=False)
+            if existing_text:
+                # 检查文章是否属于该用户（通过数据库查询验证）
+                from database_system.business_logic.models import OriginalText
+                text_model = session.query(OriginalText).filter(
+                    OriginalText.text_id == article_id,
+                    OriginalText.user_id == user_id
+                ).first()
+                
+                if text_model:
+                    print(f"⚠️ [Import] 文章 {article_id} 已存在且属于用户 {user_id}，跳过创建")
+                else:
+                    print(f"❌ [Import] 文章 {article_id} 已存在但属于其他用户，无法导入")
+                    return False
+            else:
+                # 创建文章记录（使用text_manager.add_text方法，支持language参数）
+                # 注意：由于需要指定article_id，我们不能直接使用add_text（它使用数据库自增ID）
+                # 所以我们需要直接创建OriginalText模型并指定text_id
+                from database_system.business_logic.models import OriginalText
+                text_model = OriginalText(
+                    text_id=article_id,
+                    text_title=result.get('text_title', 'Untitled Article'),
+                    user_id=user_id,
+                    language=language
+                )
+                session.add(text_model)
+                session.flush()  # 刷新以获取ID
+                print(f"✅ [Import] 创建文章: {text_model.text_title} (ID: {article_id}, User: {user_id}, Language: {language})")
+            
+            # 2. 导入句子和tokens
+            sentences = result.get('sentences', [])
+            total_sentences = 0
+            total_tokens = 0
+            
+            for sentence_data in sentences:
+                sentence_id = sentence_data.get('sentence_id', total_sentences + 1)
+                sentence_body = sentence_data.get('sentence_body', '')
+                
+                # 检查句子是否已存在
+                existing_sentence = text_manager.get_sentence(article_id, sentence_id)
+                if existing_sentence:
+                    print(f"⚠️ [Import] 句子 {article_id}:{sentence_id} 已存在，跳过")
+                    continue
+                
+                # 创建句子
+                sentence = text_manager.add_sentence_to_text(
+                    text_id=article_id,
+                    sentence_text=sentence_body,
+                    difficulty_level=None
+                )
+                total_sentences += 1
+                
+                # 3. 导入tokens
+                tokens = sentence_data.get('tokens', [])
+                for token_data in tokens:
+                    token_body = token_data.get('token_body', token_data.get('text', ''))
+                    token_type_str = token_data.get('token_type', 'TEXT')
+                    
+                    # 转换为TokenType枚举名称（数据库期望枚举名称，如 'TEXT', 'PUNCTUATION', 'SPACE'）
+                    try:
+                        token_type_str_upper = token_type_str.upper()
+                        if token_type_str_upper == 'TEXT':
+                            token_type_name = 'TEXT'
+                        elif token_type_str_upper == 'PUNCTUATION':
+                            token_type_name = 'PUNCTUATION'
+                        elif token_type_str_upper == 'SPACE':
+                            token_type_name = 'SPACE'
+                        else:
+                            token_type_name = 'TEXT'  # 默认
+                    except:
+                        token_type_name = 'TEXT'
+                    
+                    sentence_token_id = token_data.get('sentence_token_id', token_data.get('token_id'))
+                    
+                    # 创建token（传递枚举名称字符串，数据库期望枚举名称）
+                    token_crud.create(
+                        text_id=article_id,
+                        sentence_id=sentence_id,
+                        token_body=token_body,
+                        token_type=token_type_name,  # 传递枚举名称字符串（'TEXT', 'PUNCTUATION', 'SPACE'）
+                        sentence_token_id=sentence_token_id,
+                        pos_tag=token_data.get('pos_tag'),
+                        lemma=token_data.get('lemma')
+                    )
+                    total_tokens += 1
+                
+                if total_sentences % 50 == 0:
+                    print(f"📊 [Import] 已导入 {total_sentences} 个句子，{total_tokens} 个tokens...")
+            
+            session.commit()
+            print(f"✅ [Import] 导入完成: {total_sentences} 个句子，{total_tokens} 个tokens (User: {user_id}, Language: {language})")
+            return True
+            
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+            
+    except Exception as e:
+        print(f"❌ [Import] 导入文章到数据库失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 # 异步保存数据的辅助函数
 def save_data_async(dc, grammar_path, vocab_path, text_path, dialogue_record_path, dialogue_history_path):
@@ -551,23 +723,33 @@ def _sync_to_database(user_id: int = None):
             vocab_db_mgr = VocabManagerDB(session)
             text_db_mgr = OriginalTextManagerDB(session)
             
-            # 首先同步文章数据（必须先同步，因为grammar/vocab examples依赖于texts表）
-            print("📄 [Sync] 同步文章数据...")
-            synced_texts = 0
-            for text_id, text_obj in global_dc.text_manager.original_texts.items():
-                # 检查文章是否已存在
-                existing_text = text_db_mgr.get_text_by_id(text_id, include_sentences=False)
-                if not existing_text:
-                    # 文章不存在，创建基本记录（句子数据通过文章上传API处理）
-                    title = getattr(text_obj, 'text_title', f'Article {text_id}')
-                    new_text = text_db_mgr.add_text(title, user_id=user_id)
-                    print(f"✅ [Sync] 新增文章占位符: {title} (ID: {new_text.text_id})")
-                    print(f"  ℹ️  句子数据需要通过文章上传API导入")
-                    synced_texts += 1
-                else:
-                    print(f"📝 [Sync] 文章已存在: {existing_text.text_title} (ID: {text_id})")
+            # 🔧 修复：不再同步所有内存中的文章，因为：
+            # 1. global_dc.text_manager.original_texts 包含所有用户的数据（没有用户隔离）
+            # 2. 文章应该通过文章上传API处理，而不是在这里同步
+            # 3. 如果需要在同步vocab/grammar时确保文章存在，应该在创建example时检查
+            print("📄 [Sync] 跳过文章同步（文章应通过上传API处理，且global_dc包含所有用户数据）")
             
-            print(f"✅ [Sync] 文章同步完成: {synced_texts} 个新文章基本信息")
+            # 🔧 可选：如果需要，可以同步当前操作相关的文章
+            # 从 session_state 获取当前文章ID
+            current_text_id = None
+            if hasattr(session_state, 'current_sentence') and session_state.current_sentence:
+                current_text_id = getattr(session_state.current_sentence, 'text_id', None)
+            
+            if current_text_id and user_id:
+                try:
+                    # 检查当前文章是否存在于数据库中，且属于当前用户
+                    from database_system.business_logic.models import OriginalText
+                    text_model = session.query(OriginalText).filter(
+                        OriginalText.text_id == current_text_id,
+                        OriginalText.user_id == user_id
+                    ).first()
+                    if not text_model:
+                        print(f"⚠️ [Sync] 当前文章 (ID: {current_text_id}) 在数据库中不存在或不属于用户 {user_id}")
+                        print(f"  ℹ️  文章应通过文章上传API导入到数据库")
+                    else:
+                        print(f"✅ [Sync] 当前文章存在于数据库: {text_model.text_title} (ID: {current_text_id})")
+                except Exception as e:
+                    print(f"⚠️ [Sync] 检查当前文章时出错: {e}")
             
             # 同步 Grammar Rules（只同步本轮新增的）
             print(f"📚 [Sync] 同步本轮新增的 Grammar Rules (共{len(session_state.grammar_to_add)}个)...")
@@ -576,99 +758,153 @@ def _sync_to_database(user_id: int = None):
                 rule_name = grammar_item.rule_name
                 rule_explanation = grammar_item.rule_explanation
                 
-                # 检查是否已存在
-                existing = grammar_db_mgr.get_rule_by_name(rule_name)
-                if not existing:
-                    # 添加新的 grammar rule
+                # 🔧 修复：直接使用add_new_rule，它内部使用get_or_create逻辑（按user_id和rule_name检查）
+                # 如果已存在（属于当前用户），会返回现有记录；如果不存在或属于其他用户，会创建新记录
+                # 注意：这里没有language，因为在main_assistant中已经创建时传递了language
+                # 但为了保持一致性，我们仍然调用add_new_rule（它会在已存在时跳过）
+                # 实际上，在main_assistant中已经创建了，这里可能不需要再次创建
+                # 但为了确保数据同步，我们仍然调用（get_or_create会处理已存在的情况）
+                try:
                     new_rule = grammar_db_mgr.add_new_rule(
                         name=rule_name,
                         explanation=rule_explanation or '',
-                        source='auto',
-                        user_id=user_id
+                        source='qa',  # 🔧 修复：使用'qa'而不是'auto'，与main_assistant保持一致
+                        user_id=user_id,
+                        language=None  # 🔧 注意：这里没有language，因为在main_assistant中已经创建时传递了
                     )
-                    print(f"✅ [Sync] 新增 grammar rule: {rule_name} (ID: {new_rule.rule_id})")
-                    synced_grammar += 1
+                    # 🔧 检查是新建还是已存在（通过检查数据库模型）
+                    from database_system.business_logic.models import GrammarRule
+                    grammar_model = session.query(GrammarRule).filter(
+                        GrammarRule.rule_id == new_rule.rule_id
+                    ).first()
+                    if grammar_model:
+                        # 检查创建时间是否很近（1秒内），如果是，可能是新创建的
+                        import datetime
+                        time_diff = (datetime.datetime.now() - grammar_model.created_at).total_seconds()
+                        if time_diff < 2:
+                            print(f"✅ [Sync] 新增 grammar rule: {rule_name} (ID: {new_rule.rule_id})")
+                            synced_grammar += 1
+                        else:
+                            print(f"📝 [Sync] Grammar rule已存在（当前用户）: {rule_name} (ID: {new_rule.rule_id})")
                     
                     # 同步本轮的grammar notation（如果有）
                     for notation in session_state.created_grammar_notations:
                         # 只同步与当前rule相关的notation（通过grammar_id匹配）
                         # 注意：此时新rule刚创建，需要在assistant中先记录rule_id
                         pass  # TODO: 需要从assistant中传递grammar_id映射
-                else:
-                    print(f"📝 [Sync] Grammar rule已存在: {rule_name}")
+                except Exception as e:
+                    print(f"⚠️ [Sync] 同步 grammar rule 时出错: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            # 🔧 修复：vocab 和 grammar 已经在 main_assistant.add_new_to_data() 中使用数据库管理器创建了
+            # 所以这里不需要再同步，因为：
+            # 1. vocab 和 grammar 已经在数据库中（通过数据库管理器直接创建）
+            # 2. examples 也在 main_assistant 中创建了（通过 data_controller.add_vocab_example）
+            # 3. global_dc.vocab_manager.vocab_bundles 中没有数据（因为使用的是数据库管理器，不是 global_dc）
+            # 
+            # 如果需要在 _sync_to_database 中同步 examples，应该直接从数据库查找 vocab，而不是从 global_dc 查找
+            # 但实际上 examples 已经在 main_assistant 中创建了，所以这里不需要再同步
             
             # 同步 Vocab Expressions（只同步本轮新增的）
             print(f"📖 [Sync] 同步本轮新增的 Vocab Expressions (共{len(session_state.vocab_to_add)}个)...")
+            print(f"  ℹ️  注意：vocab 已在 main_assistant 中使用数据库管理器创建，这里只同步 examples（如果需要）")
             synced_vocab = 0
             
             # 从session_state获取本轮新增的vocab
             for vocab_item in session_state.vocab_to_add:
                 vocab_body = vocab_item.vocab
                 
-                # 在global_dc中查找对应的bundle
-                bundle = None
-                for vid, vb in global_dc.vocab_manager.vocab_bundles.items():
-                    if getattr(vb, 'vocab_body', None) == vocab_body:
-                        bundle = vb
-                        break
-                
-                if not bundle:
-                    print(f"⚠️ [Sync] 在内存中找不到vocab: {vocab_body}")
-                    continue
-                
-                explanation = getattr(bundle, 'explanation', '')
-                examples = getattr(bundle, 'examples', None) or getattr(bundle, 'example', [])
-                
-                # 检查是否已存在于数据库
-                existing = vocab_db_mgr.get_vocab_by_body(vocab_body)
-                if not existing:
-                    # 添加新的 vocab
-                    new_vocab = vocab_db_mgr.add_new_vocab(
-                        vocab_body=vocab_body,
-                        explanation=explanation,
-                        user_id=user_id
-                    )
-                    print(f"✅ [Sync] 新增 vocab: {vocab_body} (ID: {new_vocab.vocab_id})")
-                    synced_vocab += 1
+                # 🔧 修复：直接从数据库查找 vocab（因为已经在 main_assistant 中创建了）
+                try:
+                    # 从数据库查找 vocab（按 user_id 和 vocab_body）
+                    from database_system.business_logic.models import VocabExpression
+                    vocab_model = session.query(VocabExpression).filter(
+                        VocabExpression.vocab_body == vocab_body,
+                        VocabExpression.user_id == user_id
+                    ).first()
                     
-                    # 同步 examples
-                    print(f"🔍 [Sync] Vocab {vocab_body} 有 {len(examples)} 个 examples")
-                    added_examples = 0
-                    skipped_examples = 0
-                    for ex in examples:
-                        try:
-                            # 调试：打印example的完整信息
-                            print(f"  🔍 [Debug] Example详情: text_id={ex.text_id}, sentence_id={ex.sentence_id}, type={type(ex.text_id)}")
-                            
-                            # 先检查text_id是否存在且属于当前用户
-                            from database_system.business_logic.managers import TextManager
-                            from database_system.business_logic.models import OriginalText
-                            text_model = session.query(OriginalText).filter(
-                                OriginalText.text_id == ex.text_id,
-                                OriginalText.user_id == user_id
-                            ).first()
-                            if not text_model:
-                                print(f"  ⚠️ 跳过 example (text_id={ex.text_id} 不存在或不属于用户 {user_id}): sentence_id={ex.sentence_id}")
+                    if not vocab_model:
+                        print(f"⚠️ [Sync] 在数据库中找不到vocab: {vocab_body} (user_id={user_id})")
+                        print(f"  ℹ️  可能 vocab 在 main_assistant 中创建失败，或还未创建")
+                        continue
+                    
+                    vocab_id = vocab_model.vocab_id
+                    print(f"✅ [Sync] 找到vocab: {vocab_body} (ID: {vocab_id})")
+                    
+                    # 🔧 检查 examples 是否需要同步
+                    # 实际上，examples 已经在 main_assistant 中创建了（通过 data_controller.add_vocab_example）
+                    # 但 data_controller 使用的是文件系统管理器，所以 examples 可能不在数据库中
+                    # 让我们检查一下数据库中是否已有 examples
+                    from database_system.business_logic.models import VocabExpressionExample
+                    existing_examples_count = session.query(VocabExpressionExample).filter(
+                        VocabExpressionExample.vocab_id == vocab_id
+                    ).count()
+                    
+                    # 🔧 尝试从 global_dc 获取 examples（如果存在）
+                    # 注意：由于使用的是数据库管理器，global_dc 中可能没有数据
+                    examples = []
+                    bundle = None
+                    for vid, vb in global_dc.vocab_manager.vocab_bundles.items():
+                        if getattr(vb, 'vocab_body', None) == vocab_body:
+                            bundle = vb
+                            break
+                    
+                    if bundle:
+                        examples = getattr(bundle, 'examples', None) or getattr(bundle, 'example', [])
+                        print(f"  🔍 [Sync] 从内存中找到 {len(examples)} 个 examples")
+                    else:
+                        print(f"  ℹ️  [Sync] 在内存中找不到vocab bundle，examples 可能已在 main_assistant 中同步到数据库")
+                        print(f"  🔍 [Sync] 数据库中已有 {existing_examples_count} 个 examples")
+                        # examples 已经在数据库中，不需要再同步
+                        continue
+                    
+                    # 🔧 同步 examples（如果内存中有，但数据库中还没有）
+                    if examples and existing_examples_count == 0:
+                        print(f"🔍 [Sync] 同步 Vocab {vocab_body} 的 {len(examples)} 个 examples 到数据库...")
+                        added_examples = 0
+                        skipped_examples = 0
+                        for ex in examples:
+                            try:
+                                # 调试：打印example的完整信息
+                                print(f"  🔍 [Debug] Example详情: text_id={ex.text_id}, sentence_id={ex.sentence_id}, type={type(ex.text_id)}")
+                                
+                                # 先检查text_id是否存在且属于当前用户
+                                from database_system.business_logic.models import OriginalText
+                                text_model = session.query(OriginalText).filter(
+                                    OriginalText.text_id == ex.text_id,
+                                    OriginalText.user_id == user_id
+                                ).first()
+                                if not text_model:
+                                    print(f"  ⚠️ 跳过 example (text_id={ex.text_id} 不存在或不属于用户 {user_id}): sentence_id={ex.sentence_id}")
+                                    skipped_examples += 1
+                                    continue
+                                
+                                vocab_db_mgr.add_vocab_example(
+                                    vocab_id=vocab_id,
+                                    text_id=ex.text_id,
+                                    sentence_id=ex.sentence_id,
+                                    context_explanation=getattr(ex, 'context_explanation', ''),
+                                    token_indices=getattr(ex, 'token_indices', [])
+                                )
+                                print(f"  ✅ 添加 example: text_id={ex.text_id}, sentence_id={ex.sentence_id}")
+                                added_examples += 1
+                            except Exception as ex_err:
+                                print(f"  ❌ Example 添加失败: {ex_err}")
                                 skipped_examples += 1
-                                continue
-                            
-                            vocab_db_mgr.add_vocab_example(
-                                vocab_id=new_vocab.vocab_id,
-                                text_id=ex.text_id,
-                                sentence_id=ex.sentence_id,
-                                context_explanation=getattr(ex, 'context_explanation', ''),
-                                token_indices=getattr(ex, 'token_indices', [])
-                            )
-                            print(f"  ✅ 添加 example: text_id={ex.text_id}, sentence_id={ex.sentence_id}")
-                            added_examples += 1
-                        except Exception as ex_err:
-                            print(f"  ❌ Example 添加失败: {ex_err}")
-                            skipped_examples += 1
-                    
-                    if skipped_examples > 0:
-                        print(f"  ⚠️ {skipped_examples} 个 examples 被跳过（text_id不存在或其他错误）")
-                else:
-                    print(f"📝 [Sync] Vocab已存在，跳过: {vocab_body}")
+                        
+                        if skipped_examples > 0:
+                            print(f"  ⚠️ {skipped_examples} 个 examples 被跳过（text_id不存在或其他错误）")
+                        if added_examples > 0:
+                            print(f"  ✅ {added_examples} 个 examples 已同步到数据库")
+                    else:
+                        print(f"  ℹ️  Examples 已在数据库中或内存中不存在，跳过同步")
+                        
+                except Exception as e:
+                    print(f"⚠️ [Sync] 处理 vocab {vocab_body} 时出错: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
             
             session.commit()
             print(f"✅ [Sync] 数据库同步完成: {synced_grammar} grammar rules, {synced_vocab} vocab expressions")
@@ -684,13 +920,11 @@ def _sync_to_database(user_id: int = None):
 @app.post("/api/chat")
 async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     """聊天功能（完整 MainAssistant 集成）"""
+    import traceback
     try:
         import time
         request_id = int(time.time() * 1000) % 10000
         user_id = current_user.user_id  # 获取当前用户ID
-        
-        # 设置session_state的user_id
-        session_state.user_id = user_id
         
         print("\n" + "="*80)
         print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")
@@ -739,16 +973,27 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, 
             else:
                 selected_text = current_selected_token.token_text
         
-        # 创建 MainAssistant 实例
+        # 为本次请求创建一个独立的 SessionState 副本，避免并发请求互相干扰
+        from backend.assistants.chat_info.session_state import SessionState as _SessionState
+        local_state = _SessionState()
+        # 拷贝当前上下文（句子、选中的 token、输入、用户）
+        local_state.set_current_sentence(current_sentence)
+        if current_selected_token:
+            local_state.set_current_selected_token(current_selected_token)
+        local_state.set_current_input(current_input)
+        local_state.user_id = user_id
+        print("🧹 [Chat] 使用独立的 SessionState 副本处理本轮请求")
+
+        # 创建 MainAssistant 实例（绑定本轮独立的 session_state）
         from backend.assistants.main_assistant import MainAssistant
         main_assistant = MainAssistant(
             data_controller_instance=global_dc,
-            session_state_instance=session_state
+            session_state_instance=local_state
         )
         
         print(f"🚀 [Chat] 调用 MainAssistant...")
         
-        # 先返回主回答，其余完整流程放后台
+        # 🔧 先快速生成主回答，立即返回给前端
         effective_sentence_body = selected_text if selected_text else current_sentence.sentence_body
         print("🚀 [Chat] 生成主回答...")
         ai_response = main_assistant.answer_question_function(
@@ -756,40 +1001,46 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, 
             user_question=current_input,
             sentence_body=effective_sentence_body
         )
-        print("✅ [Chat] 主回答就绪")
+        print("✅ [Chat] 主回答就绪，立即返回给前端")
         
-        # 准备返回的摘要数据（从后台任务获取）
-        grammar_summaries = []
-        vocab_summaries = []
-        grammar_to_add = []
-        vocab_to_add = []
+        # 🔧 先立即返回主回答，然后在后台处理 grammar/vocab 和创建 notations
+        # 这样主回答能立即显示，notations 通过轮询获取
         
-        # 后台执行完整流程
-        def _run_full_flow_background():
+        # 保存主回答，立即返回
+        initial_response = {
+            'success': True,
+            'data': {
+                'ai_response': ai_response,
+                'grammar_summaries': [],
+                'vocab_summaries': [],
+                'grammar_to_add': [],
+                'vocab_to_add': [],
+                'created_grammar_notations': [],
+                'created_vocab_notations': []
+            }
+        }
+        
+        # 🔧 后台执行 grammar/vocab 处理和创建 notations
+        def _run_grammar_vocab_background():
             from backend.assistants import main_assistant as _ma_mod
             prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
             try:
-                print("\n🛠️ [Background] 启动完整流程...")
+                print("🧠 [Background] 执行 handle_grammar_vocab_function...")
                 _ma_mod.DISABLE_GRAMMAR_FEATURES = False
-                main_assistant.run(
+                main_assistant.handle_grammar_vocab_function(
                     quoted_sentence=current_sentence,
                     user_question=current_input,
-                    selected_text=selected_text
+                    ai_response=ai_response,
+                    effective_sentence_body=effective_sentence_body
                 )
                 
-                # 🔧 先检查内存中的 examples
-                print("\n🔍 [DEBUG] 检查内存中的 vocab examples:")
-                for vid, vb in list(global_dc.vocab_manager.vocab_bundles.items())[-3:]:
-                    # 兼容新旧结构
-                    exs = getattr(vb, 'examples', None) or getattr(vb, 'example', [])
-                    vocab_body = getattr(vb, 'vocab_body', 'unknown')
-                    print(f"  Vocab '{vocab_body}' (ID {vid}): {len(exs)} examples")
-                    if exs:
-                        for ex in exs[:2]:  # 只显示前2个
-                            print(f"    - text_id={ex.text_id}, sentence_id={ex.sentence_id}")
+                # 🔧 调用 add_new_to_data() 以创建新词汇和 notations
+                print("🧠 [Background] 执行 add_new_to_data()...")
+                main_assistant.add_new_to_data()
+                print("✅ [Background] add_new_to_data() 完成")
                 
-                # 🔧 同步到数据库（在内存数据还在时立即同步）
-                print("\n💾 [Background] 同步新数据到数据库...")
+                # 同步到数据库
+                print("💾 [Background] 同步数据到数据库...")
                 _sync_to_database(user_id=user_id)
                 
                 # 保存到 JSON 文件（保持兼容）
@@ -801,71 +1052,187 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, 
                     dialogue_record_path=DIALOGUE_RECORD_PATH,
                     dialogue_history_path=DIALOGUE_HISTORY_PATH
                 )
-                
-                print("✅ [Background] 完整流程与保存完成")
+                print("✅ [Background] 数据持久化完成")
             except Exception as bg_e:
-                print(f"❌ [Background] 完整流程失败: {bg_e}")
-                import traceback
-                print(traceback.format_exc())
+                print(f"❌ [Background] 后台流程失败: {bg_e}")
+                traceback.print_exc()
             finally:
-                _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
+                try:
+                    _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
+                except Exception:
+                    pass
         
-        background_tasks.add_task(_run_full_flow_background)
+        # 启动后台任务
+        background_tasks.add_task(_run_grammar_vocab_background)
         
-        return {
-            'success': True,
-            'data': {
-                'ai_response': ai_response,
-                'grammar_summaries': grammar_summaries,
-                'vocab_summaries': vocab_summaries,
-                'grammar_to_add': grammar_to_add,
-                'vocab_to_add': vocab_to_add
-            }
-        }
+        # 🔧 立即返回主回答，不等待后续流程
+        print(f"📋 [Chat] 立即返回主回答给前端（后续流程在后台执行）")
+        
+        return initial_response
     except Exception as e:
-        import traceback
         print(f"❌ [Chat] Error: {e}")
         print(traceback.format_exc())
-        return {"success": False, "error": str(e)}
+        return {
+            "success": False,
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "traceback": traceback.format_exc()
+        }
 
 @app.get("/api/vocab-example-by-location")
 async def get_vocab_example_by_location(
     text_id: int = Query(..., description="文章ID"),
     sentence_id: Optional[int] = Query(None, description="句子ID"),
-    token_index: Optional[int] = Query(None, description="Token索引")
+    token_index: Optional[int] = Query(None, description="Token索引"),
+    authorization: Optional[str] = Header(None)
 ):
     """按位置查找词汇例句"""
     try:
         print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
         
-        # 使用全局 DataController 查找例句
-        example = global_dc.vocab_manager.get_vocab_example_by_location(text_id, sentence_id, token_index)
+        # 🔧 修复：从数据库查询，而不是从 global_dc（文件系统管理器）查询
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import VocabExpressionExample, OriginalText
+        from backend.adapters import VocabExampleAdapter
         
-        if example:
-            print(f"✅ [VocabExample] Found example")
+        db_manager = DatabaseManager('development')
+        session = db_manager.get_session()
+        
+        try:
+            # 🔧 修复：支持 guest 用户（没有 token 时）
+            user_id = None
+            if authorization and authorization.startswith("Bearer "):
+                try:
+                    token = authorization.replace("Bearer ", "")
+                    from backend.utils.auth import decode_access_token
+                    payload = decode_access_token(token)
+                    if payload and "sub" in payload:
+                        user_id = int(payload["sub"])
+                except Exception:
+                    # 如果 token 无效，继续作为 guest 用户
+                    pass
             
-            # 转换为字典格式返回
-            example_dict = {
-                'vocab_id': example.vocab_id,
-                'text_id': example.text_id,
-                'sentence_id': example.sentence_id,
-                'context_explanation': example.context_explanation,
-                'token_indices': getattr(example, 'token_indices', []),
-                'token_index': token_index  # 添加 token_index 供前端使用
-            }
+            # 🔧 先检查 text_id 是否属于当前用户（如果是登录用户）
+            if user_id:
+                text_model = session.query(OriginalText).filter(
+                    OriginalText.text_id == text_id,
+                    OriginalText.user_id == user_id
+                ).first()
+                if not text_model:
+                    print(f"⚠️ [VocabExample] text_id={text_id} 不存在或不属于用户 {user_id}")
+                    return {
+                        'success': False,
+                        'data': None,
+                        'message': f'Text not found or access denied'
+                    }
             
-            return {
-                'success': True,
-                'data': example_dict,
-                'message': f'Found vocab example'
-            }
-        else:
-            print(f"❌ [VocabExample] No example found")
-            return {
-                'success': False,
-                'data': None,
-                'message': f'No vocab example found'
-            }
+            # 🔧 查询匹配的 example
+            # 1. 首先按 text_id 和 sentence_id 查找，并通过 vocab_id 关联到 VocabExpression 来过滤 user_id
+            from database_system.business_logic.models import VocabExpression
+            
+            print(f"🔍 [VocabExample] Query params: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}, user_id={user_id}")
+            
+            query = session.query(VocabExpressionExample).join(
+                VocabExpression,
+                VocabExpressionExample.vocab_id == VocabExpression.vocab_id
+            ).filter(
+                VocabExpressionExample.text_id == text_id
+            )
+            
+            # 🔧 如果有 user_id，只查询属于该用户的 vocab 的 example
+            if user_id:
+                query = query.filter(VocabExpression.user_id == user_id)
+                print(f"🔍 [VocabExample] Filtering by user_id={user_id}")
+            else:
+                print(f"⚠️ [VocabExample] No user_id provided, querying all users' examples")
+            
+            if sentence_id is not None:
+                query = query.filter(VocabExpressionExample.sentence_id == sentence_id)
+                print(f"🔍 [VocabExample] Filtering by sentence_id={sentence_id}")
+            
+            examples = query.all()
+            print(f"🔍 [VocabExample] Found {len(examples)} example(s) before token_index filtering (user_id={user_id})")
+            
+            # 🔧 修复：如果按当前用户找不到 example，尝试查询所有用户的 example
+            # 因为 example 是针对句子的，不是针对用户的，所以应该允许跨用户查询
+            if len(examples) == 0:
+                print(f"⚠️ [VocabExample] 没有找到属于用户 {user_id} 的 example，尝试查询所有用户的 example")
+                fallback_query = session.query(VocabExpressionExample).join(
+                    VocabExpression,
+                    VocabExpressionExample.vocab_id == VocabExpression.vocab_id
+                ).filter(
+                    VocabExpressionExample.text_id == text_id
+                )
+                if sentence_id is not None:
+                    fallback_query = fallback_query.filter(VocabExpressionExample.sentence_id == sentence_id)
+                examples = fallback_query.all()
+                print(f"🔍 [VocabExample] 所有用户的 example 数量: {len(examples)}")
+                for ex in examples[:5]:  # 只打印前5个
+                    vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
+                    print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
+            else:
+                # 打印找到的 examples 的详细信息
+                for ex in examples:
+                    vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
+                    print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
+            
+            # 🔧 2. 如果有 token_index，进一步过滤（检查 token_indices 是否包含 token_index）
+            # 🔧 修复：如果 token_indices 为空，说明 example 是为整个句子创建的，应该匹配任何 token_index
+            # 🔧 修复：如果 token_index 不匹配，但 example 存在，也应该返回（因为 example 已经存在，说明这个句子和词汇有关联）
+            if token_index is not None:
+                matching_examples = []
+                for ex in examples:
+                    # token_indices 是 JSON 列，可能是列表或 None
+                    token_indices = ex.token_indices if ex.token_indices else []
+                    print(f"🔍 [VocabExample] Checking example: vocab_id={ex.vocab_id}, token_indices={token_indices}, looking for token_index={token_index}")
+                    
+                    # 🔧 如果 token_indices 为空，说明 example 是为整个句子创建的，应该匹配
+                    if len(token_indices) == 0:
+                        print(f"✅ [VocabExample] Match found (empty token_indices, sentence-level example): vocab_id={ex.vocab_id}")
+                        matching_examples.append(ex)
+                    elif token_index in token_indices:
+                        matching_examples.append(ex)
+                        print(f"✅ [VocabExample] Match found: vocab_id={ex.vocab_id}")
+                    else:
+                        # 🔧 修复：即使 token_index 不匹配，但如果 example 存在，也应该返回
+                        # 因为 example 已经存在，说明这个句子和词汇有关联，只是可能使用了不同的 token_index
+                        print(f"⚠️ [VocabExample] Token index mismatch, but example exists: token_index={token_index} not in token_indices={token_indices}, but returning example anyway")
+                        matching_examples.append(ex)
+                        print(f"✅ [VocabExample] Match found (despite token_index mismatch): vocab_id={ex.vocab_id}")
+                examples = matching_examples
+                print(f"🔍 [VocabExample] After token_index filtering: {len(examples)} example(s)")
+            
+            if examples:
+                # 🔧 使用第一个匹配的 example
+                example_model = examples[0]
+                print(f"✅ [VocabExample] Found {len(examples)} example(s)")
+                
+                # 🔧 转换为 DTO，然后转换为字典
+                example_dto = VocabExampleAdapter.model_to_dto(example_model)
+                
+                example_dict = {
+                    'vocab_id': example_dto.vocab_id,
+                    'text_id': example_dto.text_id,
+                    'sentence_id': example_dto.sentence_id,
+                    'context_explanation': example_dto.context_explanation,
+                    'token_indices': example_dto.token_indices,
+                    'token_index': token_index  # 添加 token_index 供前端使用
+                }
+                
+                return {
+                    'success': True,
+                    'data': example_dict,
+                    'message': f'Found vocab example'
+                }
+            else:
+                print(f"❌ [VocabExample] No example found")
+                return {
+                    'success': False,
+                    'data': None,
+                    'message': f'No vocab example found'
+                }
+        finally:
+            session.close()
             
     except Exception as e:
         print(f"❌ [VocabExample] Error: {e}")
@@ -1014,6 +1381,7 @@ async def get_article_detail(article_id: int):
 async def upload_file(
     file: UploadFile = File(...),
     title: str = Form("Untitled Article"),
+    language: str = Form(...),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -1021,12 +1389,17 @@ async def upload_file(
     
     - **file**: 上传的文件（支持 .txt, .md 格式）
     - **title**: 文章标题（可选）
+    - **language**: 语言（中文、英文、德文），必填
     
     需要认证：是
     """
     try:
         user_id = current_user.user_id
-        print(f"📤 [Upload] 用户 {user_id} 上传文件: {file.filename}, 标题: {title}")
+        print(f"📤 [Upload] 用户 {user_id} 上传文件: {file.filename}, 标题: {title}, 语言: {language}")
+        
+        # 验证语言参数
+        if not language or language not in ['中文', '英文', '德文']:
+            return create_error_response("语言参数无效，请选择：中文、英文、德文")
         
         # 读取文件内容
         content = await file.read()
@@ -1045,19 +1418,23 @@ async def upload_file(
         
         # 使用简单文章处理器处理文章
         if process_article:
-            print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id})")
+            print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id}, 语言: {language})")
             result = process_article(text_content, article_id, title)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
             
-            # TODO: 保存到数据库（需要实现）
-            # 这里应该调用数据库API保存文章、句子和tokens
+            # 保存到数据库
+            print(f"💾 [Upload] 开始导入文章到数据库...")
+            import_success = import_article_to_database(result, article_id, user_id, language)
+            if not import_success:
+                print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
             
             return create_success_response(
                 data={
                     "article_id": article_id,
                     "title": title,
+                    "language": language,
                     "total_sentences": result['total_sentences'],
                     "total_tokens": result['total_tokens'],
                     "user_id": user_id
@@ -1078,6 +1455,7 @@ async def upload_file(
 async def upload_url(
     url: str = Form(...),
     title: str = Form("URL Article"),
+    language: str = Form(...),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -1085,12 +1463,17 @@ async def upload_url(
     
     - **url**: 要抓取的URL
     - **title**: 文章标题（可选）
+    - **language**: 语言（中文、英文、德文），必填
     
     需要认证：是
     """
     try:
         user_id = current_user.user_id
-        print(f"📤 [Upload] 用户 {user_id} 上传URL: {url}, 标题: {title}")
+        print(f"📤 [Upload] 用户 {user_id} 上传URL: {url}, 标题: {title}, 语言: {language}")
+        
+        # 验证语言参数
+        if not language or language not in ['中文', '英文', '德文']:
+            return create_error_response("语言参数无效，请选择：中文、英文、德文")
         
         # 抓取URL内容（添加User-Agent避免被网站阻止）
         headers = {
@@ -1107,26 +1490,65 @@ async def upload_url(
         
         # 使用简单文章处理器处理文章
         if process_article:
-            print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id})")
+            print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id}, 语言: {language})")
             result = process_article(text_content, article_id, title)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
             
-            # TODO: 保存到数据库（需要实现）
-            # 这里应该调用数据库API保存文章、句子和tokens
+            # 保存到数据库或返回游客数据
+            print(f"💾 [Upload] 开始导入文章...")
+            import_result = import_article_to_database(result, article_id, user_id, language)
             
-            return create_success_response(
-                data={
-                    "article_id": article_id,
-                    "title": title,
-                    "url": url,
-                    "total_sentences": result['total_sentences'],
-                    "total_tokens": result['total_tokens'],
-                    "user_id": user_id
-                },
-                message=f"URL内容抓取并处理成功: {title}"
-            )
+            # 处理导入结果
+            if isinstance(import_result, dict) and import_result.get('is_guest'):
+                # 游客模式：返回文章数据，由前端保存到 localStorage
+                print(f"👤 [Upload] 游客模式，返回文章数据供前端保存")
+                return create_success_response(
+                    data={
+                        "article_id": article_id,
+                        "title": title,
+                        "url": url,
+                        "language": language,
+                        "total_sentences": result['total_sentences'],
+                        "total_tokens": result['total_tokens'],
+                        "user_id": user_id,
+                        "is_guest": True,
+                        "article_data": import_result.get('article_data')
+                    },
+                    message=f"URL内容抓取并处理成功: {title}（游客模式，请前端保存到本地）"
+                )
+            elif import_result is True:
+                # 正式用户模式：已成功保存到数据库
+                print(f"✅ [Upload] 文章已成功导入数据库")
+                return create_success_response(
+                    data={
+                        "article_id": article_id,
+                        "title": title,
+                        "url": url,
+                        "language": language,
+                        "total_sentences": result['total_sentences'],
+                        "total_tokens": result['total_tokens'],
+                        "user_id": user_id
+                    },
+                    message=f"URL内容抓取并处理成功: {title}"
+                )
+            else:
+                # 导入失败
+                print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
+                return create_success_response(
+                    data={
+                        "article_id": article_id,
+                        "title": title,
+                        "url": url,
+                        "language": language,
+                        "total_sentences": result['total_sentences'],
+                        "total_tokens": result['total_tokens'],
+                        "user_id": user_id,
+                        "warning": "数据库导入失败，但文件已保存"
+                    },
+                    message=f"URL内容抓取并处理成功: {title}（数据库导入失败）"
+                )
         else:
             return create_error_response("预处理系统未初始化")
             
@@ -1141,6 +1563,7 @@ async def upload_url(
 async def upload_text(
     text: str = Form(...),
     title: str = Form("Text Article"),
+    language: str = Form(...),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -1148,12 +1571,17 @@ async def upload_text(
     
     - **text**: 文章文本内容
     - **title**: 文章标题（可选）
+    - **language**: 语言（中文、英文、德文），必填
     
     需要认证：是
     """
     try:
         user_id = current_user.user_id
-        print(f"📤 [Upload] 用户 {user_id} 上传文本, 标题: {title}")
+        print(f"📤 [Upload] 用户 {user_id} 上传文本, 标题: {title}, 语言: {language}")
+        
+        # 验证语言参数
+        if not language or language not in ['中文', '英文', '德文']:
+            return create_error_response("语言参数无效，请选择：中文、英文、德文")
         
         if not text.strip():
             return create_error_response("文字内容不能为空")
@@ -1163,25 +1591,62 @@ async def upload_text(
         
         # 使用简单文章处理器处理文章
         if process_article:
-            print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id})")
+            print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id}, 语言: {language})")
             result = process_article(text, article_id, title)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
             
-            # TODO: 保存到数据库（需要实现）
-            # 这里应该调用数据库API保存文章、句子和tokens
+            # 保存到数据库或返回游客数据
+            print(f"💾 [Upload] 开始导入文章...")
+            import_result = import_article_to_database(result, article_id, user_id, language)
             
-            return create_success_response(
-                data={
-                    "article_id": article_id,
-                    "title": title,
-                    "total_sentences": result['total_sentences'],
-                    "total_tokens": result['total_tokens'],
-                    "user_id": user_id
-                },
-                message=f"文字内容处理成功: {title}"
-            )
+            # 处理导入结果
+            if isinstance(import_result, dict) and import_result.get('is_guest'):
+                # 游客模式：返回文章数据，由前端保存到 localStorage
+                print(f"👤 [Upload] 游客模式，返回文章数据供前端保存")
+                return create_success_response(
+                    data={
+                        "article_id": article_id,
+                        "title": title,
+                        "language": language,
+                        "total_sentences": result['total_sentences'],
+                        "total_tokens": result['total_tokens'],
+                        "user_id": user_id,
+                        "is_guest": True,
+                        "article_data": import_result.get('article_data')
+                    },
+                    message=f"文字内容处理成功: {title}（游客模式，请前端保存到本地）"
+                )
+            elif import_result is True:
+                # 正式用户模式：已成功保存到数据库
+                print(f"✅ [Upload] 文章已成功导入数据库")
+                return create_success_response(
+                    data={
+                        "article_id": article_id,
+                        "title": title,
+                        "language": language,
+                        "total_sentences": result['total_sentences'],
+                        "total_tokens": result['total_tokens'],
+                        "user_id": user_id
+                    },
+                    message=f"文字内容处理成功: {title}"
+                )
+            else:
+                # 导入失败
+                print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
+                return create_success_response(
+                    data={
+                        "article_id": article_id,
+                        "title": title,
+                        "language": language,
+                        "total_sentences": result['total_sentences'],
+                        "total_tokens": result['total_tokens'],
+                        "user_id": user_id,
+                        "warning": "数据库导入失败，但文件已保存"
+                    },
+                    message=f"文字内容处理成功: {title}（数据库导入失败）"
+                )
         else:
             return create_error_response("预处理系统未初始化")
             

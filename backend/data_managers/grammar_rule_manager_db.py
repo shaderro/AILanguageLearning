@@ -103,7 +103,8 @@ class GrammarRuleManager:
         return GrammarAdapter.model_to_dto(grammar_model, include_examples=True)
     
     def add_new_rule(self, name: str, explanation: str, 
-                     source: str = "qa", is_starred: bool = False, user_id: int = None) -> GrammarDTO:
+                     source: str = "qa", is_starred: bool = False, user_id: int = None,
+                     language: str = None) -> GrammarDTO:
         """
         添加新语法规则
         
@@ -113,6 +114,7 @@ class GrammarRuleManager:
             source: 来源（"auto", "qa", "manual"），默认 "qa"
             is_starred: 是否收藏，默认 False
             user_id: 用户ID（必填，用于数据隔离）
+            language: 语言（"中文", "英文", "德文"），默认 None
             
         返回:
             GrammarDTO: 新创建的语法规则数据对象
@@ -123,7 +125,8 @@ class GrammarRuleManager:
                 explanation="德语定冠词根据格、性、数变化",
                 source="manual",
                 is_starred=True,
-                user_id=1
+                user_id=1,
+                language="德文"
             )
             print(f"创建规则ID: {new_rule.rule_id}")
         """
@@ -132,7 +135,8 @@ class GrammarRuleManager:
             rule_summary=explanation,  # 注意字段映射
             source=source,
             is_starred=is_starred,
-            user_id=user_id
+            user_id=user_id,
+            language=language
         )
         
         return GrammarAdapter.model_to_dto(grammar_model)

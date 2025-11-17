@@ -33,11 +33,13 @@ def get_db_session():
 
 
 # HTTP Bearer token 认证
-security = HTTPBearer()
+# auto_error=False: 如果没有token，不自动抛出错误，返回None
+# 这样可以返回401而不是403
+security = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     session: Session = Depends(get_db_session)
 ) -> User:
     """
@@ -48,6 +50,14 @@ def get_current_user(
         def protected_route(current_user: User = Depends(get_current_user)):
             return {"user_id": current_user.user_id}
     """
+    # 如果没有提供token，返回401错误
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="需要认证，请先登录",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     token = credentials.credentials
     
     # 解码 token

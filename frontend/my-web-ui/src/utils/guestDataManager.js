@@ -80,12 +80,48 @@ export const guestDataManager = {
   },
 
   /**
+   * 保存游客文章数据
+   */
+  saveArticle: (guestId, articleData) => {
+    const key = `${GUEST_DATA_PREFIX}${guestId}_articles`
+    const existing = guestDataManager.getArticles(guestId)
+    
+    // 检查是否已存在（根据 article_id）
+    const exists = existing.find(a => a.article_id === articleData.article_id)
+    if (exists) {
+      console.log('⚠️ [GuestData] 文章已存在:', articleData.article_id)
+      return false
+    }
+    
+    // 添加新文章
+    const newArticle = {
+      ...articleData,
+      created_at: new Date().toISOString()
+    }
+    
+    const updated = [...existing, newArticle]
+    localStorage.setItem(key, JSON.stringify(updated))
+    console.log('✅ [GuestData] 保存文章:', articleData.title || articleData.article_id)
+    return true
+  },
+
+  /**
+   * 获取游客文章列表
+   */
+  getArticles: (guestId) => {
+    const key = `${GUEST_DATA_PREFIX}${guestId}_articles`
+    const data = localStorage.getItem(key)
+    return data ? JSON.parse(data) : []
+  },
+
+  /**
    * 获取所有游客数据（用于迁移）
    */
   getAllGuestData: (guestId) => {
     return {
       vocabs: guestDataManager.getVocabs(guestId),
-      grammars: guestDataManager.getGrammars(guestId)
+      grammars: guestDataManager.getGrammars(guestId),
+      articles: guestDataManager.getArticles(guestId)
     }
   },
 
@@ -95,6 +131,7 @@ export const guestDataManager = {
   clearGuestData: (guestId) => {
     localStorage.removeItem(`${GUEST_DATA_PREFIX}${guestId}_vocab`)
     localStorage.removeItem(`${GUEST_DATA_PREFIX}${guestId}_grammar`)
+    localStorage.removeItem(`${GUEST_DATA_PREFIX}${guestId}_articles`)
     console.log('🗑️ [GuestData] 已清空游客数据:', guestId)
   },
 
@@ -104,7 +141,8 @@ export const guestDataManager = {
   hasGuestData: (guestId) => {
     const vocabs = guestDataManager.getVocabs(guestId)
     const grammars = guestDataManager.getGrammars(guestId)
-    return vocabs.length > 0 || grammars.length > 0
+    const articles = guestDataManager.getArticles(guestId)
+    return vocabs.length > 0 || grammars.length > 0 || articles.length > 0
   }
 }
 
