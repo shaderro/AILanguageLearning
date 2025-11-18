@@ -30,6 +30,9 @@ function WordDemo() {
   // 文章过滤
   const [textId, setTextId] = useState('all')
   
+  // 时间排序：'desc' 倒序（最新在前），'asc' 正序（最早在前）
+  const [sortOrder, setSortOrder] = useState('desc')
+  
   // 获取文章列表（使用 useArticles hook，它会处理响应格式）
   const { data: articlesResponse, isLoading: articlesLoading } = useArticles(userId, selectedLanguage, isGuest)
   
@@ -114,11 +117,37 @@ function WordDemo() {
   }
 
   const handleStartReview = () => {
-    // 使用当前filter后的所有词汇
-    const filteredVocabs = vocabData?.data || []
+    // 使用当前filter和排序后的所有词汇（保持时间排序）
+    // 注意：这里需要在函数内部重新计算 list，因为 list 是在组件渲染时计算的
+    const allVocabs = vocabData?.data || []
+    const filteredVocabs = allVocabs
+      .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
     
-    if (filteredVocabs.length === 0) {
-      // 如果为空，显示提示（使用更友好的方式）
+    // 按时间排序（如果没有时间戳，使用 id 排序）
+    const sortedList = [...filteredVocabs].sort((a, b) => {
+      const timeA = a.updated_at || a.created_at
+      const timeB = b.updated_at || b.created_at
+      
+      if (timeA && timeB) {
+        const dateA = new Date(timeA).getTime()
+        const dateB = new Date(timeB).getTime()
+        if (sortOrder === 'desc') {
+          return dateB - dateA
+        } else {
+          return dateA - dateB
+        }
+      }
+      
+      const idA = a.vocab_id || 0
+      const idB = b.vocab_id || 0
+      if (sortOrder === 'desc') {
+        return idB - idA
+      } else {
+        return idA - idB
+      }
+    })
+    
+    if (sortedList.length === 0) {
       const message = '当前筛选条件下没有词汇，请更改筛选选项后再试'
       if (window.confirm(message)) {
         // 用户点击确定后不做任何操作，只是关闭提示
@@ -126,9 +155,8 @@ function WordDemo() {
       return
     }
     
-    // 使用所有filter后的词汇进行复习（不限制数量）
-    const shuffled = [...filteredVocabs].sort(() => 0.5 - Math.random())
-    setReviewWords(shuffled)
+    // 使用排序后的列表进行复习（保持时间排序，不随机打乱）
+    setReviewWords(sortedList)
     setCurrentReviewIndex(0)
     setReviewResults([])
     setIsReviewMode(true)
@@ -269,8 +297,37 @@ function WordDemo() {
   // 注意：language和learn_status过滤已经在API层面完成，这里只需要处理搜索过滤
   const allVocabs = vocabData?.data || []
   console.log(`🔍 [WordDemo] 当前过滤状态: learnStatus=${learnStatus}, language=${selectedLanguage}, 词汇数量=${allVocabs.length}`)
-  const list = allVocabs
+  
+  // 过滤和排序
+  const filteredVocabs = allVocabs
     .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
+  
+  // 按时间排序（如果没有时间戳，使用 id 排序）
+  const list = [...filteredVocabs].sort((a, b) => {
+    // 优先使用 updated_at，如果没有则使用 created_at
+    const timeA = a.updated_at || a.created_at
+    const timeB = b.updated_at || b.created_at
+    
+    // 如果两个都有时间戳，按时间排序
+    if (timeA && timeB) {
+      const dateA = new Date(timeA).getTime()
+      const dateB = new Date(timeB).getTime()
+      if (sortOrder === 'desc') {
+        return dateB - dateA // 倒序：最新的在前
+      } else {
+        return dateA - dateB // 正序：最早的在前
+      }
+    }
+    
+    // 如果都没有时间戳，使用 id 排序
+    const idA = a.vocab_id || 0
+    const idB = b.vocab_id || 0
+    if (sortOrder === 'desc') {
+      return idB - idA // 倒序：id 大的在前（通常是更新的）
+    } else {
+      return idA - idB // 正序：id 小的在前（通常是更早的）
+    }
+  })
 
   // 配置过滤器
   const articles = Array.isArray(articlesData) ? articlesData : []
@@ -321,6 +378,8 @@ function WordDemo() {
       showSearch={true}
       showRefreshButton={true}
       backgroundClass="bg-gray-100"
+      sortOrder={sortOrder}
+      onSortChange={setSortOrder}
     >
       {/* 显示当前语言过滤状态 */}
       {selectedLanguage !== 'all' && (

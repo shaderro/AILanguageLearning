@@ -189,6 +189,23 @@ const LearnDetailPage = ({
                     <span className="font-medium">original sentence: </span>
                     <span>{example.original_sentence ?? 'null'}</span>
                   </div>
+                  {example.original_sentence && example.original_sentence !== 'null' && example.text_id && (
+                    <div className="mt-2 mb-2">
+                      <button
+                        onClick={() => {
+                          // 在新标签页打开原文 chat view
+                          const url = `${window.location.origin}${window.location.pathname}?page=article&articleId=${example.text_id}${example.sentence_id ? `&sentenceId=${example.sentence_id}` : ''}`
+                          window.open(url, '_blank')
+                        }}
+                        className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center space-x-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        <span>转到原文</span>
+                      </button>
+                    </div>
+                  )}
                   <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                     {parseExplanation(example.context_explanation)}
                   </div>
@@ -252,6 +269,23 @@ const LearnDetailPage = ({
                     <span className="font-medium">original sentence: </span>
                     <span>{example.original_sentence ?? 'null'}</span>
                   </div>
+                  {example.original_sentence && example.original_sentence !== 'null' && example.text_id && (
+                    <div className="mt-2 mb-2">
+                      <button
+                        onClick={() => {
+                          // 在新标签页打开原文 chat view
+                          const url = `${window.location.origin}${window.location.pathname}?page=article&articleId=${example.text_id}${example.sentence_id ? `&sentenceId=${example.sentence_id}` : ''}`
+                          window.open(url, '_blank')
+                        }}
+                        className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center space-x-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        <span>转到原文</span>
+                      </button>
+                    </div>
+                  )}
                   <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                     {parseExplanation(example.explanation_context)}
                   </div>

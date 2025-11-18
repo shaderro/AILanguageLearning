@@ -10,7 +10,7 @@ const LearnCard = ({
   onToggleStar = null // 新增收藏切换回调
 }) => {
   // 解析和格式化解释文本
-  const parseExplanation = (text) => {
+  const parseExplanation = (text, vocabBody = null) => {
     if (!text) return ''
     
     let cleanText = text
@@ -76,6 +76,17 @@ const LearnCard = ({
     // 去除首尾空白
     cleanText = cleanText.trim()
     
+    // 4. 如果是 vocab 类型，去掉开头的单词原型（在所有解析完成后）
+    if (vocabBody) {
+      // 转义特殊字符，支持大小写不敏感匹配
+      const escapedVocabBody = vocabBody.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // 匹配开头的单词原型（可能后面跟着换行、冒号、空格等）
+      const regex = new RegExp(`^\\s*${escapedVocabBody}\\s*[:：]?\\s*\\n?`, 'i')
+      cleanText = cleanText.replace(regex, '')
+      // 再次去除首尾空白
+      cleanText = cleanText.trim()
+    }
+    
     return cleanText
   }
 
@@ -112,8 +123,8 @@ const LearnCard = ({
           {/* 解释内容 */}
           {data?.explanation && (
             <div>
-              <div className="text-gray-800 leading-relaxed text-sm whitespace-pre-wrap">
-                {parseExplanation(data.explanation)}
+              <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
+                {parseExplanation(data.explanation, data?.vocab_body)}
               </div>
             </div>
           )}
@@ -155,7 +166,7 @@ const LearnCard = ({
 
     if (type === 'grammar') {
       return (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* 语法规则名称 */}
           <div className="text-lg font-semibold text-gray-900">
             {data?.rule_name || 'Unknown Rule'}
@@ -164,13 +175,13 @@ const LearnCard = ({
           {/* 解释内容 */}
           {data?.rule_summary && (
             <div>
-              <div className="text-gray-800 leading-relaxed text-sm whitespace-pre-wrap">
+              <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
                 {parseExplanation(data.rule_summary)}
               </div>
             </div>
           )}
           
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col space-y-1 mt-2">
             <div className="flex justify-between items-center text-xs text-gray-500">
               <span>Source: {data?.source || 'unknown'}</span>
               {onToggleStar && (
@@ -220,8 +231,11 @@ const LearnCard = ({
       loading={loading}
       error={error}
       onClick={onClick}
+      className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform h-full flex flex-col"
     >
-      {getCardContent()}
+      <div className="flex-1">
+        {getCardContent()}
+      </div>
     </CardBase>
   )
 }

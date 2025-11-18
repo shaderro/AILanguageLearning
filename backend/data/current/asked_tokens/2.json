@@ -412,5 +412,41 @@
     "type": "token",
     "vocab_id": 112,
     "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 51,
+    "sentence_token_id": 15,
+    "type": "token",
+    "vocab_id": 113,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 50,
+    "sentence_token_id": 7,
+    "type": "token",
+    "vocab_id": 114,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 45,
+    "sentence_token_id": 7,
+    "type": "token",
+    "vocab_id": 115,
+    "grammar_id": null
+  },
+  {
+    "user_id": 2,
+    "text_id": 1,
+    "sentence_id": 17,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 21
   }
 ]

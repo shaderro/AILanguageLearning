@@ -3,7 +3,9 @@ import SingleFilterOption from './SingleFilterOption'
 const FilterBar = ({ 
   filters = [], 
   onFilterChange = () => {},
-  className = ""
+  className = "",
+  sortOrder = 'desc', // 'asc' 或 'desc'
+  onSortChange = () => {} // 排序变化回调
 }) => {
   // 默认筛选器配置
   const defaultFilters = [
@@ -72,6 +74,29 @@ const FilterBar = ({
                 />
               </div>
             ))}
+            
+            {/* 时间排序按钮 */}
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  const newOrder = sortOrder === 'desc' ? 'asc' : 'desc'
+                  onSortChange(newOrder)
+                }}
+                className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 flex items-center space-x-2"
+                title={sortOrder === 'desc' ? '按时间倒序（最新在前）' : '按时间正序（最早在前）'}
+              >
+                <span className="text-sm font-medium text-gray-700">时间排序</span>
+                {sortOrder === 'desc' ? (
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Clear All Button */}

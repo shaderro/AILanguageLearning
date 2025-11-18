@@ -15,7 +15,7 @@ function getApiTarget() {
   if (saved === 'mock' || saved === 'db') return saved;
   const envVal = (import.meta?.env?.VITE_API_TARGET || '').toLowerCase();
   if (envVal === 'mock' || envVal === 'db') return envVal;
-  return 'mock';
+  return 'db'; // 默认使用数据库模式
 }
 const API_TARGET = getApiTarget();
 const BASE_URL = "http://localhost:8000";  // 统一使用8000端口（mock和db都在8000）
@@ -105,7 +105,9 @@ api.interceptors.response.use(
       // 🔧 优先检查数组格式（因为数组也是 object 类型）
       if (Array.isArray(innerData)) {
         // 检查是否是 vocab 数组（有 vocab_id 字段）
-        if (innerData.length > 0 && innerData[0].vocab_id !== undefined) {
+        // 🔧 修复：即使数组为空也要检查，通过 URL 路径判断
+        const urlPath = response?.config?.url || '';
+        if (urlPath.includes('/vocab') || (innerData.length > 0 && innerData[0].vocab_id !== undefined)) {
           console.log("🔍 [DEBUG] Found vocab array, returning as is");
           return {
             data: innerData,
@@ -113,11 +115,13 @@ api.interceptors.response.use(
           };
         }
         // 检查是否是 grammar 数组（有 rule_id 字段）
-        if (innerData.length > 0 && innerData[0].rule_id !== undefined) {
-          console.log("🔍 [DEBUG] Found grammar array, returning as is");
+        // 🔧 修复：即使数组为空也要检查，通过 URL 路径判断
+        if (urlPath.includes('/grammar') || (innerData.length > 0 && innerData[0].rule_id !== undefined)) {
+          // 🔧 使用后端返回的 count（如果存在），否则使用数组长度
+          const count = response.data.count !== undefined ? response.data.count : innerData.length;
           return {
             data: innerData,
-            count: innerData.length
+            count: count
           };
         }
         // Texts API - 如果直接是数组（向后兼容）
@@ -366,7 +370,7 @@ export const apiService = {
   },
 
   // 获取单个语法规则详情
-  getGrammarById: (id) => api.get(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}/`),
+  getGrammarById: (id) => api.get(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}`),
 
   // 搜索语法规则
   searchGrammar: (keyword) => 
@@ -396,11 +400,17 @@ export const apiService = {
       userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
     }
     
-    return api.get(
-      API_TARGET === 'mock' 
-        ? `/api/grammar_notations/${textId}` 
-        : `/api/v2/notations/grammar?text_id=${textId}&user_id=${userId}`
-    )
+    // 🔧 统一使用数据库API路径（即使API_TARGET是'mock'，后端也可能没有mock路由）
+    const url = `/api/v2/notations/grammar?text_id=${textId}&user_id=${userId}`
+    console.log(`🔍 [API] getGrammarNotations: ${url}`)
+    return api.get(url).catch(error => {
+      // 🔧 如果是404错误，返回空数组而不是抛出错误，避免无限重试
+      if (error.response && error.response.status === 404) {
+        console.warn(`⚠️ [API] Grammar notations not found for textId=${textId}, returning empty array`)
+        return { data: { success: true, data: { notations: [], count: 0 } } }
+      }
+      throw error
+    })
   },
 
   // 获取句子的语法规则

@@ -152,15 +152,15 @@ async def get_all_vocabs(
             print(f"🔍 [VocabAPI] 应用语言过滤: {language}")
         
         # 学习状态过滤
-        # 🔧 修复：SQLite 中 Enum 存储为字符串，使用 cast 转换为字符串进行比较
+        # 🔧 修复：SQLite 中 Enum 存储为字符串，使用枚举对象进行比较
         if learn_status and learn_status != 'all':
             if learn_status == 'mastered':
-                # 将 Enum 列转换为字符串进行比较
-                query = query.filter(cast(VocabExpression.learn_status, String) == 'mastered')
+                # 使用枚举对象进行比较（更可靠）
+                query = query.filter(VocabExpression.learn_status == LearnStatus.MASTERED)
                 print(f"🔍 [VocabAPI] 应用学习状态过滤: mastered")
             elif learn_status == 'not_mastered':
-                # 将 Enum 列转换为字符串进行比较
-                query = query.filter(cast(VocabExpression.learn_status, String) == 'not_mastered')
+                # 使用枚举对象进行比较（更可靠）
+                query = query.filter(VocabExpression.learn_status == LearnStatus.NOT_MASTERED)
                 print(f"🔍 [VocabAPI] 应用学习状态过滤: not_mastered")
         else:
             print(f"🔍 [VocabAPI] 不应用学习状态过滤 (learn_status={learn_status})")
@@ -192,7 +192,9 @@ async def get_all_vocabs(
                     "language": v.language,
                     "source": v.source.value if hasattr(v.source, 'value') else str(v.source),
                     "is_starred": v.is_starred,
-                    "learn_status": v.learn_status.value if hasattr(v.learn_status, 'value') else (str(v.learn_status) if v.learn_status else "not_mastered")
+                    "learn_status": v.learn_status.value if hasattr(v.learn_status, 'value') else (str(v.learn_status) if v.learn_status else "not_mastered"),
+                    "created_at": v.created_at.isoformat() if v.created_at else None,
+                    "updated_at": v.updated_at.isoformat() if v.updated_at else None
                 }
                 for v in vocabs
             ],
@@ -277,6 +279,9 @@ async def get_vocab(
                 "language": vocab_model.language,
                 "source": vocab_model.source.value if hasattr(vocab_model.source, 'value') else vocab_model.source,
                 "is_starred": vocab_model.is_starred,
+                "learn_status": vocab_model.learn_status.value if hasattr(vocab_model.learn_status, 'value') else (str(vocab_model.learn_status) if vocab_model.learn_status else "not_mastered"),
+                "created_at": vocab_model.created_at.isoformat() if vocab_model.created_at else None,
+                "updated_at": vocab_model.updated_at.isoformat() if vocab_model.updated_at else None,
                 "examples": examples_data if include_examples else []
             }
         }

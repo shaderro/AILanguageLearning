@@ -15,7 +15,9 @@ const LearnPageLayout = ({
   showReviewButton = true,
   backgroundClass = "bg-gray-100",
   onRefresh = null,
-  showRefreshButton = false
+  showRefreshButton = false,
+  sortOrder = 'desc',
+  onSortChange = () => {}
 }) => {
   return (
     <div className={`${backgroundClass} p-8 min-h-[calc(100vh-64px)] overflow-auto`}>
@@ -55,7 +57,12 @@ const LearnPageLayout = ({
         {/* Filters (below search) */}
         {showFilters && (
           <div className="mb-6">
-            <FilterBar onFilterChange={onFilterChange} filters={filters} />
+            <FilterBar 
+              onFilterChange={onFilterChange} 
+              filters={filters}
+              sortOrder={sortOrder}
+              onSortChange={onSortChange}
+            />
           </div>
         )}
 

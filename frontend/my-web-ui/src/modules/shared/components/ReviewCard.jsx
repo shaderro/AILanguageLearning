@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { apiService } from '../../../services/api'
 
 const ReviewCard = ({
   type = 'vocab', // 'vocab' | 'grammar'
@@ -14,11 +15,55 @@ const ReviewCard = ({
   showDefinition = true,
 }) => {
   const [showExplanation, setShowExplanation] = useState(false)
+  const [itemWithExamples, setItemWithExamples] = useState(item)
 
-  // 每换一张卡片（index 或 item 变化）时，重置解释为折叠状态
+  // 每换一张卡片（index 或 item 变化）时，重置解释为折叠状态，并加载完整的详情（包含 examples）
   useEffect(() => {
     setShowExplanation(false)
-  }, [index, item])
+    
+    // 如果当前 item 没有 examples，尝试加载完整的详情
+    if (item && (!item.examples || !Array.isArray(item.examples) || item.examples.length === 0)) {
+      const itemId = type === 'vocab' ? item.vocab_id : item.rule_id
+      if (itemId) {
+        const loadDetail = type === 'vocab' 
+          ? apiService.getVocabById(itemId)
+          : apiService.getGrammarById(itemId)
+        
+        loadDetail
+          .then(response => {
+            const detailData = response?.data?.data || response?.data || response
+            if (detailData && detailData.examples && Array.isArray(detailData.examples) && detailData.examples.length > 0) {
+              // 合并详情数据到当前 item
+              setItemWithExamples({ ...item, ...detailData })
+            } else {
+              setItemWithExamples(item)
+            }
+          })
+          .catch(error => {
+            console.warn(`⚠️ [ReviewCard] Failed to load ${type} detail:`, error)
+            setItemWithExamples(item)
+          })
+      } else {
+        setItemWithExamples(item)
+      }
+    } else {
+      setItemWithExamples(item)
+    }
+  }, [index, item, type])
+
+  // 随机选择一个 example sentence（每次卡片切换时重新随机，但同一张卡片总是显示同一个）
+  const randomExample = useMemo(() => {
+    // 使用 itemWithExamples 而不是 item，因为可能已经加载了完整的详情
+    const currentItem = itemWithExamples || item
+    if (!currentItem?.examples || !Array.isArray(currentItem.examples) || currentItem.examples.length === 0) {
+      return null
+    }
+    // 使用 index 和 item id 作为种子，确保同一张卡片总是显示同一个 example
+    const seed = (index * 1000 + (currentItem.vocab_id || currentItem.rule_id || 0)) % currentItem.examples.length
+    const example = currentItem.examples[seed]
+    // 优先使用 original_sentence，如果没有则返回 null
+    return example?.original_sentence || null
+  }, [index, itemWithExamples, item])
 
   // 解析和格式化解释文本
   const parseExplanation = (text) => {
@@ -91,13 +136,15 @@ const ReviewCard = ({
   }
 
   const title = useMemo(() => {
-    if (type === 'vocab') return item?.vocab_body || 'Unknown Word'
-    return item?.rule_name || item?.rule || 'Unknown Rule'
-  }, [type, item])
+    const currentItem = itemWithExamples || item
+    if (type === 'vocab') return currentItem?.vocab_body || 'Unknown Word'
+    return currentItem?.rule_name || currentItem?.rule || 'Unknown Rule'
+  }, [type, itemWithExamples, item])
 
   const shouldShowExplanation = showDefinition && showExplanation
 
   const content = useMemo(() => {
+    const currentItem = itemWithExamples || item
     if (type === 'vocab') {
       return (
         <div className="space-y-4">
@@ -105,15 +152,7 @@ const ReviewCard = ({
             <div>
               <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Definition</h3>
               <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                {parseExplanation(item?.explanation || '暂无定义')}
-              </div>
-            </div>
-          )}
-          {Array.isArray(item?.examples) && item.examples.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Example</h3>
-              <div className="text-gray-600 italic leading-relaxed whitespace-pre-wrap">
-                {parseExplanation(item.examples[0]?.context_explanation || 'Example')}
+                {parseExplanation(currentItem?.explanation || '暂无定义')}
               </div>
             </div>
           )}
@@ -127,21 +166,13 @@ const ReviewCard = ({
           <div>
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">规则解释</h3>
             <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-              {parseExplanation(item?.rule_summary || item?.explanation || '暂无解释')}
-            </div>
-          </div>
-        )}
-        {Array.isArray(item?.examples) && item.examples.length > 0 && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">使用例子</h3>
-            <div className="text-gray-600 italic leading-relaxed whitespace-pre-wrap">
-              {parseExplanation(item.examples[0]?.explanation_context || 'Example')}
+              {parseExplanation(currentItem?.rule_summary || currentItem?.explanation || '暂无解释')}
             </div>
           </div>
         )}
       </div>
     )
-  }, [type, item, shouldShowExplanation])
+  }, [type, itemWithExamples, item, shouldShowExplanation])
 
   const handleClick = (choice) => {
     // 先记录答案
@@ -190,13 +221,27 @@ const ReviewCard = ({
           )}
           <div className="flex flex-col gap-1">
             <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-            {!showExplanation && (
+            {/* 如果有 example sentence，在标题下方显示 */}
+            {randomExample && (
+              <p className="text-sm text-gray-600 italic leading-relaxed mt-1">
+                {randomExample}
+              </p>
+            )}
+            {!showExplanation ? (
               <button
                 type="button"
                 onClick={() => setShowExplanation(true)}
-                className="self-start text-xs px-2 py-1 border border-blue-300 text-blue-600 rounded hover:bg-blue-50 transition-colors"
+                className="self-start text-xs px-2 py-1 border border-blue-300 text-blue-600 rounded hover:bg-blue-50 transition-colors mt-1"
               >
                 see explanation
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowExplanation(false)}
+                className="self-start text-xs px-2 py-1 border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors mt-1"
+              >
+                hide explanation
               </button>
             )}
           </div>

@@ -22,6 +22,9 @@ const GrammarDemo = () => {
   // 文章过滤
   const [textId, setTextId] = useState('all')
   
+  // 时间排序：'desc' 倒序（最新在前），'asc' 正序（最早在前）
+  const [sortOrder, setSortOrder] = useState('desc')
+  
   // 获取文章列表（使用 useArticles hook，它会处理响应格式）
   const { data: articlesResponse, isLoading: articlesLoading } = useArticles(userId, selectedLanguage, isGuest)
   
@@ -84,10 +87,38 @@ const GrammarDemo = () => {
   // 从API数据中提取语法列表
   // 注意：language和learn_status过滤已经在API层面完成，这里只需要处理搜索过滤
   const allGrammar = grammarData?.data || []
-  console.log(`🔍 [GrammarDemo] 当前过滤状态: learnStatus=${learnStatus}, language=${selectedLanguage}, 语法数量=${allGrammar.length}`)
 
   const [filterText, setFilterText] = useState('')
-  const list = allGrammar.filter((g) => (filterText ? (g.rule_name || g.name || '').toLowerCase().includes(filterText.toLowerCase()) : true))
+  
+  // 过滤和排序
+  const filteredGrammar = allGrammar.filter((g) => (filterText ? (g.rule_name || g.name || '').toLowerCase().includes(filterText.toLowerCase()) : true))
+  
+  // 按时间排序（如果没有时间戳，使用 id 排序）
+  const list = [...filteredGrammar].sort((a, b) => {
+    // 优先使用 updated_at，如果没有则使用 created_at
+    const timeA = a.updated_at || a.created_at
+    const timeB = b.updated_at || b.created_at
+    
+    // 如果两个都有时间戳，按时间排序
+    if (timeA && timeB) {
+      const dateA = new Date(timeA).getTime()
+      const dateB = new Date(timeB).getTime()
+      if (sortOrder === 'desc') {
+        return dateB - dateA // 倒序：最新的在前
+      } else {
+        return dateA - dateB // 正序：最早的在前
+      }
+    }
+    
+    // 如果都没有时间戳，使用 id 排序
+    const idA = a.rule_id || 0
+    const idB = b.rule_id || 0
+    if (sortOrder === 'desc') {
+      return idB - idA // 倒序：id 大的在前（通常是更新的）
+    } else {
+      return idA - idB // 正序：id 小的在前（通常是更早的）
+    }
+  })
 
   const [selectedGrammar, setSelectedGrammar] = useState(null)
   const [selectedGrammarId, setSelectedGrammarId] = useState(null)
@@ -103,27 +134,74 @@ const GrammarDemo = () => {
       setIsLoadingDetail(true)
       console.log(`🔍 [GrammarDemo] Fetching grammar detail for ID: ${selectedGrammarId}`)
       
+      // 先从列表中找到对应的语法规则作为后备
+      const listItem = allGrammar.find(g => g.rule_id === selectedGrammarId)
+      if (listItem) {
+        setSelectedGrammar(listItem)
+      }
+      
       apiService.getGrammarById(selectedGrammarId)
         .then(response => {
           console.log(`✅ [GrammarDemo] Grammar detail fetched:`, response)
-          // 处理API响应格式
-          const grammarData = response?.data || response
-          setSelectedGrammar(grammarData)
+          // 处理API响应格式：后端返回 { success: true, data: {...} }
+          const grammarData = response?.data?.data || response?.data || response
+          if (grammarData) {
+            setSelectedGrammar(grammarData)
+          } else if (listItem) {
+            // 如果 API 返回的数据格式不对，使用列表中的数据
+            console.warn(`⚠️ [GrammarDemo] API response format unexpected, using list data`)
+            setSelectedGrammar(listItem)
+          }
           setIsLoadingDetail(false)
         })
         .catch(error => {
           console.error(`❌ [GrammarDemo] Error fetching grammar detail:`, error)
+          // 如果 API 失败，使用列表中的数据
+          if (listItem) {
+            console.log(`🔄 [GrammarDemo] Using list data as fallback`)
+            setSelectedGrammar(listItem)
+          } else {
+            // 如果列表中也找不到，设置为 null 以显示错误
+            setSelectedGrammar(null)
+          }
           setIsLoadingDetail(false)
         })
+    } else {
+      setSelectedGrammar(null)
     }
-  }, [selectedGrammarId])
+  }, [selectedGrammarId, allGrammar])
 
   const startReview = () => {
-    // 使用当前filter后的所有语法规则
-    const filteredGrammar = list || []
+    // 使用当前filter和排序后的所有语法规则（保持时间排序）
+    // 注意：这里需要在函数内部重新计算 list，因为 list 是在组件渲染时计算的
+    const allGrammar = grammarData?.data || []
+    const filteredGrammar = allGrammar.filter((g) => (filterText ? (g.rule_name || g.name || '').toLowerCase().includes(filterText.toLowerCase()) : true))
     
-    if (filteredGrammar.length === 0) {
-      // 如果为空，显示提示（使用更友好的方式）
+    // 按时间排序（如果没有时间戳，使用 id 排序）
+    const sortedList = [...filteredGrammar].sort((a, b) => {
+      const timeA = a.updated_at || a.created_at
+      const timeB = b.updated_at || b.created_at
+      
+      if (timeA && timeB) {
+        const dateA = new Date(timeA).getTime()
+        const dateB = new Date(timeB).getTime()
+        if (sortOrder === 'desc') {
+          return dateB - dateA
+        } else {
+          return dateA - dateB
+        }
+      }
+      
+      const idA = a.rule_id || 0
+      const idB = b.rule_id || 0
+      if (sortOrder === 'desc') {
+        return idB - idA
+      } else {
+        return idA - idB
+      }
+    })
+    
+    if (sortedList.length === 0) {
       const message = '当前筛选条件下没有语法规则，请更改筛选选项后再试'
       if (window.confirm(message)) {
         // 用户点击确定后不做任何操作，只是关闭提示
@@ -131,9 +209,8 @@ const GrammarDemo = () => {
       return
     }
     
-    // 使用所有filter后的语法规则进行复习（不限制数量）
-    const shuffled = [...filteredGrammar].sort(() => 0.5 - Math.random())
-    setReviewItems(shuffled)
+    // 使用排序后的列表进行复习（保持时间排序，不随机打乱）
+    setReviewItems(sortedList)
     setCurrentIndex(0)
     setResults([])
     setIsReviewMode(true)
@@ -179,14 +256,15 @@ const GrammarDemo = () => {
     // 处理学习状态过滤
     if (filterId === 'learn_status') {
       setLearnStatus(value)
+      return // 🔧 修复：避免继续执行，防止意外设置 filterText
     }
     // 处理文章过滤
     if (filterId === 'text_id') {
       setTextId(value)
-    } else if (typeof value === 'string') {
-      // 保留原有的文本过滤逻辑（如果需要）
-      setFilterText(value === 'all' ? '' : value)
+      return // 🔧 修复：避免继续执行，防止意外设置 filterText
     }
+    // 🔧 修复：只有明确的搜索过滤才设置 filterText
+    // 其他情况不应该设置 filterText
   }
 
   // 复习模式
@@ -228,6 +306,7 @@ const GrammarDemo = () => {
             type="grammar" 
             data={selectedGrammar}
             loading={isLoadingDetail}
+            error={!isLoadingDetail && !selectedGrammar ? '语法规则未找到或加载失败' : null}
             onBack={() => {
               setSelectedGrammar(null)
               setSelectedGrammarId(null)
@@ -252,6 +331,8 @@ const GrammarDemo = () => {
         backgroundClass="bg-gray-100"
         onRefresh={handleRefreshData}
         showRefreshButton={true}
+        sortOrder={sortOrder}
+        onSortChange={setSortOrder}
       >
         <div className="col-span-full flex justify-center items-center h-32">
           <div className="text-gray-500">加载语法数据中...</div>
@@ -273,6 +354,8 @@ const GrammarDemo = () => {
         backgroundClass="bg-gray-100"
         onRefresh={handleRefreshData}
         showRefreshButton={true}
+        sortOrder={sortOrder}
+        onSortChange={setSortOrder}
       >
         <div className="col-span-full flex justify-center items-center h-32">
           <div className="text-red-500">加载语法数据失败: {error?.message}</div>
@@ -331,6 +414,8 @@ const GrammarDemo = () => {
       backgroundClass="bg-gray-100"
       onRefresh={handleRefreshData}
       showRefreshButton={true}
+      sortOrder={sortOrder}
+      onSortChange={setSortOrder}
     >
       {/* 显示当前语言过滤状态 */}
       {selectedLanguage !== 'all' && (
@@ -339,6 +424,15 @@ const GrammarDemo = () => {
             <span className="font-medium">当前筛选：</span>{selectedLanguage}
             <span className="ml-2 text-gray-600">({list.length} 个语法规则)</span>
           </p>
+        </div>
+      )}
+      
+      {/* 空状态提示 */}
+      {list.length === 0 && !isLoading && (
+        <div className="col-span-full flex justify-center items-center h-32">
+          <div className="text-gray-500">
+            没有找到语法规则
+          </div>
         </div>
       )}
       

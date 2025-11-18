@@ -13,7 +13,7 @@ export function useGrammarNotations(articleId) {
     if (articleId) {
       loadGrammarNotations(articleId)
     }
-  }, [articleId])
+  }, [articleId]) // 移除 loadGrammarNotations 依赖，避免循环
 
   const loadGrammarNotations = async (textId) => {
     setIsLoading(true)

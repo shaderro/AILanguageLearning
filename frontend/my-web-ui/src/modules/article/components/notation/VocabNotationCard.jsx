@@ -1,5 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { apiService } from '../../../../services/api'
+
+const DEFAULT_CARD_WIDTH = 320
+const DEFAULT_CARD_MAX_HEIGHT = 320
+const CARD_MARGIN = 8
 
 // 解析和格式化解释文本
 const parseExplanation = (text) => {
@@ -85,18 +90,21 @@ const parseExplanation = (text) => {
 export default function VocabNotationCard({ 
   isVisible = false, 
   note = "This is a test note", 
-  position = {},
+  position = null,
   textId = null,
   sentenceId = null,
   tokenIndex = null,
   onMouseEnter = null,
   onMouseLeave = null,
-  getVocabExampleForToken = null
+  getVocabExampleForToken = null,
+  anchorRef = null
 }) {
   const [show, setShow] = useState(false)
   const [vocabExample, setVocabExample] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [portalStyle, setPortalStyle] = useState({})
+  const portalContainerRef = useRef(null)
 
   useEffect(() => {
     if (isVisible) {
@@ -176,7 +184,59 @@ export default function VocabNotationCard({
     }
   }, [isVisible, vocabExample, isLoading, error, textId, sentenceId, tokenIndex, getVocabExampleForToken])
 
-  if (!show) return null
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!portalContainerRef.current) {
+      let container = document.getElementById('notation-portal-root')
+      if (!container) {
+        container = document.createElement('div')
+        container.id = 'notation-portal-root'
+        container.style.position = 'relative'
+        container.style.zIndex = '9999'
+        document.body.appendChild(container)
+      }
+      portalContainerRef.current = container
+    }
+  }, [])
+
+  const updatePosition = useCallback(() => {
+    if (!anchorRef?.current || !portalContainerRef.current) return
+    const rect = anchorRef.current.getBoundingClientRect()
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const desiredLeft = rect.left
+    const maxLeft = viewportWidth - DEFAULT_CARD_WIDTH - CARD_MARGIN
+    const left = Math.max(CARD_MARGIN, Math.min(desiredLeft, maxLeft))
+    let top = rect.bottom + CARD_MARGIN
+    const maxTop = viewportHeight - CARD_MARGIN
+    const estimatedHeight = DEFAULT_CARD_MAX_HEIGHT
+    if (top + estimatedHeight > maxTop && rect.top > estimatedHeight + CARD_MARGIN) {
+      top = rect.top - estimatedHeight - CARD_MARGIN
+    }
+    setPortalStyle({
+      position: 'fixed',
+      top: `${Math.max(CARD_MARGIN, top)}px`,
+      left: `${left}px`,
+      width: `${DEFAULT_CARD_WIDTH}px`,
+      opacity: show ? 1 : 0,
+      pointerEvents: show ? 'auto' : 'none',
+      ...(position || {})
+    })
+  }, [anchorRef, show, position])
+
+  useEffect(() => {
+    if (!show) return
+    updatePosition()
+    const handleScroll = () => updatePosition()
+    window.addEventListener('scroll', handleScroll, true)
+    window.addEventListener('resize', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [show, updatePosition])
+
+  if (!show || !portalContainerRef.current) return null
 
   let displayContent = note
 
@@ -214,26 +274,26 @@ export default function VocabNotationCard({
     )
   }
 
-  return (
+  return createPortal(
     <div 
-      className="absolute top-full left-0 z-50 transition-opacity duration-200 notation-card"
-      style={{
-        minWidth: '200px',
-        maxWidth: '400px',
-        opacity: show ? 1 : 0,
-        marginTop: '-4px',
-        paddingTop: '8px',
-        ...position
-      }}
+      className="transition-opacity duration-200 notation-card"
+      style={portalStyle}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="absolute top-1 left-4 w-2 h-2 bg-gray-200 transform rotate-45 border-l border-t border-gray-300"></div>
-      <div className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg p-3">
+      <div 
+        className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg p-3"
+        style={{
+          maxHeight: `${DEFAULT_CARD_MAX_HEIGHT}px`,
+          overflowY: 'auto'
+        }}
+      >
         {displayContent}
       </div>
-    </div>
+    </div>,
+    portalContainerRef.current
   )
 }
 

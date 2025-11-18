@@ -15,7 +15,21 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491878",
+          "timestamp": "2025-11-18T12:16:39.011053",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'gründete 是德语动词 gründen 的过去式，意思是“创立、建立”。在这个句子里，它表示“他在1998年创立了...”。'}",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1758864042,
+            "sentence_id": 3,
+            "sentence_body": "1998 gründete er sein weltweit agierendes und international ausgezeichnetes Landschaftsarchitekturbüro Turenscape[6] mit etwa 600 Angestellten.[7] Yu Kongjians Arbeit befasst sich mit Aufgabenstellungen aus der Architektur, Landschaftsarchitektur sowie Städtebau in allen Maßstabsebenen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-18T12:16:39.011063",
           "data_type": "old"
         }
       ],
@@ -36,7 +50,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491895",
+          "timestamp": "2025-11-18T12:16:39.011069",
           "data_type": "old"
         },
         {
@@ -50,7 +64,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491900",
+          "timestamp": "2025-11-18T12:16:39.011072",
           "data_type": "old"
         },
         {
@@ -64,7 +78,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491903",
+          "timestamp": "2025-11-18T12:16:39.011075",
           "data_type": "old"
         },
         {
@@ -78,7 +92,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491907",
+          "timestamp": "2025-11-18T12:16:39.011078",
           "data_type": "old"
         }
       ],
@@ -99,7 +113,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491912",
+          "timestamp": "2025-11-18T12:16:39.011081",
           "data_type": "old"
         },
         {
@@ -113,7 +127,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491915",
+          "timestamp": "2025-11-18T12:16:39.011084",
           "data_type": "old"
         },
         {
@@ -127,7 +141,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491919",
+          "timestamp": "2025-11-18T12:16:39.011086",
           "data_type": "old"
         },
         {
@@ -141,7 +155,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491922",
+          "timestamp": "2025-11-18T12:16:39.011088",
           "data_type": "old"
         },
         {
@@ -155,7 +169,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491926",
+          "timestamp": "2025-11-18T12:16:39.011091",
           "data_type": "old"
         },
         {
@@ -169,7 +183,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491929",
+          "timestamp": "2025-11-18T12:16:39.011093",
           "data_type": "old"
         },
         {
@@ -183,7 +197,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491933",
+          "timestamp": "2025-11-18T12:16:39.011095",
           "data_type": "old"
         },
         {
@@ -197,7 +211,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491936",
+          "timestamp": "2025-11-18T12:16:39.011098",
           "data_type": "old"
         },
         {
@@ -211,7 +225,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491939",
+          "timestamp": "2025-11-18T12:16:39.011100",
           "data_type": "old"
         },
         {
@@ -225,7 +239,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491943",
+          "timestamp": "2025-11-18T12:16:39.011102",
           "data_type": "old"
         },
         {
@@ -239,7 +253,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491946",
+          "timestamp": "2025-11-18T12:16:39.011104",
           "data_type": "old"
         },
         {
@@ -253,7 +267,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491950",
+          "timestamp": "2025-11-18T12:16:39.011107",
           "data_type": "old"
         },
         {
@@ -267,7 +281,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491954",
+          "timestamp": "2025-11-18T12:16:39.011109",
           "data_type": "old"
         }
       ],
@@ -288,7 +302,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491959",
+          "timestamp": "2025-11-18T12:16:39.011112",
           "data_type": "old"
         },
         {
@@ -302,7 +316,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491962",
+          "timestamp": "2025-11-18T12:16:39.011114",
           "data_type": "old"
         },
         {
@@ -316,7 +330,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491966",
+          "timestamp": "2025-11-18T12:16:39.011117",
           "data_type": "old"
         },
         {
@@ -330,7 +344,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491970",
+          "timestamp": "2025-11-18T12:16:39.011119",
           "data_type": "old"
         },
         {
@@ -344,7 +358,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491974",
+          "timestamp": "2025-11-18T12:16:39.011121",
           "data_type": "old"
         },
         {
@@ -358,7 +372,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491978",
+          "timestamp": "2025-11-18T12:16:39.011124",
           "data_type": "old"
         },
         {
@@ -372,7 +386,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491981",
+          "timestamp": "2025-11-18T12:16:39.011126",
           "data_type": "old"
         },
         {
@@ -386,7 +400,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491985",
+          "timestamp": "2025-11-18T12:16:39.011128",
           "data_type": "old"
         },
         {
@@ -400,7 +414,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491988",
+          "timestamp": "2025-11-18T12:16:39.011131",
           "data_type": "old"
         },
         {
@@ -414,7 +428,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.491991",
+          "timestamp": "2025-11-18T12:16:39.011133",
           "data_type": "old"
         },
         {
@@ -428,7 +442,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492008",
+          "timestamp": "2025-11-18T12:16:39.011135",
           "data_type": "old"
         },
         {
@@ -442,7 +456,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492011",
+          "timestamp": "2025-11-18T12:16:39.011137",
           "data_type": "old"
         }
       ],
@@ -463,7 +477,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492015",
+          "timestamp": "2025-11-18T12:16:39.011139",
           "data_type": "old"
         },
         {
@@ -477,7 +491,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492018",
+          "timestamp": "2025-11-18T12:16:39.011142",
           "data_type": "old"
         },
         {
@@ -491,7 +505,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492021",
+          "timestamp": "2025-11-18T12:16:39.011144",
           "data_type": "old"
         },
         {
@@ -505,7 +519,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492024",
+          "timestamp": "2025-11-18T12:16:39.011146",
           "data_type": "old"
         },
         {
@@ -519,7 +533,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492027",
+          "timestamp": "2025-11-18T12:16:39.011148",
           "data_type": "old"
         },
         {
@@ -533,7 +547,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492030",
+          "timestamp": "2025-11-18T12:16:39.011150",
           "data_type": "old"
         },
         {
@@ -547,7 +561,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492032",
+          "timestamp": "2025-11-18T12:16:39.011152",
           "data_type": "old"
         },
         {
@@ -561,7 +575,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492035",
+          "timestamp": "2025-11-18T12:16:39.011155",
           "data_type": "old"
         },
         {
@@ -575,7 +589,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492036",
+          "timestamp": "2025-11-18T12:16:39.011157",
           "data_type": "old"
         },
         {
@@ -589,7 +603,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492039",
+          "timestamp": "2025-11-18T12:16:39.011159",
           "data_type": "old"
         },
         {
@@ -603,7 +617,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492041",
+          "timestamp": "2025-11-18T12:16:39.011161",
           "data_type": "old"
         },
         {
@@ -617,7 +631,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492043",
+          "timestamp": "2025-11-18T12:16:39.011164",
           "data_type": "old"
         },
         {
@@ -631,7 +645,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492045",
+          "timestamp": "2025-11-18T12:16:39.011166",
           "data_type": "old"
         },
         {
@@ -645,7 +659,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492047",
+          "timestamp": "2025-11-18T12:16:39.011168",
           "data_type": "old"
         },
         {
@@ -659,7 +673,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492050",
+          "timestamp": "2025-11-18T12:16:39.011170",
           "data_type": "old"
         },
         {
@@ -673,7 +687,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492053",
+          "timestamp": "2025-11-18T12:16:39.011172",
           "data_type": "old"
         },
         {
@@ -687,7 +701,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492056",
+          "timestamp": "2025-11-18T12:16:39.011174",
           "data_type": "old"
         },
         {
@@ -701,7 +715,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492060",
+          "timestamp": "2025-11-18T12:16:39.011176",
           "data_type": "old"
         },
         {
@@ -715,7 +729,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492063",
+          "timestamp": "2025-11-18T12:16:39.011178",
           "data_type": "old"
         },
         {
@@ -729,7 +743,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492067",
+          "timestamp": "2025-11-18T12:16:39.011180",
           "data_type": "old"
         },
         {
@@ -743,7 +757,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492070",
+          "timestamp": "2025-11-18T12:16:39.011182",
           "data_type": "old"
         }
       ],
@@ -764,7 +778,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492074",
+          "timestamp": "2025-11-18T12:16:39.011185",
           "data_type": "old"
         },
         {
@@ -778,7 +792,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492077",
+          "timestamp": "2025-11-18T12:16:39.011187",
           "data_type": "old"
         },
         {
@@ -792,7 +806,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492081",
+          "timestamp": "2025-11-18T12:16:39.011189",
           "data_type": "old"
         },
         {
@@ -806,7 +820,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492084",
+          "timestamp": "2025-11-18T12:16:39.011191",
           "data_type": "old"
         }
       ],
@@ -827,7 +841,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492089",
+          "timestamp": "2025-11-18T12:16:39.011194",
           "data_type": "old"
         },
         {
@@ -841,7 +855,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492092",
+          "timestamp": "2025-11-18T12:16:39.011196",
           "data_type": "old"
         },
         {
@@ -855,7 +869,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492096",
+          "timestamp": "2025-11-18T12:16:39.011199",
           "data_type": "old"
         },
         {
@@ -869,7 +883,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492099",
+          "timestamp": "2025-11-18T12:16:39.011201",
           "data_type": "old"
         },
         {
@@ -883,7 +897,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492103",
+          "timestamp": "2025-11-18T12:16:39.011203",
           "data_type": "old"
         },
         {
@@ -897,7 +911,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492107",
+          "timestamp": "2025-11-18T12:16:39.011205",
           "data_type": "old"
         },
         {
@@ -911,7 +925,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492111",
+          "timestamp": "2025-11-18T12:16:39.011207",
           "data_type": "old"
         },
         {
@@ -925,7 +939,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492114",
+          "timestamp": "2025-11-18T12:16:39.011209",
           "data_type": "old"
         },
         {
@@ -939,7 +953,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492117",
+          "timestamp": "2025-11-18T12:16:39.011211",
           "data_type": "old"
         },
         {
@@ -953,7 +967,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492121",
+          "timestamp": "2025-11-18T12:16:39.011214",
           "data_type": "old"
         },
         {
@@ -967,7 +981,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492123",
+          "timestamp": "2025-11-18T12:16:39.011216",
           "data_type": "old"
         },
         {
@@ -981,7 +995,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492126",
+          "timestamp": "2025-11-18T12:16:39.011218",
           "data_type": "old"
         },
         {
@@ -995,7 +1009,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492128",
+          "timestamp": "2025-11-18T12:16:39.011220",
           "data_type": "old"
         },
         {
@@ -1009,7 +1023,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492130",
+          "timestamp": "2025-11-18T12:16:39.011222",
           "data_type": "old"
         },
         {
@@ -1023,7 +1037,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492132",
+          "timestamp": "2025-11-18T12:16:39.011224",
           "data_type": "old"
         },
         {
@@ -1037,7 +1051,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492134",
+          "timestamp": "2025-11-18T12:16:39.011226",
           "data_type": "old"
         },
         {
@@ -1051,7 +1065,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492137",
+          "timestamp": "2025-11-18T12:16:39.011228",
           "data_type": "old"
         },
         {
@@ -1065,7 +1079,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492139",
+          "timestamp": "2025-11-18T12:16:39.011231",
           "data_type": "old"
         },
         {
@@ -1079,7 +1093,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492141",
+          "timestamp": "2025-11-18T12:16:39.011233",
           "data_type": "old"
         },
         {
@@ -1093,7 +1107,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492143",
+          "timestamp": "2025-11-18T12:16:39.011235",
           "data_type": "old"
         },
         {
@@ -1107,7 +1121,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492146",
+          "timestamp": "2025-11-18T12:16:39.011237",
           "data_type": "old"
         },
         {
@@ -1121,7 +1135,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492148",
+          "timestamp": "2025-11-18T12:16:39.011239",
           "data_type": "old"
         },
         {
@@ -1135,7 +1149,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492150",
+          "timestamp": "2025-11-18T12:16:39.011241",
           "data_type": "old"
         },
         {
@@ -1149,7 +1163,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492152",
+          "timestamp": "2025-11-18T12:16:39.011243",
           "data_type": "old"
         },
         {
@@ -1163,7 +1177,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492155",
+          "timestamp": "2025-11-18T12:16:39.011245",
           "data_type": "old"
         },
         {
@@ -1177,7 +1191,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492157",
+          "timestamp": "2025-11-18T12:16:39.011247",
           "data_type": "old"
         },
         {
@@ -1191,7 +1205,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492159",
+          "timestamp": "2025-11-18T12:16:39.011249",
           "data_type": "old"
         },
         {
@@ -1205,7 +1219,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492161",
+          "timestamp": "2025-11-18T12:16:39.011251",
           "data_type": "old"
         },
         {
@@ -1219,7 +1233,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492163",
+          "timestamp": "2025-11-18T12:16:39.011253",
           "data_type": "old"
         },
         {
@@ -1233,7 +1247,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492165",
+          "timestamp": "2025-11-18T12:16:39.011255",
           "data_type": "old"
         },
         {
@@ -1247,7 +1261,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492167",
+          "timestamp": "2025-11-18T12:16:39.011258",
           "data_type": "old"
         },
         {
@@ -1261,7 +1275,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492169",
+          "timestamp": "2025-11-18T12:16:39.011260",
           "data_type": "old"
         },
         {
@@ -1275,7 +1289,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492172",
+          "timestamp": "2025-11-18T12:16:39.011262",
           "data_type": "old"
         },
         {
@@ -1289,7 +1303,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492174",
+          "timestamp": "2025-11-18T12:16:39.011264",
           "data_type": "old"
         },
         {
@@ -1303,7 +1317,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492176",
+          "timestamp": "2025-11-18T12:16:39.011266",
           "data_type": "old"
         },
         {
@@ -1317,7 +1331,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492178",
+          "timestamp": "2025-11-18T12:16:39.011268",
           "data_type": "old"
         },
         {
@@ -1331,7 +1345,7 @@
             "grammar_annotations": [],
             "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492180",
+          "timestamp": "2025-11-18T12:16:39.011270",
           "data_type": "old"
         },
         {
@@ -1343,11 +1357,10 @@
             "sentence_id": 1,
             "sentence_body": "Mr und Mrs Dursley im Ligusterweg Nummer 4 waren stolz darauf, ganz und gar \nnormal zu sein, sehr stolz sogar.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492187",
-          "data_type": "new"
+          "timestamp": "2025-11-18T12:16:39.011272",
+          "data_type": "old"
         },
         {
           "user": "这个词是什么意思？",
@@ -1358,11 +1371,10 @@
             "sentence_id": 2,
             "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
             "grammar_annotations": [],
-            "vocab_annotations": [],
-            "sentence_difficulty_level": null
+            "vocab_annotations": []
           },
-          "timestamp": "2025-11-17T12:30:13.492191",
-          "data_type": "new"
+          "timestamp": "2025-11-18T12:16:39.011274",
+          "data_type": "old"
         },
         {
           "user": "这个词有什么词根词缀吗？",
@@ -1373,10 +1385,66 @@
             "sentence_id": 2,
             "sentence_body": "Niemand wäre auf die Idee gekommen, sie könnten \nsich in eine merkwürdige und geheimnisvolle Geschichte verstricken, denn mit \nsolchem Unsinn wollten sie nichts zu tun haben.",
             "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-18T12:16:39.011276",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'vertreten 在这里是德语动词，意思是“伸展、活动（肢体）”。在句子中“sich die Beine vertreten”是一个固定搭配，表示“活动活动腿脚、散散步”。所以这句话的意思是：他想稍微活动活动腿脚，去街对面的面包店买个甜甜圈。'}",
+          "sentence_id": 51,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 51,
+            "sentence_body": "Bis zur \nMittagspause war er glänzender Laune und wollte sich nun ein wenig die Beine \nvertreten und beim Bäcker über der Straße einen Krapfen holen.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-18T12:16:39.011283",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'dabei 在这里是一个副词，意思是“同时”或“与此同时”。整个句子的意思是：他进行了几个重要的电话通话，同时说话声音还更大了一些。dabei 常用于表示在做某事的同时还进行另一个动作。'}",
+          "sentence_id": 50,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 50,
+            "sentence_body": "Er führte mehrere \nwichtige Telefongespräche und schrie dabei noch ein wenig lauter.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-18T12:16:39.011285",
+          "data_type": "old"
+        },
+        {
+          "user": "这个词是什么意思？",
+          "ai": "{'answer': 'schwergefallen是德语动词schwerfallen的过去分词形式，意思是“感到困难”或“难以做到”。在句子中‘es wäre ihm schwergefallen’表示‘对他来说会很困难’。'}",
+          "sentence_id": 45,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 45,
+            "sentence_body": "Andernfalls wäre es ihm an diesem Morgen schwergefallen, sich auf die \nBohrer zu konzentrieren.",
+            "grammar_annotations": [],
+            "vocab_annotations": []
+          },
+          "timestamp": "2025-11-18T12:16:39.011287",
+          "data_type": "old"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "{'answer': '这句话包含三个并列的动词短语：1) griff nach der Aktentasche（伸手拿公文包），2) gab seiner Frau einen Schmatz auf die Wange（在妻子脸颊上给了一个响吻），3) versuchte es auch bei Dudley mit einem Abschiedskuss（也尝试给达力一个告别吻）。这三个动作由逗号和und连接，表示Dursley先生连续做的三个动作。'}",
+          "sentence_id": 17,
+          "quote": {
+            "text_id": 1,
+            "sentence_id": 17,
+            "sentence_body": "Um halb neun griff Mr Dursley nach der Aktentasche, gab seiner Frau einen \nSchmatz auf die Wange und versuchte es auch bei Dudley mit einem Abschiedskuss.",
+            "grammar_annotations": [],
             "vocab_annotations": [],
             "sentence_difficulty_level": null
           },
-          "timestamp": "2025-11-17T12:30:13.492194",
+          "timestamp": "2025-11-18T12:16:39.011292",
           "data_type": "new"
         }
       ],

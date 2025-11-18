@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { ApiDemo } from './components/ApiDemo'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
@@ -14,9 +14,50 @@ import { UserProvider, useUser } from './contexts/UserContext'
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState('article')
-  const [selectedArticleId, setSelectedArticleId] = useState(null)
+  // 🔧 从 URL 参数初始化页面状态
+  const getInitialStateFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    const page = params.get('page') || 'article'
+    const articleId = params.get('articleId')
+    return { page, articleId }
+  }
+
+  const initialState = getInitialStateFromURL()
+  const [currentPage, setCurrentPage] = useState(initialState.page)
+  const [selectedArticleId, setSelectedArticleId] = useState(initialState.articleId)
   const [isUploadMode, setIsUploadMode] = useState(false)
+  
+  // 🔧 监听 URL 参数变化（用于新标签页打开）
+  useEffect(() => {
+    const handlePopState = () => {
+      const state = getInitialStateFromURL()
+      setCurrentPage(state.page)
+      if (state.articleId) {
+        setSelectedArticleId(state.articleId)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // 🔧 当页面或 articleId 变化时，更新 URL（但不刷新页面）
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (currentPage) {
+      params.set('page', currentPage)
+    } else {
+      params.delete('page')
+    }
+    if (selectedArticleId) {
+      params.set('articleId', selectedArticleId)
+    } else {
+      params.delete('articleId')
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
+    if (window.location.href !== window.location.origin + newUrl) {
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [currentPage, selectedArticleId])
   
   // 模态框状态
   const [showLoginModal, setShowLoginModal] = useState(false)

@@ -154,16 +154,16 @@ async def get_all_grammar_rules(
             print(f"🔍 [GrammarAPI] 应用语言过滤: {language}")
         
         # 学习状态过滤
-        # 🔧 修复：SQLite 中 Enum 存储为字符串，使用 cast 转换为字符串进行比较
+        # 🔧 修复：SQLite 中 Enum 存储为字符串，使用枚举对象进行比较
         if learn_status and learn_status != 'all':
             if learn_status == 'mastered':
-                # 将 Enum 列转换为字符串进行比较
-                query = query.filter(cast(GrammarRule.learn_status, String) == 'mastered')
-                print(f"🔍 [GrammarAPI] 应用学习状态过滤: mastered")
+                # 使用枚举对象进行比较（SQLAlchemy 会自动处理枚举转换）
+                query = query.filter(GrammarRule.learn_status == LearnStatus.MASTERED)
+                print(f"🔍 [GrammarAPI] 应用学习状态过滤: mastered (使用枚举对象比较)")
             elif learn_status == 'not_mastered':
-                # 将 Enum 列转换为字符串进行比较
-                query = query.filter(cast(GrammarRule.learn_status, String) == 'not_mastered')
-                print(f"🔍 [GrammarAPI] 应用学习状态过滤: not_mastered")
+                # 使用枚举对象进行比较（SQLAlchemy 会自动处理枚举转换）
+                query = query.filter(GrammarRule.learn_status == LearnStatus.NOT_MASTERED)
+                print(f"🔍 [GrammarAPI] 应用学习状态过滤: not_mastered (使用枚举对象比较)")
         else:
             print(f"🔍 [GrammarAPI] 不应用学习状态过滤 (learn_status={learn_status})")
         
@@ -183,6 +183,19 @@ async def get_all_grammar_rules(
         rules = query.offset(skip).limit(limit).all()
         print(f"🔍 [GrammarAPI] 查询结果: {len(rules)} 个语法规则")
         
+        # 🔧 调试：打印前几个规则的 learn_status 值（用于排查过滤问题）
+        if rules:
+            for i, r in enumerate(rules[:3]):
+                learn_status_value = r.learn_status.value if hasattr(r.learn_status, 'value') else str(r.learn_status)
+                print(f"🔍 [GrammarAPI] 规则 {i+1} (ID={r.rule_id}): learn_status={learn_status_value} (type={type(r.learn_status)})")
+        elif learn_status and learn_status != 'all':
+            # 如果没有结果，打印调试信息
+            print(f"⚠️ [GrammarAPI] 过滤后没有结果，检查所有规则的 learn_status...")
+            all_rules = session.query(GrammarRule).filter(GrammarRule.user_id == current_user.user_id).limit(5).all()
+            for r in all_rules:
+                learn_status_value = r.learn_status.value if hasattr(r.learn_status, 'value') else str(r.learn_status)
+                print(f"🔍 [GrammarAPI] 规则 ID={r.rule_id}: learn_status={learn_status_value} (期望: {learn_status})")
+        
         return {
             "success": True,
             "data": [
@@ -195,7 +208,9 @@ async def get_all_grammar_rules(
                     "language": r.language,
                     "source": r.source.value if hasattr(r.source, 'value') else r.source,
                     "is_starred": r.is_starred,
-                    "learn_status": r.learn_status.value if hasattr(r.learn_status, 'value') else (str(r.learn_status) if r.learn_status else "not_mastered")
+                    "learn_status": r.learn_status.value if hasattr(r.learn_status, 'value') else (str(r.learn_status) if r.learn_status else "not_mastered"),
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                    "updated_at": r.updated_at.isoformat() if r.updated_at else None
                 }
                 for r in rules
             ],
@@ -221,19 +236,21 @@ async def get_grammar_rule(
     """
     try:
         print(f"[API] Getting grammar rule {rule_id}")
-        grammar_manager = GrammarRuleManagerDB(session)
-        rule = grammar_manager.get_rule_by_id(rule_id)
         
-        if not rule:
+        # 🔧 直接从数据库模型获取，以便访问 created_at 和 updated_at 字段
+        from database_system.business_logic.models import GrammarRule as GrammarModel
+        grammar_model = session.query(GrammarModel).filter(GrammarModel.rule_id == rule_id).first()
+        
+        if not grammar_model:
             print(f"[API] Grammar rule {rule_id} not found")
             raise HTTPException(status_code=404, detail=f"Grammar Rule ID {rule_id} not found")
         
-        print(f"[API] Found grammar rule: {rule.name}")
+        print(f"[API] Found grammar rule: {grammar_model.rule_name}")
 
         # 为每个 example 尝试查找原句
         examples_data = []
-        if include_examples and rule.examples:
-            for ex in rule.examples:
+        if include_examples and grammar_model.examples:
+            for ex in grammar_model.examples:
                 original_sentence = None
                 try:
                     if ex.text_id is not None and ex.sentence_id is not None:
@@ -258,15 +275,17 @@ async def get_grammar_rule(
         return {
             "success": True,
             "data": {
-                "rule_id": rule.rule_id,
-                "rule_name": rule.name,  # DTO 中是 name，前端期望 rule_name
-                "rule_summary": rule.explanation,  # DTO 中是 explanation，前端期望 rule_summary
-                "name": rule.name,  # 保留兼容性
-                "explanation": rule.explanation,  # 保留兼容性
-                "language": rule.language,
-                "source": rule.source.value if hasattr(rule.source, 'value') else rule.source,
-                "is_starred": rule.is_starred,
-                "learn_status": rule.learn_status.value if hasattr(rule.learn_status, 'value') else (str(rule.learn_status) if rule.learn_status else "not_mastered"),
+                "rule_id": grammar_model.rule_id,
+                "rule_name": grammar_model.rule_name,  # 前端期望 rule_name
+                "rule_summary": grammar_model.rule_summary,  # 前端期望 rule_summary
+                "name": grammar_model.rule_name,  # 保留兼容性
+                "explanation": grammar_model.rule_summary,  # 保留兼容性
+                "language": grammar_model.language,
+                "source": grammar_model.source.value if hasattr(grammar_model.source, 'value') else str(grammar_model.source),
+                "is_starred": grammar_model.is_starred,
+                "learn_status": grammar_model.learn_status.value if hasattr(grammar_model.learn_status, 'value') else (str(grammar_model.learn_status) if grammar_model.learn_status else "not_mastered"),
+                "created_at": grammar_model.created_at.isoformat() if hasattr(grammar_model, 'created_at') and grammar_model.created_at else None,
+                "updated_at": grammar_model.updated_at.isoformat() if hasattr(grammar_model, 'updated_at') and grammar_model.updated_at else None,
                 "examples": examples_data if include_examples else []
             }
         }

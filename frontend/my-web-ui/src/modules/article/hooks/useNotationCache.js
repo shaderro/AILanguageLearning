@@ -125,6 +125,11 @@ export function useNotationCache(articleId) {
     } catch (err) {
       console.error('❌ [useNotationCache] Error loading notations:', err)
       setError(err.message || 'Failed to load notations')
+      // 🔧 即使出错也要设置 isInitialized，避免无限重试
+      setIsInitialized(true)
+      // 设置空数组，避免显示错误
+      setGrammarNotations([])
+      setVocabNotations([])
     } finally {
       setIsLoading(false)
     }

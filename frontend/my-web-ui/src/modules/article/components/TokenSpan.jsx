@@ -43,6 +43,7 @@ export default function TokenSpan({
   } = notationContext || {}
   
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
+  const anchorRef = useRef(null)
   const selectable = typeof token === 'object' ? !!token?.selectable : false
   const uid = getTokenId(token, sentenceIdx)
   const selected = uid ? selectedTokenIds.has(uid) : false
@@ -181,6 +182,7 @@ export default function TokenSpan({
     <span
       key={getTokenKey(sentenceIdx, token, tokenIdx)}
       className="relative inline-block"
+      ref={anchorRef}
     >
       <span
         data-token="1"
@@ -276,6 +278,7 @@ export default function TokenSpan({
           onMouseEnter={handleNotationMouseEnter}
           onMouseLeave={handleNotationMouseLeave}
           getVocabExampleForToken={getVocabExampleForToken}
+          anchorRef={anchorRef}
         />
       )}
       

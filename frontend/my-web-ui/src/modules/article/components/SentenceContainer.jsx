@@ -93,8 +93,10 @@ export default function SentenceContainer({
   const backgroundStyle = getSentenceBackgroundStyle(sentenceIndex)
   const isInteracting = isSentenceInteracting(sentenceIndex)
   
+  // 🔧 获取 sentence_id 用于标识（优先使用数据中的 sentence_id，否则使用索引+1）
+  const sentenceId = sentence?.sentence_id || (typeof sentence === 'object' && sentence?.id) || (sentenceIndex + 1)
+  
   // Check if this sentence has grammar notations
-  const sentenceId = sentenceIndex + 1 // Convert 0-based index to 1-based sentence ID
   const hasGrammar = hasGrammarNotation ? hasGrammarNotation(sentenceId) : false
   const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
   
@@ -108,13 +110,14 @@ export default function SentenceContainer({
     textId: articleId,
     sentenceId
   })
-
+  
   return (
     <div 
       ref={sentenceRef}
       key={`s-${sentenceIndex}`} 
       className={`select-none relative transition-all duration-200 ${backgroundStyle} ${selectionSentenceClass}`}
       data-sentence="1"
+      data-sentence-id={sentenceId}
       onMouseEnter={(e) => { selOnEnter(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseEnter(e) }}
       onMouseLeave={(e) => { selOnLeave(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseLeave(e) }}
       onClick={(e) => { selOnClick(e); handleSentenceClick(e) }}

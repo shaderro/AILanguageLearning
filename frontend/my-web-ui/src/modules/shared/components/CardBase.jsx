@@ -42,9 +42,11 @@ const CardBase = ({
 
   return (
     <div className={className} onClick={onClick}>
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 capitalize">{title}</h2>
-      </div>
+      {title && (
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 capitalize">{title}</h2>
+        </div>
+      )}
       {children}
     </div>
   )

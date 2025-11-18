@@ -224,37 +224,7 @@ export default function GrammarNotationCard({
     >
       <div 
         style={{ 
-          height: '40px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px',
-          flexShrink: '0'
-        }}
-      >
-        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', margin: '0' }}>语法注释</h3>
-        <button
-          onClick={onClose}
-          style={{ 
-            background: 'none',
-            border: 'none',
-            fontSize: '20px',
-            color: '#9ca3af',
-            cursor: 'pointer',
-            padding: '0',
-            lineHeight: '1'
-          }}
-          onMouseEnter={(e) => e.target.style.color = '#4b5563'}
-          onMouseLeave={(e) => e.target.style.color = '#9ca3af'}
-          aria-label="关闭"
-        >
-          ×
-        </button>
-      </div>
-
-      <div 
-        style={{ 
-          maxHeight: 'calc(200px - 16px - 16px - 40px - 12px)',
+          maxHeight: 'calc(200px - 16px - 16px)',
           height: 'auto',
           overflowY: 'auto',
           overflowX: 'hidden'

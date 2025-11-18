@@ -22,6 +22,14 @@ import { useNotationCache } from './hooks/useNotationCache'
 import { apiService } from '../../services/api'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
+  // 🔧 从 URL 参数读取 sentenceId（用于自动滚动和高亮）
+  const getSentenceIdFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    const sentenceId = params.get('sentenceId')
+    return sentenceId ? parseInt(sentenceId) : null
+  }
+  const [targetSentenceId, setTargetSentenceId] = useState(getSentenceIdFromURL())
+  
   // 空白处清空选择逻辑已移至 ArticleCanvas（在 SelectionProvider 内部使用 useSelection）
   const [selectedTokens, setSelectedTokens] = useState([])
   const [quotedText, setQuotedText] = useState('')
@@ -294,8 +302,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
             </div>
           </div>
 
-          {/* Main Content - Fixed height with no overflow */}
-          <div className="flex gap-8 flex-1 p-4 overflow-hidden min-h-0">
+          {/* Main Content - allow overlays to extend beyond article view */}
+          <div className="flex gap-8 flex-1 p-4 overflow-visible min-h-0">
             {isUploadMode ? (
               showUploadProgress ? (
                 <UploadProgress onComplete={handleUploadComplete} />
@@ -312,6 +320,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                   getNotationContent={getNotationContent}
                   setNotationContent={setNotationContent}
                   onSentenceSelect={handleSentenceSelect}
+                  targetSentenceId={targetSentenceId}
+                  onTargetSentenceScrolled={() => setTargetSentenceId(null)}
                 />
               </ArticleCanvas>
             )}
