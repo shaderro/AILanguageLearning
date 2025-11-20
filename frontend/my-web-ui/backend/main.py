@@ -1419,7 +1419,7 @@ async def upload_file(
         # 使用简单文章处理器处理文章
         if process_article:
             print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id}, 语言: {language})")
-            result = process_article(text_content, article_id, title)
+            result = process_article(text_content, article_id, title, language=language)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
@@ -1491,7 +1491,7 @@ async def upload_url(
         # 使用简单文章处理器处理文章
         if process_article:
             print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id}, 语言: {language})")
-            result = process_article(text_content, article_id, title)
+            result = process_article(text_content, article_id, title, language=language)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
@@ -1592,7 +1592,7 @@ async def upload_text(
         # 使用简单文章处理器处理文章
         if process_article:
             print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id}, 语言: {language})")
-            result = process_article(text, article_id, title)
+            result = process_article(text, article_id, title, language=language)
             
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)

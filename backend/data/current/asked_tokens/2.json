@@ -448,5 +448,14 @@
     "type": "sentence",
     "vocab_id": null,
     "grammar_id": 21
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763614409,
+    "sentence_id": 1,
+    "sentence_token_id": 159,
+    "type": "token",
+    "vocab_id": 117,
+    "grammar_id": null
   }
 ]

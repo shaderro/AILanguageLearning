@@ -140,6 +140,7 @@ class Sentence(Base):
 
     text = relationship('OriginalText', back_populates='sentences')
     tokens = relationship('Token', back_populates='sentence', cascade='all, delete-orphan')
+    word_tokens = relationship('WordToken', back_populates='sentence', cascade='all, delete-orphan')  # 仅用于非空格语言
 
 class VocabExpressionExample(Base):
     __tablename__ = 'vocab_expression_examples'
@@ -181,6 +182,7 @@ class Token(Base):
     lemma = Column(String(255))
     is_grammar_marker = Column(Boolean, default=False, nullable=False)
     linked_vocab_id = Column(Integer, ForeignKey('vocab_expressions.vocab_id', ondelete='SET NULL'))
+    word_token_id = Column(Integer, ForeignKey('word_tokens.word_token_id', ondelete='SET NULL'), nullable=True)  # 仅用于非空格语言：指向所属的 WordToken
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     __table_args__ = (
@@ -193,6 +195,43 @@ class Token(Base):
 
     sentence = relationship('Sentence', back_populates='tokens')
     linked_vocab = relationship('VocabExpression', back_populates='tokens')
+    word_token = relationship('WordToken', back_populates='char_tokens', foreign_keys=[word_token_id])
+
+
+class WordToken(Base):
+    """
+    词级别 Token（仅用于非空格语言：中文、日文等）
+    
+    用途：
+    - 用于 vocab 功能的语义分析
+    - 通过分词库生成（如 jieba、mecab 等）
+    - 与 char token（Token）建立映射关系
+    """
+    __tablename__ = 'word_tokens'
+
+    word_token_id = Column(Integer, primary_key=True, autoincrement=True)
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
+    sentence_id = Column(Integer, nullable=False)
+    word_body = Column(String(255), nullable=False)  # 分词后的词，如 "喜欢"
+    token_ids = Column(JSON, nullable=False)  # 由哪些 char token 的 sentence_token_id 组成，如 [2, 3]
+    pos_tag = Column(String(50), nullable=True)  # 词性标注
+    lemma = Column(String(255), nullable=True)  # 词形还原
+    linked_vocab_id = Column(Integer, ForeignKey('vocab_expressions.vocab_id', ondelete='SET NULL'), nullable=True)  # 指向词汇表中的词汇解释
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['text_id', 'sentence_id'],
+            ['sentences.text_id', 'sentences.sentence_id'],
+            ondelete='CASCADE'
+        ),
+        UniqueConstraint('text_id', 'sentence_id', 'word_token_id', name='uq_word_token_text_sentence_word'),
+    )
+
+    sentence = relationship('Sentence', back_populates='word_tokens')
+    linked_vocab = relationship('VocabExpression', backref='word_tokens')
+    char_tokens = relationship('Token', back_populates='word_token', foreign_keys='Token.word_token_id')
+
 
 class AskedToken(Base):
     __tablename__ = 'asked_tokens'

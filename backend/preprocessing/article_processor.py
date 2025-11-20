@@ -8,11 +8,21 @@
 
 import json
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .sentence_processor import split_sentences
 from .token_processor import split_tokens, create_token_with_id
+from .language_classification import (
+    is_non_whitespace_language,
+    get_language_code,
+    get_language_category
+)
 
-def process_article(raw_text: str, text_id: int = 1, text_title: str = "Article") -> Dict[str, Any]:
+def process_article(
+    raw_text: str, 
+    text_id: int = 1, 
+    text_title: str = "Article",
+    language: Optional[str] = None
+) -> Dict[str, Any]:
     """
     处理整个文章，将raw string转换为结构化数据
     
@@ -20,6 +30,7 @@ def process_article(raw_text: str, text_id: int = 1, text_title: str = "Article"
         raw_text: 原始文章文本
         text_id: 文章ID
         text_title: 文章标题
+        language: 文章语言（如 "中文", "英文", "德文" 或 ISO 代码如 "zh", "en", "de"）
         
     Returns:
         Dict[str, Any]: 结构化的文章数据
@@ -27,6 +38,17 @@ def process_article(raw_text: str, text_id: int = 1, text_title: str = "Article"
     print(f"开始处理文章: {text_title}")
     print(f"文章ID: {text_id}")
     print(f"原始文本长度: {len(raw_text)} 字符")
+    
+    # 检查语言类型
+    language_code = get_language_code(language) if language else None
+    is_non_whitespace = is_non_whitespace_language(language_code) if language_code else False
+    language_category = get_language_category(language_code) if language_code else "unknown"
+    
+    print(f"语言: {language} (代码: {language_code}, 类型: {language_category})")
+    if is_non_whitespace:
+        print("⚠️  检测到非空格语言，将使用字符级别分词（word token 功能待实现）")
+    else:
+        print("✅ 检测到空格语言，使用单词级别分词")
     
     # 步骤1: 分割句子
     print("\n步骤1: 分割句子...")
@@ -41,8 +63,8 @@ def process_article(raw_text: str, text_id: int = 1, text_title: str = "Article"
     for sentence_id, sentence_text in enumerate(sentences_text, 1):
         print(f"  处理句子 {sentence_id}/{len(sentences_text)}: {sentence_text[:50]}...")
         
-        # 分割tokens
-        token_dicts = split_tokens(sentence_text)
+        # 分割tokens（根据语言类型选择分词方式）
+        token_dicts = split_tokens(sentence_text, is_non_whitespace=is_non_whitespace)
         
         # 为每个token添加ID
         tokens_with_id = []
@@ -66,6 +88,10 @@ def process_article(raw_text: str, text_id: int = 1, text_title: str = "Article"
     result = {
         "text_id": text_id,
         "text_title": text_title,
+        "language": language,  # 保存语言信息
+        "language_code": language_code,  # 保存语言代码
+        "language_category": language_category,  # 保存语言分类
+        "is_non_whitespace": is_non_whitespace,  # 是否为非空格语言
         "sentences": sentences,
         "total_sentences": len(sentences),
         "total_tokens": global_token_id
@@ -155,18 +181,34 @@ def save_structured_data(result: Dict[str, Any], output_dir: str = "data"):
     print(f"   - sentences.json") 
     print(f"   - tokens.json")
 
-def process_article_simple(raw_text: str) -> Dict[str, Any]:
+def process_article_simple(
+    raw_text: str,
+    language: Optional[str] = None
+) -> Dict[str, Any]:
     """
     简单处理文章：分割句子和tokens（简化版本）
     
     Args:
         raw_text: 原始文章文本
+        language: 文章语言（如 "中文", "英文", "德文" 或 ISO 代码如 "zh", "en", "de"）
         
     Returns:
         Dict[str, Any]: 包含句子和tokens的结构化数据
     """
     print("=== 简单文章处理 ===")
     print(f"原始文本长度: {len(raw_text)} 字符")
+    
+    # 检查语言类型
+    language_code = get_language_code(language) if language else None
+    is_non_whitespace = is_non_whitespace_language(language_code) if language_code else False
+    language_category = get_language_category(language_code) if language_code else "unknown"
+    
+    if language:
+        print(f"语言: {language} (代码: {language_code}, 类型: {language_category})")
+        if is_non_whitespace:
+            print("⚠️  检测到非空格语言，将使用字符级别分词")
+        else:
+            print("✅ 检测到空格语言，使用单词级别分词")
     
     # 步骤1: 分割句子
     print("\n1. 分割句子...")
@@ -186,8 +228,8 @@ def process_article_simple(raw_text: str) -> Dict[str, Any]:
     for sentence_id, sentence_text in enumerate(sentences, 1):
         print(f"  处理句子 {sentence_id}: {sentence_text[:50]}...")
         
-        # 分割tokens
-        tokens = split_tokens(sentence_text)
+        # 分割tokens（根据语言类型选择分词方式）
+        tokens = split_tokens(sentence_text, is_non_whitespace=is_non_whitespace)
         
         # 为每个token添加ID
         tokens_with_id = []
@@ -206,6 +248,12 @@ def process_article_simple(raw_text: str) -> Dict[str, Any]:
         
         result["sentences"].append(sentence_data)
         result["total_tokens"] = global_token_id
+    
+    # 添加语言信息
+    result["language"] = language
+    result["language_code"] = language_code
+    result["language_category"] = language_category
+    result["is_non_whitespace"] = is_non_whitespace
     
     print(f"\n✅ 处理完成！")
     print(f"   总句子数: {result['total_sentences']}")

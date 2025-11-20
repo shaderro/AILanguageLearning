@@ -11,6 +11,11 @@ import os
 from typing import Dict, Any, List, Optional
 from .sentence_processor import split_sentences
 from .token_processor import split_tokens, create_token_with_id
+from .language_classification import (
+    is_non_whitespace_language,
+    get_language_code,
+    get_language_category
+)
 
 class EnhancedArticleProcessor:
     """增强版文章处理器"""
@@ -268,7 +273,13 @@ class EnhancedArticleProcessor:
                 return vocab
         return None
     
-    def process_article_enhanced(self, raw_text: str, text_id: int = 1, text_title: str = "Article") -> Dict[str, Any]:
+    def process_article_enhanced(
+        self, 
+        raw_text: str, 
+        text_id: int = 1, 
+        text_title: str = "Article",
+        language: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         增强版文章处理，包含难度评估和词汇解释
         
@@ -276,6 +287,7 @@ class EnhancedArticleProcessor:
             raw_text: 原始文章文本
             text_id: 文章ID
             text_title: 文章标题
+            language: 文章语言（如 "中文", "英文", "德文" 或 ISO 代码如 "zh", "en", "de"）
             
         Returns:
             Dict[str, Any]: 结构化的文章数据
@@ -285,6 +297,18 @@ class EnhancedArticleProcessor:
         print(f"原始文本长度: {len(raw_text)} 字符")
         print(f"难度评估: {'启用' if self.enable_difficulty_estimation else '禁用'}")
         print(f"词汇解释: {'启用' if self.enable_vocab_explanation else '禁用'}")
+        
+        # 检查语言类型
+        language_code = get_language_code(language) if language else None
+        is_non_whitespace = is_non_whitespace_language(language_code) if language_code else False
+        language_category = get_language_category(language_code) if language_code else "unknown"
+        
+        if language:
+            print(f"语言: {language} (代码: {language_code}, 类型: {language_category})")
+            if is_non_whitespace:
+                print("⚠️  检测到非空格语言，将使用字符级别分词（word token 功能待实现）")
+            else:
+                print("✅ 检测到空格语言，使用单词级别分词")
         
         # 清空词库（单次处理隔离）
         self.vocab_expressions = []
@@ -303,8 +327,8 @@ class EnhancedArticleProcessor:
         for sentence_id, sentence_text in enumerate(sentences_text, 1):
             print(f"  处理句子 {sentence_id}/{len(sentences_text)}: {sentence_text[:50]}...")
             
-            # 分割tokens
-            token_dicts = split_tokens(sentence_text)
+            # 分割tokens（根据语言类型选择分词方式）
+            token_dicts = split_tokens(sentence_text, is_non_whitespace=is_non_whitespace)
             
             # 为每个token添加ID和高级信息
             tokens_with_id = []
@@ -352,6 +376,10 @@ class EnhancedArticleProcessor:
         result = {
             "text_id": text_id,
             "text_title": text_title,
+            "language": language,  # 保存语言信息
+            "language_code": language_code,  # 保存语言代码
+            "language_category": language_category,  # 保存语言分类
+            "is_non_whitespace": is_non_whitespace,  # 是否为非空格语言
             "sentences": sentences,
             "total_sentences": len(sentences),
             "total_tokens": global_token_id,
