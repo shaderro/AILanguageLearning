@@ -12,7 +12,7 @@
 """
 
 import re
-from typing import List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 
 try:
     import jieba
@@ -174,6 +174,80 @@ def segment_chinese_text(text: str) -> List[Tuple[str, int, int]]:
             text_offset += match.end()
     
     return result
+
+
+def convert_segments_to_word_tokens(
+    sentence_tokens: List[Dict[str, Any]],
+    segments: List[Tuple[str, int, int]],
+    starting_word_token_id: int = 1,
+) -> Tuple[List[Dict[str, Any]], Dict[int, int], int]:
+    """
+    将分词结果转换为 word token 数据结构
+
+    Args:
+        sentence_tokens: 已生成的字符级 token 列表（包含 sentence_token_id）
+        segments: 分词结果列表，每个元素为 (word, start_pos, end_pos)
+        starting_word_token_id: 当前可用的 word_token_id（全局递增）
+
+    Returns:
+        Tuple:
+            - word_tokens: [{word_token_id, word_body, token_ids, ...}, ...]
+            - token_word_mapping: {sentence_token_id: word_token_id}
+            - next_word_token_id: 下一个可用的 word_token_id
+    """
+    if not segments:
+        return [], {}, starting_word_token_id
+
+    # 构建字符位置到 sentence_token_id 的映射
+    char_to_token_id: Dict[int, Optional[int]] = {}
+    cursor = 0
+    for token in sentence_tokens:
+        token_body = token.get("token_body", "")
+        sentence_token_id = token.get("sentence_token_id")
+        if not token_body:
+            continue
+        length = len(token_body)
+        for offset in range(length):
+            char_to_token_id[cursor + offset] = sentence_token_id
+        cursor += length
+
+    word_tokens: List[Dict[str, Any]] = []
+    token_word_mapping: Dict[int, int] = {}
+    next_word_token_id = starting_word_token_id
+
+    for word, start_pos, end_pos in segments:
+        if word is None:
+            continue
+        if start_pos is None or end_pos is None or start_pos >= end_pos:
+            continue
+
+        token_ids: List[int] = []
+        for idx in range(start_pos, end_pos):
+            sentence_token_id = char_to_token_id.get(idx)
+            if sentence_token_id is None:
+                continue
+            if not token_ids or token_ids[-1] != sentence_token_id:
+                token_ids.append(sentence_token_id)
+
+        if not token_ids:
+            continue
+
+        word_token = {
+            "word_token_id": next_word_token_id,
+            "word_body": word,
+            "token_ids": token_ids,
+            "pos_tag": None,
+            "lemma": None,
+            "linked_vocab_id": None,
+        }
+        word_tokens.append(word_token)
+
+        for sentence_token_id in token_ids:
+            token_word_mapping[sentence_token_id] = next_word_token_id
+
+        next_word_token_id += 1
+
+    return word_tokens, token_word_mapping, next_word_token_id
 
 
 # 日文分词功能（待实现）

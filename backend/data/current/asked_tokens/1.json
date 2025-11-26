@@ -592,5 +592,41 @@
     "type": "token",
     "vocab_id": 78,
     "grammar_id": null
+  },
+  {
+    "user_id": 1,
+    "text_id": 1763782343,
+    "sentence_id": 4,
+    "sentence_token_id": 36,
+    "type": "token",
+    "vocab_id": 154,
+    "grammar_id": null
+  },
+  {
+    "user_id": 1,
+    "text_id": "1763782343",
+    "sentence_id": 6,
+    "sentence_token_id": 5,
+    "type": "token",
+    "vocab_id": 157,
+    "grammar_id": null
+  },
+  {
+    "user_id": 1,
+    "text_id": 1763782343,
+    "sentence_id": 6,
+    "sentence_token_id": 25,
+    "type": "token",
+    "vocab_id": 158,
+    "grammar_id": null
+  },
+  {
+    "user_id": 1,
+    "text_id": "1763782343",
+    "sentence_id": 3,
+    "sentence_token_id": 3,
+    "type": "token",
+    "vocab_id": 159,
+    "grammar_id": null
   }
 ]

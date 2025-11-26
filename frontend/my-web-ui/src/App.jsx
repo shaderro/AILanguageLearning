@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { ApiDemo } from './components/ApiDemo'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
@@ -7,13 +8,24 @@ import ArticleChatView from './modules/article/ArticleChatView'
 import LoginButton from './modules/auth/components/LoginButton'
 import LoginModal from './modules/auth/components/LoginModal'
 import RegisterModal from './modules/auth/components/RegisterModal'
+import ForgotPasswordModal from './modules/auth/components/ForgotPasswordModal'
+import ResetPasswordPage from './modules/auth/components/ResetPasswordPage'
 import UserAvatar from './modules/auth/components/UserAvatar'
+import ProfilePage from './modules/auth/components/ProfilePage'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
+import { UiLanguageProvider } from './contexts/UiLanguageContext'
+import { useUIText } from './i18n/useUIText'
 
 function AppContent() {
+  const queryClient = useQueryClient()
+  const t = useUIText()
+  
+  // 🔧 检查是否在重置密码页面
+  const isResetPasswordPage = window.location.pathname === '/reset-password'
+  
   // 🔧 从 URL 参数初始化页面状态
   const getInitialStateFromURL = () => {
     const params = new URLSearchParams(window.location.search)
@@ -62,6 +74,8 @@ function AppContent() {
   // 模态框状态
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false)
+  const [showProfilePage, setShowProfilePage] = useState(false)
   
   // 从 UserContext 获取用户信息和方法
   const { 
@@ -99,6 +113,27 @@ function AppContent() {
     </button>
   )
 
+  // 如果是重置密码页面，直接显示重置密码组件（Provider 已在 App 外层）
+  if (isResetPasswordPage) {
+    return (
+      <ResetPasswordPage 
+        onBackToLogin={() => {
+          window.location.href = '/'
+        }}
+      />
+    )
+  }
+
+  // 如果显示个人中心页面
+  if (showProfilePage) {
+    return (
+      <ProfilePage
+        onClose={() => setShowProfilePage(false)}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto">
       <div className="bg-white shadow-sm border-b">
@@ -107,13 +142,13 @@ function AppContent() {
             {/* 左侧：Logo 和导航 */}
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Language Learning App</h1>
+                <h1 className="text-xl font-bold text-gray-900">{t('语言学习应用')}</h1>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navButton('apiDemo', 'API Demo')}
-                {navButton('wordDemo', 'Word Demo')}
-                {navButton('grammarDemo', 'Grammar Demo')}
-                {navButton('article', 'Article')}
+                {navButton('apiDemo', t('API 演示'))}
+                {navButton('wordDemo', t('单词演示'))}
+                {navButton('grammarDemo', t('语法演示'))}
+                {navButton('article', t('文章'))}
               </div>
             </div>
 
@@ -122,7 +157,7 @@ function AppContent() {
               {/* 语言切换下拉选项 - 全局显示 */}
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <label htmlFor="language-select" className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
-                  语言:
+                  {t('语言:')}
                 </label>
                 <select
                   id="language-select"
@@ -130,10 +165,10 @@ function AppContent() {
                   onChange={(e) => setSelectedLanguage(e.target.value)}
                   className="px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 >
-                  <option value="all">全部</option>
-                  <option value="中文">中文</option>
-                  <option value="英文">英文</option>
-                  <option value="德文">德文</option>
+                  <option value="all">{t('全部')}</option>
+                  <option value="中文">{t('中文')}</option>
+                  <option value="英文">{t('英文')}</option>
+                  <option value="德文">{t('德文')}</option>
                 </select>
               </div>
               
@@ -146,7 +181,11 @@ function AppContent() {
                   />
                   
                   {/* 用户头像 */}
-                  <UserAvatar userId={currentUserId} onLogout={handleLogout} />
+                  <UserAvatar 
+                    userId={currentUserId} 
+                    onLogout={handleLogout}
+                    onOpenProfile={() => setShowProfilePage(true)}
+                  />
                 </>
               ) : (
                 <LoginButton onClick={() => setShowLoginModal(true)} />
@@ -164,6 +203,10 @@ function AppContent() {
           setShowLoginModal(false)
           setShowRegisterModal(true)
         }}
+        onSwitchToForgotPassword={() => {
+          setShowLoginModal(false)
+          setShowForgotPasswordModal(true)
+        }}
       />
 
       {/* 注册模态框 */}
@@ -172,6 +215,16 @@ function AppContent() {
         onClose={() => setShowRegisterModal(false)}
         onSwitchToLogin={() => {
           setShowRegisterModal(false)
+          setShowLoginModal(true)
+        }}
+      />
+
+      {/* 忘记密码模态框 */}
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onSwitchToLogin={() => {
+          setShowForgotPasswordModal(false)
           setShowLoginModal(true)
         }}
       />
@@ -208,12 +261,46 @@ function AppContent() {
                 articleId={selectedArticleId}
                 isUploadMode={isUploadMode}
                 onBack={() => {
-                  setSelectedArticleId(null)
+                  console.log('🔙 [App] 返回文章列表')
+                  // 🔧 确保状态更新顺序正确，避免空白页
                   setIsUploadMode(false)
+                  setSelectedArticleId(null)
+                  // 🔧 确保 ArticleSelection 组件能正确渲染
+                  queryClient.invalidateQueries({ 
+                    predicate: (query) => {
+                      const key = query.queryKey
+                      return key && key[0] === 'articles'
+                    }
+                  })
                 }}
-                onUploadComplete={() => {
-                  setSelectedArticleId(null)
-                  setIsUploadMode(false)
+                onUploadComplete={(articleId) => {
+                  // 🔧 上传完成后，直接跳转到新文章（不再先返回列表）
+                  console.log('🔄 [App] 上传完成，准备跳转到新文章，articleId:', articleId)
+                  
+                  if (articleId) {
+                    // 🔧 直接跳转到新文章，不返回列表
+                    setIsUploadMode(false)
+                    // 先刷新文章列表（在后台）
+                    queryClient.invalidateQueries({ 
+                      predicate: (query) => {
+                        const key = query.queryKey
+                        return key && key[0] === 'articles'
+                      }
+                    })
+                    // 直接设置文章ID，跳转到新文章
+                    setSelectedArticleId(articleId)
+                  } else {
+                    // 如果没有文章ID，返回文章列表
+                    setSelectedArticleId(null)
+                    setIsUploadMode(false)
+                    // 刷新文章列表
+                    queryClient.invalidateQueries({ 
+                      predicate: (query) => {
+                        const key = query.queryKey
+                        return key && key[0] === 'articles'
+                      }
+                    })
+                  }
                 }}
               />
             ) : (
@@ -240,7 +327,9 @@ function App() {
   return (
     <UserProvider>
       <LanguageProvider>
-        <AppContent />
+        <UiLanguageProvider>
+          <AppContent />
+        </UiLanguageProvider>
       </LanguageProvider>
     </UserProvider>
   )

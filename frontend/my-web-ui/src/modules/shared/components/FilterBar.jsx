@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import SingleFilterOption from './SingleFilterOption'
+import { useUIText } from '../../../i18n/useUIText'
 
 const FilterBar = ({ 
   filters = [], 
@@ -7,42 +9,44 @@ const FilterBar = ({
   sortOrder = 'desc', // 'asc' 或 'desc'
   onSortChange = () => {} // 排序变化回调
 }) => {
+  const t = useUIText()
+
   // 默认筛选器配置
-  const defaultFilters = [
+  const defaultFilters = useMemo(() => [
     {
       id: 'category',
-      label: 'Category',
+      label: t('分类'),
       options: [
-        { value: 'all', label: 'All Categories' },
-        { value: 'fruits', label: 'Fruits' },
-        { value: 'vegetables', label: 'Vegetables' },
-        { value: 'animals', label: 'Animals' }
+        { value: 'all', label: t('全部分类') },
+        { value: 'fruits', label: t('水果') },
+        { value: 'vegetables', label: t('蔬菜') },
+        { value: 'animals', label: t('动物') }
       ],
-      placeholder: 'Select category'
+      placeholder: t('选择分类')
     },
     {
       id: 'difficulty',
-      label: 'Difficulty',
+      label: t('难度'),
       options: [
-        { value: 'all', label: 'All Levels' },
-        { value: 'easy', label: 'Easy' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'hard', label: 'Hard' }
+        { value: 'all', label: t('全部难度') },
+        { value: 'easy', label: t('简单') },
+        { value: 'medium', label: t('中等') },
+        { value: 'hard', label: t('困难') }
       ],
-      placeholder: 'Select difficulty'
+      placeholder: t('选择难度')
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('状态'),
       options: [
-        { value: 'all', label: 'All Status' },
-        { value: 'new', label: 'New' },
-        { value: 'reviewed', label: 'Reviewed' },
-        { value: 'mastered', label: 'Mastered' }
+        { value: 'all', label: t('全部状态') },
+        { value: 'new', label: t('最新') },
+        { value: 'reviewed', label: t('已复习') },
+        { value: 'mastered', label: t('已掌握') }
       ],
-      placeholder: 'Select status'
+      placeholder: t('选择状态')
     }
-  ]
+  ], [t])
 
   const filterConfigs = filters.length > 0 ? filters : defaultFilters
 
@@ -57,7 +61,7 @@ const FilterBar = ({
         <div className="flex items-center justify-between h-full">
           {/* Filters Title */}
           <div className="flex items-center">
-            <h2 className="text-lg font-semibold text-gray-900 mr-8">Filters</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mr-8">{t('筛选')}</h2>
           </div>
 
           {/* Filter Options */}
@@ -83,9 +87,9 @@ const FilterBar = ({
                   onSortChange(newOrder)
                 }}
                 className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 flex items-center space-x-2"
-                title={sortOrder === 'desc' ? '按时间倒序（最新在前）' : '按时间正序（最早在前）'}
+                title={sortOrder === 'desc' ? t('按时间倒序（最新在前）') : t('按时间正序（最早在前）')}
               >
-                <span className="text-sm font-medium text-gray-700">时间排序</span>
+                <span className="text-sm font-medium text-gray-700">{t('时间排序')}</span>
                 {sortOrder === 'desc' ? (
                   <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -110,7 +114,7 @@ const FilterBar = ({
               }}
               className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
-              Clear All
+              {t('清除全部')}
             </button>
           </div>
         </div>

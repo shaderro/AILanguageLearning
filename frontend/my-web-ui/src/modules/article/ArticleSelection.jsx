@@ -2,32 +2,115 @@ import ArticleList from './components/ArticleList'
 import { useArticles } from '../../hooks/useApi'
 import { useUser } from '../../contexts/UserContext'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { apiService } from '../../services/api'
+import { useUIText } from '../../i18n/useUIText'
 
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   const { userId, isGuest } = useUser()
   const { selectedLanguage } = useLanguage()
+  const queryClient = useQueryClient()
+  const t = useUIText()
+  
+  // 编辑和删除相关状态
+  const [editingArticle, setEditingArticle] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [deletingArticle, setDeletingArticle] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  
+  // 🔧 调试日志
+  useEffect(() => {
+    console.log('📋 [ArticleSelection] 组件渲染，userId:', userId, 'isGuest:', isGuest, 'selectedLanguage:', selectedLanguage)
+  }, [userId, isGuest, selectedLanguage])
+  
   // 使用API获取文章数据 - 传入 userId、isGuest 和 language（后端过滤或本地过滤）
-  const { data, isLoading, isError, error } = useArticles(userId, selectedLanguage, isGuest)
+  const { data, isLoading, isError, error, refetch } = useArticles(userId, selectedLanguage, isGuest)
+  
+  // 🔧 移除查询失效监听器，避免无限循环
+  // React Query 已经会自动处理查询失效和重新获取
+  // 如果需要手动刷新，应该通过 invalidateQueries 触发，而不是监听查询失效事件
+  
+  // 🔧 移除组件挂载时的自动刷新，避免与 React Query 的自动机制冲突
+  // React Query 会在组件挂载时自动获取数据，不需要手动触发
+  
+  // 🔧 当 userId/selectedLanguage 变化时，自动刷新文章列表（但不包括组件挂载时，避免重复刷新）
+  useEffect(() => {
+    // 只在 userId 或 selectedLanguage 变化时刷新，不在组件挂载时刷新（React Query 会自动初始加载）
+    if (userId !== null) {
+      console.log('🔄 [ArticleSelection] userId 或 selectedLanguage 变化，刷新文章列表')
+      refetch()
+    }
+  }, [userId, selectedLanguage, refetch])
+  
+  // 🔧 监听页面可见性变化，当页面变为可见时自动刷新文章列表
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('🔄 [ArticleSelection] 页面变为可见，刷新文章列表')
+        refetch()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refetch])
+  
+  // 🔧 监听焦点变化，当窗口获得焦点时自动刷新文章列表
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('🔄 [ArticleSelection] 窗口获得焦点，刷新文章列表')
+      refetch()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [refetch])
   
   // 处理游客模式和登录模式的数据格式
   let summaries = []
+  console.log('📋 [ArticleSelection] 原始 data:', data)
+  
   if (isGuest) {
     // 游客模式：data.data 是文章数组
     summaries = Array.isArray(data?.data) ? data.data : []
+    console.log('📋 [ArticleSelection] 游客模式，文章数量:', summaries.length)
   } else {
-    // 登录模式：data.data.texts 是文章数组，或者 data.data 本身就是数组
-    const responseData = data?.data
-    if (Array.isArray(responseData)) {
-      summaries = responseData
-    } else if (responseData?.texts && Array.isArray(responseData.texts)) {
-      summaries = responseData.texts
+    // 登录模式：响应拦截器返回格式可能是：
+    // 1. {data: [...], count: ...} - 来自 api.js 的映射（这是当前的情况）
+    // 2. {texts: [...], count: ...} - 原始后端格式
+    // 3. [...] - 直接是数组
+    // 4. {data: {texts: [...], count: ...}} - 嵌套格式
+    
+    // 🔧 首先检查 data 本身是否是数组
+    if (Array.isArray(data)) {
+      summaries = data
+      console.log('📋 [ArticleSelection] data 是数组，文章数量:', summaries.length)
+    } else if (data && Array.isArray(data.data)) {
+      // 格式：{data: [...], count: ...} - 这是响应拦截器返回的格式
+      summaries = data.data
+      console.log('📋 [ArticleSelection] 从 data.data 提取，文章数量:', summaries.length)
+    } else if (data?.data && Array.isArray(data.data.texts)) {
+      // 格式：{data: {texts: [...], count: ...}}
+      summaries = data.data.texts
+      console.log('📋 [ArticleSelection] 从 data.data.texts 提取，文章数量:', summaries.length)
+    } else if (data && Array.isArray(data.texts)) {
+      // 格式：{texts: [...], count: ...}
+      summaries = data.texts
+      console.log('📋 [ArticleSelection] 从 data.texts 提取，文章数量:', summaries.length)
     } else {
       summaries = []
+      console.warn('⚠️ [ArticleSelection] 无法提取文章数据，data 格式:', data)
     }
   }
   
   // 将后端摘要映射为列表卡片需要的结构
   // 注意：language过滤已经在API层面完成（登录模式）或本地完成（游客模式），这里只需要映射数据
+  console.log('📋 [ArticleSelection] summaries 数量:', summaries.length, '前3条:', summaries.slice(0, 3))
   const mappedArticles = summaries.map((s) => {
     // 处理游客模式和登录模式的数据格式
     const textId = s.text_id || s.article_id || s.id
@@ -35,22 +118,27 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     const totalSentences = s.total_sentences || s.sentence_count || 0
     const totalTokens = s.total_tokens || s.wordCount || 0
     const language = s.language || null
+    const processingStatus = s.processing_status || 'completed' // 处理状态：processing/completed/failed
     
     return {
       id: textId,
       title: textTitle,
-      description: `Sentences: ${totalSentences} • Tokens: ${totalTokens}`,
+      description: processingStatus === 'processing' 
+        ? t('处理中...') 
+        : `Sentences: ${totalSentences} • Tokens: ${totalTokens}`,
       language: language, // 从后端获取语言字段，null表示未设置
       difficulty: 'N/A',
       wordCount: totalTokens,
       estimatedTime: `${Math.max(1, Math.ceil((totalSentences || 1) / 5))} min`,
       category: 'Article',
-      tags: []
+      tags: [],
+      processingStatus: processingStatus // 添加处理状态
     }
   })
 
   // 文章已经在后端过滤，直接使用mappedArticles
   const filteredArticles = mappedArticles
+  console.log('📋 [ArticleSelection] mappedArticles 数量:', mappedArticles.length, 'filteredArticles 数量:', filteredArticles.length)
 
   const handleArticleSelect = (articleId) => {
     console.log('Article selected:', articleId)
@@ -63,6 +151,76 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       onUploadNew()
     }
   }
+  
+  // 处理编辑文章
+  const handleEdit = (articleId, currentTitle) => {
+    setEditingArticle(articleId)
+    setEditTitle(currentTitle)
+  }
+  
+  // 保存编辑
+  const handleSaveEdit = async () => {
+    if (!editingArticle || !editTitle.trim()) {
+      return
+    }
+    
+    setIsProcessing(true)
+    try {
+      console.log('🔄 [ArticleSelection] 开始更新文章:', editingArticle, '新名称:', editTitle.trim())
+      const response = await apiService.updateArticle(editingArticle, { text_title: editTitle.trim() })
+      console.log('✅ [ArticleSelection] 文章名称已更新，响应:', response)
+      // 刷新文章列表
+      queryClient.invalidateQueries({ queryKey: ['articles'] })
+      await refetch()
+      console.log('✅ [ArticleSelection] 文章列表已刷新')
+      setEditingArticle(null)
+      setEditTitle('')
+    } catch (error) {
+      console.error('❌ [ArticleSelection] 更新文章名称失败:', error)
+      console.error('❌ [ArticleSelection] 错误详情:', error.response?.data || error.message)
+      alert(t('更新失败: {error}').replace('{error}', error.response?.data?.detail || error.message || '未知错误'))
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+  
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setEditingArticle(null)
+    setEditTitle('')
+  }
+  
+  // 处理删除文章
+  const handleDelete = (articleId, articleTitle) => {
+    setDeletingArticle({ id: articleId, title: articleTitle })
+  }
+  
+  // 确认删除
+  const handleConfirmDelete = async () => {
+    if (!deletingArticle) {
+      return
+    }
+    
+    setIsProcessing(true)
+    try {
+      await apiService.deleteArticle(deletingArticle.id)
+      console.log('✅ [ArticleSelection] 文章已删除')
+      // 刷新文章列表
+      queryClient.invalidateQueries({ queryKey: ['articles'] })
+      refetch()
+      setDeletingArticle(null)
+    } catch (error) {
+      console.error('❌ [ArticleSelection] 删除文章失败:', error)
+      alert(t('删除失败: {error}').replace('{error}', error.response?.data?.detail || error.message || '未知错误'))
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+  
+  // 取消删除
+  const handleCancelDelete = () => {
+    setDeletingArticle(null)
+  }
 
   return (
     <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
@@ -73,13 +231,13 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                Choose an Article
+                {t('选择文章')}
               </h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Select an article to start reading and chatting with our AI assistant. 
+                {t('请选择一篇文章开始阅读并与 AI 助手对话。')}
                 {selectedLanguage !== 'all' && (
                   <span className="block mt-2 text-blue-600 font-medium">
-                    当前筛选：{selectedLanguage}
+                    {t('当前筛选：')}{selectedLanguage}
                   </span>
                 )}
               </p>
@@ -87,27 +245,119 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
 
             {/* Loading / Error */}
             {isLoading && (
-              <div className="text-center text-gray-600 py-8">Loading articles...</div>
+              <div className="text-center text-gray-600 py-8">{t('文章加载中...')}</div>
             )}
             {isError && (
-              <div className="text-center text-red-600 py-8">{String(error)}</div>
+              <div className="text-center text-red-600 py-8">
+                <p>{t('加载文章失败：')}{String(error)}</p>
+                <button 
+                  onClick={() => refetch()} 
+                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  {t('重试')}
+                </button>
+              </div>
             )}
 
-            {/* Article Count */}
-            <div className="mb-6">
-              <p className="text-gray-600">
-                {selectedLanguage === 'all' 
-                  ? `Showing ${filteredArticles.length} articles`
-                  : `Showing ${filteredArticles.length} articles (${selectedLanguage})`
-                }
-              </p>
-            </div>
+            {/* 🔧 确保即使没有数据也显示内容，避免空白页 */}
+            {!isLoading && !isError && (
+              <>
+                {/* Article Count */}
+                <div className="mb-6">
+                  <p className="text-gray-600">
+                    {selectedLanguage === 'all' 
+                      ? t('共显示 {count} 篇文章').replace('{count}', filteredArticles.length)
+                      : t('共显示 {count} 篇文章（{language}）')
+                          .replace('{count}', filteredArticles.length)
+                          .replace('{language}', selectedLanguage)
+                    }
+                  </p>
+                </div>
 
-            {/* Article List */}
-            <ArticleList 
-              articles={filteredArticles}
-              onArticleSelect={handleArticleSelect}
-            />
+                {/* Article List */}
+                {filteredArticles.length > 0 ? (
+                  <ArticleList 
+                    articles={filteredArticles}
+                    onArticleSelect={handleArticleSelect}
+                    onArticleEdit={handleEdit}
+                    onArticleDelete={handleDelete}
+                  />
+                ) : (
+                  <div className="text-center text-gray-500 py-12">
+                    <p className="text-lg mb-2">{t('未找到文章')}</p>
+                    <p className="text-sm">{t('请尝试上传新文章或调整筛选条件。')}</p>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* 编辑对话框 */}
+            {editingArticle && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h2 className="text-xl font-bold mb-4">{t('编辑文章名称')}</h2>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={t('输入新名称')}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSaveEdit()
+                      } else if (e.key === 'Escape') {
+                        handleCancelEdit()
+                      }
+                    }}
+                  />
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isProcessing}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                    >
+                      {t('取消')}
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={isProcessing || !editTitle.trim()}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing ? t('保存中...') : t('保存')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 删除确认对话框 */}
+            {deletingArticle && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h2 className="text-xl font-bold mb-4 text-red-600">{t('确认删除')}</h2>
+                  <p className="text-gray-700 mb-6">
+                    {t('确定要删除文章')} <strong>"{deletingArticle.title}"</strong> {t('吗？此操作无法撤销。')}
+                  </p>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={handleCancelDelete}
+                      disabled={isProcessing}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleConfirmDelete}
+                      disabled={isProcessing}
+                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing ? '删除中...' : '确认删除'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Bottom padding for fixed button */}
             <div className="pb-24"></div>
@@ -135,7 +385,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                 d="M12 4v16m8-8H4" 
               />
             </svg>
-            <span className="font-medium">Upload New</span>
+            <span className="font-medium">{t('上传新文章')}</span>
           </div>
         </button>
       </div>

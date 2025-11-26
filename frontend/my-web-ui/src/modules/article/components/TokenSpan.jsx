@@ -31,7 +31,10 @@ export default function TokenSpan({
   isTokenAsked,
   markAsAsked,
   getNotationContent,
-  setNotationContent
+  setNotationContent,
+  // 🔧 新增：分词下划线相关 props
+  showSegmentationUnderline = false,
+  wordTokenInfo = null
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -88,44 +91,54 @@ export default function TokenSpan({
     ? getVocabNotationsForSentence(sentenceId)
     : []
   
-  console.log('🔍 [TokenSpan] 渲染检查:', {
-    sentenceId,
-    tokenSentenceTokenId,
-    vocabNotationsForSentenceCount: vocabNotationsForSentence?.length || 0,
-    vocabNotationsForSentence: vocabNotationsForSentence,
-    getVocabNotationsForSentenceType: typeof getVocabNotationsForSentence
-  })
+  // 🔧 获取当前 token 的 word_token_id（如果存在）
+  const currentTokenWordTokenId = token?.word_token_id ? Number(token.word_token_id) : null
   
   // 使用useMemo缓存匹配结果，避免每次渲染都重新计算
-  const hasVocabNotationForToken = useMemo(() => {
+  // 🔧 修复：不仅检查是否有匹配，还要找到最匹配的 notation（用于后续显示正确的 vocab example）
+  const { hasVocabNotationForToken, matchedNotation } = useMemo(() => {
     if (!Array.isArray(vocabNotationsForSentence) || tokenSentenceTokenId == null) {
-      console.log('🔍 [TokenSpan] hasVocabNotationForToken: false (条件不满足)', {
-        isArray: Array.isArray(vocabNotationsForSentence),
-        tokenSentenceTokenId
-      })
-      return false
+      return { hasVocabNotationForToken: false, matchedNotation: null }
     }
     const currentTokenId = Number(tokenSentenceTokenId)
-    const result = vocabNotationsForSentence.some(n => {
-      // 确保类型一致（数字比较）
-      const notationTokenId = Number(n?.token_id ?? n?.token_index)
-      const match = notationTokenId === currentTokenId
-      if (match) {
-        console.log('✅ [TokenSpan] 找到匹配的 notation:', {
-          currentTokenId,
-          notationTokenId,
-          notation: n
-        })
+    
+    // 🔧 优先匹配：如果当前 token 有 word_token_id，优先匹配相同 word_token_id 的 notation
+    if (currentTokenWordTokenId != null) {
+      const exactMatch = vocabNotationsForSentence.find(n => {
+        const notationWordTokenId = n?.word_token_id ? Number(n.word_token_id) : null
+        return notationWordTokenId === currentTokenWordTokenId
+      })
+      
+      if (exactMatch) {
+        return { hasVocabNotationForToken: true, matchedNotation: exactMatch }
       }
-      return match
+    }
+    
+    // 🔧 次优匹配：检查 word_token_token_ids 是否包含当前 token
+    const wordTokenMatch = vocabNotationsForSentence.find(n => {
+      if (n?.word_token_token_ids && Array.isArray(n.word_token_token_ids) && n.word_token_token_ids.length > 0) {
+        const tokenIdsArray = n.word_token_token_ids.map(id => Number(id))
+        return tokenIdsArray.includes(currentTokenId)
+      }
+      return false
     })
-    console.log('🔍 [TokenSpan] hasVocabNotationForToken 计算结果:', {
-      currentTokenId,
-      result,
-      vocabNotationsForSentenceCount: vocabNotationsForSentence.length
+    
+    if (wordTokenMatch) {
+      return { hasVocabNotationForToken: true, matchedNotation: wordTokenMatch }
+    }
+    
+    // 🔧 回退匹配：使用 token_id 精确匹配（用于空格语言或没有 word_token_token_ids 的情况）
+    const tokenIdMatch = vocabNotationsForSentence.find(n => {
+      const notationTokenId = Number(n?.token_id ?? n?.token_index)
+      return notationTokenId === currentTokenId
     })
-    return result
-  }, [vocabNotationsForSentence, tokenSentenceTokenId])
+    
+    if (tokenIdMatch) {
+      return { hasVocabNotationForToken: true, matchedNotation: tokenIdMatch }
+    }
+    
+    return { hasVocabNotationForToken: false, matchedNotation: null }
+  }, [vocabNotationsForSentence, tokenSentenceTokenId, currentTokenWordTokenId])
 
   // 优先使用vocab notation，asked tokens作为备用（向后兼容）
   // 如果vocab notation存在，就不需要检查asked tokens了
@@ -218,6 +231,8 @@ export default function TokenSpan({
           if (hasVocabVisual) {
             scheduleHideNotation()
           }
+          // 🔧 注意：分词下划线的显示/隐藏由 SentenceContainer 的 hover 状态控制
+          // 这里不需要额外处理，因为当鼠标离开整个句子时，SentenceContainer 会处理
         }}
         onClick={(e) => { 
           // 如果正在拖拽或刚结束拖拽，完全跳过点击处理（避免拖拽结束时误触发切换）
@@ -236,7 +251,7 @@ export default function TokenSpan({
           } 
         }}
         className={[
-          'px-0.5 rounded-sm transition-colors duration-150 select-none',
+          'px-0.5 rounded-sm transition-colors duration-150 select-none relative',
           cursorClass,
           bgClass,
           selectionTokenClass,
@@ -246,6 +261,51 @@ export default function TokenSpan({
         style={{ color: '#111827' }}
       >
         {displayText}
+        {/* 🔧 分词下划线：在 token 下方显示灰色下划线（表示 word token 的分词边界） */}
+        {/* 🔧 只对文本类型的 token 显示下划线，不包括标点符号和空格 */}
+        {showSegmentationUnderline && wordTokenInfo && isTextToken && token?.token_type !== 'punctuation' && token?.token_type !== 'space' && (() => {
+          // 🔧 根据 token 在 word_token 中的位置，调整下划线的样式
+          // 目标：同一个 word_token 内的字符下划线连续，不同 word_token 之间有间隙
+          // 注意：token span 有 px-0.5 (左右各 2px padding)，下划线是绝对定位的
+          // 下划线的 left 是相对于 token span 的内容区域（不包括 padding）的
+          const { isFirstInWord, isLastInWord, isSingleCharWord } = wordTokenInfo
+          
+          let finalLeft = '0%'
+          let finalWidth = '100%'
+          
+          // 🔧 统一基准：所有字符的下划线都从 padding 的左边缘开始（-2px），确保对齐
+          // 然后通过宽度调整来实现连接或留空隙
+          if (isSingleCharWord) {
+            // 单独字符：从 padding 左边缘开始，但左右都有空隙（缩短到 75%，居中）
+            // 调整 left 使下划线居中：从 padding 左边缘(-2px) + 内容区域12.5%开始
+            finalLeft = 'calc(-2px + 12.5%)' // 从 padding 左边缘 + 内容区域12.5%开始（居中）
+            finalWidth = '75%' // 宽度 75%
+          } else if (isFirstInWord) {
+            // 第一个字符：从 padding 左边缘开始，延伸到右侧（覆盖右侧 padding，与下一个字符连接）
+            finalLeft = '-2px' // 从 padding 左边缘开始，统一基准
+            finalWidth = 'calc(100% + 4px)' // 总宽度：内容(100%) + 左侧padding(2px) + 右侧padding(2px)
+          } else if (isLastInWord) {
+            // 最后一个字符：从 padding 左边缘开始（与前一个字符对齐），右侧留空隙
+            finalLeft = '-2px' // 从 padding 左边缘开始，统一基准
+            finalWidth = 'calc(100% + 4px - 10px)' // 总宽度减去右侧空隙（10px）
+          } else {
+            // 中间字符：从 padding 左边缘开始（与前一个字符对齐），延伸到右侧（与下一个字符连接）
+            finalLeft = '-2px' // 从 padding 左边缘开始，统一基准
+            finalWidth = 'calc(100% + 4px)' // 总宽度：内容(100%) + 左侧padding(2px) + 右侧padding(2px)
+          }
+          
+          return (
+            <span 
+              className="absolute bottom-[-2px] h-[1.5px] bg-gray-400 pointer-events-none opacity-60"
+              style={{ 
+                // 确保下划线在 vocab 绿色下划线下方（如果有的话）
+                zIndex: hasVocabVisual ? 0 : 1,
+                left: finalLeft,
+                width: finalWidth
+              }}
+            />
+          )
+        })()}
       </span>
       
       {isTextToken && tokenHasExplanation && (
@@ -274,7 +334,8 @@ export default function TokenSpan({
           note={notationContent || "This is a test note"}
           textId={articleId}
           sentenceId={tokenSentenceId}
-          tokenIndex={tokenSentenceTokenId}
+          // 🔧 修复：如果匹配到了 notation，使用该 notation 的 token_id（确保显示正确的 vocab example）
+          tokenIndex={matchedNotation?.token_id ?? tokenSentenceTokenId}
           onMouseEnter={handleNotationMouseEnter}
           onMouseLeave={handleNotationMouseLeave}
           getVocabExampleForToken={getVocabExampleForToken}

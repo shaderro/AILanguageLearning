@@ -1,6 +1,10 @@
 import React from 'react';
+import { useUIText } from '../../../i18n/useUIText';
 
-const StartReviewButton = ({ onClick, disabled = false, children = "开始复习" }) => {
+const StartReviewButton = ({ onClick, disabled = false, children }) => {
+  const t = useUIText();
+  const label = children ?? t('开始复习');
+
   return (
     <button
       onClick={onClick}
@@ -12,13 +16,9 @@ const StartReviewButton = ({ onClick, disabled = false, children = "开始复习
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
     >
-      {children}
+      {label}
     </button>
   );
 };
 
 export default StartReviewButton;
-
-
-
-

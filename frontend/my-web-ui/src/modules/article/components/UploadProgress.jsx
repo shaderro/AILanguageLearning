@@ -1,19 +1,48 @@
 import { useState, useEffect } from 'react'
+import { useUIText } from '../../../i18n/useUIText'
 
-const UploadProgress = ({ onComplete }) => {
+const UploadProgress = ({ onComplete, articleId = null }) => {
+  const t = useUIText()
   const [currentStep, setCurrentStep] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
   const steps = [
-    { name: '上传', description: '正在上传文件...' },
-    { name: '分句', description: '正在分析文章结构...' },
-    { name: '分词', description: '正在提取关键词...' },
-    { name: '建索引', description: '正在建立搜索索引...' }
+    { name: t('上传'), description: t('正在上传文件...') },
+    { name: t('分句'), description: t('正在分析文章结构...') },
+    { name: t('分词'), description: t('正在提取关键词...') },
+    { name: t('建索引'), description: t('正在建立搜索索引...') },
+    { name: t('处理'), description: t('正在处理文章内容...') }
   ]
 
   useEffect(() => {
-    // 模拟进度动画
+    // 🔧 如果已经有 articleId，说明上传已完成，直接显示成功并跳转
+    if (articleId) {
+      console.log('✅ [UploadProgress] 检测到 articleId，上传已完成，准备跳转:', articleId)
+      // 快速完成进度条动画
+      let step = 0
+      const fastInterval = setInterval(() => {
+        step++
+        setCurrentStep(step)
+        if (step >= steps.length - 1) {
+          clearInterval(fastInterval)
+          // 显示成功动效
+          setTimeout(() => {
+            setIsComplete(true)
+            setTimeout(() => {
+              setShowSuccess(true)
+              // 成功动效结束后调用完成回调，传递 articleId
+              setTimeout(() => {
+                onComplete && onComplete(articleId)
+              }, 1500)
+            }, 500)
+          }, 300)
+        }
+      }, 300) // 快速完成动画
+      return () => clearInterval(fastInterval)
+    }
+
+    // 模拟进度动画（当没有 articleId 时，说明还在上传中）
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => {
         if (prev < steps.length - 1) {
@@ -27,17 +56,17 @@ const UploadProgress = ({ onComplete }) => {
               setShowSuccess(true)
               // 成功动效结束后调用完成回调
               setTimeout(() => {
-                onComplete && onComplete()
+                onComplete && onComplete(articleId)
               }, 1500)
             }, 500)
           }, 800)
           return prev
         }
       })
-    }, 1200) // 每个步骤1.2秒
+    }, 2000) // 🔧 延长每个步骤到2秒，让进度条更真实
 
     return () => clearInterval(stepInterval)
-  }, [steps.length, onComplete])
+  }, [steps.length, onComplete, articleId])
 
   if (showSuccess) {
     return (
@@ -59,10 +88,10 @@ const UploadProgress = ({ onComplete }) => {
             
             {/* 成功文字 */}
             <h2 className="text-3xl font-bold text-green-600 mb-2 animate-pulse">
-              上传成功！
+              {t('上传成功！')}
             </h2>
             <p className="text-gray-600 text-lg">
-              文章已成功处理，正在跳转到阅读页面...
+              {t('文章已成功处理，正在跳转到阅读页面...')}
             </p>
           </div>
         </div>
@@ -72,14 +101,14 @@ const UploadProgress = ({ onComplete }) => {
 
   return (
     <div className="flex-1 min-w-0 flex flex-col gap-4 bg-white p-6 rounded-lg shadow-md overflow-y-auto h-full">
-      <h2 className="text-xl font-semibold text-gray-800">处理文章</h2>
+      <h2 className="text-xl font-semibold text-gray-800">{t('处理文章')}</h2>
       
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-md">
           {/* 进度条 */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-sm font-medium text-gray-700">处理进度</span>
+              <span className="text-sm font-medium text-gray-700">{t('处理进度')}</span>
               <span className="text-sm text-gray-500">
                 {Math.round(((currentStep + 1) / steps.length) * 100)}%
               </span>
@@ -131,7 +160,7 @@ const UploadProgress = ({ onComplete }) => {
               <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full">
                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-2 animate-pulse"></div>
                 <span className="text-sm font-medium">
-                  {steps[currentStep]?.description || '处理完成'}
+                  {steps[currentStep]?.description || t('处理完成')}
                 </span>
               </div>
             </div>

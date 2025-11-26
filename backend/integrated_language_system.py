@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from preprocessing.enhanced_processor import EnhancedArticleProcessor
 from data_managers.data_controller import DataController
 from assistants.main_assistant import MainAssistant
-from data_managers.data_classes_new import Sentence as NewSentence, Token, VocabExpression, GrammarRule, OriginalText
+from data_managers.data_classes_new import Sentence as NewSentence, Token, WordToken, VocabExpression, GrammarRule, OriginalText
 from typing import List, Dict, Any, Optional, Union
 import json
 
@@ -166,6 +166,8 @@ class IntegratedLanguageSystem:
             
             # 转换tokens
             tokens = self._convert_tokens_to_objects(sentence_data['tokens'])
+
+            word_tokens = self._convert_word_tokens_to_objects(sentence_data.get('word_tokens'))
             
             # 创建NewSentence对象
             sentence = NewSentence(
@@ -175,7 +177,8 @@ class IntegratedLanguageSystem:
                 grammar_annotations=(),
                 vocab_annotations=(),
                 sentence_difficulty_level=difficulty_level,
-                tokens=tokens
+                tokens=tokens,
+                word_tokens=word_tokens
             )
             sentences.append(sentence)
         
@@ -216,6 +219,25 @@ class IntegratedLanguageSystem:
             token_objects.append(token)
         
         return tuple(token_objects)
+
+    def _convert_word_tokens_to_objects(self, word_tokens_data: Optional[List[Dict[str, Any]]]) -> Optional[tuple]:
+        """将 word token 数据转换为 WordToken 对象"""
+        if not word_tokens_data:
+            return None
+
+        word_token_objects = []
+        for word_token in word_tokens_data:
+            word_token_objects.append(
+                WordToken(
+                    word_token_id=word_token.get('word_token_id', 0),
+                    token_ids=tuple(word_token.get('token_ids', [])),
+                    word_body=word_token.get('word_body', ''),
+                    pos_tag=word_token.get('pos_tag'),
+                    lemma=word_token.get('lemma'),
+                    linked_vocab_id=word_token.get('linked_vocab_id')
+                )
+            )
+        return tuple(word_token_objects)
     
     def _save_processed_data(self, processed_data: Dict[str, Any], sentences: List[NewSentence]):
         """保存处理后的数据到数据管理器"""
@@ -323,9 +345,21 @@ class IntegratedLanguageSystem:
                                 'pos_tag': token.pos_tag,
                                 'lemma': token.lemma,
                                 'is_grammar_marker': token.is_grammar_marker,
-                                'linked_vocab_id': token.linked_vocab_id
+                                'linked_vocab_id': token.linked_vocab_id,
+                                'word_token_id': token.word_token_id
                             }
                             for token in sentence.tokens
+                        ],
+                        'word_tokens': [
+                            {
+                                'word_token_id': word_token.word_token_id,
+                                'word_body': word_token.word_body,
+                                'token_ids': list(word_token.token_ids),
+                                'pos_tag': word_token.pos_tag,
+                                'lemma': word_token.lemma,
+                                'linked_vocab_id': word_token.linked_vocab_id
+                            }
+                            for word_token in (sentence.word_tokens or [])
                         ]
                     }
                     for sentence in sentences

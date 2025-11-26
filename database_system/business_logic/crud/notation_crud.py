@@ -13,14 +13,16 @@ class VocabNotationCRUD:
         self.session = session
     
     def create(self, user_id: str, text_id: int, sentence_id: int, 
-               token_id: int, vocab_id: Optional[int] = None) -> VocabNotation:
+               token_id: int, vocab_id: Optional[int] = None,
+               word_token_id: Optional[int] = None) -> VocabNotation:
         """创建词汇标注"""
         notation = VocabNotation(
             user_id=user_id,
             text_id=text_id,
             sentence_id=sentence_id,
             token_id=token_id,
-            vocab_id=vocab_id
+            vocab_id=vocab_id,
+            word_token_id=word_token_id  # 新增：用于非空格语言的 word token 级别标注
         )
         self.session.add(notation)
         self.session.commit()

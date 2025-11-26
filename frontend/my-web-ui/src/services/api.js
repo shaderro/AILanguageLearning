@@ -70,6 +70,19 @@ api.interceptors.response.use(
       return response.data;
     }
     
+    // 🔧 特殊处理：错误响应格式 { status: "error", data: {...}, error: "..." }
+    if (response.data && response.data.status === 'error') {
+      console.log("🔍 [DEBUG] Detected error response format, returning full response.data");
+      return response.data;
+    }
+    
+    // 🔧 特殊处理：成功响应格式 { status: "success", data: {...}, message: "..." }
+    if (response.data && response.data.status === 'success') {
+      console.log("🔍 [DEBUG] Detected success response format with status field");
+      // 返回整个 response.data，包含 status, data, message
+      return response.data;
+    }
+    
     // 数据库API返回格式: { success: true, data: {...} }
     // Mock API返回格式: 直接返回数据
     if (response.data && response.data.success !== undefined) {
@@ -539,6 +552,18 @@ export const apiService = {
     api.get(API_TARGET === 'mock'
       ? `/api/articles/${textId}`
       : `/api/v2/texts/${textId}/sentences/`),
+  
+  // 更新文章
+  updateArticle: async (textId, updates) => {
+    const response = await api.put(`/api/v2/texts/${textId}`, updates);
+    return response;
+  },
+  
+  // 删除文章
+  deleteArticle: async (textId) => {
+    const response = await api.delete(`/api/v2/texts/${textId}`);
+    return response;
+  },
 
   // 搜索文章
   searchArticles: (keyword) => 
@@ -691,7 +716,9 @@ export const apiService = {
     formData.append('language', language);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+    // 🔧 增加超时时间到 10 分钟，因为处理大文件可能需要很长时间
     return api.post("/api/upload/file", formData, {
+      timeout: 600000, // 10 分钟超时
       headers: {
         // 移除 Content-Type，让 axios 自动处理 FormData
       },
@@ -707,7 +734,9 @@ export const apiService = {
     formData.append('language', language);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+    // 🔧 增加超时时间到 10 分钟，因为 URL 提取和处理大量文本可能需要很长时间
     return api.post("/api/upload/url", formData, {
+      timeout: 600000, // 10 分钟超时
       headers: {
         // 移除 Content-Type，让 axios 自动处理 FormData
       },
@@ -715,12 +744,17 @@ export const apiService = {
   },
 
   // 上传文本
-  uploadText: async (text, title = "Text Article", language = "") => {
-    console.log('📤 [Frontend] Uploading text, title:', title, 'length:', text.length, 'language:', language);
+  uploadText: async (text, title = "Text Article", language = "", skipLengthCheck = false) => {
+    console.log('📤 [Frontend] Uploading text, title:', title, 'length:', text.length, 'language:', language, 'skipLengthCheck:', skipLengthCheck);
+    console.log('📤 [Frontend] Text content preview (first 100 chars):', text.substring(0, 100));
+    console.log('📤 [Frontend] Text content preview (last 100 chars):', text.substring(Math.max(0, text.length - 100)));
     const formData = new FormData();
     formData.append('text', text);
     formData.append('title', title);
     formData.append('language', language);
+    if (skipLengthCheck) {
+      formData.append('skip_length_check', 'true');
+    }
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
     return api.post("/api/upload/text", formData, {

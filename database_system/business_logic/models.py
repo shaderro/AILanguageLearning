@@ -116,6 +116,7 @@ class OriginalText(Base):
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
     text_title = Column(String(500), nullable=False)
     language = Column(String(50), nullable=True)  # 语言：中文、英文、德文
+    processing_status = Column(String(50), default='completed', nullable=False)  # 处理状态：processing（处理中）、completed（已完成）、failed（失败）
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
@@ -264,7 +265,8 @@ class VocabNotation(Base):
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False)
     sentence_id = Column(Integer, nullable=False)
-    token_id = Column(Integer, nullable=False)  # sentence_token_id
+    token_id = Column(Integer, nullable=False)  # sentence_token_id（保持向后兼容）
+    word_token_id = Column(Integer, ForeignKey('word_tokens.word_token_id', ondelete='SET NULL'), nullable=True)  # 新增：用于非空格语言的 word token 级别标注
     vocab_id = Column(Integer, ForeignKey('vocab_expressions.vocab_id', ondelete='CASCADE'))
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     
@@ -280,6 +282,7 @@ class VocabNotation(Base):
     # 关系
     vocab = relationship('VocabExpression', backref='notations')
     text = relationship('OriginalText', backref='vocab_notations')
+    word_token = relationship('WordToken', backref='vocab_notations')  # 新增：关联到 WordToken
 
 class GrammarNotation(Base):
     __tablename__ = 'grammar_notations'
@@ -310,6 +313,7 @@ class User(Base):
     
     user_id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     password_hash = Column(String(255), nullable=False)  # 存储哈希后的密码
+    email = Column(String(255), nullable=True, unique=True, index=True)  # 邮箱（唯一性约束）
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     
     # 关联关系

@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
 import UploadProgress from './components/UploadProgress'
@@ -20,8 +21,10 @@ import { useAskedTokens } from './hooks/useAskedTokens'
 import { useTokenNotations } from './hooks/useTokenNotations'
 import { useNotationCache } from './hooks/useNotationCache'
 import { apiService } from '../../services/api'
+import { useUIText } from '../../i18n/useUIText'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
+  const t = useUIText()
   // 🔧 从 URL 参数读取 sentenceId（用于自动滚动和高亮）
   const getSentenceIdFromURL = () => {
     const params = new URLSearchParams(window.location.search)
@@ -35,6 +38,10 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [quotedText, setQuotedText] = useState('')
   const [showUploadProgress, setShowUploadProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [uploadedArticleId, setUploadedArticleId] = useState(null) // 🔧 保存上传完成的文章ID
+  // 长度超限对话框状态（提升到父组件，避免子组件卸载时丢失）
+  const [showLengthDialog, setShowLengthDialog] = useState(false)
+  const [pendingContent, setPendingContent] = useState(null)
   const [hasSelectedToken, setHasSelectedToken] = useState(false)
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
@@ -201,7 +208,13 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         const normalizedSentence = {
           text_id: sentenceData?.text_id ?? sentenceData?.textId ?? articleId,
           sentence_id: sentenceData?.sentence_id ?? sentenceData?.sentenceId ?? (typeof sentenceIndex === 'number' ? sentenceIndex + 1 : undefined),
-          sentence_body: sentenceData?.sentence_body ?? sentenceData?.sentenceBody ?? sentenceText ?? sentenceData?.text ?? ''
+          sentence_body: sentenceData?.sentence_body ?? sentenceData?.sentenceBody ?? sentenceText ?? sentenceData?.text ?? '',
+          sentence_difficulty_level: sentenceData?.sentence_difficulty_level ?? sentenceData?.sentenceDifficultyLevel ?? null,
+          tokens: sentenceData?.tokens ?? [],
+          word_tokens: sentenceData?.word_tokens ?? sentenceData?.wordTokens ?? null,
+          language: sentenceData?.language ?? null,
+          language_code: sentenceData?.language_code ?? sentenceData?.languageCode ?? null,
+          is_non_whitespace: sentenceData?.is_non_whitespace ?? sentenceData?.isNonWhitespace ?? null
         }
         // 无条件显式清空后端 token，避免任何历史残留导致错配
         const updatePayload = { sentence: normalizedSentence, token: null }
@@ -222,28 +235,124 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }
 
-  const handleUploadStart = () => {
-    setShowUploadProgress(true)
+  const handleUploadStart = (show = true) => {
+    setShowUploadProgress(show)
+  }
+  
+  const handleLengthDialogClose = () => {
+    setShowLengthDialog(false)
+    setPendingContent(null)
+  }
+  
+  const handleTruncateContent = async () => {
+    if (!pendingContent || !pendingContent.content) {
+      console.error('❌ [ArticleChatView] handleTruncateContent: pendingContent 或 content 为空')
+      return
+    }
+    
+    const MAX_LENGTH = 5000
+    const MAX_LENGTH_DISPLAY = '5,000' // 用于显示，避免在 JSX 中计算
+    // 留一些余量，避免 FormData 编码导致超出限制（约 0.3% 的余量）
+    const SAFE_LENGTH = Math.floor(MAX_LENGTH * 0.997) // 49850 字符
+    // 确保截取后的内容不超过限制（使用 slice 更安全）
+    const originalLength = pendingContent.content.length
+    // 使用 slice 截取，留一些余量避免编码问题
+    const truncatedContent = pendingContent.content.slice(0, SAFE_LENGTH)
+    const truncatedLength = truncatedContent.length
+    
+    console.log('✂️ [Frontend] 截取内容:')
+    console.log('  - 原始长度:', originalLength)
+    console.log('  - 截取后长度:', truncatedLength)
+    console.log('  - MAX_LENGTH:', MAX_LENGTH)
+    console.log('  - 截取后内容前50字符:', truncatedContent.substring(0, 50))
+    console.log('  - 截取后内容后50字符:', truncatedContent.substring(Math.max(0, truncatedLength - 50)))
+    
+    // 验证截取后的长度
+    if (truncatedLength > MAX_LENGTH) {
+      console.error('❌ [Frontend] 截取后长度仍然超过限制！', truncatedLength, '>', MAX_LENGTH)
+      alert(t('截取失败：内容长度仍然超过限制'))
+      return
+    }
+    
+    if (truncatedLength !== MAX_LENGTH && originalLength > MAX_LENGTH) {
+      console.warn('⚠️ [Frontend] 截取后长度不等于 MAX_LENGTH，但应该等于', truncatedLength, 'vs', MAX_LENGTH)
+    }
+    
+    handleLengthDialogClose()
+    
+    // 调用上传API上传截取后的内容
+    try {
+      setShowUploadProgress(true)
+      console.log('📤 [Frontend] 准备上传截取后的内容，长度:', truncatedLength)
+      // 再次确认长度
+      if (truncatedContent.length !== truncatedLength) {
+        console.error('❌ [Frontend] 内容长度不一致！', truncatedContent.length, 'vs', truncatedLength)
+      }
+      // 截取后的内容跳过长度检查
+      const response = await apiService.uploadText(truncatedContent, pendingContent.title || 'Text Article', pendingContent.language, true)
+      
+      console.log('📥 [Frontend] 截取后上传响应:', response)
+      
+      // 检查响应格式（可能是 response.success 或 response.status === 'success'）
+      if (response && (response.success || response.status === 'success')) {
+        const responseData = response.data || response
+        const articleId = responseData.article_id || responseData.text_id
+        
+        console.log('✅ [Frontend] 截取后上传成功，文章ID:', articleId)
+        
+        // 调用完成回调，传递文章ID
+        handleUploadComplete(articleId)
+      } else {
+        console.error('❌ [Frontend] 上传响应格式错误:', response)
+        setShowUploadProgress(false)
+        alert(t('上传失败: 响应格式错误'))
+      }
+    } catch (error) {
+      console.error('❌ [Frontend] 截取后上传失败:', error)
+      setShowUploadProgress(false)
+      const errorMessage = error.response?.data?.error || error.message || '未知错误'
+      alert(t('上传失败: {error}').replace('{error}', errorMessage))
+    }
   }
 
-  const handleUploadComplete = () => {
+  const handleUploadComplete = (articleId = null) => {
+    console.log('✅ [ArticleChatView] handleUploadComplete 被调用，articleId:', articleId)
+    if (articleId) {
+      // 🔧 如果有 articleId，保存它并让进度条完成动画后再跳转
+      setUploadedArticleId(articleId)
+      // 不立即调用 onUploadComplete，让进度条完成动画
+      // 进度条会在动画完成后调用 onComplete 回调
+    } else {
+      // 如果没有 articleId，立即完成
+      setUploadComplete(true)
+      setShowUploadProgress(false)
+      if (onUploadComplete) {
+        onUploadComplete(articleId)
+      }
+    }
+  }
+  
+  // 🔧 进度条完成后的回调
+  const handleProgressComplete = (articleId = null) => {
+    console.log('✅ [ArticleChatView] 进度条完成，准备跳转，articleId:', articleId)
     setUploadComplete(true)
     setShowUploadProgress(false)
-    // 调用父组件的完成回调
+    // 调用父组件的完成回调，传递文章ID
     if (onUploadComplete) {
-      onUploadComplete()
+      onUploadComplete(articleId || uploadedArticleId)
     }
   }
 
   // 构建 NotationContext 的值
   // 🔧 添加 vocabNotations 和 grammarNotations 到依赖，确保缓存更新时 Context 值也更新
   const notationContextValue = useMemo(() => {
-    console.log('🔄 [ArticleChatView] NotationContext 值更新:', {
-      vocabNotationsCount: vocabNotations.length,
-      grammarNotationsCount: grammarNotations.length,
-      vocabNotations: vocabNotations,
-      grammarNotations: grammarNotations
-    })
+    // 🔧 移除频繁的日志输出，减少控制台噪音
+    // console.log('🔄 [ArticleChatView] NotationContext 值更新:', {
+    //   vocabNotationsCount: vocabNotations.length,
+    //   grammarNotationsCount: grammarNotations.length,
+    //   vocabNotations: vocabNotations,
+    //   grammarNotations: grammarNotations
+    // })
     
     return {
       // Grammar 相关
@@ -275,14 +384,16 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     isTokenAsked,
     getNotationContent,
     setNotationContent,
-    vocabNotations,  // 🔧 添加依赖
-    grammarNotations  // 🔧 添加依赖
+    vocabNotations.length,  // 🔧 只依赖长度，避免数组引用变化导致不必要的重新渲染
+    grammarNotations.length  // 🔧 只依赖长度，避免数组引用变化导致不必要的重新渲染
   ])
 
-  return (
-    <ChatEventProvider>
-      <NotationContext.Provider value={notationContextValue}>
-        <SelectionProvider>
+  // 🔧 错误边界：捕获渲染错误
+  try {
+    return (
+      <ChatEventProvider>
+        <NotationContext.Provider value={notationContextValue}>
+          <SelectionProvider>
         <div className="h-full flex flex-col">
           {/* Header with Back Button */}
           <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
@@ -306,9 +417,31 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           <div className="flex gap-8 flex-1 p-4 overflow-visible min-h-0">
             {isUploadMode ? (
               showUploadProgress ? (
-                <UploadProgress onComplete={handleUploadComplete} />
+                <UploadProgress onComplete={handleProgressComplete} articleId={uploadedArticleId} />
               ) : (
-                <UploadInterface onUploadStart={handleUploadStart} />
+                <UploadInterface 
+                  onUploadStart={handleUploadStart}
+                  onLengthExceeded={(content) => {
+                    console.log('📞 [ArticleChatView] onLengthExceeded 被调用，content:', {
+                      type: content.type,
+                      url: content.url,
+                      title: content.title,
+                      language: content.language,
+                      contentLength: content.content?.length
+                    })
+                    try {
+                      // 🔧 直接更新状态，不使用 setTimeout（避免时序问题）
+                      setPendingContent(content)
+                      setShowLengthDialog(true)
+                      setShowUploadProgress(false)
+                      console.log('✅ [ArticleChatView] 状态已更新，showLengthDialog: true, pendingContent:', !!content)
+                    } catch (err) {
+                      console.error('❌ [ArticleChatView] onLengthExceeded 执行失败:', err)
+                      console.error('❌ [ArticleChatView] 错误堆栈:', err.stack)
+                    }
+                  }}
+                  onUploadComplete={handleUploadComplete}
+                />
               )
             ) : (
               <ArticleCanvas>
@@ -347,11 +480,83 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           />
         </div>
       </div>
-        </SelectionProvider>
-      </NotationContext.Provider>
+      
+      {/* 长度超限对话框（在父组件中渲染，避免子组件卸载时丢失） */}
+      {showLengthDialog && pendingContent && (() => {
+        try {
+          console.log('🎨 [ArticleChatView] 渲染对话框，showLengthDialog:', showLengthDialog, 'pendingContent:', {
+            type: pendingContent?.type,
+            hasContent: !!pendingContent?.content,
+            contentLength: pendingContent?.content?.length
+          })
+          return createPortal(
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" 
+              style={{ zIndex: 99999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  handleLengthDialogClose()
+                }
+              }}
+            >
+              <div 
+                className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">{t('文章长度超出限制')}</h3>
+                <div className="mb-4">
+                  <p className="text-gray-600 mb-2">
+                    {t('文章长度为')} <span className="font-semibold text-red-600">{(pendingContent?.content?.length || 0).toLocaleString()}</span> {t('字符， 超过了最大限制')} <span className="font-semibold">5,000</span> {t('字符。')}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {t('如果选择自动截取，将只保留前 5,000 个字符。')}
+                  </p>
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={handleLengthDialogClose}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    {t('重新上传')}
+                  </button>
+                  <button
+                    onClick={handleTruncateContent}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {t('自动截取前面部分')}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        } catch (err) {
+          console.error('❌ [ArticleChatView] 对话框渲染失败:', err)
+          console.error('❌ [ArticleChatView] 错误堆栈:', err.stack)
+          return null
+        }
+      })()}
+    </SelectionProvider>
+    </NotationContext.Provider>
     </ChatEventProvider>
-  )
-} 
+    )
+  } catch (err) {
+    console.error('❌ [ArticleChatView] 渲染错误:', err)
+    console.error('❌ [ArticleChatView] 错误堆栈:', err.stack)
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8">
+        <div className="text-red-600 text-lg font-semibold mb-4">页面渲染出错</div>
+        <div className="text-gray-600 mb-4">{String(err.message || err)}</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          刷新页面
+        </button>
+      </div>
+    )
+  }
+}
 
 
 

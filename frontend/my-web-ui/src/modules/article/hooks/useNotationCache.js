@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '../../../services/api'
 
 /**
@@ -82,9 +82,17 @@ export function useNotationCache(articleId) {
         const vocabData = vocabResponse.data.notations || vocabResponse.data
         const vocabList = Array.isArray(vocabData) ? vocabData : []
         
-        console.log('📝 [useNotationCache] vocabData:', vocabData)
-        console.log('📝 [useNotationCache] vocabList length:', vocabList.length)
-        console.log('📝 [useNotationCache] vocabList:', vocabList)
+        // 🔍 先检查原始数据是否包含 word_token_token_ids
+        console.log('🔍 [useNotationCache] 检查原始 API 数据中的 word_token_token_ids:')
+        vocabList.forEach((n, idx) => {
+          console.log(`  notation ${idx}:`, {
+            token_id: n.token_id,
+            word_token_id: n.word_token_id,
+            word_token_token_ids: n.word_token_token_ids,
+            has_field: 'word_token_token_ids' in n,
+            all_keys: Object.keys(n)
+          })
+        })
         
         // 转换为前端使用的格式（确保有token_index字段）
         const formattedVocabNotations = vocabList.map(notation => ({
@@ -94,10 +102,35 @@ export function useNotationCache(articleId) {
           token_id: notation.token_id,
           token_index: notation.token_id, // 添加token_index字段作为别名
           vocab_id: notation.vocab_id,
+          word_token_id: notation.word_token_id, // 🔧 新增：word_token_id（用于非空格语言的完整词标注）
+          word_token_token_ids: notation.word_token_token_ids || null, // 🔧 新增：word_token的所有token_ids（用于显示完整下划线）
           created_at: notation.created_at
         }))
         
-        console.log('✅ [useNotationCache] Formatted vocab notations:', formattedVocabNotations)
+        // 🔍 检查格式化后的数据
+        console.log('🔍 [useNotationCache] 格式化后的数据:')
+        formattedVocabNotations.forEach((n, idx) => {
+          console.log(`  formatted ${idx}:`, {
+            token_id: n.token_id,
+            word_token_id: n.word_token_id,
+            word_token_token_ids: n.word_token_token_ids,
+            has_field: 'word_token_token_ids' in n
+          })
+        })
+        
+        // 🔍 只记录有 word_token_token_ids 的 notations（用于调试）
+        const wordTokenNotations = formattedVocabNotations.filter(n => n.word_token_token_ids && Array.isArray(n.word_token_token_ids) && n.word_token_token_ids.length > 0)
+        if (wordTokenNotations.length > 0) {
+          console.log('✅ [useNotationCache] 发现 word_token_token_ids:', wordTokenNotations.map(n => ({
+            token_id: n.token_id,
+            word_token_id: n.word_token_id,
+            word_token_token_ids: n.word_token_token_ids
+          })))
+        } else {
+          console.warn('⚠️ [useNotationCache] 没有发现任何 word_token_token_ids！')
+        }
+        
+        console.log('✅ [useNotationCache] 加载了', formattedVocabNotations.length, '个 vocab notations')
         setVocabNotations(formattedVocabNotations)
         // 不再预加载所有 examples：改为按需懒加载 + 新建后单次写缓存
       } else if (vocabResponse && vocabResponse.data) {
@@ -110,6 +143,8 @@ export function useNotationCache(articleId) {
           token_id: notation.token_id,
           token_index: notation.token_id,
           vocab_id: notation.vocab_id,
+          word_token_id: notation.word_token_id, // 🔧 新增：word_token_id（用于非空格语言的完整词标注）
+          word_token_token_ids: notation.word_token_token_ids || null, // 🔧 新增：word_token的所有token_ids（用于显示完整下划线）
           created_at: notation.created_at
         }))
         setVocabNotations(formattedVocabNotations)
@@ -137,42 +172,45 @@ export function useNotationCache(articleId) {
 
   // 初始化加载
   useEffect(() => {
-    if (articleId && !isInitialized) {
-      loadAllNotations(articleId)
+    // 🔧 检查articleId是否为有效数字（上传模式下可能是字符串'upload'）
+    const validArticleId = typeof articleId === 'string' && articleId === 'upload' ? null : articleId
+    if (validArticleId && !isInitialized) {
+      loadAllNotations(validArticleId)
+    } else if (articleId === 'upload') {
+      // 如果是上传模式，直接标记为已初始化，避免不必要的加载
+      setIsInitialized(true)
     }
   }, [articleId, isInitialized, loadAllNotations])
 
+  // 🔧 使用 ref 保存最新的数组引用，避免闭包问题
+  const grammarNotationsRef = useRef(grammarNotations)
+  const vocabNotationsRef = useRef(vocabNotations)
+  
+  useEffect(() => {
+    grammarNotationsRef.current = grammarNotations
+    vocabNotationsRef.current = vocabNotations
+  }, [grammarNotations, vocabNotations])
+
   // 获取句子的grammar notations
   const getGrammarNotationsForSentence = useCallback((sentenceId) => {
-    return grammarNotations.filter(notation => 
+    return grammarNotationsRef.current.filter(notation => 
       notation.sentence_id === sentenceId
     )
-  }, [grammarNotations])
+  }, []) // 🔧 不依赖数组，使用 ref 访问最新值
 
   // 获取句子的vocab notations
   const getVocabNotationsForSentence = useCallback((sentenceId) => {
     // 确保类型一致（数字比较）
     const sid = Number(sentenceId)
     
-    console.log('🔍 [useNotationCache] getVocabNotationsForSentence 被调用:', {
-      sentenceId,
-      sid,
-      vocabNotationsCount: vocabNotations.length,
-      vocabNotations: vocabNotations
-    })
-    
-    const filtered = vocabNotations.filter(notation => 
+    const filtered = vocabNotationsRef.current.filter(notation => 
       Number(notation.sentence_id) === sid
     )
     
-    console.log('🔍 [useNotationCache] getVocabNotationsForSentence 返回:', {
-      sentenceId: sid,
-      filteredCount: filtered.length,
-      filtered: filtered
-    })
+    // 🔍 调试日志已移除（减少控制台输出）
     
     return filtered
-  }, [vocabNotations])
+  }, []) // 🔧 不依赖数组，使用 ref 访问最新值
 
   // 获取特定token的vocab example（通过API按需获取）
   const getVocabExampleForToken = useCallback(async (textId, sentenceId, tokenIndex) => {
@@ -188,10 +226,24 @@ export function useNotationCache(articleId) {
       const sid = Number(sentenceId)
       const tid = Number(tokenIndex)
 
-      // 在当前缓存的 vocabNotations 中查找匹配的标注
-      const matchedNotation = vocabNotations.find(n => {
+      // 🔧 修复：在当前缓存的 vocabNotations 中查找匹配的标注
+      // 优先匹配：精确 token_id 匹配
+      let matchedNotation = vocabNotationsRef.current.find(n => {
         return Number(n.sentence_id) === sid && Number(n.token_id) === tid
       })
+      
+      // 🔧 如果没有精确匹配，尝试通过 word_token_token_ids 匹配
+      if (!matchedNotation) {
+        matchedNotation = vocabNotationsRef.current.find(n => {
+          if (Number(n.sentence_id) !== sid) return false
+          // 检查 word_token_token_ids 是否包含当前 token
+          if (n?.word_token_token_ids && Array.isArray(n.word_token_token_ids) && n.word_token_token_ids.length > 0) {
+            const tokenIdsArray = n.word_token_token_ids.map(id => Number(id))
+            return tokenIdsArray.includes(tid)
+          }
+          return false
+        })
+      }
 
       if (matchedNotation && matchedNotation.vocab_id) {
         const { apiService } = await import('../../../services/api')
@@ -257,7 +309,7 @@ export function useNotationCache(articleId) {
       console.error('❌ [getVocabExampleForToken] API error (by location):', error)
       return null
     }
-  }, [vocabExamplesCache, vocabNotations])
+  }, [vocabExamplesCache]) // 🔧 移除 vocabNotations 依赖，使用 ref 访问
 
   // 获取grammar rule详情
   const getGrammarRuleById = useCallback((grammarId) => {
@@ -266,17 +318,17 @@ export function useNotationCache(articleId) {
 
   // 检查句子是否有grammar notation
   const hasGrammarNotation = useCallback((sentenceId) => {
-    return grammarNotations.some(notation => 
+    return grammarNotationsRef.current.some(notation => 
       notation.sentence_id === sentenceId
     )
-  }, [grammarNotations])
+  }, []) // 🔧 不依赖数组，使用 ref 访问最新值
 
   // 检查句子是否有vocab notation
   const hasVocabNotation = useCallback((sentenceId) => {
-    return vocabNotations.some(notation => 
+    return vocabNotationsRef.current.some(notation => 
       notation.sentence_id === sentenceId
     )
-  }, [vocabNotations])
+  }, []) // 🔧 不依赖数组，使用 ref 访问最新值
 
   // 刷新缓存（当有新的notation被创建时调用）
   const refreshCache = useCallback(async () => {

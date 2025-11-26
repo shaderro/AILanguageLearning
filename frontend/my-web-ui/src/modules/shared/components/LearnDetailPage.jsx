@@ -1,3 +1,5 @@
+import { useUIText } from '../../../i18n/useUIText'
+
 const LearnDetailPage = ({
   type = 'vocab', // 'vocab' | 'grammar'
   data,
@@ -8,6 +10,7 @@ const LearnDetailPage = ({
   customContent = null,
   onToggleStar = null, // 新增收藏切换回调
 }) => {
+  const t = useUIText()
   // 解析和格式化解释文本（与 LearnCard 中的逻辑一致）
   const parseExplanation = (text) => {
     if (!text) return ''
@@ -81,7 +84,7 @@ const LearnDetailPage = ({
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">{t('加载中...')}</p>
       </div>
     );
   }
@@ -94,14 +97,14 @@ const LearnDetailPage = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">加载失败</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('加载失败')}</h3>
         <p className="text-gray-600 mb-4">{String(error)}</p>
         {onBack && (
           <button
             onClick={onBack}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
-            返回
+            {t('返回')}
           </button>
         )}
       </div>
@@ -112,15 +115,15 @@ const LearnDetailPage = ({
     <div className="flex items-center justify-between mb-6">
       <h2 className="text-2xl font-bold text-gray-900">
         {type === 'vocab'
-          ? (data?.vocab_body || 'Unknown Word')
-          : (data?.rule_name || 'Unknown Rule')}
+          ? (data?.vocab_body || t('未知词汇'))
+          : (data?.rule_name || t('未知规则'))}
       </h2>
       <div className="flex items-center space-x-3">
         {onToggleStar && (
           <button
             onClick={() => onToggleStar(type === 'vocab' ? data.vocab_id : data.rule_id, data.is_starred)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title={data?.is_starred ? "取消收藏" : "收藏"}
+            title={data?.is_starred ? t('取消收藏') : t('收藏')}
           >
             {data?.is_starred ? (
               <svg className="w-6 h-6 text-yellow-500 fill-current" viewBox="0 0 20 20">
@@ -138,7 +141,7 @@ const LearnDetailPage = ({
             onClick={onBack}
             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
-            返回
+            {t('返回')}
           </button>
         )}
       </div>
@@ -161,7 +164,7 @@ const LearnDetailPage = ({
         {/* 完整解释 */}
         {data?.explanation && (
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">完整解释</h3>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t('完整解释')}</h3>
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                 {parseExplanation(data.explanation)}
@@ -173,20 +176,20 @@ const LearnDetailPage = ({
         {/* 所有例子 */}
         {Array.isArray(data?.examples) && data.examples.length > 0 && (
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">使用例子</h3>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t('使用例子')}</h3>
             <div className="space-y-4">
               {data.examples.map((example, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">例子 {index + 1}</span>
+                    <span className="text-sm font-medium text-gray-600">{t('例子')} {index + 1}</span>
                     <div className="text-xs text-gray-500">
-                      <span>文章ID: {example.text_id}</span>
+                      <span>{t('文章ID')}: {example.text_id}</span>
                       <span className="mx-2">|</span>
-                      <span>句子ID: {example.sentence_id}</span>
+                      <span>{t('句子ID')}: {example.sentence_id}</span>
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 mb-1">
-                    <span className="font-medium">original sentence: </span>
+                    <span className="font-medium">{t('原句')} </span>
                     <span>{example.original_sentence ?? 'null'}</span>
                   </div>
                   {example.original_sentence && example.original_sentence !== 'null' && example.text_id && (
@@ -202,7 +205,7 @@ const LearnDetailPage = ({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        <span>转到原文</span>
+                        <span>{t('转到原文')}</span>
                       </button>
                     </div>
                   )}
@@ -211,7 +214,7 @@ const LearnDetailPage = ({
                   </div>
                   {example.token_indices && example.token_indices.length > 0 && (
                     <div className="mt-2 text-xs text-gray-500">
-                      相关词汇位置: {example.token_indices.join(', ')}
+                      {t('相关词汇位置')}: {example.token_indices.join(', ')}
                     </div>
                   )}
                 </div>
@@ -222,8 +225,8 @@ const LearnDetailPage = ({
 
         {/* 元信息 */}
         <section className="text-sm text-gray-500 flex items-center justify-between pt-4 border-t">
-          <span>来源: {data?.source || 'unknown'}</span>
-          <span>词汇ID: {data?.vocab_id}</span>
+          <span>{t('来源')}: {data?.source || t('未知')}</span>
+          <span>{t('词汇ID')}: {data?.vocab_id}</span>
         </section>
       </div>
     ) : (
@@ -241,7 +244,7 @@ const LearnDetailPage = ({
         {/* 完整解释 */}
         {data?.rule_summary && (
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">规则解释</h3>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t('规则解释')}</h3>
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                 {parseExplanation(data.rule_summary)}
@@ -253,20 +256,20 @@ const LearnDetailPage = ({
         {/* 所有例子 */}
         {Array.isArray(data?.examples) && data.examples.length > 0 && (
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">使用例子</h3>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t('使用例子')}</h3>
             <div className="space-y-4">
               {data.examples.map((example, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-green-400">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">例子 {index + 1}</span>
+                    <span className="text-sm font-medium text-gray-600">{t('例子')} {index + 1}</span>
                     <div className="text-xs text-gray-500">
-                      <span>文章ID: {example.text_id}</span>
+                      <span>{t('文章ID')}: {example.text_id}</span>
                       <span className="mx-2">|</span>
-                      <span>句子ID: {example.sentence_id}</span>
+                      <span>{t('句子ID')}: {example.sentence_id}</span>
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 mb-1">
-                    <span className="font-medium">original sentence: </span>
+                    <span className="font-medium">{t('原句')} </span>
                     <span>{example.original_sentence ?? 'null'}</span>
                   </div>
                   {example.original_sentence && example.original_sentence !== 'null' && example.text_id && (
@@ -282,7 +285,7 @@ const LearnDetailPage = ({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        <span>转到原文</span>
+                        <span>{t('转到原文')}</span>
                       </button>
                     </div>
                   )}
@@ -297,8 +300,8 @@ const LearnDetailPage = ({
 
         {/* 元信息 */}
         <section className="text-sm text-gray-500 flex items-center justify-between pt-4 border-t">
-          <span>来源: {data?.source || 'unknown'}</span>
-          <span>规则ID: {data?.rule_id}</span>
+          <span>{t('来源')}: {data?.source || t('未知')}</span>
+          <span>{t('规则ID')}: {data?.rule_id}</span>
         </section>
       </div>
     )

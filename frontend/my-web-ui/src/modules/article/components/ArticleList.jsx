@@ -3,6 +3,8 @@ import ArticleCard from './ArticleCard'
 const ArticleList = ({ 
   articles = [], 
   onArticleSelect,
+  onArticleEdit,
+  onArticleDelete,
   className = ""
 }) => {
   if (articles.length === 0) {
@@ -33,7 +35,10 @@ const ArticleList = ({
           estimatedTime={article.estimatedTime}
           category={article.category}
           tags={article.tags}
+          processingStatus={article.processingStatus}
           onSelect={onArticleSelect}
+          onEdit={onArticleEdit}
+          onDelete={onArticleDelete}
         />
       ))}
     </div>

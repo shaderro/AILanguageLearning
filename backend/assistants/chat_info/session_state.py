@@ -45,6 +45,9 @@ class SessionState:
         self.created_grammar_notations: List[dict] = []  # 新增：本轮创建的 grammar notations
         self.created_vocab_notations: List[dict] = []  # 新增：本轮创建的 vocab notations
         self.user_id: Optional[int] = None  # 新增：当前用户ID
+        self.current_language: Optional[str] = None
+        self.current_language_code: Optional[str] = None
+        self.current_is_non_whitespace: Optional[bool] = None
     
     def set_current_sentence(self, sentence: SentenceType):
         """
@@ -52,6 +55,22 @@ class SessionState:
         支持新旧两种数据结构。
         """
         self.current_sentence = sentence
+    
+    def set_language_context(
+        self,
+        language: Optional[str] = None,
+        language_code: Optional[str] = None,
+        is_non_whitespace: Optional[bool] = None,
+    ):
+        """
+        设置当前语言上下文信息
+        """
+        if language is not None:
+            self.current_language = language
+        if language_code is not None:
+            self.current_language_code = language_code
+        if is_non_whitespace is not None:
+            self.current_is_non_whitespace = is_non_whitespace
 
     def set_current_selected_token(self, selected_token: SelectedToken):
         """
@@ -99,6 +118,9 @@ class SessionState:
         self.summarized_results.clear()
         self.grammar_to_add.clear()
         self.vocab_to_add.clear()
+        self.current_language = None
+        self.current_language_code = None
+        self.current_is_non_whitespace = None
     
     def reset_processing_results(self):
         """只重置处理结果，保留上下文（避免重复设置）"""

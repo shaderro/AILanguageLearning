@@ -57,6 +57,7 @@ class UnifiedNotationManager:
                      vocab_id: Optional[int] = None,
                      grammar_id: Optional[int] = None,
                      marked_token_ids: Optional[List[int]] = None,
+                     word_token_id: Optional[int] = None,  # 新增：用于非空格语言的 word token 级别标注
                      **kwargs) -> bool:
         """
         统一的标注创建接口
@@ -70,9 +71,10 @@ class UnifiedNotationManager:
             vocab_id: 词汇ID（词汇标注可选）
             grammar_id: 语法ID（语法标注可选）
             marked_token_ids: 标记的token ID列表（语法标注可选）
+            word_token_id: Word Token ID（可选，仅用于非空格语言的 word token 级别标注）
             **kwargs: 其他参数
         """
-        print(f"[INFO] [UnifiedNotation] mark_notation called: type={notation_type}")
+        print(f"[INFO] [UnifiedNotation] mark_notation called: type={notation_type}, word_token_id={word_token_id}")
         
         try:
             if notation_type == "vocab":
@@ -85,7 +87,8 @@ class UnifiedNotationManager:
                     text_id=text_id,
                     sentence_id=sentence_id,
                     token_id=token_id,
-                    vocab_id=vocab_id
+                    vocab_id=vocab_id,
+                    word_token_id=word_token_id  # 新增：传递 word_token_id
                 )
                 
                 # 如果启用向后兼容，同时创建 AskedToken

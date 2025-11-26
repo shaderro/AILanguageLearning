@@ -17,6 +17,10 @@ from backend.api.auth_routes import get_current_user
 
 # 导入数据库版本的 OriginalTextManager
 from backend.data_managers import OriginalTextManagerDB
+from backend.preprocessing.language_classification import (
+    get_language_code,
+    is_non_whitespace_language,
+)
 
 # 导入 DTO（用于类型提示和响应）
 from backend.data_managers.data_classes_new import (
@@ -150,6 +154,7 @@ async def get_all_texts(
                 "text_id": t.text_id,
                 "text_title": t.text_title,
                 "language": t.language,
+                "processing_status": t.processing_status,  # 添加处理状态
                 "total_sentences": sentence_count,
                 "total_tokens": token_count,
                 "sentence_count": sentence_count,  # 保持向后兼容
@@ -215,6 +220,9 @@ async def get_text(
         
         print(f"[API] Found text {text_id}: {text.text_title}, sentences: {sentence_count}")
         
+        language_code = get_language_code(text.language) if text.language else None
+        is_non_whitespace = is_non_whitespace_language(language_code) if language_code else None
+
         result = {
             "success": True,
             "data": {
@@ -242,6 +250,11 @@ async def get_text(
                                         if t.token_type is not None
                                         else "text"
                                     ),
+                                    "difficulty_level": t.difficulty_level,
+                                    "global_token_id": getattr(t, "global_token_id", None),
+                                    "pos_tag": getattr(t, "pos_tag", None),
+                                    "lemma": getattr(t, "lemma", None),
+                                    "word_token_id": getattr(t, "word_token_id", None),
                                     # 标记为可选择 token
                                     "selectable": True,
                                 }
@@ -257,7 +270,25 @@ async def get_text(
                                 }
                                 for idx, word in enumerate((s.sentence_body or "").split())
                             ]
-                        )
+                        ),
+                        "word_tokens": (
+                            [
+                                {
+                                    "word_token_id": wt.word_token_id,
+                                    "word_body": wt.word_body,
+                                    "token_ids": list(wt.token_ids),
+                                    "pos_tag": wt.pos_tag,
+                                    "lemma": wt.lemma,
+                                    "linked_vocab_id": wt.linked_vocab_id,
+                                }
+                                for wt in getattr(s, "word_tokens", []) or []
+                            ]
+                            if getattr(s, "word_tokens", None)
+                            else []
+                        ),
+                        "language": text.language,
+                        "language_code": language_code,
+                        "is_non_whitespace": is_non_whitespace,
                     }
                     for s in text_by_sentence
                 ] if include_sentences else []
@@ -530,6 +561,114 @@ async def get_text_stats(
             "success": True,
             "data": stats
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class TextUpdateRequest(BaseModel):
+    """更新文章请求"""
+    text_title: Optional[str] = Field(None, description="文章标题")
+    language: Optional[str] = Field(None, description="语言")
+    processing_status: Optional[str] = Field(None, description="处理状态")
+
+
+@router.put("/{text_id}", summary="更新文章")
+async def update_text(
+    text_id: int,
+    request: TextUpdateRequest,
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    更新文章（仅限当前用户的文章）
+    
+    - **text_id**: 文章ID
+    - **text_title**: 新标题（可选）
+    - **language**: 新语言（可选）
+    - **processing_status**: 新处理状态（可选）
+    
+    需要认证：是
+    """
+    try:
+        print(f"[API] 更新文章 {text_id}, 请求数据: {request.dict()}")
+        
+        # 先验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            print(f"[API] 文章 {text_id} 不存在或不属于用户 {current_user.user_id}")
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
+        print(f"[API] 找到文章: {text_model.text_title}, 准备更新")
+        
+        text_manager = OriginalTextManagerDB(session)
+        updated_text = text_manager.update_text(
+            text_id, 
+            request.text_title, 
+            request.language, 
+            request.processing_status
+        )
+        
+        if not updated_text:
+            print(f"[API] 更新失败，文章 {text_id} 不存在")
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
+        print(f"[API] 文章已更新: {updated_text.text_title}")
+        
+        return {
+            "success": True,
+            "message": "Text updated successfully",
+            "data": {
+                "text_id": updated_text.text_id,
+                "text_title": updated_text.text_title,
+                "language": updated_text.language,
+                "processing_status": text_model.processing_status
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{text_id}", summary="删除文章")
+async def delete_text(
+    text_id: int,
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    删除文章（仅限当前用户的文章）
+    
+    - **text_id**: 文章ID
+    
+    需要认证：是
+    """
+    try:
+        # 先验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
+        text_manager = OriginalTextManagerDB(session)
+        success = text_manager.delete_text(text_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
+        return {
+            "success": True,
+            "message": "Text deleted successfully"
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

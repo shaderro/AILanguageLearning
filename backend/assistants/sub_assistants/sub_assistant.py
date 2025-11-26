@@ -1,4 +1,7 @@
+import time
 from openai import OpenAI
+from openai import APIConnectionError, APITimeoutError
+import httpx
 #, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 from assistants.utility import parse_json_from_text
 
@@ -9,6 +12,8 @@ class SubAssistant:
         self.max_tokens = max_tokens
         self.parse_json = parse_json
         self.model = "deepseek-chat"
+        self.max_retries = 3
+        self.retry_backoff_seconds = 2
 
     def run(self, *args, verbose=False, **kwargs) -> dict |list[dict] | str:
         user_prompt = self.build_prompt(*args, **kwargs)
@@ -19,18 +24,33 @@ class SubAssistant:
             {"role": "system", "content": self.sys_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            max_tokens=self.max_tokens
-        )
-        content = response.choices[0].message.content.strip()
-        if verbose:
-            print("📬 Raw Response:\n", content)
-        if self.parse_json:
-            #print("📬 Parsing JSON from response...")
-            return parse_json_from_text(content)
-        return content
+
+        last_error = None
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    max_tokens=self.max_tokens
+                )
+                content = response.choices[0].message.content.strip()
+                if verbose:
+                    print("📬 Raw Response:\n", content)
+                if self.parse_json:
+                    #print("📬 Parsing JSON from response...")
+                    return parse_json_from_text(content)
+                return content
+            except (APIConnectionError, APITimeoutError, httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout) as error:
+                last_error = error
+                if attempt < self.max_retries:
+                    wait = self.retry_backoff_seconds * attempt
+                    print(f"⚠️ OpenAI连接失败（第{attempt}次），{wait}s 后重试... 错误: {error}")
+                    time.sleep(wait)
+                else:
+                    print(f"❌ OpenAI连接多次失败，已重试 {self.max_retries} 次。")
+                    raise
+        # 如果循环结束仍未返回，抛出最后的错误
+        raise last_error if last_error else RuntimeError("未知错误：OpenAI调用重试后仍失败")
 
     def build_prompt(self, *args, **kwargs) -> str:
         """

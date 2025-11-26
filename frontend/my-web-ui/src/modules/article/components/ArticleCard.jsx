@@ -1,3 +1,5 @@
+import { useUIText } from '../../../i18n/useUIText'
+
 const ArticleCard = ({ 
   id,
   title, 
@@ -8,9 +10,15 @@ const ArticleCard = ({
   estimatedTime, 
   category,
   tags = [],
+  processingStatus = 'completed', // 处理状态：processing/completed/failed
   onSelect,
+  onEdit,
+  onDelete,
   className = ""
 }) => {
+  const t = useUIText()
+  const isProcessing = processingStatus === 'processing'
+  const isFailed = processingStatus === 'failed'
   const getLanguageColor = (language) => {
     switch (language) {
       case '中文':
@@ -53,12 +61,17 @@ const ArticleCard = ({
   return (
     <div 
       className={`
-        bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 
-        cursor-pointer transform hover:scale-105 border border-gray-200
+        bg-white rounded-lg shadow-md transition-all duration-300 
+        border border-gray-200
         relative
+        ${isProcessing || isFailed ? 'opacity-75 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer transform hover:scale-105'}
         ${className}
       `}
-      onClick={() => onSelect(id)}
+      onClick={() => {
+        if (!isProcessing && !isFailed) {
+          onSelect(id)
+        }
+      }}
     >
       {/* 语言标签 - 绝对定位在左上角 */}
       {language && (
@@ -68,6 +81,58 @@ const ArticleCard = ({
           </span>
         </div>
       )}
+      
+      {/* 操作按钮 - 绝对定位在右上角 */}
+      <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
+        {/* 处理状态标签 */}
+        {isProcessing && (
+          <span className="px-2 py-1 rounded-full text-xs font-medium shadow-sm bg-yellow-100 text-yellow-800 flex items-center">
+            <svg className="w-3 h-3 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {t('处理中...')}
+          </span>
+        )}
+        {isFailed && (
+          <span className="px-2 py-1 rounded-full text-xs font-medium shadow-sm bg-red-100 text-red-800">
+            {t('处理失败')}
+          </span>
+        )}
+        
+        {/* 编辑和删除按钮 - 只在非处理状态时显示 */}
+        {!isProcessing && !isFailed && (
+          <>
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(id, title);
+                }}
+                className="p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                title={t('编辑文章名称')}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(id, title);
+                }}
+                className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                title={t('删除文章')}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </>
+        )}
+      </div>
       
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
@@ -137,8 +202,15 @@ const ArticleCard = ({
 
       {/* Action Button */}
       <div className="px-6 pb-6">
-        <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors font-medium">
-          Start Reading
+        <button 
+          className={`w-full py-2 px-4 rounded-md transition-colors font-medium ${
+            isProcessing || isFailed
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+          disabled={isProcessing || isFailed}
+        >
+          {isProcessing ? t('处理中...') : isFailed ? t('处理失败') : t('Start Reading')}
         </button>
       </div>
     </div>

@@ -128,9 +128,9 @@ class TextDataAccessLayer:
         self.session = session
         self._crud = TextCRUD(session)
     
-    def create_text(self, text_title: str, user_id: int = None, language: str = None):
+    def create_text(self, text_title: str, user_id: int = None, language: str = None, processing_status: str = 'completed'):
         """创建文章"""
-        return self._crud.create_text(text_title, user_id, language)
+        return self._crud.create_text(text_title, user_id, language, processing_status)
     
     def get_text_by_id(self, text_id: int):
         """根据ID获取文章"""
@@ -156,6 +156,14 @@ class TextDataAccessLayer:
     def get_sentence_by_id(self, text_id: int, sentence_id: int):
         """根据ID获取句子"""
         return self._crud.get_sentence_by_id(text_id, sentence_id)
+    
+    def update_text(self, text_id: int, text_title: str = None, language: str = None, processing_status: str = None):
+        """更新文章"""
+        return self._crud.update_text(text_id, text_title, language, processing_status)
+    
+    def delete_text(self, text_id: int) -> bool:
+        """删除文章"""
+        return self._crud.delete_text(text_id)
 
 
 class TokenDataAccessLayer:

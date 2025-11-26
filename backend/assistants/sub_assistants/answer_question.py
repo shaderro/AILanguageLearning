@@ -22,12 +22,14 @@ class AnswerQuestionAssistant(SubAssistant):
             f"这是对话的上文，用于提供背景参考：\n{context_info}"
             if context_info else "这是第一轮对话，没有上文。"
         )
-        quoted_part = (
-            f"\n{quoted_part}"
-            if quoted_part else "用户引用了整句话\n"
-        )
+        # 格式化 quoted_part：如果用户选择了特定文本，明确标注；否则说明是整句话
+        if quoted_part:
+            quoted_part_formatted = f'"{quoted_part}"'
+        else:
+            quoted_part_formatted = "用户引用了整句话"
+        
         return answer_question_template.format(
-            quoted_part=quoted_part,
+            quoted_part=quoted_part_formatted,
             context_info=context_info,
             full_sentence=full_sentence,
             user_question=user_question

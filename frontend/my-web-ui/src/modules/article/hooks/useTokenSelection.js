@@ -57,11 +57,21 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
     console.log('  - Final textId:', textId)
     console.log('  - Final sentenceId:', sentenceId)
     
+    const wordTokens = sentence.word_tokens || sentence.wordTokens || null
+    const language = sentence.language || sentence.language_name || null
+    const languageCode = sentence.language_code || sentence.languageCode || null
+    const isNonWhitespace = sentence.is_non_whitespace ?? sentence.isNonWhitespace ?? null
+    
     return {
       sentence: {
         text_id: textId,
         sentence_id: sentenceId,
-        sentence_body: sentence.sentence_body || sentence.sentenceBody || sentence.text || ''
+        sentence_body: sentence.sentence_body || sentence.sentenceBody || sentence.text || '',
+        language,
+        language_code: languageCode,
+        is_non_whitespace: isNonWhitespace,
+        tokens: sentence.tokens || [],
+        word_tokens: wordTokens
       },
       tokens: selectedTokens,
       selectedTexts,

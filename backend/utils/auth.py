@@ -90,3 +90,45 @@ def decode_access_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
+
+def create_password_reset_token(user_id: int) -> str:
+    """
+    创建密码重置 token
+    
+    Args:
+        user_id: 用户ID
+        
+    Returns:
+        str: 密码重置 token（1小时有效）
+    """
+    expire = datetime.utcnow() + timedelta(hours=1)  # 1小时过期
+    to_encode = {
+        "sub": str(user_id),
+        "type": "password_reset",  # 标记为密码重置 token
+        "exp": expire
+    }
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_password_reset_token(token: str) -> Optional[int]:
+    """
+    解码并验证密码重置 token
+    
+    Args:
+        token: 密码重置 token 字符串
+        
+    Returns:
+        int: 用户ID，如果 token 无效则返回 None
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # 验证 token 类型
+        if payload.get("type") != "password_reset":
+            return None
+        user_id_str = payload.get("sub")
+        if user_id_str:
+            return int(user_id_str)
+        return None
+    except (JWTError, ValueError, TypeError):
+        return None

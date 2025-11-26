@@ -1,4 +1,5 @@
 ﻿import CardBase from './CardBase'
+import { useUIText } from '../../../i18n/useUIText'
 
 const LearnCard = ({ 
   data, 
@@ -9,6 +10,8 @@ const LearnCard = ({
   customContent = null,
   onToggleStar = null // 新增收藏切换回调
 }) => {
+  const t = useUIText()
+
   // 解析和格式化解释文本
   const parseExplanation = (text, vocabBody = null) => {
     if (!text) return ''
@@ -92,10 +95,10 @@ const LearnCard = ({
 
   // 格式化学习状态显示文本
   const formatLearnStatus = (learnStatus) => {
-    if (!learnStatus) return '未掌握'
-    if (learnStatus === 'mastered') return '已掌握'
-    if (learnStatus === 'not_mastered') return '未掌握'
-    return '未掌握' // 默认值
+    if (!learnStatus) return t('未掌握')
+    if (learnStatus === 'mastered') return t('已掌握')
+    if (learnStatus === 'not_mastered') return t('未掌握')
+    return t('未掌握') // 默认值
   }
 
   // 获取学习状态显示颜色
@@ -117,7 +120,7 @@ const LearnCard = ({
         <div className="space-y-2">
           {/* 词汇本身 */}
           <div className="text-lg font-semibold text-gray-900">
-            {data?.vocab_body || 'Unknown Word'}
+            {data?.vocab_body || t('未知词汇')}
           </div>
           
           {/* 解释内容 */}
@@ -131,7 +134,7 @@ const LearnCard = ({
           
           <div className="flex flex-col space-y-1 mt-2">
             <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>Source: {data?.source || 'unknown'}</span>
+              <span>{t('来源')}: {data?.source || t('未知')}</span>
               {onToggleStar && (
                 <button
                   onClick={(e) => {
@@ -139,7 +142,7 @@ const LearnCard = ({
                     onToggleStar(type === 'vocab' ? data.vocab_id : data.rule_id, data.is_starred);
                   }}
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title={data?.is_starred ? "取消收藏" : "收藏"}
+                  title={data?.is_starred ? t('取消收藏') : t('收藏')}
                 >
                   {data?.is_starred ? (
                     <svg className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
@@ -156,7 +159,7 @@ const LearnCard = ({
             {/* 学习状态显示 */}
             <div className="text-xs">
               <span className={getLearnStatusColor(data?.learn_status)}>
-                状态: {formatLearnStatus(data?.learn_status)}
+                {t('状态')}: {formatLearnStatus(data?.learn_status)}
               </span>
             </div>
           </div>
@@ -169,7 +172,7 @@ const LearnCard = ({
         <div className="space-y-2">
           {/* 语法规则名称 */}
           <div className="text-lg font-semibold text-gray-900">
-            {data?.rule_name || 'Unknown Rule'}
+            {data?.rule_name || t('未知规则')}
           </div>
           
           {/* 解释内容 */}
@@ -183,7 +186,7 @@ const LearnCard = ({
           
           <div className="flex flex-col space-y-1 mt-2">
             <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>Source: {data?.source || 'unknown'}</span>
+              <span>{t('来源')}: {data?.source || t('未知')}</span>
               {onToggleStar && (
                 <button
                   onClick={(e) => {
@@ -191,7 +194,7 @@ const LearnCard = ({
                     onToggleStar(type === 'vocab' ? data.vocab_id : data.rule_id, data.is_starred);
                   }}
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title={data?.is_starred ? "取消收藏" : "收藏"}
+                  title={data?.is_starred ? t('取消收藏') : t('收藏')}
                 >
                   {data?.is_starred ? (
                     <svg className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
@@ -208,7 +211,7 @@ const LearnCard = ({
             {/* 学习状态显示 */}
             <div className="text-xs">
               <span className={getLearnStatusColor(data?.learn_status)}>
-                状态: {formatLearnStatus(data?.learn_status)}
+                {t('状态')}: {formatLearnStatus(data?.learn_status)}
               </span>
             </div>
           </div>

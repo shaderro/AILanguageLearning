@@ -14,9 +14,9 @@ class TextManager:
         self.session = session
         self.dal = TextDataAccessLayer(session)
     
-    def create_text(self, text_title: str, user_id: int = None, language: str = None) -> OriginalText:
+    def create_text(self, text_title: str, user_id: int = None, language: str = None, processing_status: str = 'completed') -> OriginalText:
         """创建文章"""
-        return self.dal.create_text(text_title, user_id, language)
+        return self.dal.create_text(text_title, user_id, language, processing_status)
     
     def get_text(self, text_id: int) -> Optional[OriginalText]:
         """获取文章"""
@@ -73,3 +73,11 @@ class TextManager:
             "total_texts": total_texts,
             "total_sentences": total_sentences
         }
+    
+    def update_text(self, text_id: int, text_title: str = None, language: str = None, processing_status: str = None):
+        """更新文章"""
+        return self.dal.update_text(text_id, text_title, language, processing_status)
+    
+    def delete_text(self, text_id: int) -> bool:
+        """删除文章"""
+        return self.dal.delete_text(text_id)

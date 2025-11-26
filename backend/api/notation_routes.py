@@ -112,18 +112,117 @@ async def get_vocab_notations(
         # 获取该文章下的所有vocab notations
         all_notations = crud.get_by_text(text_id, user_id)
         
-        notation_list = [
-            {
+        # 构建返回的notation列表，如果存在word_token_id，同时返回该word_token的所有token_ids
+        print(f"[API] ========== 开始处理 {len(all_notations)} 个 vocab notations ==========")
+        
+        # 🔍 调试：检查数据库中是否有 WordToken 记录
+        try:
+            from database_system.business_logic.models import WordToken
+            word_token_count = session.query(WordToken).filter(
+                WordToken.text_id == text_id
+            ).count()
+            print(f"[API] 🔍 数据库中 text_id={text_id} 的 WordToken 记录数: {word_token_count}")
+        except Exception as e:
+            print(f"[API] ⚠️ 无法查询 WordToken 记录数: {e}")
+        
+        notation_list = []
+        for n in all_notations:
+            notation_data = {
                 "notation_id": n.id,
                 "user_id": n.user_id,
                 "text_id": n.text_id,
                 "sentence_id": n.sentence_id,
                 "token_id": n.token_id,
                 "vocab_id": n.vocab_id,
+                "word_token_id": n.word_token_id,  # 新增：word_token_id（用于非空格语言的完整词标注）
                 "created_at": n.created_at.isoformat() if n.created_at else None
             }
-            for n in all_notations
-        ]
+            
+            # 🔧 如果存在word_token_id，查询该word_token的所有token_ids，以便前端显示完整下划线
+            print(f"[API] 检查 notation {n.id}: word_token_id={n.word_token_id}, text_id={n.text_id}, sentence_id={n.sentence_id}")
+            if n.word_token_id is not None:
+                try:
+                    from database_system.business_logic.models import WordToken
+                    # 直接查询 WordToken 表（不依赖关系加载）
+                    word_token_model = session.query(WordToken).filter(
+                        WordToken.word_token_id == n.word_token_id,
+                        WordToken.text_id == n.text_id,
+                        WordToken.sentence_id == n.sentence_id
+                    ).first()
+                    print(f"[API] 数据库查询 word_token 结果: {word_token_model is not None}")
+                    
+                    if word_token_model:
+                        # 处理 token_ids（JSON 类型，SQLAlchemy 会自动解析）
+                        if hasattr(word_token_model, 'token_ids') and word_token_model.token_ids:
+                            token_ids_list = word_token_model.token_ids if isinstance(word_token_model.token_ids, list) else list(word_token_model.token_ids) if word_token_model.token_ids else []
+                            notation_data["word_token_token_ids"] = token_ids_list
+                            print(f"[API] ✅ 为notation {n.id}添加word_token_token_ids: {token_ids_list}")
+                        else:
+                            print(f"[API] ⚠️ word_token_model 没有 token_ids 属性或为空")
+                    else:
+                        # 如果数据库 WordToken 表中没有，尝试从 OriginalTextManagerDB 加载（通过 DTO 转换）
+                        print(f"[API] 数据库 WordToken 表中没有找到，尝试从 OriginalTextManagerDB 加载...")
+                        try:
+                            from backend.data_managers import OriginalTextManagerDB
+                            text_manager_db = OriginalTextManagerDB(session)
+                            original_text = text_manager_db.get_text_by_id(n.text_id, include_sentences=True)
+                            print(f"[API] OriginalTextManagerDB 加载 text: {original_text is not None}")
+                            if original_text and hasattr(original_text, 'text_by_sentence') and original_text.text_by_sentence:
+                                print(f"[API] text 有 {len(original_text.text_by_sentence)} 个句子")
+                                for sentence in original_text.text_by_sentence:
+                                    if sentence.sentence_id == n.sentence_id:
+                                        print(f"[API] 找到句子 {n.sentence_id}, 检查 word_tokens...")
+                                        print(f"[API] 句子类型: {type(sentence)}, 有 word_tokens 属性: {hasattr(sentence, 'word_tokens')}")
+                                        if hasattr(sentence, 'word_tokens'):
+                                            print(f"[API] sentence.word_tokens 值: {sentence.word_tokens}, 类型: {type(sentence.word_tokens)}")
+                                        
+                                        if hasattr(sentence, 'word_tokens') and sentence.word_tokens:
+                                            print(f"[API] 句子有 {len(sentence.word_tokens)} 个 word_tokens")
+                                            for wt in sentence.word_tokens:
+                                                print(f"[API] 检查 word_token: word_token_id={wt.word_token_id}, 目标={n.word_token_id}")
+                                                if wt.word_token_id == n.word_token_id:
+                                                    # 处理 token_ids（可能是 tuple 或 list）
+                                                    token_ids_list = list(wt.token_ids) if isinstance(wt.token_ids, (tuple, list)) else [wt.token_ids] if wt.token_ids else []
+                                                    notation_data["word_token_token_ids"] = token_ids_list
+                                                    print(f"[API] ✅ 从 OriginalTextManagerDB 找到 word_token: word_token_id={wt.word_token_id}, token_ids={token_ids_list}")
+                                                    break
+                                        else:
+                                            print(f"[API] ⚠️ 句子没有 word_tokens 或为空，尝试直接从数据库查询 WordToken 表...")
+                                            # 如果 OriginalTextManagerDB 没有加载 word_tokens，直接从数据库查询
+                                            try:
+                                                from database_system.business_logic.models import WordToken as WordTokenModel
+                                                # 查询该句子的所有 word_tokens
+                                                word_tokens_in_db = session.query(WordTokenModel).filter(
+                                                    WordTokenModel.text_id == n.text_id,
+                                                    WordTokenModel.sentence_id == n.sentence_id
+                                                ).all()
+                                                print(f"[API] 直接从数据库查询到 {len(word_tokens_in_db)} 个 word_tokens")
+                                                for wt_db in word_tokens_in_db:
+                                                    if wt_db.word_token_id == n.word_token_id:
+                                                        token_ids_list = wt_db.token_ids if isinstance(wt_db.token_ids, list) else list(wt_db.token_ids) if wt_db.token_ids else []
+                                                        notation_data["word_token_token_ids"] = token_ids_list
+                                                        print(f"[API] ✅ 直接从数据库找到 word_token: word_token_id={wt_db.word_token_id}, token_ids={token_ids_list}")
+                                                        break
+                                            except Exception as db_query_e:
+                                                print(f"[API] ⚠️ 直接从数据库查询失败: {db_query_e}")
+                                        break
+                            else:
+                                print(f"[API] ⚠️ OriginalTextManagerDB 返回的 text 为空或没有 sentences")
+                        except Exception as db_e:
+                            print(f"[API] ⚠️ 从 OriginalTextManagerDB 加载失败: {db_e}")
+                            import traceback
+                            traceback.print_exc()
+                        
+                        if "word_token_token_ids" not in notation_data:
+                            print(f"[API] ⚠️ notation {n.id} 的 word_token 不存在（WordToken 表和 OriginalTextManagerDB 都没有）")
+                except Exception as e:
+                    print(f"[WARNING] 无法获取word_token的token_ids: {e}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print(f"[API] notation {n.id} 没有 word_token_id (为 None)")
+            
+            notation_list.append(notation_data)
         
         print(f"[API] Found {len(notation_list)} vocab notations")
         

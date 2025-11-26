@@ -111,6 +111,79 @@ export default function SentenceContainer({
     sentenceId
   })
   
+  // 🔧 分词下划线功能：检测是否为中文（无空格语言）且有 word_tokens
+  const isNonWhitespace = sentence?.is_non_whitespace || sentence?.language_code === 'zh'
+  const wordTokens = sentence?.word_tokens || []
+  const hasWordTokens = Array.isArray(wordTokens) && wordTokens.length > 0
+  const shouldShowSegmentationUnderline = isNonWhitespace && hasWordTokens
+  
+  // 🔧 跟踪 hover 状态（句子或 token）
+  const [isHovered, setIsHovered] = useState(false)
+  
+  // 🔧 检查句子是否被选中或交互中
+  const isSentenceSelected = isSentenceInteracting && isSentenceInteracting(sentenceIndex)
+  
+  // 🔧 检查是否有 token 被选中（在当前句子中）
+  // selectedTokenIds 中的 uid 格式是 `${sentenceIdx}-${sentence_token_id}`
+  const hasSelectedTokens = selectedTokenIds && selectedTokenIds.size > 0 && 
+    Array.from(selectedTokenIds).some(uid => {
+      const uidStr = String(uid)
+      // 检查 uid 是否以当前句子索引开头
+      return uidStr.startsWith(`${sentenceIndex}-`)
+    })
+  
+  // 🔧 判断是否应该显示分词 UI：hover 或选中时都显示
+  const shouldShowSegmentationUI = shouldShowSegmentationUnderline && (isHovered || isSentenceSelected || hasSelectedTokens)
+  
+  // 🔧 辅助函数：检查某个 token 是否属于某个 word_token（用于显示下划线）
+  const getTokenWordTokenInfo = (token, tokenIndex) => {
+    if (!shouldShowSegmentationUnderline || !token) return null
+    
+    const tokenId = token?.sentence_token_id || token?.token_id
+    if (tokenId == null) return null
+    
+    // 查找包含该 token 的 word_token
+    for (const wordToken of wordTokens) {
+      const tokenIds = wordToken?.token_ids || []
+      if (Array.isArray(tokenIds) && tokenIds.includes(Number(tokenId))) {
+        // 🔧 计算该 token 在 word_token 中的位置
+        const sortedTokenIds = [...tokenIds].sort((a, b) => a - b)
+        const tokenIndexInWord = sortedTokenIds.indexOf(Number(tokenId))
+        const isFirstInWord = tokenIndexInWord === 0
+        const isLastInWord = tokenIndexInWord === sortedTokenIds.length - 1
+        const isSingleCharWord = sortedTokenIds.length === 1
+        
+        return {
+          wordTokenId: wordToken?.word_token_id,
+          tokenIds: sortedTokenIds,
+          wordBody: wordToken?.word_body,
+          tokenIndexInWord,
+          isFirstInWord,
+          isLastInWord,
+          isSingleCharWord
+        }
+      }
+    }
+    return null
+  }
+  
+  // 🔧 处理句子 hover
+  const handleSentenceHover = (e) => {
+    if (shouldShowSegmentationUnderline) {
+      setIsHovered(true)
+    }
+    selOnEnter()
+    handleSentenceMouseEnter(e)
+  }
+  
+  const handleSentenceHoverLeave = (e) => {
+    if (shouldShowSegmentationUnderline) {
+      setIsHovered(false)
+    }
+    selOnLeave()
+    handleSentenceMouseLeave(e)
+  }
+  
   return (
     <div 
       ref={sentenceRef}
@@ -118,39 +191,88 @@ export default function SentenceContainer({
       className={`select-none relative transition-all duration-200 ${backgroundStyle} ${selectionSentenceClass}`}
       data-sentence="1"
       data-sentence-id={sentenceId}
-      onMouseEnter={(e) => { selOnEnter(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseEnter(e) }}
-      onMouseLeave={(e) => { selOnLeave(); /* 不再用整句 hover 触发卡片 */ handleSentenceMouseLeave(e) }}
+      onMouseEnter={handleSentenceHover}
+      onMouseLeave={handleSentenceHoverLeave}
       onClick={(e) => { selOnClick(e); handleSentenceClick(e) }}
       style={{}}
     >
       {/* 移除旧的背景/边框层，避免与 Selection 模块产生双重边框/叠加样式 */}
       
-      {(sentence?.tokens || []).map((token, tokenIndex) => (
-        <TokenSpan
-          key={`${sentenceIndex}-${tokenIndex}`}
-          token={token}
-          tokenIdx={tokenIndex}
-          sentenceIdx={sentenceIndex}
-          articleId={articleId}
-          selectedTokenIds={selectedTokenIds}
-          activeSentenceIndex={activeSentenceIndex}
-          isDraggingRef={isDraggingRef}
-          wasDraggingRef={wasDraggingRef}
-          tokenRefsRef={tokenRefsRef}
-          hasExplanation={hasExplanation}
-          getExplanation={getExplanation}
-          hoveredTokenId={hoveredTokenId}
-          setHoveredTokenId={setHoveredTokenId}
-          handleGetExplanation={handleGetExplanation}
-          handleMouseDownToken={handleMouseDownToken}
-          handleMouseEnterToken={handleMouseEnterToken}
-          addSingle={addSingle}
-          isTokenAsked={isTokenAsked}
-          markAsAsked={markAsAsked}
-          getNotationContent={getNotationContent}
-          setNotationContent={setNotationContent}
-        />
-      ))}
+      {(sentence?.tokens || []).map((token, tokenIndex) => {
+        // 🔧 获取该 token 的 word_token 信息（用于显示分词下划线）
+        const wordTokenInfo = getTokenWordTokenInfo(token, tokenIndex)
+        const shouldShowUnderline = shouldShowSegmentationUI && wordTokenInfo != null
+        
+        // 🔧 检查当前 token 和下一个 token 是否属于不同的 word token（用于添加空格）
+        let shouldAddSpaceAfter = false
+        if (shouldShowSegmentationUI && tokenIndex < (sentence?.tokens || []).length - 1) {
+          const nextToken = sentence.tokens[tokenIndex + 1]
+          // 🔧 只对文本类型的 token 添加空格（不包括标点符号和空格）
+          const isCurrentTextToken = token?.token_type === 'text' || (typeof token === 'object' && !token?.token_type)
+          const isNextTextToken = nextToken?.token_type === 'text' || (typeof nextToken === 'object' && !nextToken?.token_type)
+          
+          if (isCurrentTextToken && isNextTextToken) {
+            const nextTokenWordTokenInfo = getTokenWordTokenInfo(nextToken, tokenIndex + 1)
+            
+            // 如果当前 token 和下一个 token 都属于 word token，但属于不同的 word token，则添加空格
+            if (wordTokenInfo && nextTokenWordTokenInfo) {
+              const currentWordTokenId = wordTokenInfo.wordTokenId
+              const nextWordTokenId = nextTokenWordTokenInfo.wordTokenId
+              if (currentWordTokenId !== nextWordTokenId) {
+                shouldAddSpaceAfter = true
+              }
+            } else if (wordTokenInfo && !nextTokenWordTokenInfo) {
+              // 当前 token 属于 word token，下一个不属于，添加空格
+              shouldAddSpaceAfter = true
+            } else if (!wordTokenInfo && nextTokenWordTokenInfo) {
+              // 当前 token 不属于 word token，下一个属于，添加空格
+              shouldAddSpaceAfter = true
+            }
+          }
+        }
+        
+        return (
+          <>
+            <TokenSpan
+              key={`${sentenceIndex}-${tokenIndex}`}
+              token={token}
+              tokenIdx={tokenIndex}
+              sentenceIdx={sentenceIndex}
+              articleId={articleId}
+              selectedTokenIds={selectedTokenIds}
+              activeSentenceIndex={activeSentenceIndex}
+              isDraggingRef={isDraggingRef}
+              wasDraggingRef={wasDraggingRef}
+              tokenRefsRef={tokenRefsRef}
+              hasExplanation={hasExplanation}
+              getExplanation={getExplanation}
+              hoveredTokenId={hoveredTokenId}
+              setHoveredTokenId={setHoveredTokenId}
+              handleGetExplanation={handleGetExplanation}
+              handleMouseDownToken={handleMouseDownToken}
+              handleMouseEnterToken={(sIdx, tIdx, t) => {
+                // 🔧 当 hover token 时，也显示分词下划线
+                if (shouldShowSegmentationUnderline) {
+                  setIsHovered(true)
+                }
+                handleMouseEnterToken(sIdx, tIdx, t)
+              }}
+              addSingle={addSingle}
+              isTokenAsked={isTokenAsked}
+              markAsAsked={markAsAsked}
+              getNotationContent={getNotationContent}
+              setNotationContent={setNotationContent}
+              // 🔧 新增：分词下划线相关 props
+              showSegmentationUnderline={shouldShowUnderline}
+              wordTokenInfo={wordTokenInfo}
+            />
+            {/* 🔧 在不同 word token 之间添加空格（只在 hover 时显示） */}
+            {shouldAddSpaceAfter && (
+              <span key={`space-${sentenceIndex}-${tokenIndex}`} className="inline-block w-2" aria-hidden="true" />
+            )}
+          </>
+        )
+      })}
       
       {/* Grammar notation card - shown when hovering over the entire sentence */}
       {hasGrammar && grammarNotations.length > 0 && (

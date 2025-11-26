@@ -111,8 +111,9 @@ class VocabNotation:
     user_id: str
     text_id: int
     sentence_id: int
-    token_id: int               # 当前句子中哪个 token
+    token_id: int               # 当前句子中哪个 token（保持向后兼容）
     vocab_id: Optional[int]     # 对应词汇表中的词汇
+    word_token_id: Optional[int] = None  # 新增：如果标注到 word token，则为 word_token_id（仅用于非空格语言）
     created_at: Optional[str] = None  # 时间戳（可选）
 
 @dataclass

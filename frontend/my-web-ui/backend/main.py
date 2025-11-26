@@ -33,14 +33,19 @@ from utils import create_success_response, create_error_response
 # 导入预处理模块
 try:
     from backend.preprocessing.article_processor import process_article, save_structured_data
+    from backend.preprocessing.html_extractor import extract_main_text_from_url
     print("[OK] 使用简单文章处理器 (无AI依赖)")
 except ImportError as e:
     print(f"Warning: Could not import article_processor: {e}")
     process_article = None
     save_structured_data = None
+    extract_main_text_from_url = None
 
 # 导入 asked tokens manager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
+
+# 文章长度限制（字符数）
+MAX_ARTICLE_LENGTH = 5000
 
 # 导入新的标注API路由
 try:
@@ -230,6 +235,60 @@ def _mark_tokens_selectable(data):
                         token['selectable'] = False
     return data
 
+def _convert_tokens_from_payload(tokens_payload):
+    """将前端传入的 token 列表转换为 Token 数据类"""
+    if not tokens_payload:
+        return tuple()
+    converted = []
+    for token in tokens_payload:
+        if isinstance(token, NewToken):
+            converted.append(token)
+        elif isinstance(token, dict):
+            token_data = {field: token.get(field) for field in NewToken.__dataclass_fields__.keys()}
+            token_data['token_body'] = token.get('token_body', '')
+            token_data['token_type'] = token.get('token_type', 'text')
+            converted.append(NewToken(**token_data))
+        else:
+            converted.append(token)
+    return tuple(converted)
+
+def _convert_word_tokens_from_payload(word_tokens_payload):
+    """将前端传入的 word token 列表转换为 WordToken 数据类"""
+    if not word_tokens_payload:
+        return None
+    converted = []
+    for word_token in word_tokens_payload:
+        if isinstance(word_token, WordToken):
+            converted.append(word_token)
+        elif isinstance(word_token, dict):
+            converted.append(
+                WordToken(
+                    word_token_id=word_token.get('word_token_id'),
+                    token_ids=tuple(word_token.get('token_ids', [])),
+                    word_body=word_token.get('word_body', ''),
+                    pos_tag=word_token.get('pos_tag'),
+                    lemma=word_token.get('lemma'),
+                    linked_vocab_id=word_token.get('linked_vocab_id'),
+                )
+            )
+    return tuple(converted) if converted else None
+
+def _derive_language_context(sentence_data: dict):
+    language = sentence_data.get('language')
+    language_code = sentence_data.get('language_code')
+    is_non_whitespace = sentence_data.get('is_non_whitespace')
+    if not language_code and language:
+        try:
+            language_code = lc_get_language_code(language)
+        except Exception:
+            language_code = None
+    if is_non_whitespace is None and language_code:
+        try:
+            is_non_whitespace = lc_is_non_whitespace_language(language_code)
+        except Exception:
+            is_non_whitespace = None
+    return language, language_code, is_non_whitespace
+
 # 创建FastAPI应用
 app = FastAPI(title="AI Language Learning API", version="1.0.0")
 
@@ -351,7 +410,15 @@ async def debug_db_info():
 # 初始化全局 SessionState（使用完整的 SessionState 类）
 from backend.assistants.chat_info.session_state import SessionState
 from backend.assistants.chat_info.selected_token import SelectedToken
-from backend.data_managers.data_classes_new import Sentence as NewSentence
+from backend.data_managers.data_classes_new import (
+    Sentence as NewSentence,
+    Token as NewToken,
+    WordToken,
+)
+from backend.preprocessing.language_classification import (
+    get_language_code as lc_get_language_code,
+    is_non_whitespace_language as lc_is_non_whitespace_language,
+)
 
 session_state = SessionState()
 print("[OK] SessionState singleton initialized")
@@ -388,7 +455,7 @@ except Exception as e:
     print("⚠️ Continuing with empty data")
 
 # 将处理后的文章数据导入到数据库
-def import_article_to_database(result: dict, article_id: int, user_id, language: str = None):
+def import_article_to_database(result: dict, article_id: int, user_id, language: str = None, title: str = None):
     """
     将处理后的文章数据导入到数据库或返回游客数据
     
@@ -409,9 +476,11 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
         # 游客模式：返回文章数据，由前端保存到 localStorage
         print(f"👤 [Import] 游客模式，返回文章数据供前端保存 (guest_id: {user_id}, language: {language})")
         
+        # 优先使用传入的title，如果没有则使用result中的
+        final_title = title or result.get('text_title', 'Untitled Article')
         article_data = {
             "article_id": article_id,
-            "title": result.get('text_title', 'Untitled Article'),
+            "title": final_title,
             "language": language,
             "total_sentences": result.get('total_sentences', 0),
             "total_tokens": result.get('total_tokens', 0),
@@ -439,37 +508,42 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
             
             from backend.data_managers import OriginalTextManagerDB
             from database_system.business_logic.crud import TokenCRUD
-            from database_system.business_logic.models import TokenType
+            from database_system.business_logic.models import TokenType, WordToken
+            from sqlalchemy import func
             
             text_manager = OriginalTextManagerDB(session)
             token_crud = TokenCRUD(session)
             
-            # 1. 创建文章（使用指定的article_id）
-            # 先检查文章是否已存在且属于该用户
-            existing_text = text_manager.get_text_by_id(article_id, include_sentences=False)
-            if existing_text:
-                # 检查文章是否属于该用户（通过数据库查询验证）
-                from database_system.business_logic.models import OriginalText
-                text_model = session.query(OriginalText).filter(
-                    OriginalText.text_id == article_id,
-                    OriginalText.user_id == user_id
-                ).first()
-                
-                if text_model:
-                    print(f"⚠️ [Import] 文章 {article_id} 已存在且属于用户 {user_id}，跳过创建")
-                else:
-                    print(f"❌ [Import] 文章 {article_id} 已存在但属于其他用户，无法导入")
-                    return False
+            # 1. 创建或更新文章（使用指定的article_id）
+            # 文章记录应该已经在上传时创建（状态为"processing"），这里需要更新状态为"completed"
+            from database_system.business_logic.models import OriginalText
+            text_model = session.query(OriginalText).filter(
+                OriginalText.text_id == article_id,
+                OriginalText.user_id == user_id
+            ).first()
+            
+            if text_model:
+                # 更新文章信息（优先使用传入的title，如果没有则使用result中的，最后才使用现有的）
+                # 这样可以确保用户输入的标题不会被覆盖
+                if title:
+                    text_model.text_title = title
+                elif result.get('text_title'):
+                    text_model.text_title = result.get('text_title')
+                # 如果都没有，保持现有的标题
+                text_model.language = language or text_model.language
+                text_model.processing_status = 'completed'  # 更新状态为"已完成"
+                session.commit()  # 确保状态更新被提交
+                print(f"✅ [Import] 更新文章状态为已完成: {text_model.text_title} (ID: {article_id}, User: {user_id}, Language: {language})")
             else:
-                # 创建文章记录（使用text_manager.add_text方法，支持language参数）
-                # 注意：由于需要指定article_id，我们不能直接使用add_text（它使用数据库自增ID）
-                # 所以我们需要直接创建OriginalText模型并指定text_id
-                from database_system.business_logic.models import OriginalText
+                # 如果文章记录不存在（可能是旧数据），创建新记录
+                # 优先使用传入的title
+                final_title = title or result.get('text_title', 'Untitled Article')
                 text_model = OriginalText(
                     text_id=article_id,
-                    text_title=result.get('text_title', 'Untitled Article'),
+                    text_title=final_title,
                     user_id=user_id,
-                    language=language
+                    language=language,
+                    processing_status='completed'
                 )
                 session.add(text_model)
                 session.flush()  # 刷新以获取ID
@@ -477,8 +551,27 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
             
             # 2. 导入句子和tokens
             sentences = result.get('sentences', [])
+            print(f"🔍 [Import] 预处理结果检查: sentences数量={len(sentences)}")
+            if sentences:
+                first_sentence = sentences[0]
+                print(f"🔍 [Import] 第一个句子检查: sentence_id={first_sentence.get('sentence_id')}, 有tokens={bool(first_sentence.get('tokens'))}, 有word_tokens={bool(first_sentence.get('word_tokens'))}")
+                if first_sentence.get('word_tokens'):
+                    print(f"🔍 [Import] 第一个句子的word_tokens数量: {len(first_sentence.get('word_tokens', []))}")
+                    if len(first_sentence.get('word_tokens', [])) > 0:
+                        print(f"🔍 [Import] 第一个word_token示例: {first_sentence.get('word_tokens')[0]}")
+            
+            # 🔧 修复：查询数据库中当前最大的 word_token_id，确保新分配的 ID 全局唯一
+            from database_system.business_logic.models import WordToken
+            max_word_token_id = session.query(func.max(WordToken.word_token_id)).scalar() or 0
+            print(f"🔍 [Import] 数据库中当前最大 word_token_id: {max_word_token_id}")
+            next_word_token_id = max_word_token_id + 1
+            
+            # 创建 word_token_id 映射表：预处理生成的 ID -> 新的全局唯一 ID
+            word_token_id_mapping = {}
+            
             total_sentences = 0
             total_tokens = 0
+            total_word_tokens = 0
             
             for sentence_data in sentences:
                 sentence_id = sentence_data.get('sentence_id', total_sentences + 1)
@@ -498,9 +591,53 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
                 )
                 total_sentences += 1
                 
-                # 3. 导入tokens
+                # 3. 先导入 word_tokens（仅用于非空格语言），确保在创建 tokens 时可以引用
+                word_tokens = sentence_data.get('word_tokens', [])
+                print(f"🔍 [Import] 句子 {sentence_id} 的 word_tokens: {len(word_tokens) if word_tokens else 0} 个")
+                for word_token_data in word_tokens:
+                    old_word_token_id = word_token_data.get('word_token_id')  # 预处理生成的 ID（可能从 1 开始）
+                    word_body = word_token_data.get('word_body', '')
+                    token_ids = word_token_data.get('token_ids', [])
+                    
+                    if not old_word_token_id or not word_body or not token_ids:
+                        print(f"⚠️ [Import] 跳过无效的 word_token: word_token_id={old_word_token_id}, word_body={word_body}, token_ids={token_ids}")
+                        continue
+                    
+                    # 🔧 修复：分配新的全局唯一 word_token_id
+                    if old_word_token_id not in word_token_id_mapping:
+                        new_word_token_id = next_word_token_id
+                        word_token_id_mapping[old_word_token_id] = new_word_token_id
+                        next_word_token_id += 1
+                    else:
+                        new_word_token_id = word_token_id_mapping[old_word_token_id]
+                    
+                    # 创建 word_token（使用新的全局唯一 ID）
+                    try:
+                        word_token = WordToken(
+                            word_token_id=new_word_token_id,
+                            text_id=article_id,
+                            sentence_id=sentence_id,
+                            word_body=word_body,
+                            token_ids=token_ids,  # JSON 类型，直接传递列表
+                            pos_tag=word_token_data.get('pos_tag'),
+                            lemma=word_token_data.get('lemma'),
+                            linked_vocab_id=word_token_data.get('linked_vocab_id')
+                        )
+                        session.add(word_token)
+                        total_word_tokens += 1
+                        print(f"✅ [Import] 创建 word_token: old_id={old_word_token_id} -> new_id={new_word_token_id}, word_body={word_body}, token_ids={token_ids}")
+                    except Exception as wt_e:
+                        print(f"❌ [Import] 创建 word_token 失败: {wt_e}")
+                        import traceback
+                        traceback.print_exc()
+                
+                # 4. 导入tokens（在 word_tokens 之后，以便可以引用 word_token_id）
                 tokens = sentence_data.get('tokens', [])
-                for token_data in tokens:
+                tokens_count = len(tokens)
+                if tokens_count > 0:
+                    print(f"📝 [Import] 开始导入句子 {sentence_id} 的 {tokens_count} 个tokens...")
+                
+                for idx, token_data in enumerate(tokens):
                     token_body = token_data.get('token_body', token_data.get('text', ''))
                     token_type_str = token_data.get('token_type', 'TEXT')
                     
@@ -519,6 +656,14 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
                         token_type_name = 'TEXT'
                     
                     sentence_token_id = token_data.get('sentence_token_id', token_data.get('token_id'))
+                    old_word_token_id = token_data.get('word_token_id')  # 🔧 获取预处理生成的 word_token_id
+                    
+                    # 🔧 修复：将预处理生成的 word_token_id 映射到新的全局唯一 ID
+                    new_word_token_id = None
+                    if old_word_token_id is not None:
+                        new_word_token_id = word_token_id_mapping.get(old_word_token_id)
+                        if new_word_token_id is None:
+                            print(f"⚠️ [Import] token 引用的 word_token_id={old_word_token_id} 未找到映射，跳过 word_token_id 引用")
                     
                     # 创建token（传递枚举名称字符串，数据库期望枚举名称）
                     token_crud.create(
@@ -528,27 +673,80 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
                         token_type=token_type_name,  # 传递枚举名称字符串（'TEXT', 'PUNCTUATION', 'SPACE'）
                         sentence_token_id=sentence_token_id,
                         pos_tag=token_data.get('pos_tag'),
-                        lemma=token_data.get('lemma')
+                        lemma=token_data.get('lemma'),
+                        word_token_id=new_word_token_id  # 🔧 使用映射后的全局唯一 word_token_id
                     )
                     total_tokens += 1
+                    
+                    # 🔧 添加更频繁的进度日志（每 1000 个 tokens 或每 10 个句子打印一次）
+                    if total_tokens % 1000 == 0:
+                        print(f"📊 [Import] 进度: {total_sentences} 个句子，{total_tokens} 个tokens，{total_word_tokens} 个word_tokens...")
+                        # 🔧 每 1000 个 tokens 执行一次 flush，减少内存使用并提高性能
+                        session.flush()
+                    elif total_sentences % 10 == 0 and idx == 0:  # 每 10 个句子的第一个 token 时打印
+                        print(f"📊 [Import] 进度: {total_sentences} 个句子，{total_tokens} 个tokens，{total_word_tokens} 个word_tokens...")
+                        session.flush()  # 每 10 个句子也 flush 一次
                 
-                if total_sentences % 50 == 0:
-                    print(f"📊 [Import] 已导入 {total_sentences} 个句子，{total_tokens} 个tokens...")
+                # 每完成一个句子，如果句子有很多 tokens，打印完成信息
+                if tokens_count > 100:
+                    print(f"✅ [Import] 句子 {sentence_id} 完成: {tokens_count} 个tokens")
             
+            # 🔧 在提交前打印最终统计
+            print(f"💾 [Import] 准备提交到数据库: {total_sentences} 个句子，{total_tokens} 个tokens，{total_word_tokens} 个word_tokens...")
+            import time
+            commit_start = time.time()
             session.commit()
-            print(f"✅ [Import] 导入完成: {total_sentences} 个句子，{total_tokens} 个tokens (User: {user_id}, Language: {language})")
+            commit_elapsed = (time.time() - commit_start) * 1000
+            print(f"✅ [Import] 数据库提交完成，耗时: {commit_elapsed:.2f}ms")
+            print(f"✅ [Import] 导入完成: {total_sentences} 个句子，{total_tokens} 个tokens，{total_word_tokens} 个word_tokens (User: {user_id}, Language: {language})")
             return True
             
         except Exception as e:
             session.rollback()
+            # 导入失败时，更新状态为"failed"
+            try:
+                from database_system.business_logic.models import OriginalText
+                text_model = session.query(OriginalText).filter(
+                    OriginalText.text_id == article_id,
+                    OriginalText.user_id == user_id
+                ).first()
+                if text_model:
+                    text_model.processing_status = 'failed'
+                    session.commit()
+                    print(f"⚠️ [Import] 导入失败，已更新文章状态为失败: {article_id}")
+            except Exception as update_error:
+                session.rollback()
+                print(f"⚠️ [Import] 更新文章状态失败: {update_error}")
             raise e
         finally:
             session.close()
-            
+        
     except Exception as e:
         print(f"❌ [Import] 导入文章到数据库失败: {e}")
         import traceback
         traceback.print_exc()
+        # 如果是在外层异常，尝试更新状态
+        try:
+            from database_system.database_manager import DatabaseManager
+            from database_system.business_logic.models import OriginalText
+            db_manager = DatabaseManager('development')
+            session = db_manager.get_session()
+            try:
+                text_model = session.query(OriginalText).filter(
+                    OriginalText.text_id == article_id,
+                    OriginalText.user_id == user_id
+                ).first()
+                if text_model:
+                    text_model.processing_status = 'failed'
+                    session.commit()
+                    print(f"⚠️ [Import] 导入失败，已更新文章状态为失败: {article_id}")
+            except Exception as update_error:
+                session.rollback()
+                print(f"⚠️ [Import] 更新文章状态失败: {update_error}")
+            finally:
+                session.close()
+        except Exception as session_error:
+            print(f"⚠️ [Import] 无法获取数据库会话: {session_error}")
         return False
 
 # 异步保存数据的辅助函数
@@ -575,13 +773,19 @@ async def set_session_sentence(payload: dict):
     try:
         print(f"[Session] Setting session sentence")
         sentence_data = payload.get('sentence', payload)
+        tokens_payload = sentence_data.get('tokens', [])
+        word_tokens_payload = sentence_data.get('word_tokens')
         sentence = NewSentence(
             text_id=sentence_data['text_id'],
             sentence_id=sentence_data['sentence_id'],
             sentence_body=sentence_data['sentence_body'],
-            tokens=tuple(sentence_data.get('tokens', []))
+            sentence_difficulty_level=sentence_data.get('sentence_difficulty_level'),
+            tokens=_convert_tokens_from_payload(tokens_payload),
+            word_tokens=_convert_word_tokens_from_payload(word_tokens_payload)
         )
         session_state.set_current_sentence(sentence)
+        language, language_code, is_non_whitespace = _derive_language_context(sentence_data)
+        session_state.set_language_context(language, language_code, is_non_whitespace)
         return {"success": True, "message": "Sentence context set"}
     except Exception as e:
         print(f"[Session] Error setting sentence: {e}")
@@ -626,13 +830,19 @@ async def update_session_context(payload: dict):
             print(f"  - sentence_id: {sentence_data.get('sentence_id')}")
             print(f"  - sentence_body: {sentence_data.get('sentence_body', '')[:50]}...")
             
+            tokens_payload = sentence_data.get('tokens', [])
+            word_tokens_payload = sentence_data.get('word_tokens')
             current_sentence = NewSentence(
                 text_id=sentence_data['text_id'],
                 sentence_id=sentence_data['sentence_id'],
                 sentence_body=sentence_data['sentence_body'],
-                tokens=tuple(sentence_data.get('tokens', []))
+                sentence_difficulty_level=sentence_data.get('sentence_difficulty_level'),
+                tokens=_convert_tokens_from_payload(tokens_payload),
+                word_tokens=_convert_word_tokens_from_payload(word_tokens_payload)
             )
             session_state.set_current_sentence(current_sentence)
+            language, language_code, is_non_whitespace = _derive_language_context(sentence_data)
+            session_state.set_language_context(language, language_code, is_non_whitespace)
             updated_fields.append('sentence')
         
         # 更新 token
@@ -1413,8 +1623,44 @@ async def upload_file(
         else:
             return create_error_response(f"不支持的文件格式: {file.filename}")
         
+        # 检查内容长度
+        if len(text_content) > MAX_ARTICLE_LENGTH:
+            print(f"⚠️ [Upload] 文件内容长度超出限制: {len(text_content)} > {MAX_ARTICLE_LENGTH}")
+            return create_error_response(
+                f"文章长度超出限制（{len(text_content)} 字符 > {MAX_ARTICLE_LENGTH} 字符）",
+                data={
+                    "error_code": "CONTENT_TOO_LONG",
+                    "content_length": len(text_content),
+                    "max_length": MAX_ARTICLE_LENGTH,
+                    "original_content": text_content  # 返回原始内容供前端截取
+                }
+            )
+        
         # 生成文章ID
         article_id = int(datetime.now().timestamp())
+        
+        # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import OriginalText
+        db_manager = DatabaseManager('development')
+        session = db_manager.get_session()
+        try:
+            # 创建文章记录（状态为"processing"）
+            text_model = OriginalText(
+                text_id=article_id,
+                text_title=title,
+                user_id=user_id,
+                language=language,
+                processing_status='processing'
+            )
+            session.add(text_model)
+            session.commit()
+            print(f"✅ [Upload] 创建文章记录（处理中）: {title} (ID: {article_id})")
+        except Exception as e:
+            session.rollback()
+            print(f"⚠️ [Upload] 创建文章记录失败: {e}")
+        finally:
+            session.close()
         
         # 使用简单文章处理器处理文章
         if process_article:
@@ -1424,11 +1670,23 @@ async def upload_file(
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
             
-            # 保存到数据库
+            # 保存到数据库（会更新状态为"completed"）
             print(f"💾 [Upload] 开始导入文章到数据库...")
-            import_success = import_article_to_database(result, article_id, user_id, language)
+            import_success = import_article_to_database(result, article_id, user_id, language, title=title)
             if not import_success:
                 print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
+                # 如果导入失败，更新状态为"failed"
+                session = db_manager.get_session()
+                try:
+                    text_model = session.query(OriginalText).filter(OriginalText.text_id == article_id).first()
+                    if text_model:
+                        text_model.processing_status = 'failed'
+                        session.commit()
+                except Exception as e:
+                    session.rollback()
+                    print(f"⚠️ [Upload] 更新文章状态失败: {e}")
+                finally:
+                    session.close()
             
             return create_success_response(
                 data={
@@ -1475,18 +1733,63 @@ async def upload_url(
         if not language or language not in ['中文', '英文', '德文']:
             return create_error_response("语言参数无效，请选择：中文、英文、德文")
         
-        # 抓取URL内容（添加User-Agent避免被网站阻止）
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        response = requests.get(url, timeout=30, headers=headers)
-        response.raise_for_status()
+        # 🔧 使用 HTML 提取器从 URL 获取正文
+        if extract_main_text_from_url:
+            print(f"🔍 [Upload] 使用 HTML 提取器从 URL 提取正文...")
+            text_content = extract_main_text_from_url(url)
+            
+            if not text_content or not text_content.strip():
+                return create_error_response("无法从 URL 提取正文内容，请检查 URL 是否有效")
+            
+            print(f"✅ [Upload] HTML 提取成功，正文长度: {len(text_content)} 字符")
+        else:
+            # Fallback：简单抓取（不推荐，但作为备用）
+            print(f"⚠️ [Upload] HTML 提取器未可用，使用简单抓取（不推荐）")
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(url, timeout=30, headers=headers)
+            response.raise_for_status()
+            text_content = response.text
         
-        # 简单提取文本内容（这里可以集成更复杂的HTML解析）
-        text_content = response.text
+        # 检查内容长度
+        if len(text_content) > MAX_ARTICLE_LENGTH:
+            print(f"⚠️ [Upload] 内容长度超出限制: {len(text_content)} > {MAX_ARTICLE_LENGTH}")
+            return create_error_response(
+                f"文章长度超出限制（{len(text_content)} 字符 > {MAX_ARTICLE_LENGTH} 字符）",
+                data={
+                    "error_code": "CONTENT_TOO_LONG",
+                    "content_length": len(text_content),
+                    "max_length": MAX_ARTICLE_LENGTH,
+                    "original_content": text_content  # 返回原始内容供前端截取
+                }
+            )
         
         # 生成文章ID
         article_id = int(datetime.now().timestamp())
+        
+        # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import OriginalText
+        db_manager = DatabaseManager('development')
+        session = db_manager.get_session()
+        try:
+            # 创建文章记录（状态为"processing"）
+            text_model = OriginalText(
+                text_id=article_id,
+                text_title=title,
+                user_id=user_id,
+                language=language,
+                processing_status='processing'
+            )
+            session.add(text_model)
+            session.commit()
+            print(f"✅ [Upload] 创建文章记录（处理中）: {title} (ID: {article_id})")
+        except Exception as e:
+            session.rollback()
+            print(f"⚠️ [Upload] 创建文章记录失败: {e}")
+        finally:
+            session.close()
         
         # 使用简单文章处理器处理文章
         if process_article:
@@ -1496,9 +1799,9 @@ async def upload_url(
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
             
-            # 保存到数据库或返回游客数据
+            # 保存到数据库或返回游客数据（会更新状态为"completed"）
             print(f"💾 [Upload] 开始导入文章...")
-            import_result = import_article_to_database(result, article_id, user_id, language)
+            import_result = import_article_to_database(result, article_id, user_id, language, title=title)
             
             # 处理导入结果
             if isinstance(import_result, dict) and import_result.get('is_guest'):
@@ -1519,7 +1822,7 @@ async def upload_url(
                     message=f"URL内容抓取并处理成功: {title}（游客模式，请前端保存到本地）"
                 )
             elif import_result is True:
-                # 正式用户模式：已成功保存到数据库
+                # 正式用户模式：已成功保存到数据库（状态已在import_article_to_database中更新为"completed"）
                 print(f"✅ [Upload] 文章已成功导入数据库")
                 return create_success_response(
                     data={
@@ -1534,8 +1837,19 @@ async def upload_url(
                     message=f"URL内容抓取并处理成功: {title}"
                 )
             else:
-                # 导入失败
+                # 导入失败，更新状态为"failed"
                 print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
+                session = db_manager.get_session()
+                try:
+                    text_model = session.query(OriginalText).filter(OriginalText.text_id == article_id).first()
+                    if text_model:
+                        text_model.processing_status = 'failed'
+                        session.commit()
+                except Exception as e:
+                    session.rollback()
+                    print(f"⚠️ [Upload] 更新文章状态失败: {e}")
+                finally:
+                    session.close()
                 return create_success_response(
                     data={
                         "article_id": article_id,
@@ -1550,12 +1864,40 @@ async def upload_url(
                     message=f"URL内容抓取并处理成功: {title}（数据库导入失败）"
                 )
         else:
+            # 预处理系统未初始化，更新状态为"failed"
+            print(f"❌ [Upload] 预处理系统未初始化")
+            session = db_manager.get_session()
+            try:
+                text_model = session.query(OriginalText).filter(OriginalText.text_id == article_id).first()
+                if text_model:
+                    text_model.processing_status = 'failed'
+                    session.commit()
+            except Exception as e:
+                session.rollback()
+                print(f"⚠️ [Upload] 更新文章状态失败: {e}")
+            finally:
+                session.close()
             return create_error_response("预处理系统未初始化")
             
     except Exception as e:
         print(f"❌ [Upload] URL内容抓取失败: {e}")
         import traceback
         traceback.print_exc()
+        # 发生异常时，更新状态为"failed"
+        try:
+            session = db_manager.get_session()
+            try:
+                text_model = session.query(OriginalText).filter(OriginalText.text_id == article_id).first()
+                if text_model:
+                    text_model.processing_status = 'failed'
+                    session.commit()
+            except Exception as update_error:
+                session.rollback()
+                print(f"⚠️ [Upload] 更新文章状态失败: {update_error}")
+            finally:
+                session.close()
+        except Exception as session_error:
+            print(f"⚠️ [Upload] 无法获取数据库会话: {session_error}")
         return create_error_response(f"URL内容抓取失败: {str(e)}")
 
 # 新增：文字输入处理API
@@ -1564,6 +1906,7 @@ async def upload_text(
     text: str = Form(...),
     title: str = Form("Text Article"),
     language: str = Form(...),
+    skip_length_check: Optional[str] = Form(None),  # 是否跳过长度检查（用于截取后的内容）
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -1578,6 +1921,9 @@ async def upload_text(
     try:
         user_id = current_user.user_id
         print(f"📤 [Upload] 用户 {user_id} 上传文本, 标题: {title}, 语言: {language}")
+        print(f"📏 [Upload] 接收到的文本长度: {len(text)} 字符")
+        print(f"📏 [Upload] 文本前100字符: {text[:100]}")
+        print(f"📏 [Upload] 文本后100字符: {text[-100:]}")
         
         # 验证语言参数
         if not language or language not in ['中文', '英文', '德文']:
@@ -1586,8 +1932,50 @@ async def upload_text(
         if not text.strip():
             return create_error_response("文字内容不能为空")
         
+        # 检查 skip_length_check 参数（FormData 传递的是字符串）
+        should_skip_check = skip_length_check and skip_length_check.lower() in ('true', '1', 'yes')
+        
+        # 检查内容长度（如果 skip_length_check 为 True，则跳过检查）
+        if not should_skip_check and len(text) > MAX_ARTICLE_LENGTH:
+            print(f"⚠️ [Upload] 文本内容长度超出限制: {len(text)} > {MAX_ARTICLE_LENGTH}")
+            return create_error_response(
+                f"文章长度超出限制（{len(text)} 字符 > {MAX_ARTICLE_LENGTH} 字符）",
+                data={
+                    "error_code": "CONTENT_TOO_LONG",
+                    "content_length": len(text),
+                    "max_length": MAX_ARTICLE_LENGTH,
+                    "original_content": text  # 返回原始内容供前端截取
+                }
+            )
+        
+        if should_skip_check:
+            print(f"ℹ️ [Upload] 跳过长度检查（截取后的内容），实际长度: {len(text)} 字符")
+        
         # 生成文章ID
         article_id = int(datetime.now().timestamp())
+        
+        # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import OriginalText
+        db_manager = DatabaseManager('development')
+        session = db_manager.get_session()
+        try:
+            # 创建文章记录（状态为"processing"）
+            text_model = OriginalText(
+                text_id=article_id,
+                text_title=title,
+                user_id=user_id,
+                language=language,
+                processing_status='processing'
+            )
+            session.add(text_model)
+            session.commit()
+            print(f"✅ [Upload] 创建文章记录（处理中）: {title} (ID: {article_id})")
+        except Exception as e:
+            session.rollback()
+            print(f"⚠️ [Upload] 创建文章记录失败: {e}")
+        finally:
+            session.close()
         
         # 使用简单文章处理器处理文章
         if process_article:
@@ -1597,9 +1985,9 @@ async def upload_text(
             # 保存到文件系统
             save_structured_data(result, RESULT_DIR)
             
-            # 保存到数据库或返回游客数据
+            # 保存到数据库或返回游客数据（会更新状态为"completed"）
             print(f"💾 [Upload] 开始导入文章...")
-            import_result = import_article_to_database(result, article_id, user_id, language)
+            import_result = import_article_to_database(result, article_id, user_id, language, title=title)
             
             # 处理导入结果
             if isinstance(import_result, dict) and import_result.get('is_guest'):
@@ -1633,8 +2021,19 @@ async def upload_text(
                     message=f"文字内容处理成功: {title}"
                 )
             else:
-                # 导入失败
+                # 导入失败，更新状态为"failed"
                 print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
+                session = db_manager.get_session()
+                try:
+                    text_model = session.query(OriginalText).filter(OriginalText.text_id == article_id).first()
+                    if text_model:
+                        text_model.processing_status = 'failed'
+                        session.commit()
+                except Exception as e:
+                    session.rollback()
+                    print(f"⚠️ [Upload] 更新文章状态失败: {e}")
+                finally:
+                    session.close()
                 return create_success_response(
                     data={
                         "article_id": article_id,

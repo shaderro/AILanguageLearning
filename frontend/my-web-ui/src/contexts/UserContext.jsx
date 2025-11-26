@@ -8,7 +8,7 @@
  * - 自动从 localStorage 恢复登录状态
  * - 游客模式和数据迁移
  */
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import authService from '../modules/auth/services/authService'
 import guestDataManager from '../utils/guestDataManager'
 
@@ -23,9 +23,16 @@ export function UserProvider({ children }) {
   const [isGuest, setIsGuest] = useState(false) // 是否为游客模式
   const [pendingGuestId, setPendingGuestId] = useState(null) // 待迁移的游客ID
   const [showMigrationDialog, setShowMigrationDialog] = useState(false) // 是否显示迁移对话框
+  const isInitializedRef = useRef(false) // 🔧 使用 ref 标记是否已经初始化，避免重复初始化
 
   // 初始化：从 localStorage 恢复登录状态或创建游客ID
   useEffect(() => {
+    // 🔧 如果已经初始化过，直接返回，避免重复初始化
+    if (isInitializedRef.current) {
+      console.log('⚠️ [UserContext] 已经初始化，跳过重复初始化')
+      return
+    }
+    
     const initAuth = async () => {
       const { userId: savedUserId, token: savedToken } = authService.getAuth()
       
@@ -33,23 +40,53 @@ export function UserProvider({ children }) {
         console.log('🔍 [UserContext] 检测到已保存的登录信息')
         
         try {
-          // 验证 token 是否有效
-          const user = await authService.getCurrentUser(savedToken)
+          // 验证 token 是否有效（添加超时处理，增加超时时间避免预处理过程中被登出）
+          const user = await Promise.race([
+            authService.getCurrentUser(savedToken),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('验证超时')), 120000) // 增加到2分钟
+            )
+          ])
           console.log('✅ [UserContext] Token 有效，自动登录:', user)
           
+          // 🔧 确保状态更新是同步的，避免在更新过程中被其他逻辑干扰
           setUserId(parseInt(savedUserId))
           setToken(savedToken)
           setIsAuthenticated(true)
           setIsGuest(false)
+          isInitializedRef.current = true
+          
+          // 🔧 确保状态已设置完成
+          console.log('✅ [UserContext] 登录状态已设置，userId:', savedUserId)
         } catch (error) {
-          console.log('⚠️ [UserContext] Token 无效，清除登录信息')
-          authService.clearAuth()
-          // Token 无效，创建游客模式
-          createGuestUser()
+          console.log('⚠️ [UserContext] Token 验证失败:', error.message || error)
+          // 🔧 修改逻辑：如果是网络错误或超时，不切换模式，保持登录状态
+          // 只有在明确的认证错误（401）且不是网络问题时，才考虑切换
+          const isNetworkError = error.message?.includes('网络') || 
+                                 error.message?.includes('timeout') || 
+                                 error.message?.includes('超时') ||
+                                 error.message?.includes('Network Error') ||
+                                 !error.response
+          
+          if (isNetworkError) {
+            // 网络错误：保持登录状态，不清除信息
+            console.log('⚠️ [UserContext] 网络错误，保持登录状态（不清除 localStorage）')
+            setUserId(parseInt(savedUserId))
+            setToken(savedToken)
+            setIsAuthenticated(true)
+            setIsGuest(false)
+            isInitializedRef.current = true
+          } else {
+            // 认证错误：切换到游客模式，但不清除 localStorage
+            console.log('⚠️ [UserContext] Token 验证失败，保持登录信息但切换到游客模式（不清除 localStorage）')
+            createGuestUser()
+            isInitializedRef.current = true
+          }
         }
       } else {
         // 没有登录信息，创建游客模式
         createGuestUser()
+        isInitializedRef.current = true
       }
       
       setIsLoading(false)
@@ -81,11 +118,11 @@ export function UserProvider({ children }) {
   /**
    * 登录
    */
-  const login = async (inputUserId, inputPassword) => {
+  const login = async (inputUserId, inputPassword, inputEmail = null) => {
     try {
-      console.log('🔐 [UserContext] 登录中...', { userId: inputUserId })
+      console.log('🔐 [UserContext] 登录中...', { userId: inputUserId, email: inputEmail })
       
-      const result = await authService.login(inputUserId, inputPassword)
+      const result = await authService.login(inputUserId, inputPassword, inputEmail)
       
       console.log('✅ [UserContext] 登录成功:', result)
       
@@ -123,11 +160,11 @@ export function UserProvider({ children }) {
   /**
    * 注册
    */
-  const register = async (inputPassword) => {
+  const register = async (inputPassword, inputEmail) => {
     try {
-      console.log('📝 [UserContext] 注册中...')
+      console.log('📝 [UserContext] 注册中...', { email: inputEmail })
       
-      const result = await authService.register(inputPassword)
+      const result = await authService.register(inputPassword, inputEmail)
       
       console.log('✅ [UserContext] 注册成功:', result)
       
@@ -152,7 +189,13 @@ export function UserProvider({ children }) {
         setShowMigrationDialog(true)
       }
       
-      return { success: true, userId: result.user_id, token: result.access_token }
+      return { 
+        success: true, 
+        userId: result.user_id, 
+        token: result.access_token,
+        emailUnique: result.email_unique,
+        emailCheckMessage: result.email_check_message
+      }
     } catch (error) {
       console.error('❌ [UserContext] 注册失败:', error)
       return { 

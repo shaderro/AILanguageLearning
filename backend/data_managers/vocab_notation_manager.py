@@ -70,7 +70,8 @@ class VocabNotationManager:
         return os.path.join(self.json_dir, f"{user_id}.json")
     
     def create_vocab_notation(self, user_id: str, text_id: int, sentence_id: int, 
-                             token_id: int, vocab_id: Optional[int] = None) -> bool:
+                             token_id: int, vocab_id: Optional[int] = None,
+                             word_token_id: Optional[int] = None) -> bool:
         """
         创建词汇标注
         
@@ -80,6 +81,7 @@ class VocabNotationManager:
             sentence_id: 句子ID
             token_id: Token ID（当前句子中哪个token）
             vocab_id: 词汇ID（可选）
+            word_token_id: Word Token ID（可选，仅用于非空格语言的 word token 级别标注）
         """
         print(f"[INFO] [VocabNotation] create_vocab_notation called:")
         print(f"  - user_id: {user_id}")
@@ -87,6 +89,7 @@ class VocabNotationManager:
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - token_id: {token_id}")
         print(f"  - vocab_id: {vocab_id}")
+        print(f"  - word_token_id: {word_token_id}")
         
         try:
             vocab_notation = VocabNotation(
@@ -95,6 +98,7 @@ class VocabNotationManager:
                 sentence_id=sentence_id,
                 token_id=token_id,
                 vocab_id=vocab_id,
+                word_token_id=word_token_id,  # 新增
                 created_at=datetime.now().isoformat()
             )
             
@@ -131,7 +135,8 @@ class VocabNotationManager:
                     text_id=vocab_notation.text_id,
                     sentence_id=vocab_notation.sentence_id,
                     token_id=vocab_notation.token_id,
-                    vocab_id=vocab_notation.vocab_id
+                    vocab_id=vocab_notation.vocab_id,
+                    word_token_id=vocab_notation.word_token_id  # 新增：传递 word_token_id
                 )
                 print(f"[OK] [VocabNotation] Created vocab notation in ORM: {vocab_notation.text_id}:{vocab_notation.sentence_id}:{vocab_notation.token_id}")
                 session.close()

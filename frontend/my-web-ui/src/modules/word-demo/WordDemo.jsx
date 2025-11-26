@@ -8,6 +8,7 @@ import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
 import ReviewCard from '../shared/components/ReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
+import { useUIText } from '../../i18n/useUIText'
 
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
@@ -23,6 +24,7 @@ function WordDemo() {
   
   // 从 LanguageContext 获取选择的语言
   const { selectedLanguage } = useLanguage()
+  const t = useUIText()
 
   // 学习状态过滤
   const [learnStatus, setLearnStatus] = useState('all')
@@ -148,7 +150,7 @@ function WordDemo() {
     })
     
     if (sortedList.length === 0) {
-      const message = '当前筛选条件下没有词汇，请更改筛选选项后再试'
+      const message = t('当前筛选条件下没有词汇，请更改筛选选项后再试')
       if (window.confirm(message)) {
         // 用户点击确定后不做任何操作，只是关闭提示
       }
@@ -230,15 +232,15 @@ function WordDemo() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-lg">加载词汇数据中...</div>
+        <div className="text-lg">{t('加载词汇数据中...')}</div>
       </div>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-red-500">加载失败: {error.message}</div>
+      <div className="flex items-center justify-center.h-full">
+        <div className="text-red-500">{t('加载失败')}: {error?.message}</div>
       </div>
     )
   }
@@ -334,13 +336,16 @@ function WordDemo() {
   console.log('🔍 [WordDemo] 文章数据:', articles.length, '篇', articles.length > 0 ? articles[0] : '')
   
   const articleOptions = [
-    { value: 'all', label: '全部文章' },
+    { value: 'all', label: t('全部文章') },
     ...articles
-      .filter(article => article && (article.id || article.text_id)) // 过滤掉无效的文章
-      .map(article => ({
-        value: String(article.id || article.text_id),
-        label: article.title || article.text_title || `文章 ${article.id || article.text_id}`
-      }))
+      .filter(article => article && (article.id || article.text_id))
+      .map((article) => {
+        const fallbackLabel = `${t('文章')} ${article.id || article.text_id}`
+        return {
+          value: String(article.id || article.text_id),
+          label: article.title || article.text_title || fallbackLabel
+        }
+      })
   ]
   
   console.log('🔍 [WordDemo] 文章选项:', articleOptions.length, '个', articleOptions.map(opt => opt.label))
@@ -348,27 +353,27 @@ function WordDemo() {
   const filters = [
     {
       id: 'learn_status',
-      label: '学习状态',
+      label: t('学习状态'),
       options: [
-        { value: 'all', label: '全部' },
-        { value: 'mastered', label: '已掌握' },
-        { value: 'not_mastered', label: '未掌握' }
+        { value: 'all', label: t('全部') },
+        { value: 'mastered', label: t('已掌握') },
+        { value: 'not_mastered', label: t('未掌握') }
       ],
-      placeholder: '选择学习状态',
+      placeholder: t('选择学习状态'),
       value: learnStatus
     },
     {
       id: 'text_id',
-      label: '文章',
+      label: t('文章'),
       options: articleOptions,
-      placeholder: '选择文章',
+      placeholder: t('选择文章'),
       value: textId
     }
   ]
 
   return (
     <LearnPageLayout
-      title="词汇学习"
+      title={t('词汇学习')}
       onStartReview={handleStartReview}
       onSearch={(value) => setSearchTerm(value)}
       onFilterChange={handleFilterChange}

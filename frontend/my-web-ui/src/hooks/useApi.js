@@ -182,10 +182,13 @@ export const useArticles = (userId = null, language = null, isGuest = false) => 
 
 // 获取文章详情 Hook - 支持 userId
 export const useArticle = (id, userId = null) => {
+  // 🔧 检查id是否为有效数字（上传模式下可能是字符串'upload'）
+  const isValidId = id && id !== 'upload' && (typeof id === 'number' || !isNaN(parseInt(id)))
+  
   return useQuery({
     queryKey: queryKeys.articles.detail(id, userId),
     queryFn: () => apiService.getArticleById(id),
-    enabled: !!id, // 只有当 id 存在时才执行查询
+    enabled: isValidId, // 只有当 id 存在且有效时才执行查询
     staleTime: 10 * 60 * 1000, // 10分钟
   });
 };

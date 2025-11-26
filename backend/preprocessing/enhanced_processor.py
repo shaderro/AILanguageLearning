@@ -11,6 +11,7 @@ import os
 from typing import Dict, Any, List, Optional
 from .sentence_processor import split_sentences
 from .token_processor import split_tokens, create_token_with_id
+from .word_segmentation import word_segmentation
 from .language_classification import (
     is_non_whitespace_language,
     get_language_code,
@@ -41,6 +42,7 @@ class EnhancedArticleProcessor:
         # 内部管理：按lemma聚合的词汇库
         self.vocab_expressions: List[Dict[str, Any]] = []
         self.lemma_to_vocab_id: Dict[str, int] = {}
+        self.enable_debug_logging = True
         
         # 是否启用高级功能
         self.enable_difficulty_estimation = False
@@ -316,13 +318,14 @@ class EnhancedArticleProcessor:
         
         # 步骤1: 分割句子
         print("\n步骤1: 分割句子...")
-        sentences_text = split_sentences(raw_text)
+        sentences_text = split_sentences(raw_text, language_code=language_code)
         print(f"分割得到 {len(sentences_text)} 个句子")
         
         # 步骤2: 为每个句子分割tokens并创建结构化数据
         print("\n步骤2: 分割tokens并创建结构化数据...")
         sentences = []
         global_token_id = 0
+        global_word_token_id = 1
         
         for sentence_id, sentence_text in enumerate(sentences_text, 1):
             print(f"  处理句子 {sentence_id}/{len(sentences_text)}: {sentence_text[:50]}...")
@@ -361,11 +364,28 @@ class EnhancedArticleProcessor:
                 tokens_with_id.append(token_with_id)
                 global_token_id += 1
             
+            sentence_word_tokens: List[Dict[str, Any]] = []
+            if language_code == "zh":
+                sentence_word_tokens, token_word_mapping, global_word_token_id = word_segmentation(
+                    language_code,
+                    sentence_text,
+                    tokens_with_id,
+                    global_word_token_id,
+                )
+                if sentence_word_tokens:
+                    for token in tokens_with_id:
+                        mapped_id = token_word_mapping.get(token["sentence_token_id"])
+                        if mapped_id is not None:
+                            token["word_token_id"] = mapped_id
+                    print(f"    - 生成 {len(sentence_word_tokens)} 个 word tokens")
+                    self._print_sentence_debug_info(sentence_id, tokens_with_id, sentence_word_tokens)
+            
             # 创建句子数据
             sentence_data = {
                 "sentence_id": sentence_id,
                 "sentence_body": sentence_text,
                 "tokens": tokens_with_id,
+                "word_tokens": sentence_word_tokens,
                 "token_count": len(tokens_with_id)
             }
             
@@ -383,6 +403,7 @@ class EnhancedArticleProcessor:
             "sentences": sentences,
             "total_sentences": len(sentences),
             "total_tokens": global_token_id,
+            "total_word_tokens": global_word_token_id - 1 if global_word_token_id > 1 else 0,
             "vocab_expressions": self.vocab_expressions
         }
         
@@ -390,6 +411,8 @@ class EnhancedArticleProcessor:
         print(f"   总句子数: {len(sentences)}")
         print(f"   总token数: {global_token_id}")
         print(f"   生成词汇解释: {len(self.vocab_expressions)} 个")
+        if language_code == "zh":
+            self._print_segmentation_debug_info(result)
         
         return result
     
@@ -479,4 +502,50 @@ class EnhancedArticleProcessor:
         print(f"   - sentences.json") 
         print(f"   - tokens.json")
         if result.get("vocab_expressions"):
-            print(f"   - vocab_data.json") 
+            print(f"   - vocab_data.json")
+
+    def _print_sentence_debug_info(
+        self,
+        sentence_id: int,
+        tokens: List[Dict[str, Any]],
+        word_tokens: List[Dict[str, Any]],
+    ) -> None:
+        if not self.enable_debug_logging:
+            return
+        print(f"    ▶︎ 句子 {sentence_id} 字级 token:")
+        for token in tokens:
+            print(
+                f"      - token[{token['sentence_token_id']:>2}] "
+                f"body='{token['token_body']}' type={token['token_type']} "
+                f"word_token_id={token.get('word_token_id')}"
+            )
+        if word_tokens:
+            print(f"    ▶︎ 句子 {sentence_id} word token:")
+            for word_token in word_tokens:
+                print(
+                    f"      - word_token[{word_token['word_token_id']:>2}] "
+                    f"body='{word_token['word_body']}' token_ids={word_token['token_ids']}"
+                )
+
+    def _print_segmentation_debug_info(self, result: Dict[str, Any]):
+        if not self.enable_debug_logging:
+            return
+        sentences = result.get("sentences", [])
+        total_word_tokens = result.get("total_word_tokens", 0)
+        print("\n🔍 中文分词调试数据:")
+        print(f"   - 总 sentence 数: {len(sentences)}")
+        print(f"   - 总字级 token 数: {result.get('total_tokens', 0)}")
+        print(f"   - 总 word token 数: {total_word_tokens}")
+
+        for sentence in sentences:
+            print(f"\n[Sentence {sentence.get('sentence_id')}] {sentence.get('sentence_body')}")
+            sentence_view = {
+                "tokens": sentence.get("tokens", []),
+                "word_tokens": sentence.get("word_tokens", []),
+            }
+            print(json.dumps(sentence_view, ensure_ascii=False, indent=2))
+
+        vocab_list = result.get("vocab_expressions") or []
+        if vocab_list:
+            print("\n📚 词汇解释调试数据:")
+            print(json.dumps(vocab_list, ensure_ascii=False, indent=2))

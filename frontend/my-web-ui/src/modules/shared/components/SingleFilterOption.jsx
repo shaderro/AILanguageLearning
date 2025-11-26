@@ -1,16 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
+import { useUIText } from '../../../i18n/useUIText'
 
 const SingleFilterOption = ({ 
-  label = "Filter", 
+  label = "筛选", 
   options = [], 
   value = "", 
   onChange = () => {},
-  placeholder = "Select option",
+  placeholder = "选择选项",
   className = ""
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedValue, setSelectedValue] = useState(value)
   const dropdownRef = useRef(null)
+  const t = useUIText()
 
   // 点击外部关闭下拉框
   useEffect(() => {
@@ -59,7 +61,7 @@ const SingleFilterOption = ({
       >
         <div className="flex items-center justify-between">
           <span className={`${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}>
-            {selectedOption ? selectedOption.label : placeholder}
+            {selectedOption ? selectedOption.label : t(placeholder)}
           </span>
           <svg 
             className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
@@ -95,7 +97,7 @@ const SingleFilterOption = ({
               ))
             ) : (
               <li className="px-3 py-2 text-gray-500 text-sm">
-                No options available
+                {t('暂无可选项')}
               </li>
             )}
           </ul>

@@ -1,5 +1,6 @@
 import os
 import json
+import inspect
 print("✅ 当前运行文件：", __file__)
 print("✅ 当前工作目录：", os.getcwd())
 import re
@@ -21,7 +22,7 @@ from backend.assistants.sub_assistants.vocab_explanation import VocabExplanation
 from backend.data_managers.data_classes import Sentence
 # 导入新数据结构类
 try:
-    from backend.data_managers.data_classes_new import Sentence as NewSentence, Token
+    from backend.data_managers.data_classes_new import Sentence as NewSentence, Token, WordToken
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False
@@ -30,9 +31,13 @@ from backend.data_managers import data_controller
 from backend.data_managers.dialogue_record import DialogueRecordBySentence
 # 只读能力探测适配层（不改变业务逻辑）
 from backend.assistants.adapters import CapabilityDetector, DataAdapter, GrammarRuleAdapter, VocabAdapter
+from backend.preprocessing.language_classification import (
+    get_language_code,
+    is_non_whitespace_language
+)
 
 # 定义联合类型，支持新旧两种 Sentence 类型
-from typing import Union
+from typing import Union, Optional, Tuple
 SentenceType = Union[Sentence, NewSentence] if NEW_STRUCTURE_AVAILABLE else Sentence
 
 # 全局开关：临时关闭语法相关能力（对比/生成规则与例句）
@@ -61,6 +66,249 @@ class MainAssistant:
         
         # 只读：能力探测缓存（不用于业务分支，仅打印）
         self._capabilities_cache = {}
+        
+        # 当前处理的句子语言信息（在 run() 方法中设置）
+        self.current_language: Optional[str] = None
+        self.current_language_code: Optional[str] = None
+        self.current_is_non_whitespace: bool = False
+        self.processed_articles_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "data", "current", "articles")
+        )
+
+    def _detect_sentence_language(self, sentence: SentenceType) -> Tuple[Optional[str], Optional[str], bool]:
+        """
+        检测句子的语言信息
+        
+        Args:
+            sentence: 句子对象（支持新旧两种类型）
+            
+        Returns:
+            Tuple[language, language_code, is_non_whitespace]:
+                - language: 语言名称（如 "中文", "英文"），如果无法获取则为 None
+                - language_code: 语言代码（如 "zh", "en"），如果无法获取则为 None
+                - is_non_whitespace: 是否为非空格语言（True/False），如果无法判断则默认为 False
+        """
+        # 方法0: 如果 session_state 中已经存储了语言信息，直接使用
+        if hasattr(self.session_state, 'current_language_code'):
+            stored_language_code = getattr(self.session_state, 'current_language_code', None)
+            stored_language = getattr(self.session_state, 'current_language', None)
+            stored_is_non_whitespace = getattr(self.session_state, 'current_is_non_whitespace', None)
+            if stored_language_code:
+                if stored_is_non_whitespace is None:
+                    stored_is_non_whitespace = is_non_whitespace_language(stored_language_code)
+                return stored_language, stored_language_code, bool(stored_is_non_whitespace)
+
+        # 方法1: 检查 NewSentence 是否有 word_tokens（最直接的方式）
+        if NEW_STRUCTURE_AVAILABLE and isinstance(sentence, NewSentence):
+            if sentence.word_tokens is not None and len(sentence.word_tokens) > 0:
+                # 有 word_tokens 说明是非空格语言
+                # 尝试从关联的 OriginalText 获取具体语言信息
+                language, language_code = self._get_language_from_text(sentence.text_id)
+                if language_code:
+                    is_non_whitespace = is_non_whitespace_language(language_code)
+                    return language, language_code, is_non_whitespace
+                else:
+                    # 无法获取具体语言，但根据 word_tokens 存在可以判断为非空格语言
+                    return None, None, True
+        
+        # 方法2: 从关联的 OriginalText 获取语言信息
+        language, language_code = self._get_language_from_text(sentence.text_id)
+        if language_code:
+            is_non_whitespace = is_non_whitespace_language(language_code)
+            return language, language_code, is_non_whitespace
+        
+        # 方法3: 根据句子内容进行简单推断（例如检测中文字符）
+        sentence_body = getattr(sentence, 'sentence_body', '')
+        if sentence_body:
+            try:
+                import re
+                if re.search(r'[\u4e00-\u9fff]', sentence_body):
+                    return "中文", "zh", True
+            except Exception as e:
+                print(f"⚠️ [MainAssistant] 基于句子内容推断语言失败: {e}")
+        
+        # 方法4: 无法判断，返回默认值（假设为空格语言）
+        return None, None, False
+    
+    def _get_language_from_text(self, text_id: int) -> Tuple[Optional[str], Optional[str]]:
+        """
+        从 text_id 获取语言信息
+        
+        Args:
+            text_id: 文章ID
+            
+        Returns:
+            Tuple[language, language_code]: 语言名称和语言代码，如果无法获取则为 (None, None)
+        """
+        try:
+            # 尝试从 data_controller 获取 OriginalText
+            if hasattr(self.data_controller, 'text_manager'):
+                text_manager = self.data_controller.text_manager
+                # 尝试调用 get_text_by_id 获取文章信息
+                if hasattr(text_manager, 'get_text_by_id'):
+                    get_text_fn = text_manager.get_text_by_id
+                    text_dto = None
+                    try:
+                        signature = inspect.signature(get_text_fn)
+                        if 'include_sentences' in signature.parameters:
+                            text_dto = get_text_fn(text_id, include_sentences=False)
+                        else:
+                            text_dto = get_text_fn(text_id)
+                    except (ValueError, TypeError):
+                        # 签名获取失败或不支持参数信息，回退到无关键字调用
+                        text_dto = get_text_fn(text_id)
+                    if text_dto and hasattr(text_dto, 'language') and text_dto.language:
+                        language = text_dto.language
+                        language_code = get_language_code(language)
+                        return language, language_code
+        except Exception as e:
+            print(f"⚠️ [MainAssistant] 获取语言信息失败: {e}")
+        
+        return None, None
+
+    def _clean_vocab_for_matching(self, vocab: str) -> str:
+        """
+        清理词汇用于匹配（去除标点、空格、转小写）
+        
+        Args:
+            vocab: 原始词汇字符串
+            
+        Returns:
+            str: 清理后的词汇字符串
+        """
+        import string
+        # 去除中英文标点
+        punctuation = string.punctuation + '。，！？；：""''（）【】《》、'
+        cleaned = vocab.strip().lower()
+        for p in punctuation:
+            cleaned = cleaned.replace(p, '')
+        return cleaned.strip()
+
+    def _load_sentence_from_processed_files(self, text_id: int, sentence_id: int) -> Optional['NewSentence']:
+        try:
+            sentences_path = os.path.join(self.processed_articles_dir, f"text_{text_id}", "sentences.json")
+            if not os.path.exists(sentences_path):
+                return None
+            with open(sentences_path, "r", encoding="utf-8") as f:
+                sentences_data = json.load(f)
+            for entry in sentences_data:
+                if entry.get("sentence_id") == sentence_id:
+                    tokens_data = entry.get("tokens") or []
+                    word_tokens_data = entry.get("word_tokens") or []
+                    tokens = tuple([
+                        Token(
+                            token_body=token.get("token_body", ""),
+                            token_type=token.get("token_type", "text"),
+                            difficulty_level=token.get("difficulty_level"),
+                            global_token_id=token.get("global_token_id"),
+                            sentence_token_id=token.get("sentence_token_id"),
+                            pos_tag=token.get("pos_tag"),
+                            lemma=token.get("lemma"),
+                            is_grammar_marker=token.get("is_grammar_marker", False),
+                            linked_vocab_id=token.get("linked_vocab_id"),
+                            word_token_id=token.get("word_token_id"),
+                        )
+                        for token in tokens_data
+                    ])
+                    word_tokens = tuple([
+                        WordToken(
+                            word_token_id=wt.get("word_token_id"),
+                            token_ids=tuple(wt.get("token_ids") or []),
+                            word_body=wt.get("word_body", ""),
+                            pos_tag=wt.get("pos_tag"),
+                            lemma=wt.get("lemma"),
+                            linked_vocab_id=wt.get("linked_vocab_id"),
+                        )
+                        for wt in word_tokens_data
+                    ])
+                    return NewSentence(
+                        text_id=text_id,
+                        sentence_id=sentence_id,
+                        sentence_body=entry.get("sentence_body", ""),
+                        grammar_annotations=tuple(entry.get("grammar_annotations") or []),
+                        vocab_annotations=tuple(entry.get("vocab_annotations") or []),
+                        sentence_difficulty_level=entry.get("sentence_difficulty_level"),
+                        tokens=tokens,
+                        word_tokens=word_tokens if word_tokens else None,
+                    )
+        except Exception as e:
+            print(f"⚠️ [MainAssistant] 无法从文件加载句子(word_tokens): {e}")
+        return None
+
+    def _ensure_sentence_has_word_tokens(self, sentence: SentenceType) -> SentenceType:
+        has_word_tokens = getattr(sentence, "word_tokens", None)
+        has_tokens = getattr(sentence, "tokens", None)
+        text_id = getattr(sentence, "text_id", None)
+        sentence_id = getattr(sentence, "sentence_id", None)
+        if has_word_tokens and has_tokens:
+            return sentence
+        if text_id is None or sentence_id is None or not NEW_STRUCTURE_AVAILABLE:
+            return sentence
+        enriched = self._load_sentence_from_processed_files(text_id, sentence_id)
+        if not enriched:
+            return sentence
+        if isinstance(sentence, NewSentence):
+            return NewSentence(
+                text_id=sentence.text_id,
+                sentence_id=sentence.sentence_id,
+                sentence_body=sentence.sentence_body,
+                grammar_annotations=sentence.grammar_annotations,
+                vocab_annotations=sentence.vocab_annotations,
+                sentence_difficulty_level=sentence.sentence_difficulty_level,
+                tokens=enriched.tokens if not has_tokens else sentence.tokens,
+                word_tokens=enriched.word_tokens if not has_word_tokens else sentence.word_tokens,
+            )
+        return enriched
+
+    def _match_vocab_to_word_token(self, vocab: str, sentence: SentenceType) -> Optional[int]:
+        """
+        尝试将 vocab 匹配到句子的 word token（仅用于非空格语言）
+        
+        Args:
+            vocab: 总结出的词汇
+            sentence: 句子对象
+            
+        Returns:
+            word_token_id: 如果匹配成功，返回 word_token_id；否则返回 None
+        """
+        sentence = self._ensure_sentence_has_word_tokens(sentence)
+        # 1. 检查是否为非空格语言
+        if not self.current_is_non_whitespace:
+            return None
+        
+        # 2. 检查句子是否有 word_tokens
+        if not NEW_STRUCTURE_AVAILABLE or not isinstance(sentence, NewSentence):
+            return None
+        
+        if not sentence.word_tokens or len(sentence.word_tokens) == 0:
+            return None
+        
+        # 3. 清理 vocab（去除标点、空格、转小写）
+        vocab_clean = self._clean_vocab_for_matching(vocab)
+        if not vocab_clean:
+            return None
+        
+        # 4. 尝试匹配 word tokens
+        for word_token in sentence.word_tokens:
+            if not hasattr(word_token, 'word_body') or not hasattr(word_token, 'word_token_id'):
+                continue
+            
+            word_body_clean = self._clean_vocab_for_matching(word_token.word_body)
+            if not word_body_clean:
+                continue
+            
+            # 精确匹配
+            if vocab_clean == word_body_clean:
+                print(f"✅ [WordToken匹配] vocab '{vocab}' 精确匹配到 word_token '{word_token.word_body}' (word_token_id={word_token.word_token_id})")
+                return word_token.word_token_id
+            
+            # 部分匹配：如果 vocab 是单个字符，检查是否属于 word token
+            if len(vocab_clean) == 1 and vocab_clean in word_body_clean:
+                print(f"✅ [WordToken匹配] vocab '{vocab}' 部分匹配到 word_token '{word_token.word_body}' (word_token_id={word_token.word_token_id})")
+                return word_token.word_token_id
+        
+        print(f"⚠️ [WordToken匹配] vocab '{vocab}' 未匹配到任何 word_token，将回退到字符 token 匹配")
+        return None
 
     def run(self, quoted_sentence: SentenceType, user_question: str, selected_text: str = None):
         """
@@ -74,6 +322,24 @@ class MainAssistant:
         # 🔧 优化：只重置处理结果，保留上下文（避免重复设置）
         # 上下文（sentence、input、token）已由 Mock Server 通过 session API 设置
         self.session_state.reset_processing_results()
+        
+        # 🌐 检测句子语言信息（用于后续非空格语言的特殊处理）
+        language, language_code, is_non_whitespace = self._detect_sentence_language(quoted_sentence)
+        # 存储语言信息供后续使用
+        self.current_language = language
+        self.current_language_code = language_code
+        self.current_is_non_whitespace = is_non_whitespace
+        
+        # 总是打印语言检测结果（用于调试）
+        if language_code:
+            print(f"🌐 [MainAssistant] 检测到语言: {language} (代码: {language_code}, 非空格语言: {is_non_whitespace})")
+        else:
+            print(f"🌐 [MainAssistant] 无法检测语言，使用默认处理（假设为空格语言，is_non_whitespace={is_non_whitespace}）")
+        
+        # 额外调试：检查句子是否有 word_tokens
+        if NEW_STRUCTURE_AVAILABLE and isinstance(quoted_sentence, NewSentence):
+            has_word_tokens = quoted_sentence.word_tokens is not None and len(quoted_sentence.word_tokens) > 0
+            print(f"🔍 [MainAssistant] 句子是否有 word_tokens: {has_word_tokens} (text_id={quoted_sentence.text_id})")
         
         # 📋 使用已设置的上下文，或者从参数设置（兼容直接调用）
         # 如果 session_state 中没有上下文，说明是直接调用（非 Mock Server），需要设置
@@ -244,6 +510,21 @@ class MainAssistant:
         """
         处理与语法和词汇相关的操作。
         """
+        # 🌐 确保语言信息已检测（如果还没有检测，则现在检测）
+        # 这很重要，因为 handle_grammar_vocab_function 可能被直接调用，绕过了 run() 方法
+        if self.current_language_code is None:
+            print("🔍 [DEBUG] [handle_grammar_vocab_function] 语言信息未设置，执行语言检测...")
+            language, language_code, is_non_whitespace = self._detect_sentence_language(quoted_sentence)
+            self.current_language = language
+            self.current_language_code = language_code
+            self.current_is_non_whitespace = is_non_whitespace
+            if language_code:
+                print(f"🌐 [MainAssistant] [handle_grammar_vocab_function] 检测到语言: {language} (代码: {language_code}, 非空格语言: {is_non_whitespace})")
+            else:
+                print(f"🌐 [MainAssistant] [handle_grammar_vocab_function] 无法检测语言，使用默认处理（假设为空格语言，is_non_whitespace={is_non_whitespace}）")
+        else:
+            print(f"🌐 [MainAssistant] [handle_grammar_vocab_function] 使用已检测的语言信息: {self.current_language} (代码: {self.current_language_code}, 非空格语言: {self.current_is_non_whitespace})")
+        
         # 🔧 保存 selected_token 的引用（避免在后续处理中被清空）
         saved_selected_token = self.session_state.current_selected_token
         print(f"🔍 [DEBUG] [handle_grammar_vocab_function] 保存 selected_token 引用: {saved_selected_token is not None}")
@@ -309,7 +590,8 @@ class MainAssistant:
             raw_vocab_summary = self.summarize_vocab_rule_assistant.run(
                 sentence_body,
                 user_input,
-                ai_response_str
+                ai_response_str,
+                is_non_whitespace=self.current_is_non_whitespace
             )
 
             # 🔧 修复：避免跨多轮累积过多 vocab，总是只针对当前轮的词汇进行处理
@@ -417,10 +699,18 @@ class MainAssistant:
                     db_manager = DatabaseManager('development')
                     session = db_manager.get_session()
                     try:
-                        # 🔧 直接查询数据库，只获取当前用户的语法规则
-                        grammar_models = session.query(GrammarRule).filter(
+                        # 🔧 直接查询数据库，只获取当前用户且相同语言的语法规则
+                        query = session.query(GrammarRule).filter(
                             GrammarRule.user_id == user_id
-                        ).all()
+                        )
+                        # 🔧 如果文章有语言，只获取相同语言的规则
+                        if article_language:
+                            query = query.filter(GrammarRule.language == article_language)
+                            print(f"📚 只获取相同语言的语法规则 (user_id={user_id}, language={article_language})")
+                        else:
+                            print(f"📚 文章无语言信息，获取所有语言的语法规则 (user_id={user_id})")
+                        
+                        grammar_models = query.all()
                         # 构建规则字典：{name, rule_id, language}
                         for rule_model in grammar_models:
                             current_grammar_rules.append({
@@ -679,10 +969,18 @@ class MainAssistant:
                 db_manager = DatabaseManager('development')
                 session = db_manager.get_session()
                 try:
-                    # 🔧 直接查询数据库，按 user_id 过滤
-                    vocab_models = session.query(VocabExpression).filter(
+                    # 🔧 直接查询数据库，按 user_id 和 language 过滤
+                    query = session.query(VocabExpression).filter(
                         VocabExpression.user_id == user_id
-                    ).all()
+                    )
+                    # 🔧 如果文章有语言，只获取相同语言的词汇
+                    if article_language:
+                        query = query.filter(VocabExpression.language == article_language)
+                        print(f"🔍 [DEBUG] 只获取相同语言的词汇 (user_id={user_id}, language={article_language})")
+                    else:
+                        print(f"🔍 [DEBUG] 文章无语言信息，获取所有语言的词汇 (user_id={user_id})")
+                    
+                    vocab_models = query.all()
                     current_vocab_list = [vocab.vocab_body for vocab in vocab_models]
                     vocab_id_map = {vocab.vocab_body: vocab.vocab_id for vocab in vocab_models}
                     print(f"🔍 [DEBUG] 从数据库获取当前用户词汇列表 (user_id={user_id}): {len(current_vocab_list)} 个词汇")
@@ -802,6 +1100,7 @@ class MainAssistant:
                                 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
                                 notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                                 token_id = token_indices[0] if isinstance(token_indices, list) and token_indices else None
+                                word_token_id = None  # 新增：用于存储匹配到的 word_token_id
                                 
                                 # 🔧 如果 token_id 为空，尝试从句子中查找匹配的 token
                                 if token_id is None and hasattr(current_sentence, 'tokens') and current_sentence.tokens:
@@ -829,26 +1128,50 @@ class MainAssistant:
                                             print(f"⚠️ [DEBUG] 无法获取词汇名称: {e}")
                                     
                                     if vocab_body:
-                                        vocab_body_lower = vocab_body.lower().strip()
-                                        import string
-                                        def strip_punctuation(text: str) -> str:
-                                            return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+                                        # 🌐 优先尝试匹配 word token（仅用于非空格语言）
+                                        word_token_id = self._match_vocab_to_word_token(vocab_body, current_sentence)
                                         
-                                        vocab_clean = strip_punctuation(vocab_body_lower)
-                                        print(f"🔍 [DEBUG] 尝试从句子中查找匹配的token（现有词汇），vocab='{vocab_body}' (清理后='{vocab_clean}')")
-                                        
-                                        for token in current_sentence.tokens:
-                                            if hasattr(token, 'token_type') and token.token_type == 'text':
-                                                if hasattr(token, 'token_body') and hasattr(token, 'sentence_token_id'):
-                                                    token_clean = strip_punctuation(token.token_body.lower())
-                                                    if token_clean == vocab_clean and token.sentence_token_id is not None:
-                                                        token_id = token.sentence_token_id
-                                                        print(f"✅ [DEBUG] 在句子中找到匹配的token（现有词汇）: '{token.token_body}' → sentence_token_id={token_id}")
+                                        # 如果匹配到 word token，使用 word token 的所有字符 token 作为 token_indices
+                                        if word_token_id is not None:
+                                            # 找到对应的 word token，获取其所有字符 token 的 sentence_token_id
+                                            if NEW_STRUCTURE_AVAILABLE:
+                                                enriched_sentence = self._ensure_sentence_has_word_tokens(current_sentence)
+                                                word_token_source = enriched_sentence.word_tokens
+                                            else:
+                                                word_token_source = getattr(current_sentence, "word_tokens", None)
+
+                                            if word_token_source:
+                                                for wt in word_token_source:
+                                                    if wt.word_token_id == word_token_id and hasattr(wt, 'token_ids') and wt.token_ids:
+                                                        # 🔧 使用 word_token 的所有 token_ids（用于显示完整下划线）
+                                                        token_indices = list(wt.token_ids)  # 更新 token_indices 为所有字符 token 的 IDs
+                                                        token_id = wt.token_ids[0]  # 使用第一个字符 token 的 ID（用于向后兼容）
+                                                        print(f"✅ [DEBUG] 匹配到 word_token '{wt.word_body}'，使用所有 token_ids: {token_indices} (word_token_id={word_token_id})")
                                                         break
+                                        else:
+                                            # 未匹配到 word token，回退到字符 token 匹配（现有逻辑）
+                                            vocab_body_lower = vocab_body.lower().strip()
+                                            import string
+                                            def strip_punctuation(text: str) -> str:
+                                                return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+                                            
+                                            vocab_clean = strip_punctuation(vocab_body_lower)
+                                            print(f"🔍 [DEBUG] 尝试从句子中查找匹配的token（现有词汇），vocab='{vocab_body}' (清理后='{vocab_clean}')")
+                                            
+                                            for token in current_sentence.tokens:
+                                                if hasattr(token, 'token_type') and token.token_type == 'text':
+                                                    if hasattr(token, 'token_body') and hasattr(token, 'sentence_token_id'):
+                                                        token_clean = strip_punctuation(token.token_body.lower())
+                                                        if token_clean == vocab_clean and token.sentence_token_id is not None:
+                                                            token_id = token.sentence_token_id
+                                                            print(f"✅ [DEBUG] 在句子中找到匹配的token（现有词汇）: '{token.token_body}' → sentence_token_id={token_id}")
+                                                            break
                                 
+                                current_sentence = self._ensure_sentence_has_word_tokens(current_sentence)
+
                                 # 获取user_id（优先使用session_state中的user_id）
                                 user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
-                                print(f"🔍 [DEBUG] 创建vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={existing_vocab_id}, user_id={user_id_for_notation}")
+                                print(f"🔍 [DEBUG] 创建vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, word_token_id={word_token_id}, vocab_id={existing_vocab_id}, user_id={user_id_for_notation}")
                                 
                                 if token_id is not None:
                                     v_ok = notation_manager.mark_notation(
@@ -857,7 +1180,8 @@ class MainAssistant:
                                         text_id=current_sentence.text_id,
                                         sentence_id=current_sentence.sentence_id,
                                         token_id=token_id,
-                                        vocab_id=existing_vocab_id
+                                        vocab_id=existing_vocab_id,
+                                        word_token_id=word_token_id  # 新增：传递 word_token_id
                                     )
                                     print(f"✅ [DEBUG] vocab_notation创建结果: {v_ok}")
                                     if v_ok:
@@ -1322,30 +1646,55 @@ class MainAssistant:
                             notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
                             # 🔧 确保使用和 vocab_example 相同的 token_indices
                             token_id = token_indices[0] if isinstance(token_indices, list) and len(token_indices) > 0 else None
+                            word_token_id = None  # 新增：用于存储匹配到的 word_token_id
                             print(f"🔍 [DEBUG] 创建 vocab notation 使用的 token_id: {token_id} (来自 token_indices={token_indices})")
                             
-                            # 🔧 如果 token_id 为空，尝试从句子中查找匹配的 token
-                            if token_id is None and hasattr(current_sentence, 'tokens') and current_sentence.tokens:
-                                vocab_body_lower = vocab.vocab.lower().strip()
-                                import string
-                                def strip_punctuation(text: str) -> str:
-                                    return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
-                                
-                                vocab_clean = strip_punctuation(vocab_body_lower)
-                                print(f"🔍 [DEBUG] 尝试从句子中查找匹配的token，vocab='{vocab.vocab}' (清理后='{vocab_clean}')")
-                                
-                                for token in current_sentence.tokens:
-                                    if hasattr(token, 'token_type') and token.token_type == 'text':
-                                        if hasattr(token, 'token_body') and hasattr(token, 'sentence_token_id'):
-                                            token_clean = strip_punctuation(token.token_body.lower())
-                                            if token_clean == vocab_clean and token.sentence_token_id is not None:
-                                                token_id = token.sentence_token_id
-                                                print(f"✅ [DEBUG] 在句子中找到匹配的token: '{token.token_body}' → sentence_token_id={token_id}")
+                            # 🌐 优先尝试匹配 word token（仅用于非空格语言）
+                            # 即使 token_id 不为空，也要检查是否应该使用 word_token
+                            vocab_body = vocab.vocab
+                            word_token_id = self._match_vocab_to_word_token(vocab_body, current_sentence)
+                            
+                            # 如果匹配到 word token，使用 word token 的所有字符 token 作为 token_indices
+                            if word_token_id is not None:
+                                # 🔧 确保 current_sentence 有 word_tokens 数据
+                                current_sentence = self._ensure_sentence_has_word_tokens(current_sentence)
+                                # 找到对应的 word token，获取其所有字符 token 的 sentence_token_id
+                                if NEW_STRUCTURE_AVAILABLE and isinstance(current_sentence, NewSentence):
+                                    if current_sentence.word_tokens is None:
+                                        print(f"⚠️ [DEBUG] word_token_id={word_token_id} 但 current_sentence.word_tokens 为 None，跳过 word token 迭代")
+                                    else:
+                                        for wt in current_sentence.word_tokens:
+                                            if wt.word_token_id == word_token_id and hasattr(wt, 'token_ids') and wt.token_ids:
+                                                # 🔧 使用 word_token 的所有 token_ids 作为 token_indices（用于显示完整下划线）
+                                                token_indices = list(wt.token_ids)  # 使用所有字符 token 的 IDs
+                                                token_id = wt.token_ids[0]  # 使用第一个字符 token 的 ID（用于向后兼容）
+                                                print(f"✅ [DEBUG] 匹配到 word_token '{wt.word_body}'，使用所有 token_ids: {token_indices} (word_token_id={word_token_id})")
                                                 break
+                            else:
+                                # 未匹配到 word token，如果 token_id 为空，尝试从句子中查找匹配的 token
+                                if token_id is None and hasattr(current_sentence, 'tokens') and current_sentence.tokens:
+                                    # 回退到字符 token 匹配（现有逻辑）
+                                    vocab_body_lower = vocab_body.lower().strip()
+                                    import string
+                                    def strip_punctuation(text: str) -> str:
+                                        return text.strip(string.punctuation + '。，！？；：""''（）【】《》、')
+                                    
+                                    vocab_clean = strip_punctuation(vocab_body_lower)
+                                    print(f"🔍 [DEBUG] 尝试从句子中查找匹配的token，vocab='{vocab.vocab}' (清理后='{vocab_clean}')")
+                                    
+                                    for token in current_sentence.tokens:
+                                        if hasattr(token, 'token_type') and token.token_type == 'text':
+                                            if hasattr(token, 'token_body') and hasattr(token, 'sentence_token_id'):
+                                                token_clean = strip_punctuation(token.token_body.lower())
+                                                if token_clean == vocab_clean and token.sentence_token_id is not None:
+                                                    token_id = token.sentence_token_id
+                                                    print(f"✅ [DEBUG] 在句子中找到匹配的token: '{token.token_body}' → sentence_token_id={token_id}")
+                                                    break
                             
                             # 获取user_id（优先使用session_state中的user_id）
+                            current_sentence = self._ensure_sentence_has_word_tokens(current_sentence)
                             user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
-                            print(f"🔍 [DEBUG] 创建新词汇的vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, vocab_id={vocab_id}, user_id={user_id_for_notation}")
+                            print(f"🔍 [DEBUG] 创建新词汇的vocab notation: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, token_id={token_id}, word_token_id={word_token_id}, vocab_id={vocab_id}, user_id={user_id_for_notation}")
                             
                             if token_id is not None:
                                 v_ok = notation_manager.mark_notation(
@@ -1354,7 +1703,8 @@ class MainAssistant:
                                     text_id=current_sentence.text_id,
                                     sentence_id=current_sentence.sentence_id,
                                     token_id=token_id,
-                                    vocab_id=vocab_id
+                                    vocab_id=vocab_id,
+                                    word_token_id=word_token_id  # 新增：传递 word_token_id
                                 )
                                 print(f"✅ [DEBUG] 新词汇 vocab_notation创建结果: {v_ok}")
                                 if v_ok:

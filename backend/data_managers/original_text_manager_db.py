@@ -62,7 +62,7 @@ class OriginalTextManager:
         self.session = session
         self.db_manager = DBTextManager(session)
     
-    def add_text(self, text_title: str, user_id: int = None, language: str = None) -> TextDTO:
+    def add_text(self, text_title: str, user_id: int = None, language: str = None, processing_status: str = 'completed') -> TextDTO:
         """
         创建新文章
         
@@ -70,6 +70,7 @@ class OriginalTextManager:
             text_title: 文章标题
             user_id: 用户ID（必填，用于数据隔离）
             language: 语言（中文、英文、德文），可选
+            processing_status: 处理状态（processing/completed/failed），默认completed
             
         返回:
             TextDTO: 新创建的文章数据对象
@@ -78,7 +79,7 @@ class OriginalTextManager:
             text = text_manager.add_text("我的第一篇德语文章", user_id=1, language="德文")
             print(f"创建文章ID: {text.text_id}")
         """
-        text_model = self.db_manager.create_text(text_title, user_id, language)
+        text_model = self.db_manager.create_text(text_title, user_id, language, processing_status)
         return TextAdapter.model_to_dto(text_model, include_sentences=False)
     
     def get_text_by_id(self, text_id: int, include_sentences: bool = True) -> Optional[TextDTO]:
@@ -350,4 +351,43 @@ class OriginalTextManager:
         if not texts:
             return 1
         return max(t.text_id for t in texts) + 1
+    
+    def update_text(self, text_id: int, text_title: str = None, language: str = None, processing_status: str = None) -> Optional[TextDTO]:
+        """
+        更新文章
+        
+        参数:
+            text_id: 文章ID
+            text_title: 新标题（可选）
+            language: 新语言（可选）
+            processing_status: 新处理状态（可选）
+            
+        返回:
+            TextDTO: 更新后的文章数据对象
+            None: 文章不存在
+            
+        使用示例:
+            text = text_manager.update_text(1, text_title="新标题")
+        """
+        text_model = self.db_manager.update_text(text_id, text_title, language, processing_status)
+        if not text_model:
+            return None
+        return TextAdapter.model_to_dto(text_model, include_sentences=False)
+    
+    def delete_text(self, text_id: int) -> bool:
+        """
+        删除文章
+        
+        参数:
+            text_id: 文章ID
+            
+        返回:
+            bool: 是否删除成功
+            
+        使用示例:
+            success = text_manager.delete_text(1)
+            if success:
+                print("文章已删除")
+        """
+        return self.db_manager.delete_text(text_id)
 

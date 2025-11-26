@@ -1,0 +1,1135 @@
+{
+  "text_id": 1763696665,
+  "text_title": "chinese 4",
+  "text_by_sentence": [
+    {
+      "text_id": 1763696665,
+      "sentence_id": 1,
+      "sentence_body": "在一家小餐馆，小明遇到了一位新朋友，叫玛丽。\r\n\r\n他们点了很多美味的食物，一起聊了很长时间。\r\n\r\n小明要到了玛丽的电话号码，他们约好了下次再见面。\r\n\r\n小明很高兴认识了新朋友。",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "在",
+          "token_type": "text",
+          "global_token_id": 0,
+          "sentence_token_id": 1,
+          "word_token_id": 1
+        },
+        {
+          "token_body": "一",
+          "token_type": "text",
+          "global_token_id": 1,
+          "sentence_token_id": 2,
+          "word_token_id": 2
+        },
+        {
+          "token_body": "家",
+          "token_type": "text",
+          "global_token_id": 2,
+          "sentence_token_id": 3,
+          "word_token_id": 2
+        },
+        {
+          "token_body": "小",
+          "token_type": "text",
+          "global_token_id": 3,
+          "sentence_token_id": 4,
+          "word_token_id": 3
+        },
+        {
+          "token_body": "餐",
+          "token_type": "text",
+          "global_token_id": 4,
+          "sentence_token_id": 5,
+          "word_token_id": 4
+        },
+        {
+          "token_body": "馆",
+          "token_type": "text",
+          "global_token_id": 5,
+          "sentence_token_id": 6,
+          "word_token_id": 4
+        },
+        {
+          "token_body": "，",
+          "token_type": "punctuation",
+          "global_token_id": 6,
+          "sentence_token_id": 7,
+          "word_token_id": 5
+        },
+        {
+          "token_body": "小",
+          "token_type": "text",
+          "global_token_id": 7,
+          "sentence_token_id": 8,
+          "word_token_id": 6
+        },
+        {
+          "token_body": "明",
+          "token_type": "text",
+          "global_token_id": 8,
+          "sentence_token_id": 9,
+          "word_token_id": 6
+        },
+        {
+          "token_body": "遇",
+          "token_type": "text",
+          "global_token_id": 9,
+          "sentence_token_id": 10,
+          "word_token_id": 7
+        },
+        {
+          "token_body": "到",
+          "token_type": "text",
+          "global_token_id": 10,
+          "sentence_token_id": 11,
+          "word_token_id": 7
+        },
+        {
+          "token_body": "了",
+          "token_type": "text",
+          "global_token_id": 11,
+          "sentence_token_id": 12,
+          "word_token_id": 8
+        },
+        {
+          "token_body": "一",
+          "token_type": "text",
+          "global_token_id": 12,
+          "sentence_token_id": 13,
+          "word_token_id": 9
+        },
+        {
+          "token_body": "位",
+          "token_type": "text",
+          "global_token_id": 13,
+          "sentence_token_id": 14,
+          "word_token_id": 9
+        },
+        {
+          "token_body": "新",
+          "token_type": "text",
+          "global_token_id": 14,
+          "sentence_token_id": 15,
+          "word_token_id": 10
+        },
+        {
+          "token_body": "朋",
+          "token_type": "text",
+          "global_token_id": 15,
+          "sentence_token_id": 16,
+          "word_token_id": 11
+        },
+        {
+          "token_body": "友",
+          "token_type": "text",
+          "global_token_id": 16,
+          "sentence_token_id": 17,
+          "word_token_id": 11
+        },
+        {
+          "token_body": "，",
+          "token_type": "punctuation",
+          "global_token_id": 17,
+          "sentence_token_id": 18,
+          "word_token_id": 12
+        },
+        {
+          "token_body": "叫",
+          "token_type": "text",
+          "global_token_id": 18,
+          "sentence_token_id": 19,
+          "word_token_id": 13
+        },
+        {
+          "token_body": "玛",
+          "token_type": "text",
+          "global_token_id": 19,
+          "sentence_token_id": 20,
+          "word_token_id": 14
+        },
+        {
+          "token_body": "丽",
+          "token_type": "text",
+          "global_token_id": 20,
+          "sentence_token_id": 21,
+          "word_token_id": 14
+        },
+        {
+          "token_body": "。",
+          "token_type": "punctuation",
+          "global_token_id": 21,
+          "sentence_token_id": 22,
+          "word_token_id": 15
+        },
+        {
+          "token_body": "\r\n\r\n",
+          "token_type": "space",
+          "global_token_id": 22,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "他",
+          "token_type": "text",
+          "global_token_id": 23,
+          "sentence_token_id": 24,
+          "word_token_id": 16
+        },
+        {
+          "token_body": "们",
+          "token_type": "text",
+          "global_token_id": 24,
+          "sentence_token_id": 25,
+          "word_token_id": 16
+        },
+        {
+          "token_body": "点",
+          "token_type": "text",
+          "global_token_id": 25,
+          "sentence_token_id": 26,
+          "word_token_id": 17
+        },
+        {
+          "token_body": "了",
+          "token_type": "text",
+          "global_token_id": 26,
+          "sentence_token_id": 27,
+          "word_token_id": 18
+        },
+        {
+          "token_body": "很",
+          "token_type": "text",
+          "global_token_id": 27,
+          "sentence_token_id": 28,
+          "word_token_id": 19
+        },
+        {
+          "token_body": "多",
+          "token_type": "text",
+          "global_token_id": 28,
+          "sentence_token_id": 29,
+          "word_token_id": 19
+        },
+        {
+          "token_body": "美",
+          "token_type": "text",
+          "global_token_id": 29,
+          "sentence_token_id": 30,
+          "word_token_id": 20
+        },
+        {
+          "token_body": "味",
+          "token_type": "text",
+          "global_token_id": 30,
+          "sentence_token_id": 31,
+          "word_token_id": 20
+        },
+        {
+          "token_body": "的",
+          "token_type": "text",
+          "global_token_id": 31,
+          "sentence_token_id": 32,
+          "word_token_id": 21
+        },
+        {
+          "token_body": "食",
+          "token_type": "text",
+          "global_token_id": 32,
+          "sentence_token_id": 33,
+          "word_token_id": 22
+        },
+        {
+          "token_body": "物",
+          "token_type": "text",
+          "global_token_id": 33,
+          "sentence_token_id": 34,
+          "word_token_id": 22
+        },
+        {
+          "token_body": "，",
+          "token_type": "punctuation",
+          "global_token_id": 34,
+          "sentence_token_id": 35,
+          "word_token_id": 23
+        },
+        {
+          "token_body": "一",
+          "token_type": "text",
+          "global_token_id": 35,
+          "sentence_token_id": 36,
+          "word_token_id": 24
+        },
+        {
+          "token_body": "起",
+          "token_type": "text",
+          "global_token_id": 36,
+          "sentence_token_id": 37,
+          "word_token_id": 24
+        },
+        {
+          "token_body": "聊",
+          "token_type": "text",
+          "global_token_id": 37,
+          "sentence_token_id": 38,
+          "word_token_id": 25
+        },
+        {
+          "token_body": "了",
+          "token_type": "text",
+          "global_token_id": 38,
+          "sentence_token_id": 39,
+          "word_token_id": 26
+        },
+        {
+          "token_body": "很",
+          "token_type": "text",
+          "global_token_id": 39,
+          "sentence_token_id": 40,
+          "word_token_id": 27
+        },
+        {
+          "token_body": "长",
+          "token_type": "text",
+          "global_token_id": 40,
+          "sentence_token_id": 41,
+          "word_token_id": 28
+        },
+        {
+          "token_body": "时",
+          "token_type": "text",
+          "global_token_id": 41,
+          "sentence_token_id": 42,
+          "word_token_id": 28
+        },
+        {
+          "token_body": "间",
+          "token_type": "text",
+          "global_token_id": 42,
+          "sentence_token_id": 43,
+          "word_token_id": 28
+        },
+        {
+          "token_body": "。",
+          "token_type": "punctuation",
+          "global_token_id": 43,
+          "sentence_token_id": 44,
+          "word_token_id": 29
+        },
+        {
+          "token_body": "\r\n\r\n",
+          "token_type": "space",
+          "global_token_id": 44,
+          "sentence_token_id": 45
+        },
+        {
+          "token_body": "小",
+          "token_type": "text",
+          "global_token_id": 45,
+          "sentence_token_id": 46,
+          "word_token_id": 30
+        },
+        {
+          "token_body": "明",
+          "token_type": "text",
+          "global_token_id": 46,
+          "sentence_token_id": 47,
+          "word_token_id": 30
+        },
+        {
+          "token_body": "要",
+          "token_type": "text",
+          "global_token_id": 47,
+          "sentence_token_id": 48,
+          "word_token_id": 31
+        },
+        {
+          "token_body": "到",
+          "token_type": "text",
+          "global_token_id": 48,
+          "sentence_token_id": 49,
+          "word_token_id": 32
+        },
+        {
+          "token_body": "了",
+          "token_type": "text",
+          "global_token_id": 49,
+          "sentence_token_id": 50,
+          "word_token_id": 33
+        },
+        {
+          "token_body": "玛",
+          "token_type": "text",
+          "global_token_id": 50,
+          "sentence_token_id": 51,
+          "word_token_id": 34
+        },
+        {
+          "token_body": "丽",
+          "token_type": "text",
+          "global_token_id": 51,
+          "sentence_token_id": 52,
+          "word_token_id": 34
+        },
+        {
+          "token_body": "的",
+          "token_type": "text",
+          "global_token_id": 52,
+          "sentence_token_id": 53,
+          "word_token_id": 35
+        },
+        {
+          "token_body": "电",
+          "token_type": "text",
+          "global_token_id": 53,
+          "sentence_token_id": 54,
+          "word_token_id": 36
+        },
+        {
+          "token_body": "话",
+          "token_type": "text",
+          "global_token_id": 54,
+          "sentence_token_id": 55,
+          "word_token_id": 36
+        },
+        {
+          "token_body": "号",
+          "token_type": "text",
+          "global_token_id": 55,
+          "sentence_token_id": 56,
+          "word_token_id": 36
+        },
+        {
+          "token_body": "码",
+          "token_type": "text",
+          "global_token_id": 56,
+          "sentence_token_id": 57,
+          "word_token_id": 36
+        },
+        {
+          "token_body": "，",
+          "token_type": "punctuation",
+          "global_token_id": 57,
+          "sentence_token_id": 58,
+          "word_token_id": 37
+        },
+        {
+          "token_body": "他",
+          "token_type": "text",
+          "global_token_id": 58,
+          "sentence_token_id": 59,
+          "word_token_id": 38
+        },
+        {
+          "token_body": "们",
+          "token_type": "text",
+          "global_token_id": 59,
+          "sentence_token_id": 60,
+          "word_token_id": 38
+        },
+        {
+          "token_body": "约",
+          "token_type": "text",
+          "global_token_id": 60,
+          "sentence_token_id": 61,
+          "word_token_id": 39
+        },
+        {
+          "token_body": "好",
+          "token_type": "text",
+          "global_token_id": 61,
+          "sentence_token_id": 62,
+          "word_token_id": 40
+        },
+        {
+          "token_body": "了",
+          "token_type": "text",
+          "global_token_id": 62,
+          "sentence_token_id": 63,
+          "word_token_id": 41
+        },
+        {
+          "token_body": "下",
+          "token_type": "text",
+          "global_token_id": 63,
+          "sentence_token_id": 64,
+          "word_token_id": 42
+        },
+        {
+          "token_body": "次",
+          "token_type": "text",
+          "global_token_id": 64,
+          "sentence_token_id": 65,
+          "word_token_id": 42
+        },
+        {
+          "token_body": "再",
+          "token_type": "text",
+          "global_token_id": 65,
+          "sentence_token_id": 66,
+          "word_token_id": 43
+        },
+        {
+          "token_body": "见",
+          "token_type": "text",
+          "global_token_id": 66,
+          "sentence_token_id": 67,
+          "word_token_id": 43
+        },
+        {
+          "token_body": "面",
+          "token_type": "text",
+          "global_token_id": 67,
+          "sentence_token_id": 68,
+          "word_token_id": 43
+        },
+        {
+          "token_body": "。",
+          "token_type": "punctuation",
+          "global_token_id": 68,
+          "sentence_token_id": 69,
+          "word_token_id": 44
+        },
+        {
+          "token_body": "\r\n\r\n",
+          "token_type": "space",
+          "global_token_id": 69,
+          "sentence_token_id": 70
+        },
+        {
+          "token_body": "小",
+          "token_type": "text",
+          "global_token_id": 70,
+          "sentence_token_id": 71,
+          "word_token_id": 45
+        },
+        {
+          "token_body": "明",
+          "token_type": "text",
+          "global_token_id": 71,
+          "sentence_token_id": 72,
+          "word_token_id": 45
+        },
+        {
+          "token_body": "很",
+          "token_type": "text",
+          "global_token_id": 72,
+          "sentence_token_id": 73,
+          "word_token_id": 46
+        },
+        {
+          "token_body": "高",
+          "token_type": "text",
+          "global_token_id": 73,
+          "sentence_token_id": 74,
+          "word_token_id": 47
+        },
+        {
+          "token_body": "兴",
+          "token_type": "text",
+          "global_token_id": 74,
+          "sentence_token_id": 75,
+          "word_token_id": 47
+        },
+        {
+          "token_body": "认",
+          "token_type": "text",
+          "global_token_id": 75,
+          "sentence_token_id": 76,
+          "word_token_id": 48
+        },
+        {
+          "token_body": "识",
+          "token_type": "text",
+          "global_token_id": 76,
+          "sentence_token_id": 77,
+          "word_token_id": 48
+        },
+        {
+          "token_body": "了",
+          "token_type": "text",
+          "global_token_id": 77,
+          "sentence_token_id": 78,
+          "word_token_id": 49
+        },
+        {
+          "token_body": "新",
+          "token_type": "text",
+          "global_token_id": 78,
+          "sentence_token_id": 79,
+          "word_token_id": 50
+        },
+        {
+          "token_body": "朋",
+          "token_type": "text",
+          "global_token_id": 79,
+          "sentence_token_id": 80,
+          "word_token_id": 51
+        },
+        {
+          "token_body": "友",
+          "token_type": "text",
+          "global_token_id": 80,
+          "sentence_token_id": 81,
+          "word_token_id": 51
+        },
+        {
+          "token_body": "。",
+          "token_type": "punctuation",
+          "global_token_id": 81,
+          "sentence_token_id": 82,
+          "word_token_id": 52
+        }
+      ],
+      "word_tokens": [
+        {
+          "word_token_id": 1,
+          "word_body": "在",
+          "token_ids": [
+            1
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 2,
+          "word_body": "一家",
+          "token_ids": [
+            2,
+            3
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 3,
+          "word_body": "小",
+          "token_ids": [
+            4
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 4,
+          "word_body": "餐馆",
+          "token_ids": [
+            5,
+            6
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 5,
+          "word_body": "，",
+          "token_ids": [
+            7
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 6,
+          "word_body": "小明",
+          "token_ids": [
+            8,
+            9
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 7,
+          "word_body": "遇到",
+          "token_ids": [
+            10,
+            11
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 8,
+          "word_body": "了",
+          "token_ids": [
+            12
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 9,
+          "word_body": "一位",
+          "token_ids": [
+            13,
+            14
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 10,
+          "word_body": "新",
+          "token_ids": [
+            15
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 11,
+          "word_body": "朋友",
+          "token_ids": [
+            16,
+            17
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 12,
+          "word_body": "，",
+          "token_ids": [
+            18
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 13,
+          "word_body": "叫",
+          "token_ids": [
+            19
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 14,
+          "word_body": "玛丽",
+          "token_ids": [
+            20,
+            21
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 15,
+          "word_body": "。",
+          "token_ids": [
+            22
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 16,
+          "word_body": "他们",
+          "token_ids": [
+            24,
+            25
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 17,
+          "word_body": "点",
+          "token_ids": [
+            26
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 18,
+          "word_body": "了",
+          "token_ids": [
+            27
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 19,
+          "word_body": "很多",
+          "token_ids": [
+            28,
+            29
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 20,
+          "word_body": "美味",
+          "token_ids": [
+            30,
+            31
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 21,
+          "word_body": "的",
+          "token_ids": [
+            32
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 22,
+          "word_body": "食物",
+          "token_ids": [
+            33,
+            34
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 23,
+          "word_body": "，",
+          "token_ids": [
+            35
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 24,
+          "word_body": "一起",
+          "token_ids": [
+            36,
+            37
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 25,
+          "word_body": "聊",
+          "token_ids": [
+            38
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 26,
+          "word_body": "了",
+          "token_ids": [
+            39
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 27,
+          "word_body": "很",
+          "token_ids": [
+            40
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 28,
+          "word_body": "长时间",
+          "token_ids": [
+            41,
+            42,
+            43
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 29,
+          "word_body": "。",
+          "token_ids": [
+            44
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 30,
+          "word_body": "小明",
+          "token_ids": [
+            46,
+            47
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 31,
+          "word_body": "要",
+          "token_ids": [
+            48
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 32,
+          "word_body": "到",
+          "token_ids": [
+            49
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 33,
+          "word_body": "了",
+          "token_ids": [
+            50
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 34,
+          "word_body": "玛丽",
+          "token_ids": [
+            51,
+            52
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 35,
+          "word_body": "的",
+          "token_ids": [
+            53
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 36,
+          "word_body": "电话号码",
+          "token_ids": [
+            54,
+            55,
+            56,
+            57
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 37,
+          "word_body": "，",
+          "token_ids": [
+            58
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 38,
+          "word_body": "他们",
+          "token_ids": [
+            59,
+            60
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 39,
+          "word_body": "约",
+          "token_ids": [
+            61
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 40,
+          "word_body": "好",
+          "token_ids": [
+            62
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 41,
+          "word_body": "了",
+          "token_ids": [
+            63
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 42,
+          "word_body": "下次",
+          "token_ids": [
+            64,
+            65
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 43,
+          "word_body": "再见面",
+          "token_ids": [
+            66,
+            67,
+            68
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 44,
+          "word_body": "。",
+          "token_ids": [
+            69
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 45,
+          "word_body": "小明",
+          "token_ids": [
+            71,
+            72
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 46,
+          "word_body": "很",
+          "token_ids": [
+            73
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 47,
+          "word_body": "高兴",
+          "token_ids": [
+            74,
+            75
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 48,
+          "word_body": "认识",
+          "token_ids": [
+            76,
+            77
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 49,
+          "word_body": "了",
+          "token_ids": [
+            78
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 50,
+          "word_body": "新",
+          "token_ids": [
+            79
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 51,
+          "word_body": "朋友",
+          "token_ids": [
+            80,
+            81
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 52,
+          "word_body": "。",
+          "token_ids": [
+            82
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        }
+      ]
+    }
+  ]
+}

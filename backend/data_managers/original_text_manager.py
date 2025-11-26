@@ -1,13 +1,18 @@
 import json
 import os
 import chardet  
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import asdict, dataclass
 from backend.data_managers.data_classes import OriginalText, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 
 # 导入新的数据结构类
 try:
-    from backend.data_managers.data_classes_new import Sentence as NewSentence, OriginalText as NewOriginalText
+    from backend.data_managers.data_classes_new import (
+        Sentence as NewSentence,
+        OriginalText as NewOriginalText,
+        Token as NewToken,
+        WordToken as NewWordToken,
+    )
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False
@@ -197,8 +202,14 @@ class OriginalTextManager:
                 if hasattr(sentence, 'sentence_difficulty_level') and sentence.sentence_difficulty_level is not None:
                     sentence_data['sentence_difficulty_level'] = sentence.sentence_difficulty_level
                 
-                if hasattr(sentence, 'tokens') and sentence.tokens is not None:
-                    sentence_data['tokens'] = sentence.tokens
+                if hasattr(sentence, 'tokens') and sentence.tokens:
+                    sentence_data['tokens'] = [asdict(token) for token in sentence.tokens]
+                
+                if hasattr(sentence, 'word_tokens') and sentence.word_tokens:
+                    sentence_data['word_tokens'] = [
+                        {**asdict(word_token), 'token_ids': list(word_token.token_ids)}
+                        for word_token in sentence.word_tokens
+                    ]
                 
                 text_data['text_by_sentence'].append(sentence_data)
             
@@ -232,6 +243,46 @@ class OriginalTextManager:
         if not text:
             return ""
         return "\n".join([s.sentence_body for s in text.text_by_sentence])
+
+    def _convert_tokens(self, sentence_data: Dict) -> Optional[tuple]:
+        if not self.use_new_structure or not NEW_STRUCTURE_AVAILABLE:
+            return None
+        tokens_data = sentence_data.get('tokens')
+        if not tokens_data:
+            return None
+        converted = []
+        for token in tokens_data:
+            try:
+                converted.append(NewToken(**token))
+            except TypeError:
+                # 兼容缺少字段或包含额外字段的情况
+                filtered = {k: token.get(k) for k in NewToken.__dataclass_fields__.keys() if k in token}
+                # 必填字段兜底
+                filtered.setdefault('token_body', token.get('token_body', ''))
+                filtered.setdefault('token_type', token.get('token_type', 'text'))
+                converted.append(NewToken(**filtered))
+        return tuple(converted) if converted else None
+
+    def _convert_word_tokens(self, sentence_data: Dict) -> Optional[tuple]:
+        if not self.use_new_structure or not NEW_STRUCTURE_AVAILABLE:
+            return None
+        word_tokens_data = sentence_data.get('word_tokens')
+        if not word_tokens_data:
+            return None
+        converted = []
+        for wt in word_tokens_data:
+            token_ids = wt.get('token_ids') or []
+            converted.append(
+                NewWordToken(
+                    word_token_id=wt.get('word_token_id'),
+                    token_ids=tuple(token_ids),
+                    word_body=wt.get('word_body', ''),
+                    pos_tag=wt.get('pos_tag'),
+                    lemma=wt.get('lemma'),
+                    linked_vocab_id=wt.get('linked_vocab_id'),
+                )
+            )
+        return tuple(converted) if converted else None
 
     def load_from_file(self, path: str):
         """
@@ -275,20 +326,26 @@ class OriginalTextManager:
             for tid, text_data in items_to_process:
                 if self.use_new_structure:
                     # 使用新结构加载，tokens先留空
-                    text = NewOriginalText(
-                        text_id=text_data['text_id'],
-                        text_title=text_data['text_title'],
-                        text_by_sentence=[
+                    new_sentences = []
+                    for sentence in text_data.get('text_by_sentence', []):
+                        tokens_tuple = self._convert_tokens(sentence)
+                        word_tokens_tuple = self._convert_word_tokens(sentence)
+                        new_sentences.append(
                             NewSentence(
                                 text_id=sentence['text_id'],
                                 sentence_id=sentence['sentence_id'],
                                 sentence_body=sentence['sentence_body'],
                                 grammar_annotations=sentence.get('grammar_annotations', []),
                                 vocab_annotations=sentence.get('vocab_annotations', []),
-                                sentence_difficulty_level=None,  # 暂时不设置难度
-                                tokens=None  # tokens先留空，先不分词
-                            ) for sentence in text_data['text_by_sentence']
-                        ]
+                                sentence_difficulty_level=sentence.get('sentence_difficulty_level'),
+                                tokens=tokens_tuple,
+                                word_tokens=word_tokens_tuple,
+                            )
+                        )
+                    text = NewOriginalText(
+                        text_id=text_data['text_id'],
+                        text_title=text_data['text_title'],
+                        text_by_sentence=new_sentences
                     )
                 else:
                     # 使用旧结构加载

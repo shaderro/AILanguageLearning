@@ -19,7 +19,8 @@ from database_system.business_logic.models import (
 from backend.data_managers.data_classes_new import (
     OriginalText as TextDTO,
     Sentence as SentenceDTO,
-    Token as TokenDTO
+    Token as TokenDTO,
+    WordToken as WordTokenDTO,
 )
 
 
@@ -42,22 +43,37 @@ class SentenceAdapter:
         
         # 处理tokens
         tokens = ()
-        if include_tokens and model.tokens:
-            tokens = tuple([
-                TokenDTO(
-                    token_body=t.token_body,
-                    token_type=t.token_type.value if t.token_type else 'TEXT',
-                    difficulty_level=t.difficulty_level.value.lower() if t.difficulty_level else None,
-                    # 可选字段按需映射（如果 ORM 上存在这些属性）
-                    global_token_id=getattr(t, "global_token_id", None),
-                    sentence_token_id=t.sentence_token_id,
-                    pos_tag=getattr(t, "pos_tag", None),
-                    lemma=getattr(t, "lemma", None),
-                    is_grammar_marker=getattr(t, "is_grammar_marker", False),
-                    linked_vocab_id=getattr(t, "linked_vocab_id", None),
-                )
-                for t in sorted(model.tokens, key=lambda x: x.sentence_token_id)
-            ])
+        word_tokens = ()
+        if include_tokens:
+            if model.tokens:
+                tokens = tuple([
+                    TokenDTO(
+                        token_body=t.token_body,
+                        token_type=t.token_type.value if t.token_type else 'TEXT',
+                        difficulty_level=t.difficulty_level.value.lower() if t.difficulty_level else None,
+                        # 可选字段按需映射（如果 ORM 上存在这些属性）
+                        global_token_id=getattr(t, "global_token_id", None),
+                        sentence_token_id=t.sentence_token_id,
+                        pos_tag=getattr(t, "pos_tag", None),
+                        lemma=getattr(t, "lemma", None),
+                        is_grammar_marker=getattr(t, "is_grammar_marker", False),
+                        linked_vocab_id=getattr(t, "linked_vocab_id", None),
+                        word_token_id=getattr(t, "word_token_id", None),
+                    )
+                    for t in sorted(model.tokens, key=lambda x: x.sentence_token_id)
+                ])
+            if hasattr(model, "word_tokens") and model.word_tokens:
+                word_tokens = tuple([
+                    WordTokenDTO(
+                        word_token_id=wt.word_token_id,
+                        token_ids=tuple(wt.token_ids or []),
+                        word_body=wt.word_body,
+                        pos_tag=getattr(wt, "pos_tag", None),
+                        lemma=getattr(wt, "lemma", None),
+                        linked_vocab_id=getattr(wt, "linked_vocab_id", None),
+                    )
+                    for wt in sorted(model.word_tokens, key=lambda x: x.word_token_id)
+                ])
         
         # 处理difficulty_level（枚举 → 字符串）
         difficulty_level = None
@@ -71,7 +87,8 @@ class SentenceAdapter:
             grammar_annotations=grammar_annotations,
             vocab_annotations=vocab_annotations,
             sentence_difficulty_level=difficulty_level,
-            tokens=tokens
+            tokens=tokens,
+            word_tokens=word_tokens or None
         )
     
     @staticmethod

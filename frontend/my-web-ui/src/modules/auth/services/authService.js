@@ -8,7 +8,7 @@ const API_BASE_URL = 'http://localhost:8000'
 
 const authApi = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // 增加到 30 秒，避免刷新后验证 token 时超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -18,31 +18,49 @@ export const authService = {
   /**
    * 用户注册
    * @param {string} password - 密码（至少6位）
-   * @returns {Promise<{access_token: string, user_id: number}>}
+   * @param {string} email - 邮箱
+   * @returns {Promise<{access_token: string, user_id: number, email_unique: boolean, email_check_message: string}>}
    */
-  register: async (password) => {
-    const response = await authApi.post('/api/auth/register', { password })
+  register: async (password, email) => {
+    const response = await authApi.post('/api/auth/register', { password, email })
+    return response.data
+  },
+
+  /**
+   * 检查邮箱唯一性（用于debug UI）
+   * @param {string} email - 要检查的邮箱
+   * @returns {Promise<{unique: boolean, message: string}>}
+   */
+  checkEmailUnique: async (email) => {
+    const response = await authApi.get('/api/auth/check-email', {
+      params: { email }
+    })
     return response.data
   },
 
   /**
    * 用户登录
-   * @param {number} userId - 用户ID
+   * @param {number} userId - 用户ID（可选）
    * @param {string} password - 密码
+   * @param {string} email - 邮箱（可选）
    * @returns {Promise<{access_token: string, user_id: number}>}
    */
-  login: async (userId, password) => {
-    const response = await authApi.post('/api/auth/login', {
-      user_id: userId,
-      password: password,
-    })
+  login: async (userId, password, email = null) => {
+    const requestBody = { password }
+    if (userId) {
+      requestBody.user_id = userId
+    }
+    if (email) {
+      requestBody.email = email
+    }
+    const response = await authApi.post('/api/auth/login', requestBody)
     return response.data
   },
 
   /**
    * 获取当前用户信息
    * @param {string} token - JWT token
-   * @returns {Promise<{user_id: number, created_at: string}>}
+   * @returns {Promise<{user_id: number, email: string, created_at: string}>}
    */
   getCurrentUser: async (token) => {
     const response = await authApi.get('/api/auth/me', {
@@ -124,6 +142,34 @@ export const authService = {
     } catch (e) {
       return {}
     }
+  },
+
+  /**
+   * 忘记密码 - 生成重置链接
+   * @param {string} email - 邮箱（可选）
+   * @param {number} userId - 用户ID（可选）
+   * @returns {Promise<{success: boolean, reset_link: string, message: string, token?: string}>}
+   */
+  forgotPassword: async (email = null, userId = null) => {
+    const response = await authApi.post('/api/auth/forgot-password', {
+      email,
+      user_id: userId
+    })
+    return response.data
+  },
+
+  /**
+   * 重置密码
+   * @param {string} token - 密码重置 token
+   * @param {string} newPassword - 新密码
+   * @returns {Promise<{success: boolean, message: string}>}
+   */
+  resetPassword: async (token, newPassword) => {
+    const response = await authApi.post('/api/auth/reset-password', {
+      token,
+      new_password: newPassword
+    })
+    return response.data
   },
 }
 

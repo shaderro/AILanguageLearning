@@ -12,18 +12,20 @@ class TextCRUD:
     def __init__(self, session: Session):
         self.session = session
     
-    def create_text(self, text_title: str, user_id: int = None, language: str = None) -> OriginalText:
+    def create_text(self, text_title: str, user_id: int = None, language: str = None, processing_status: str = 'completed') -> OriginalText:
         """创建文章"""
-        text = OriginalText(text_title=text_title, user_id=user_id, language=language)
+        text = OriginalText(text_title=text_title, user_id=user_id, language=language, processing_status=processing_status)
         self.session.add(text)
         self.session.commit()
         self.session.refresh(text)
         return text
     
     def get_text_by_id(self, text_id: int) -> Optional[OriginalText]:
-        """根据ID获取文章（预加载sentences关系）"""
+        """根据ID获取文章（预加载sentences、tokens和word_tokens关系）"""
+        from sqlalchemy.orm import selectinload
         return self.session.query(OriginalText).options(
-            joinedload(OriginalText.sentences)
+            joinedload(OriginalText.sentences).selectinload(Sentence.tokens),
+            joinedload(OriginalText.sentences).selectinload(Sentence.word_tokens)
         ).filter(
             OriginalText.text_id == text_id
         ).first()
@@ -58,14 +60,49 @@ class TextCRUD:
         return sentence
     
     def get_sentences_by_text(self, text_id: int) -> List[Sentence]:
-        """获取文章的所有句子"""
-        return self.session.query(Sentence).filter(
+        """获取文章的所有句子（预加载tokens和word_tokens关系）"""
+        from sqlalchemy.orm import selectinload
+        return self.session.query(Sentence).options(
+            selectinload(Sentence.tokens),
+            selectinload(Sentence.word_tokens)
+        ).filter(
             Sentence.text_id == text_id
         ).all()
     
     def get_sentence_by_id(self, text_id: int, sentence_id: int) -> Optional[Sentence]:
-        """根据ID获取句子"""
+        """根据ID获取句子（预加载tokens和word_tokens关系）"""
         from sqlalchemy import and_
-        return self.session.query(Sentence).filter(
+        from sqlalchemy.orm import selectinload
+        return self.session.query(Sentence).options(
+            selectinload(Sentence.tokens),
+            selectinload(Sentence.word_tokens)
+        ).filter(
             and_(Sentence.text_id == text_id, Sentence.sentence_id == sentence_id)
         ).first()
+    
+    def update_text(self, text_id: int, text_title: str = None, language: str = None, processing_status: str = None) -> Optional[OriginalText]:
+        """更新文章"""
+        text = self.get_text_by_id(text_id)
+        if not text:
+            return None
+        
+        if text_title is not None:
+            text.text_title = text_title
+        if language is not None:
+            text.language = language
+        if processing_status is not None:
+            text.processing_status = processing_status
+        
+        self.session.commit()
+        self.session.refresh(text)
+        return text
+    
+    def delete_text(self, text_id: int) -> bool:
+        """删除文章（级联删除相关句子、tokens等）"""
+        text = self.get_text_by_id(text_id)
+        if not text:
+            return False
+        
+        self.session.delete(text)
+        self.session.commit()
+        return True

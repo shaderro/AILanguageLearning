@@ -12,5 +12,5 @@ Write-Host "按 Ctrl+C 停止服务器" -ForegroundColor Yellow
 Write-Host ""
 
 # 启动服务器
-python server.py
+python frontend/my-web-ui/backend/main.py
 

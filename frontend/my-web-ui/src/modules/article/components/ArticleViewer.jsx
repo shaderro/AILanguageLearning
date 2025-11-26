@@ -29,20 +29,44 @@ export default function ArticleViewer({
   const { userId } = useUser()
   const { data, isLoading, isError, error } = useArticle(articleId, userId)
 
-  // Asked tokens management - 现在从props接收，不再创建新的hook实例
-  // const { askedTokenKeys, isTokenAsked, markAsAsked } = useAskedTokens(articleId)
+  const normalizeLanguageCode = (language) => {
+    if (!language) return null
+    const lower = String(language).trim().toLowerCase()
+    if (['zh', 'zh-cn', 'zh_cn', 'zh-hans', '中文', 'chinese'].includes(lower)) return 'zh'
+    if (['zh-tw', 'zh_tw', '繁体中文'].includes(lower)) return 'zh'
+    if (['en', 'english', '英文'].includes(lower)) return 'en'
+    if (['de', 'german', '德文', '德语'].includes(lower)) return 'de'
+    if (lower.length === 2) return lower
+    return null
+  }
+
+  const rawSentences = data?.data?.sentences
+  const articleLanguage = data?.data?.language || null
+  const articleLanguageCode = normalizeLanguageCode(articleLanguage)
+  const articleIsNonWhitespace = articleLanguageCode
+    ? ['zh', 'ja', 'ko'].includes(articleLanguageCode)
+    : undefined
 
   const sentences = useMemo(() => {
-    console.log('🔍 [ArticleViewer] Processing data:', data)
-    console.log('🔍 [ArticleViewer] data.data:', data?.data)
-    const raw = data?.data?.sentences
-    console.log('🔍 [ArticleViewer] sentences:', raw, 'isArray:', Array.isArray(raw))
-    if (Array.isArray(raw) && raw.length > 0) {
-      console.log('🔍 [ArticleViewer] First sentence:', raw[0])
-      console.log('🔍 [ArticleViewer] First sentence has tokens?', raw[0]?.tokens, 'length:', raw[0]?.tokens?.length)
+    // 🔧 移除频繁的调试日志，减少控制台输出
+    // console.log('🔍 [ArticleViewer] Processing data:', data)
+    // console.log('🔍 [ArticleViewer] data.data:', data?.data)
+    // console.log('🔍 [ArticleViewer] sentences:', rawSentences, 'isArray:', Array.isArray(rawSentences))
+    if (!Array.isArray(rawSentences)) {
+      return []
     }
-    return Array.isArray(raw) ? raw : []
-  }, [data])
+    try {
+      return rawSentences.map((sentence) => ({
+        ...sentence,
+        language: sentence.language ?? articleLanguage,
+        language_code: sentence.language_code ?? articleLanguageCode,
+        is_non_whitespace: sentence.is_non_whitespace ?? articleIsNonWhitespace,
+      }))
+    } catch (err) {
+      console.error('❌ [ArticleViewer] 处理句子数据时出错:', err)
+      return []
+    }
+  }, [data, rawSentences, articleLanguage, articleLanguageCode, articleIsNonWhitespace])
 
   // Vocab explanations management
   const {
@@ -213,6 +237,15 @@ export default function ArticleViewer({
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto h-full max-h-[calc(100vh-200px)]">
         <div className="text-red-500">Failed to load: {String(error?.message || error)}</div>
+      </div>
+    )
+  }
+
+  // 🔧 如果没有数据且不在加载中，返回空状态（避免渲染错误）
+  if (!data && !isLoading) {
+    return (
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto h-full max-h-[calc(100vh-200px)]">
+        <div className="text-gray-500">No article data available</div>
       </div>
     )
   }
