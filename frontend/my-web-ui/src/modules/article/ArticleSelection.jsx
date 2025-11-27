@@ -3,7 +3,7 @@ import { useArticles } from '../../hooks/useApi'
 import { useUser } from '../../contexts/UserContext'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { apiService } from '../../services/api'
 import { useUIText } from '../../i18n/useUIText'
 
@@ -108,6 +108,8 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     }
   }
   
+  const fallbackPreview = t('暂无摘要')
+
   // 将后端摘要映射为列表卡片需要的结构
   // 注意：language过滤已经在API层面完成（登录模式）或本地完成（游客模式），这里只需要映射数据
   console.log('📋 [ArticleSelection] summaries 数量:', summaries.length, '前3条:', summaries.slice(0, 3))
@@ -116,9 +118,19 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     const textId = s.text_id || s.article_id || s.id
     const textTitle = s.text_title || s.title || `Article ${textId}`
     const totalSentences = s.total_sentences || s.sentence_count || 0
-    const totalTokens = s.total_tokens || s.wordCount || 0
+    const totalTokens = s.total_tokens || s.wordCount || s.token_count || 0
     const language = s.language || null
     const processingStatus = s.processing_status || 'completed' // 处理状态：processing/completed/failed
+    const noteCount =
+      s.note_count ?? s.notes_count ?? s.total_notes ?? s.grammar_notes_count ?? s.vocab_notes_count ?? 0
+    const previewText =
+      s.preview_text ||
+      s.preview ||
+      s.summary ||
+      s.description ||
+      s.snippet ||
+      s.first_sentence ||
+      fallbackPreview
     
     return {
       id: textId,
@@ -129,6 +141,8 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       language: language, // 从后端获取语言字段，null表示未设置
       difficulty: 'N/A',
       wordCount: totalTokens,
+      noteCount,
+      preview: previewText,
       estimatedTime: `${Math.max(1, Math.ceil((totalSentences || 1) / 5))} min`,
       category: 'Article',
       tags: [],
@@ -138,6 +152,62 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
 
   // 文章已经在后端过滤，直接使用mappedArticles
   const filteredArticles = mappedArticles
+
+  const [previewOverrides, setPreviewOverrides] = useState({})
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchMissingPreviews = async () => {
+      const pending = filteredArticles.filter(
+        (article) =>
+          (!article.preview || article.preview === fallbackPreview) &&
+          !previewOverrides[article.id],
+      )
+      if (pending.length === 0) {
+        return
+      }
+
+      await Promise.all(
+        pending.map(async (article) => {
+          try {
+            const resp = await apiService.getArticleSentences(article.id, { limit: 1 })
+            const sentences =
+              resp?.data?.data?.sentences ||
+              resp?.data?.sentences ||
+              resp?.data ||
+              resp?.sentences ||
+              []
+            const firstSentence = Array.isArray(sentences) && sentences.length > 0
+              ? sentences[0]?.sentence_body || sentences[0]?.text || sentences[0]?.sentence
+              : null
+            if (firstSentence && !cancelled) {
+              setPreviewOverrides((prev) => ({
+                ...prev,
+                [article.id]: firstSentence,
+              }))
+            }
+          } catch (err) {
+            console.warn('⚠️ [ArticleSelection] 获取文章首句失败:', article.id, err)
+          }
+        }),
+      )
+    }
+
+    fetchMissingPreviews()
+
+    return () => {
+      cancelled = true
+    }
+  }, [filteredArticles, previewOverrides, fallbackPreview])
+
+  const enrichedArticles = useMemo(
+    () =>
+      filteredArticles.map((article) => ({
+        ...article,
+        preview: previewOverrides[article.id] ?? article.preview,
+      })),
+    [filteredArticles, previewOverrides],
+  )
   console.log('📋 [ArticleSelection] mappedArticles 数量:', mappedArticles.length, 'filteredArticles 数量:', filteredArticles.length)
 
   const handleArticleSelect = (articleId) => {
@@ -266,18 +336,18 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                 <div className="mb-6">
                   <p className="text-gray-600">
                     {selectedLanguage === 'all' 
-                      ? t('共显示 {count} 篇文章').replace('{count}', filteredArticles.length)
+                      ? t('共显示 {count} 篇文章').replace('{count}', enrichedArticles.length)
                       : t('共显示 {count} 篇文章（{language}）')
-                          .replace('{count}', filteredArticles.length)
+                          .replace('{count}', enrichedArticles.length)
                           .replace('{language}', selectedLanguage)
                     }
                   </p>
                 </div>
 
                 {/* Article List */}
-                {filteredArticles.length > 0 ? (
+                {enrichedArticles.length > 0 ? (
                   <ArticleList 
-                    articles={filteredArticles}
+                    articles={enrichedArticles}
                     onArticleSelect={handleArticleSelect}
                     onArticleEdit={handleEdit}
                     onArticleDelete={handleDelete}

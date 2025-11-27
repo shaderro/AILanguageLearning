@@ -1,4 +1,4 @@
-import ArticleCard from './ArticleCard'
+import { ArticlePreviewCard } from '../../../components/features/article/ArticlePreviewCard'
 
 const ArticleList = ({ 
   articles = [], 
@@ -24,21 +24,26 @@ const ArticleList = ({
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
       {articles.map((article) => (
-        <ArticleCard
+        <ArticlePreviewCard
           key={article.id}
-          id={article.id}
           title={article.title}
-          description={article.description}
-          language={article.language}
-          difficulty={article.difficulty}
           wordCount={article.wordCount}
-          estimatedTime={article.estimatedTime}
-          category={article.category}
-          tags={article.tags}
+          noteCount={article.noteCount}
+          preview={article.preview}
           processingStatus={article.processingStatus}
-          onSelect={onArticleSelect}
-          onEdit={onArticleEdit}
-          onDelete={onArticleDelete}
+          width="100%"
+          height="auto"
+          onRead={() => onArticleSelect?.(article.id)}
+          onEdit={
+            onArticleEdit
+              ? () => onArticleEdit(article.id, article.title)
+              : undefined
+          }
+          onDelete={
+            onArticleDelete
+              ? () => onArticleDelete(article.id, article.title)
+              : undefined
+          }
         />
       ))}
     </div>

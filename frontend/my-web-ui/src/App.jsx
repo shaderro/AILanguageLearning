@@ -18,6 +18,7 @@ import { UserProvider, useUser } from './contexts/UserContext'
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
 import { UiLanguageProvider } from './contexts/UiLanguageContext'
 import { useUIText } from './i18n/useUIText'
+import UIDemoPage from './pages/UIDemo'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -316,6 +317,8 @@ function AppContent() {
               />
             )
           )}
+
+          {currentPage === 'UIDemo' && <UIDemoPage />}
         </div>
       </div>
     </div>

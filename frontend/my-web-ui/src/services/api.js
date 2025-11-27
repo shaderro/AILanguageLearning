@@ -547,11 +547,15 @@ export const apiService = {
     }
   },
 
-  // 获取文章的句子列表
-  getArticleSentences: (textId) => 
-    api.get(API_TARGET === 'mock'
-      ? `/api/articles/${textId}`
-      : `/api/v2/texts/${textId}/sentences/`),
+  // 获取文章的句子列表（可选 limit）
+  getArticleSentences: (textId, { limit } = {}) => {
+    const query = limit ? `?limit=${encodeURIComponent(limit)}` : '';
+    return api.get(
+      API_TARGET === 'mock'
+        ? `/api/articles/${textId}`
+        : `/api/v2/texts/${textId}/sentences/${query}`,
+    );
+  },
   
   // 更新文章
   updateArticle: async (textId, updates) => {
