@@ -90,9 +90,9 @@ export const tokens = {
         tertiary: '#f3f4f6',     // gray-100
       },
       border: {
-        default: '#e5e7eb',      // gray-200
-        hover: '#d1d5db',        // gray-300
-        focus: '#3b82f6',        // primary-500
+        default: '#d1d5db',      // gray-300 - darker base
+        hover: '#9ca3af',        // gray-400 - Rollover
+        focus: '#84c4b5',        // primary-500
       },
     },
   },

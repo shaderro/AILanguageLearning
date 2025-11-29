@@ -7,6 +7,43 @@ import { useEffect, useMemo, useState } from 'react'
 import { apiService } from '../../services/api'
 import { useUIText } from '../../i18n/useUIText'
 
+const PREVIEW_CACHE_KEY = 'articlePreviewCache'
+const previewCache = new Map()
+let previewCacheLoaded = false
+
+const ensurePreviewCacheLoaded = () => {
+  if (previewCacheLoaded || typeof window === 'undefined') {
+    return
+  }
+  try {
+    const raw = window.localStorage.getItem(PREVIEW_CACHE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      Object.entries(parsed).forEach(([id, value]) => {
+        if (typeof value === 'string' && value.trim()) {
+          previewCache.set(id, value)
+        }
+      })
+    }
+  } catch (err) {
+    console.warn('⚠️ [ArticleSelection] 读取摘要缓存失败:', err)
+  } finally {
+    previewCacheLoaded = true
+  }
+}
+
+const persistPreviewCache = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  try {
+    const serialized = JSON.stringify(Object.fromEntries(previewCache))
+    window.localStorage.setItem(PREVIEW_CACHE_KEY, serialized)
+  } catch (err) {
+    console.warn('⚠️ [ArticleSelection] 保存摘要缓存失败:', err)
+  }
+}
+
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   const { userId, isGuest } = useUser()
   const { selectedLanguage } = useLanguage()
@@ -42,34 +79,6 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       refetch()
     }
   }, [userId, selectedLanguage, refetch])
-  
-  // 🔧 监听页面可见性变化，当页面变为可见时自动刷新文章列表
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('🔄 [ArticleSelection] 页面变为可见，刷新文章列表')
-        refetch()
-      }
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [refetch])
-  
-  // 🔧 监听焦点变化，当窗口获得焦点时自动刷新文章列表
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log('🔄 [ArticleSelection] 窗口获得焦点，刷新文章列表')
-      refetch()
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    return () => {
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [refetch])
   
   // 处理游客模式和登录模式的数据格式
   let summaries = []
@@ -109,6 +118,8 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   }
   
   const fallbackPreview = t('暂无摘要')
+
+  ensurePreviewCacheLoaded()
 
   // 将后端摘要映射为列表卡片需要的结构
   // 注意：language过滤已经在API层面完成（登录模式）或本地完成（游客模式），这里只需要映射数据
@@ -153,44 +164,63 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   // 文章已经在后端过滤，直接使用mappedArticles
   const filteredArticles = mappedArticles
 
-  const [previewOverrides, setPreviewOverrides] = useState({})
+  const [previewOverrides, setPreviewOverrides] = useState(() => {
+    const initial = {}
+    mappedArticles.forEach((article) => {
+      if (previewCache.has(article.id)) {
+        initial[article.id] = previewCache.get(article.id)
+      }
+    })
+    return initial
+  })
 
   useEffect(() => {
     let cancelled = false
+    const CONCURRENCY = 3
     const fetchMissingPreviews = async () => {
       const pending = filteredArticles.filter(
         (article) =>
           (!article.preview || article.preview === fallbackPreview) &&
-          !previewOverrides[article.id],
+          !previewCache.has(article.id),
       )
       if (pending.length === 0) {
         return
       }
 
-      await Promise.all(
-        pending.map(async (article) => {
-          try {
-            const resp = await apiService.getArticleSentences(article.id, { limit: 1 })
-            const sentences =
-              resp?.data?.data?.sentences ||
-              resp?.data?.sentences ||
-              resp?.data ||
-              resp?.sentences ||
-              []
-            const firstSentence = Array.isArray(sentences) && sentences.length > 0
-              ? sentences[0]?.sentence_body || sentences[0]?.text || sentences[0]?.sentence
-              : null
-            if (firstSentence && !cancelled) {
-              setPreviewOverrides((prev) => ({
-                ...prev,
-                [article.id]: firstSentence,
-              }))
+      for (let i = 0; i < pending.length && !cancelled; i += CONCURRENCY) {
+        const batch = pending.slice(i, i + CONCURRENCY)
+        await Promise.all(
+          batch.map(async (article) => {
+            try {
+              const resp = await apiService.getArticleSentences(article.id, { limit: 1 })
+              const sentences =
+                resp?.data?.data?.sentences ||
+                resp?.data?.sentences ||
+                resp?.data ||
+                resp?.sentences ||
+                []
+              const firstSentence = Array.isArray(sentences) && sentences.length > 0
+                ? sentences[0]?.sentence_body || sentences[0]?.text || sentences[0]?.sentence
+                : null
+              if (firstSentence && !cancelled) {
+                previewCache.set(article.id, firstSentence)
+                persistPreviewCache()
+                setPreviewOverrides((prev) => {
+                  if (prev[article.id] === firstSentence) {
+                    return prev
+                  }
+                  return {
+                    ...prev,
+                    [article.id]: firstSentence,
+                  }
+                })
+              }
+            } catch (err) {
+              console.warn('⚠️ [ArticleSelection] 获取文章首句失败:', article.id, err)
             }
-          } catch (err) {
-            console.warn('⚠️ [ArticleSelection] 获取文章首句失败:', article.id, err)
-          }
-        }),
-      )
+          }),
+        )
+      }
     }
 
     fetchMissingPreviews()
@@ -198,13 +228,13 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     return () => {
       cancelled = true
     }
-  }, [filteredArticles, previewOverrides, fallbackPreview])
+  }, [filteredArticles, fallbackPreview])
 
   const enrichedArticles = useMemo(
     () =>
       filteredArticles.map((article) => ({
         ...article,
-        preview: previewOverrides[article.id] ?? article.preview,
+        preview: previewOverrides[article.id] ?? previewCache.get(article.id) ?? article.preview,
       })),
     [filteredArticles, previewOverrides],
   )
@@ -293,24 +323,16 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   }
 
   return (
-    <div className="h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-      {/* Main Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                {t('选择文章')}
-              </h1>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                {t('请选择一篇文章开始阅读并与 AI 助手对话。')}
-                {selectedLanguage !== 'all' && (
-                  <span className="block mt-2 text-blue-600 font-medium">
-                    {t('当前筛选：')}{selectedLanguage}
-                  </span>
-                )}
-              </p>
+    <div className="bg-white">
+      {/* Main Content */}
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-4">
+              {selectedLanguage !== 'all' && (
+                <span className="block text-primary-600 font-medium">
+                  {t('当前筛选：')}{selectedLanguage}
+                </span>
+              )}
             </div>
 
             {/* Loading / Error */}
@@ -433,13 +455,12 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
             <div className="pb-24"></div>
           </div>
         </div>
-      </div>
 
       {/* Upload New Button - Fixed Position */}
       <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
         <button
           onClick={handleUploadNew}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300"
+          className="bg-[#5BE2C2] hover:bg-[#44c5a7] text-white px-8 py-3 rounded-[40px] shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#a8f4e3]"
         >
           <div className="flex items-center space-x-2">
             <svg 
@@ -455,7 +476,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                 d="M12 4v16m8-8H4" 
               />
             </svg>
-            <span className="font-medium">{t('上传新文章')}</span>
+            <span className="font-semibold">{t('上传新文章')}</span>
           </div>
         </button>
       </div>

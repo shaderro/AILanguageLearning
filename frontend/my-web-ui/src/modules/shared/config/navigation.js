@@ -3,13 +3,6 @@ export const navigationConfig = {
   title: "React Demo",
   pages: [
     {
-      id: 'apiDemo',
-      label: 'API Demo',
-      icon: '🔌',
-      description: 'API 接口演示',
-      path: '/api-demo'
-    },
-    {
       id: 'wordDemo',
       label: 'Word Demo',
       icon: '📚',

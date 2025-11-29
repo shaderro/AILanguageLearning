@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { ApiDemo } from './components/ApiDemo'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
 import ArticleSelection from './modules/article/ArticleSelection'
@@ -19,6 +18,7 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
 import { UiLanguageProvider } from './contexts/UiLanguageContext'
 import { useUIText } from './i18n/useUIText'
 import UIDemoPage from './pages/UIDemo'
+import LandingPage from './pages/LandingPage'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -30,7 +30,7 @@ function AppContent() {
   // 🔧 从 URL 参数初始化页面状态
   const getInitialStateFromURL = () => {
     const params = new URLSearchParams(window.location.search)
-    const page = params.get('page') || 'article'
+    const page = params.get('page') || 'landing'
     const articleId = params.get('articleId')
     return { page, articleId }
   }
@@ -39,6 +39,35 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState(initialState.page)
   const [selectedArticleId, setSelectedArticleId] = useState(initialState.articleId)
   const [isUploadMode, setIsUploadMode] = useState(false)
+
+  const navigateToLanding = () => {
+    setIsUploadMode(false)
+    setSelectedArticleId(null)
+    setCurrentPage('landing')
+  }
+
+  const handleLandingArticleSelect = (articleId) => {
+    if (!articleId) {
+      return
+    }
+    setIsUploadMode(false)
+    setSelectedArticleId(articleId)
+    setCurrentPage('article')
+  }
+
+  const handleLandingViewAll = () => {
+    setIsUploadMode(false)
+    setSelectedArticleId(null)
+    setCurrentPage('article')
+  }
+
+  const handleStartVocabReview = () => {
+    setCurrentPage('wordDemo')
+  }
+
+  const handleStartGrammarReview = () => {
+    setCurrentPage('grammarDemo')
+  }
   
   // 🔧 监听 URL 参数变化（用于新标签页打开）
   useEffect(() => {
@@ -143,10 +172,15 @@ function AppContent() {
             {/* 左侧：Logo 和导航 */}
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">{t('语言学习应用')}</h1>
+                <button
+                  type="button"
+                  onClick={navigateToLanding}
+                  className="text-xl font-bold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                >
+                  {t('语言学习应用')}
+                </button>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navButton('apiDemo', t('API 演示'))}
                 {navButton('wordDemo', t('单词演示'))}
                 {navButton('grammarDemo', t('语法演示'))}
                 {navButton('article', t('文章'))}
@@ -242,13 +276,18 @@ function AppContent() {
       />
 
       <div className={`max-w-7xl mx-auto sm:px-6 lg:px-8 ${
-        currentPage === 'article' ? 'h-[calc(100vh-64px)] overflow-y-auto' : 'min-h-[calc(100vh-64px)]'
+        currentPage === 'article' ? '' : 'min-h-[calc(100vh-64px)]'
       }`}>
         <div className={`px-4 sm:px-0 ${currentPage === 'article' ? '' : ''}`}>
           {/* Pages */}
-          {currentPage === 'apiDemo' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <ApiDemo />
+          {currentPage === 'landing' && (
+            <div className="bg-white rounded-lg border border-gray-200">
+              <LandingPage
+                onArticleSelect={handleLandingArticleSelect}
+                onNavigateToArticles={handleLandingViewAll}
+                onStartVocabReview={handleStartVocabReview}
+                onStartGrammarReview={handleStartGrammarReview}
+              />
             </div>
           )}
 

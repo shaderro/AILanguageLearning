@@ -7,6 +7,9 @@ import { BaseSpinnerDemo } from '../components/base/BaseSpinner.demo';
 import { ConfirmDialogDemo } from '../components/base/ConfirmDialog.demo';
 import { LoadingOverlayDemo } from '../components/base/LoadingOverlay.demo';
 import { ArticlePreviewCard } from '../components/features/article/ArticlePreviewCard';
+import VocabReviewCard from '../components/features/review/VocabReviewCard';
+import GrammarReviewCard from '../components/features/review/GrammarReviewCard';
+import { useState } from 'react';
 
 const demoSections = [
   {
@@ -65,6 +68,70 @@ const functionSections = [
           onEdit={() => {}}
           onDelete={() => {}}
           onRead={() => {}}
+        />
+      );
+    },
+  },
+  {
+    title: 'VocabReviewCard',
+    description: '词汇复习卡片，用于词汇学习和复习场景，支持显示释义、例句导航和复习反馈。',
+    component: function VocabReviewCardDemo() {
+      return (
+        <VocabReviewCard
+          vocab={{
+            vocab_id: 1,
+            vocab_body: 'vertreten',
+            explanation: '表示伸展、活动 (肢体)；代表、代理 (某人或某组织)；坚持、维护 (观点或立场)；扭伤、挫伤 (肢体)',
+            examples: [
+              {
+                original_sentence: 'Er vertritt die Ansicht, dass...',
+                context_explanation: '在这个句子中，vertreten 表示"代表、坚持"某个观点。'
+              },
+              {
+                original_sentence: 'Ich muss mir die Beine vertreten.',
+                context_explanation: '这里 vertreten 表示"伸展、活动"腿脚的意思。'
+              }
+            ]
+          }}
+          currentProgress={2}
+          totalProgress={3}
+          onClose={() => console.log('关闭')}
+          onPrevious={() => console.log('上一个')}
+          onNext={() => console.log('下一个')}
+          onDontKnow={() => console.log('不认识')}
+          onKnow={() => console.log('认识')}
+        />
+      );
+    },
+  },
+  {
+    title: 'GrammarReviewCard',
+    description: '语法复习卡片，用于语法规则学习和复习场景，支持显示释义、例句导航和复习反馈。',
+    component: function GrammarReviewCardDemo() {
+      return (
+        <GrammarReviewCard
+          grammar={{
+            rule_id: 1,
+            rule_name: '现在完成时',
+            rule_summary: '现在完成时表示过去发生的动作对现在造成的影响或结果，或者表示从过去开始一直持续到现在的动作或状态。结构：have/has + 过去分词。',
+            examples: [
+              {
+                original_sentence: 'I have finished my homework.',
+                context_explanation: '这个句子使用现在完成时，表示"完成作业"这个动作已经完成，对现在的影响是作业已经做完了。'
+              },
+              {
+                original_sentence: 'She has lived in Beijing for five years.',
+                context_explanation: '这里使用现在完成时，表示"居住"这个动作从过去开始一直持续到现在，已经持续了五年。'
+              }
+            ]
+          }}
+          currentProgress={2}
+          totalProgress={3}
+          onClose={() => console.log('关闭')}
+          onPrevious={() => console.log('上一个')}
+          onNext={() => console.log('下一个')}
+          onDontKnow={() => console.log('不认识')}
+          onKnow={() => console.log('认识')}
         />
       );
     },

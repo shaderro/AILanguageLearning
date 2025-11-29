@@ -7,6 +7,7 @@ import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
 import ReviewCard from '../shared/components/ReviewCard'
+import VocabReviewCard from '../../components/features/review/VocabReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import { useUIText } from '../../i18n/useUIText'
 
@@ -248,19 +249,33 @@ function WordDemo() {
   // 复习模式
   if (isReviewMode) {
     if (currentReviewIndex < reviewWords.length) {
+      const currentVocab = reviewWords[currentReviewIndex]
       return (
         <div className="h-full bg-gray-100 p-8">
           <div className="max-w-6xl mx-auto">
-            <ReviewCard
-              type="vocab"
-              item={reviewWords[currentReviewIndex]}
-              index={currentReviewIndex}
-              total={reviewWords.length}
-              onAnswer={handleReviewAnswer}
-              onNext={handleNextReview}
-              onBack={handleBackToWords}
-              onPrevCard={handlePrevReview}
-              onNextCard={handleNextReview}
+            <VocabReviewCard
+              vocab={currentVocab}
+              currentProgress={currentReviewIndex + 1}
+              totalProgress={reviewWords.length}
+              onClose={handleBackToWords}
+              onPrevious={currentReviewIndex > 0 ? handlePrevReview : null}
+              onNext={currentReviewIndex < reviewWords.length - 1 ? handleNextReview : null}
+              onDontKnow={() => {
+                handleReviewAnswer('unknown')
+                setTimeout(() => {
+                  if (currentReviewIndex + 1 < reviewWords.length) {
+                    handleNextReview()
+                  }
+                }, 300)
+              }}
+              onKnow={() => {
+                handleReviewAnswer('know')
+                setTimeout(() => {
+                  if (currentReviewIndex + 1 < reviewWords.length) {
+                    handleNextReview()
+                  }
+                }, 300)
+              }}
             />
           </div>
         </div>

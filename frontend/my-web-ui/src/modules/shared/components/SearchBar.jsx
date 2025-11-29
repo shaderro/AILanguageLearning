@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useUIText } from '../../../i18n/useUIText'
+import { BaseButton } from '../../../components/base/BaseButton'
 
 const SearchBar = ({ placeholder = '搜索...', onSearch, className = '' }) => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -30,12 +31,13 @@ const SearchBar = ({ placeholder = '搜索...', onSearch, className = '' }) => {
           value={searchTerm}
           onChange={handleInputChange}
         />
-        <button
+        <BaseButton
           type="submit"
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          variant="secondary"
+          size="sm"
         >
           {t('搜索')}
-        </button>
+        </BaseButton>
       </form>
     </div>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BaseCard, BaseButton } from '../../base';
+import { componentTokens } from '../../../design-tokens/design-tokens';
 import { useUIText } from '../../../i18n/useUIText';
 
 export function ArticlePreviewCard({
@@ -15,6 +16,8 @@ export function ArticlePreviewCard({
   style,
   width = 320,
   height = 170,
+  showEditButton = true,
+  showDeleteButton = true,
 }) {
   const t = useUIText ? useUIText() : (text) => text;
   const widthValue = typeof width === 'number' ? `${width}px` : width;
@@ -145,7 +148,7 @@ export function ArticlePreviewCard({
       className={`group shadow-none transition-shadow duration-200 hover:shadow-md ${className ?? ''}`}
       style={{ width: widthValue, height: heightValue, ...style }}
     >
-      <div className="space-y-1">
+      <div className="flex h-full flex-col space-y-1">
         <div className="relative">
           <div
             className="overflow-hidden"
@@ -160,8 +163,8 @@ export function ArticlePreviewCard({
               {title}
             </h3>
           </div>
-          {canInteract && (
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-start gap-1">
+          {canInteract && showEditButton && onEdit && (
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-start justify-end">
               <button
                 type="button"
                 onClick={onEdit}
@@ -181,30 +184,16 @@ export function ArticlePreviewCard({
                   />
                 </svg>
               </button>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="pointer-events-auto hidden rounded-full bg-white/70 p-1 text-red-500 opacity-0 transition-all duration-200 hover:bg-white hover:text-red-600 group-hover:inline-flex group-hover:opacity-100"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+        <div className="flex items-center gap-4" style={{
+          fontSize: componentTokens.text.cardNote.fontSize,
+          color: componentTokens.text.cardNote.color,
+          lineHeight: componentTokens.text.cardNote.lineHeight,
+          fontWeight: componentTokens.text.cardNote.fontWeight,
+        }}>
           <span>{wordCount} words</span>
           <span>{noteCount} notes</span>
         </div>
@@ -224,16 +213,47 @@ export function ArticlePreviewCard({
           )}
         </div>
 
-        <div className="pt-2">
-          <BaseButton
-            variant="primary"
-            size="sm"
-            onClick={() => canInteract && onRead?.()}
-            disabled={!canInteract}
-            className="w-full justify-center px-4"
-          >
-            {isProcessing ? t('处理中...') : isFailed ? t('处理失败') : 'read'}
-          </BaseButton>
+        <div className="mt-auto pt-2 flex items-center gap-2">
+          <div className="flex-1">
+            {showDeleteButton && onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={!canInteract}
+                className={`pointer-events-none inline-flex items-center rounded-full p-2 opacity-0 transition-all duration-200 ${
+                  canInteract
+                    ? 'bg-red-50 text-red-500 hover:bg-red-100 group-hover:pointer-events-auto group-hover:opacity-100'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+                aria-label={t('删除')}
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+          <div className="ml-auto flex justify-end w-1/3 min-w-[96px]">
+            <BaseButton
+              variant="primary"
+              size="sm"
+              onClick={() => canInteract && onRead?.()}
+              disabled={!canInteract}
+              className="w-full justify-center px-4"
+            >
+              {isProcessing ? t('处理中...') : isFailed ? t('处理失败') : 'read'}
+            </BaseButton>
+          </div>
         </div>
       </div>
     </BaseCard>
