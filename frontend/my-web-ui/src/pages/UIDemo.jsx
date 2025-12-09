@@ -9,6 +9,8 @@ import { LoadingOverlayDemo } from '../components/base/LoadingOverlay.demo';
 import { ArticlePreviewCard } from '../components/features/article/ArticlePreviewCard';
 import VocabReviewCard from '../components/features/review/VocabReviewCard';
 import GrammarReviewCard from '../components/features/review/GrammarReviewCard';
+import VocabDetailCard from '../components/features/vocab/VocabDetailCard';
+import { tokens } from '../design-tokens';
 import { useState } from 'react';
 
 const demoSections = [
@@ -136,6 +138,116 @@ const functionSections = [
       );
     },
   },
+  {
+    title: 'VocabDetailCard',
+    description: '词汇详情卡片，用于展示词汇的完整信息，包括释义、语法说明和例句，支持上一个/下一个导航。',
+    component: function VocabDetailCardDemo() {
+      const [currentIndex, setCurrentIndex] = useState(0);
+      
+      const vocabList = [
+        {
+          vocab_id: 1,
+          vocab_body: 'erstrecken',
+          part_of_speech: '动词',
+          explanation: '1. 延伸, 伸展 (指空间上的扩展)\n2. 持续, 延续 (指时间上的跨度)',
+          grammar_notes: 'sich erstrecken — 延伸, 扩展 (反身动词用法)\nerstrecken über + Akk. — 延伸覆盖某区域',
+          examples: [
+            {
+              original_sentence: 'Der Wald erstreckt sich über mehrere Kilometer.',
+              context_explanation: '森林绵延数公里。这里使用反身形式 \'sich erstrecken\' 表示空间上的延伸。',
+              text_title: '德国地理',
+              source: 'qa'
+            },
+            {
+              original_sentence: 'Die Verhandlungen erstreckten sich über mehrere Monate.',
+              context_explanation: '谈判持续了数月。这里 erstrecken 表示时间上的延续。',
+              text_title: '商务德语',
+              source: 'qa'
+            },
+            {
+              original_sentence: 'Das Gebirge erstreckt sich von Norden nach Süden.',
+              context_explanation: '山脉从北向南延伸。这里表示地理空间上的扩展。',
+              text_title: '地理知识',
+              source: 'qa'
+            }
+          ],
+          source: 'qa'
+        },
+        {
+          vocab_id: 2,
+          vocab_body: 'vertreten',
+          part_of_speech: '动词',
+          explanation: '1. 表示伸展、活动 (肢体)\n2. 代表、代理 (某人或某组织)\n3. 坚持、维护 (观点或立场)\n4. 扭伤、挫伤 (肢体)',
+          examples: [
+            {
+              original_sentence: 'Er vertritt die Ansicht, dass...',
+              context_explanation: '在这个句子中，vertreten 表示"代表、坚持"某个观点。'
+            },
+            {
+              original_sentence: 'Ich muss mir die Beine vertreten.',
+              context_explanation: '这里 vertreten 表示"伸展、活动"腿脚的意思。'
+            }
+          ],
+          source: 'qa'
+        }
+      ];
+
+      const handlePrevious = () => {
+        if (currentIndex > 0) {
+          setCurrentIndex(currentIndex - 1);
+        }
+      };
+
+      const handleNext = () => {
+        if (currentIndex < vocabList.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+        }
+      };
+
+      return (
+        <VocabDetailCard
+          vocab={vocabList[currentIndex]}
+          onPrevious={currentIndex > 0 ? handlePrevious : null}
+          onNext={currentIndex < vocabList.length - 1 ? handleNext : null}
+        />
+      );
+    },
+  },
+];
+
+const colorGroups = [
+  {
+    title: 'Primary',
+    items: Object.entries(tokens.colors.primary).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Success',
+    items: Object.entries(tokens.colors.success).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Warning',
+    items: Object.entries(tokens.colors.warning).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Danger',
+    items: Object.entries(tokens.colors.danger).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Gray',
+    items: Object.entries(tokens.colors.gray).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Semantic / Text',
+    items: Object.entries(tokens.colors.semantic.text).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Semantic / Background',
+    items: Object.entries(tokens.colors.semantic.bg).map(([key, value]) => ({ name: key, value })),
+  },
+  {
+    title: 'Semantic / Border',
+    items: Object.entries(tokens.colors.semantic.border).map(([key, value]) => ({ name: key, value })),
+  },
 ];
 
 export default function UIDemoPage() {
@@ -170,6 +282,46 @@ export default function UIDemoPage() {
               </div>
             </section>
           ))}
+        </div>
+
+        {/* Color varients */}
+        <div className="mt-12 space-y-6">
+          <header className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900">Color varients</h2>
+            <p className="text-gray-600">
+              设计 token 中的当前颜色集合，按类别分组展示。
+            </p>
+          </header>
+          <div className="grid gap-6 md:grid-cols-2">
+            {colorGroups.map((group) => (
+              <section
+                key={group.title}
+                className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">{group.title}</h3>
+                  <span className="text-sm text-gray-500">{group.items.length} colors</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {group.items.map(({ name, value }) => (
+                    <div
+                      key={name}
+                      className="rounded-xl border border-gray-100 overflow-hidden bg-white shadow-sm"
+                    >
+                      <div
+                        className="h-16 w-full"
+                        style={{ backgroundColor: value }}
+                      ></div>
+                      <div className="px-3 py-2 flex flex-col gap-1">
+                        <span className="text-xs font-medium text-gray-700 uppercase tracking-wide">{name}</span>
+                        <span className="text-sm text-gray-600">{value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
 
         <div className="mt-12 space-y-8">

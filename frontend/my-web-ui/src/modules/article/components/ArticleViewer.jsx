@@ -190,13 +190,13 @@ export default function ArticleViewer({
         // 添加闪烁效果
         setFlashingSentenceId(targetSentenceId)
         
-        // 10秒后移除闪烁效果
+        // 5 秒后移除闪烁效果
         setTimeout(() => {
           setFlashingSentenceId(null)
           if (onTargetSentenceScrolled) {
             onTargetSentenceScrolled()
           }
-        }, 10000)
+        }, 5000)
       }
     }, 100) // 等待 DOM 渲染
   }, [targetSentenceId, sentences, onTargetSentenceScrolled])

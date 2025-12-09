@@ -4,6 +4,7 @@ import LearnCard from '../shared/components/LearnCard'
 import LearnDetailPage from '../shared/components/LearnDetailPage'
 import ReviewCard from '../shared/components/ReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
+import GrammarReviewCard from '../../components/features/review/GrammarReviewCard'
 import { useGrammarList, useToggleGrammarStar, useRefreshData, useArticles } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
@@ -272,19 +273,37 @@ const GrammarDemo = () => {
   // 复习模式
   if (isReviewMode) {
     if (currentIndex < reviewItems.length) {
+      const currentItem = reviewItems[currentIndex]
+      
+      // 处理答案的回调函数，需要同时调用 handleAnswer 和 handleNext
+      const handleDontKnow = () => {
+        handleAnswer('unknown')
+        // 延迟一下再进入下一题，让用户看到反馈
+        setTimeout(() => {
+          handleNext()
+        }, 300)
+      }
+      
+      const handleKnow = () => {
+        handleAnswer('know')
+        // 延迟一下再进入下一题，让用户看到反馈
+        setTimeout(() => {
+          handleNext()
+        }, 300)
+      }
+      
       return (
         <div className="h-full bg-gray-100 p-8">
           <div className="max-w-6xl mx-auto">
-            <ReviewCard
-              type="grammar"
-              item={reviewItems[currentIndex]}
-              index={currentIndex}
-              total={reviewItems.length}
-              onAnswer={handleAnswer}
+            <GrammarReviewCard
+              grammar={currentItem}
+              currentProgress={currentIndex + 1}
+              totalProgress={reviewItems.length}
+              onClose={() => setIsReviewMode(false)}
+              onPrevious={handlePrev}
               onNext={handleNext}
-              onBack={() => setIsReviewMode(false)}
-              onPrevCard={handlePrev}
-              onNextCard={handleNext}
+              onDontKnow={handleDontKnow}
+              onKnow={handleKnow}
             />
           </div>
         </div>

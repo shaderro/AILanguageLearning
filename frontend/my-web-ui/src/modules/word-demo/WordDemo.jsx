@@ -10,6 +10,7 @@ import ReviewCard from '../shared/components/ReviewCard'
 import VocabReviewCard from '../../components/features/review/VocabReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import { useUIText } from '../../i18n/useUIText'
+import VocabDetailCard from '../../components/features/vocab/VocabDetailCard'
 
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
@@ -295,16 +296,23 @@ function WordDemo() {
     return (
       <div className="h-full bg-gray-100 p-8">
         <div className="max-w-6xl mx-auto">
-          <LearnDetailPage
-            type="vocab"
-            data={selectedWord}
+          <VocabDetailCard
+            vocab={selectedWord}
             loading={isLoadingDetail}
-            onBack={() => {
-              setSelectedWord(null)
-              setSelectedWordId(null)
-            }}
-            onToggleStar={handleToggleStar}
+            onPrevious={null}
+            onNext={null}
           />
+          <div className="mt-4">
+            <button
+              onClick={() => {
+                setSelectedWord(null)
+                setSelectedWordId(null)
+              }}
+              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              {t('返回')}
+            </button>
+          </div>
         </div>
       </div>
     )
