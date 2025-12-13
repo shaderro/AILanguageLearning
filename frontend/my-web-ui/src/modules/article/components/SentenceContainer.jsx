@@ -1,9 +1,13 @@
-import { useState, useRef, useContext } from 'react'
+import React, { useState, useRef, useContext, useCallback, useEffect, useMemo } from 'react'
 import TokenSpan from './TokenSpan'
 import GrammarNotationCard from './notation/GrammarNotationCard'
 import GrammarNoteBadge from './notation/GrammarNoteBadge'
 import { NotationContext } from '../contexts/NotationContext'
 import { useSentenceSelectable } from '../selection/hooks/useSentenceSelectable'
+import QuickTranslationTooltip from '../../../components/QuickTranslationTooltip'
+import { getQuickTranslation, getSystemLanguage } from '../../../services/translationService'
+import { useLanguage, languageNameToCode } from '../../../contexts/LanguageContext'
+import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
@@ -34,7 +38,10 @@ export default function SentenceContainer({
   onSentenceMouseLeave,
   onSentenceClick,
   getSentenceBackgroundStyle,
-  isSentenceInteracting
+  isSentenceInteracting,
+  currentReadingToken = null, // 当前正在朗读的 token {sentenceIndex, tokenIndex}
+  // 🔧 新增：AI详细解释回调
+  onAskAI = null
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -120,6 +127,50 @@ export default function SentenceContainer({
   // 🔧 跟踪 hover 状态（句子或 token）
   const [isHovered, setIsHovered] = useState(false)
   
+  // 🔧 整句翻译相关状态
+  const { selectedLanguage } = useLanguage()
+  const { addLog: addDebugLog } = useTranslationDebug()
+  const [sentenceTranslation, setSentenceTranslation] = useState(null)
+  const [showSentenceTranslation, setShowSentenceTranslation] = useState(false)
+  const [isLoadingSentenceTranslation, setIsLoadingSentenceTranslation] = useState(false)
+  const sentenceTranslationTimerRef = useRef(null)
+  const sentenceTranslationQueryRef = useRef(null)
+  const [isHoveringToken, setIsHoveringToken] = useState(false)
+  const isHoveringTokenRef = useRef(false) // 使用 ref 来跟踪，避免闭包问题
+  
+  // 获取源语言和目标语言
+  const sourceLang = useMemo(() => {
+    return sentence?.language_code || 'de' // 默认德语
+  }, [sentence])
+  
+  const targetLang = useMemo(() => {
+    const globalLang = languageNameToCode(selectedLanguage)
+    const preferredLang = globalLang || getSystemLanguage()
+    
+    if (preferredLang === sourceLang) {
+      const systemLang = getSystemLanguage()
+      if (systemLang !== sourceLang) {
+        return systemLang
+      } else {
+        return sourceLang === 'en' ? 'zh' : 'en'
+      }
+    }
+    return preferredLang
+  }, [selectedLanguage, sourceLang])
+  
+  // 获取句子完整文本
+  const sentenceText = useMemo(() => {
+    if (sentence?.sentence_body) {
+      return sentence.sentence_body
+    }
+    if (Array.isArray(sentence?.tokens)) {
+      return sentence.tokens
+        .map(token => typeof token === 'string' ? token : (token?.token_body || token?.token || ''))
+        .join('')
+    }
+    return ''
+  }, [sentence])
+  
   // 🔧 检查句子是否被选中或交互中
   const isSentenceSelected = isSentenceInteracting && isSentenceInteracting(sentenceIndex)
   
@@ -167,6 +218,78 @@ export default function SentenceContainer({
     return null
   }
   
+  // 🔧 查询整句翻译
+  const querySentenceTranslation = useCallback(async (text) => {
+    if (!text || text.trim().length === 0) {
+      return
+    }
+    
+    // 取消之前的查询
+    if (sentenceTranslationQueryRef.current) {
+      sentenceTranslationQueryRef.current = null
+    }
+    
+    const currentQuery = {}
+    sentenceTranslationQueryRef.current = currentQuery
+    
+    // 设置加载状态
+    setIsLoadingSentenceTranslation(true)
+    setShowSentenceTranslation(true)
+    
+    const debugLogger = (level, message, data) => {
+      addDebugLog(level, `[SentenceContainer] ${message}`, data)
+    }
+    
+    try {
+      const finalTargetLang = targetLang || 'en'
+      const logData = { text, sourceLang, targetLang: finalTargetLang }
+      debugLogger('info', `开始查询整句翻译: "${text.substring(0, 50)}..."`, logData)
+      
+      const translation = await getQuickTranslation(text, sourceLang, finalTargetLang, {
+        debugLogger
+      })
+      
+      const resultData = { text: text.substring(0, 50) + '...', translation }
+      debugLogger(translation ? 'success' : 'warning', `整句翻译查询完成`, resultData)
+      
+      // 检查查询是否已被取消
+      if (sentenceTranslationQueryRef.current === currentQuery) {
+        setSentenceTranslation(translation)
+        setIsLoadingSentenceTranslation(false)
+        // 即使没有翻译结果，也保持显示状态（显示加载失败或空状态）
+        setShowSentenceTranslation(true)
+        sentenceTranslationQueryRef.current = null
+      }
+    } catch (error) {
+      const errorData = { text: text.substring(0, 50) + '...', error: error.message }
+      debugLogger('error', `整句翻译查询失败`, errorData)
+      
+      if (sentenceTranslationQueryRef.current === currentQuery) {
+        setSentenceTranslation(null)
+        setIsLoadingSentenceTranslation(false)
+        setShowSentenceTranslation(false)
+        sentenceTranslationQueryRef.current = null
+      }
+    }
+  }, [sourceLang, targetLang, addDebugLog])
+  
+  // 🔧 清理整句翻译定时器
+  const clearSentenceTranslationTimer = useCallback(() => {
+    if (sentenceTranslationTimerRef.current) {
+      clearTimeout(sentenceTranslationTimerRef.current)
+      sentenceTranslationTimerRef.current = null
+    }
+  }, [])
+  
+  // 🔧 清理整句翻译状态
+  const clearSentenceTranslation = useCallback(() => {
+    clearSentenceTranslationTimer()
+    setShowSentenceTranslation(false)
+    setSentenceTranslation(null)
+    setIsLoadingSentenceTranslation(false)
+    sentenceTranslationQueryRef.current = null
+  }, [clearSentenceTranslationTimer])
+  
   // 🔧 处理句子 hover
   const handleSentenceHover = (e) => {
     if (shouldShowSegmentationUnderline) {
@@ -174,6 +297,22 @@ export default function SentenceContainer({
     }
     selOnEnter()
     handleSentenceMouseEnter(e)
+    
+    // 🔧 重置 token hover 状态（因为鼠标现在在 sentence container 上，不在 token 上）
+    // 这样可以确保从 token 移动到 sentence container 其他区域时能显示整句翻译
+    setIsHoveringToken(false)
+    isHoveringTokenRef.current = false
+    
+    // 🔧 延迟显示整句翻译
+    if (sentenceText.trim().length > 0) {
+      clearSentenceTranslationTimer()
+      sentenceTranslationTimerRef.current = setTimeout(() => {
+        // 再次检查，确保没有新的 token hover
+        if (!isHoveringTokenRef.current) {
+          querySentenceTranslation(sentenceText)
+        }
+      }, 250)
+    }
   }
   
   const handleSentenceHoverLeave = (e) => {
@@ -182,7 +321,42 @@ export default function SentenceContainer({
     }
     selOnLeave()
     handleSentenceMouseLeave(e)
+    
+    // 🔧 清理整句翻译
+    clearSentenceTranslation()
+    setIsHoveringToken(false)
+    isHoveringTokenRef.current = false
   }
+  
+  // 🔧 处理 token hover 进入
+  const handleTokenHoverEnter = useCallback(() => {
+    setIsHoveringToken(true)
+    isHoveringTokenRef.current = true
+    clearSentenceTranslation() // 当 hover token 时，隐藏整句翻译
+  }, [clearSentenceTranslation])
+  
+  // 🔧 处理 token hover 离开
+  const handleTokenHoverLeave = useCallback(() => {
+    setIsHoveringToken(false)
+    isHoveringTokenRef.current = false
+    // 如果还在句子内，延迟显示整句翻译
+    if (isHovered && sentenceText.trim().length > 0) {
+      clearSentenceTranslationTimer()
+      sentenceTranslationTimerRef.current = setTimeout(() => {
+        if (!isHoveringTokenRef.current) {
+          querySentenceTranslation(sentenceText)
+        }
+      }, 250)
+    }
+  }, [isHovered, sentenceText, clearSentenceTranslationTimer, querySentenceTranslation])
+  
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      clearSentenceTranslationTimer()
+      sentenceTranslationQueryRef.current = null
+    }
+  }, [clearSentenceTranslationTimer])
   
   return (
     <div 
@@ -191,6 +365,7 @@ export default function SentenceContainer({
       className={`select-none relative transition-all duration-200 ${backgroundStyle} ${selectionSentenceClass}`}
       data-sentence="1"
       data-sentence-id={sentenceId}
+      data-sentence-index={sentenceIndex}
       onMouseEnter={handleSentenceHover}
       onMouseLeave={handleSentenceHoverLeave}
       onClick={(e) => { selOnClick(e); handleSentenceClick(e) }}
@@ -202,6 +377,11 @@ export default function SentenceContainer({
         // 🔧 获取该 token 的 word_token 信息（用于显示分词下划线）
         const wordTokenInfo = getTokenWordTokenInfo(token, tokenIndex)
         const shouldShowUnderline = shouldShowSegmentationUI && wordTokenInfo != null
+        
+        // 🔧 检查当前 token 是否是正在朗读的 token
+        const isCurrentlyReading = currentReadingToken && 
+          currentReadingToken.sentenceIndex === sentenceIndex && 
+          currentReadingToken.tokenIndex === tokenIndex
         
         // 🔧 检查当前 token 和下一个 token 是否属于不同的 word token（用于添加空格）
         let shouldAddSpaceAfter = false
@@ -232,9 +412,8 @@ export default function SentenceContainer({
         }
         
         return (
-          <>
+          <React.Fragment key={`${sentenceIndex}-${tokenIndex}`}>
             <TokenSpan
-              key={`${sentenceIndex}-${tokenIndex}`}
               token={token}
               tokenIdx={tokenIndex}
               sentenceIdx={sentenceIndex}
@@ -255,8 +434,10 @@ export default function SentenceContainer({
                 if (shouldShowSegmentationUnderline) {
                   setIsHovered(true)
                 }
+                handleTokenHoverEnter() // 标记正在 hover token
                 handleMouseEnterToken(sIdx, tIdx, t)
               }}
+              onTokenMouseLeave={handleTokenHoverLeave}
               addSingle={addSingle}
               isTokenAsked={isTokenAsked}
               markAsAsked={markAsAsked}
@@ -265,14 +446,31 @@ export default function SentenceContainer({
               // 🔧 新增：分词下划线相关 props
               showSegmentationUnderline={shouldShowUnderline}
               wordTokenInfo={wordTokenInfo}
+              // 🔧 新增：朗读高亮相关 props
+              isCurrentlyReading={isCurrentlyReading}
+              // 🔧 新增：AI详细解释回调
+              onAskAI={onAskAI}
             />
             {/* 🔧 在不同 word token 之间添加空格（只在 hover 时显示） */}
             {shouldAddSpaceAfter && (
               <span key={`space-${sentenceIndex}-${tokenIndex}`} className="inline-block w-2" aria-hidden="true" />
             )}
-          </>
+          </React.Fragment>
         )
       })}
+      
+      {/* 🔧 整句翻译 tooltip - 只在没有 hover token 时显示 */}
+      {showSentenceTranslation && !isHoveringToken && (
+        <QuickTranslationTooltip
+          word={sentenceText}
+          translation={sentenceTranslation}
+          isVisible={showSentenceTranslation}
+          anchorRef={sentenceRef}
+          position="bottom"
+          showWord={false}
+          isLoading={isLoadingSentenceTranslation}
+        />
+      )}
       
       {/* Grammar notation card - shown when hovering over the entire sentence */}
       {hasGrammar && grammarNotations.length > 0 && (

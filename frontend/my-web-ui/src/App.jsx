@@ -19,6 +19,7 @@ import { UiLanguageProvider } from './contexts/UiLanguageContext'
 import { useUIText } from './i18n/useUIText'
 import UIDemoPage from './pages/UIDemo'
 import LandingPage from './pages/LandingPage'
+import { colors } from './design-tokens'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -130,18 +131,21 @@ function AppContent() {
     // 不需要刷新页面，组件会自动响应 isAuthenticated 变化
   }
 
-  const navButton = (id, label) => (
-    <button
-      onClick={() => setCurrentPage(id)}
-      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-        currentPage === id
-          ? 'border-blue-500 text-gray-900'
-          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-      }`}
-    >
-      {label}
-    </button>
-  )
+  const navButton = (id, label) => {
+    const isActive = currentPage === id
+    return (
+      <button
+        onClick={() => setCurrentPage(id)}
+        className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
+        style={{
+          borderColor: isActive ? colors.primary[600] : 'transparent',
+          color: isActive ? colors.semantic?.text?.primary ?? '#111827' : colors.semantic?.text?.secondary ?? '#6b7280',
+        }}
+      >
+        {label}
+      </button>
+    )
+  }
 
   // 如果是重置密码页面，直接显示重置密码组件（Provider 已在 App 外层）
   if (isResetPasswordPage) {
@@ -175,7 +179,8 @@ function AppContent() {
                 <button
                   type="button"
                   onClick={navigateToLanding}
-                  className="text-xl font-bold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                  className="text-xl font-bold text-gray-900 focus:outline-none focus-visible:ring-2 rounded"
+                  style={{ '--tw-ring-color': colors.primary[300] }}
                 >
                   {t('语言学习应用')}
                 </button>
@@ -198,9 +203,9 @@ function AppContent() {
                   id="language-select"
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
+                  className="px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white text-gray-900"
+                  style={{ '--tw-ring-color': colors.primary[300] }}
                 >
-                  <option value="all">{t('全部')}</option>
                   <option value="中文">{t('中文')}</option>
                   <option value="英文">{t('英文')}</option>
                   <option value="德文">{t('德文')}</option>
@@ -276,9 +281,9 @@ function AppContent() {
       />
 
       <div className={`max-w-7xl mx-auto sm:px-6 lg:px-8 ${
-        currentPage === 'article' ? '' : 'min-h-[calc(100vh-64px)]'
+        currentPage === 'article' ? 'h-[calc(100vh-64px)]' : 'min-h-[calc(100vh-64px)]'
       }`}>
-        <div className={`px-4 sm:px-0 ${currentPage === 'article' ? '' : ''}`}>
+        <div className={`px-4 sm:px-0 ${currentPage === 'article' ? 'h-full' : ''}`}>
           {/* Pages */}
           {currentPage === 'landing' && (
             <div className="bg-white rounded-lg border border-gray-200">

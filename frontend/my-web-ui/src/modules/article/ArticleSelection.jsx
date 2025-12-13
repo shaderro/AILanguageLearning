@@ -328,11 +328,9 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
             <div className="text-center mb-4">
-              {selectedLanguage !== 'all' && (
-                <span className="block text-primary-600 font-medium">
-                  {t('当前筛选：')}{selectedLanguage}
-                </span>
-              )}
+              <span className="block text-primary-600 font-medium">
+                {t('当前筛选：')}{selectedLanguage}
+              </span>
             </div>
 
             {/* Loading / Error */}
@@ -357,11 +355,9 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                 {/* Article Count */}
                 <div className="mb-6">
                   <p className="text-gray-600">
-                    {selectedLanguage === 'all' 
-                      ? t('共显示 {count} 篇文章').replace('{count}', enrichedArticles.length)
-                      : t('共显示 {count} 篇文章（{language}）')
-                          .replace('{count}', enrichedArticles.length)
-                          .replace('{language}', selectedLanguage)
+                    {t('共显示 {count} 篇文章（{language}）')
+                      .replace('{count}', enrichedArticles.length)
+                      .replace('{language}', selectedLanguage)
                     }
                   </p>
                 </div>

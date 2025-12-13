@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BaseCard, BaseButton } from '../../base';
+import { BaseCard, BaseButton, BaseSpinner } from '../../base';
 import { componentTokens } from '../../../design-tokens/design-tokens';
 import { useUIText } from '../../../i18n/useUIText';
 
@@ -205,11 +205,19 @@ export function ArticlePreviewCard({
         )}
 
         <div ref={previewRef} className="text-sm text-gray-700 space-y-1">
-          <div className="truncate">{previewLines.first}</div>
-          {previewLines.second && (
-            <div className="overflow-hidden" style={{ maxWidth: '50%' }}>
-              {previewLines.second}
+          {!preview || preview.trim() === '' || preview === t('暂无摘要') ? (
+            <div className="flex items-center gap-2" style={{ minHeight: '3rem', lineHeight: '1.5rem' }}>
+              <BaseSpinner size="sm" variant="neutral" label="" />
             </div>
+          ) : (
+            <>
+              <div className="truncate">{previewLines.first}</div>
+              {previewLines.second && (
+                <div className="overflow-hidden" style={{ maxWidth: '50%' }}>
+                  {previewLines.second}
+                </div>
+              )}
+            </>
           )}
         </div>
 

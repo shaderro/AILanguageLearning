@@ -2,7 +2,9 @@
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
+import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { useRefreshData } from '../../../hooks/useApi'
+import { colors } from '../../../design-tokens'
 
 export default function ChatView({ 
   quotedText, 
@@ -22,10 +24,14 @@ export default function ChatView({
   addGrammarNotationToCache = null,
   addVocabNotationToCache = null,
   addGrammarRuleToCache = null,
-  addVocabExampleToCache = null
+  addVocabExampleToCache = null,
+  // 🔧 新增：isProcessing 状态管理（从父组件传入，用于同步状态）
+  isProcessing: externalIsProcessing = null,
+  onProcessingChange = null
 }) {
-  const { pendingMessage, clearPendingMessage, pendingToast, clearPendingToast } = useChatEvent()
+  const { pendingMessage, clearPendingMessage, pendingContext, clearPendingContext, pendingToast, clearPendingToast } = useChatEvent()
   const { refreshGrammar, refreshVocab } = useRefreshData()  // 🔧 添加自动刷新功能
+  const { addLog } = useTranslationDebug()  // 🔧 添加调试日志
   const [messages, setMessages] = useState([
     { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
   ])
@@ -36,6 +42,11 @@ export default function ChatView({
   const [toasts, setToasts] = useState([]) // {id, message, slot}
   const messagesEndRef = useRef(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(false)
+  // 🔧 新增：跟踪 main assistant 是否正在处理
+  // 🔧 如果父组件传入了外部状态，使用外部状态；否则使用内部状态
+  const [internalIsProcessing, setInternalIsProcessing] = useState(false)
+  const isProcessing = externalIsProcessing !== null ? externalIsProcessing : internalIsProcessing
+  const setIsProcessing = onProcessingChange || setInternalIsProcessing
   // 移除展开状态相关代码
 
   // 新增：自动滚动到底部的函数
@@ -53,67 +64,354 @@ export default function ChatView({
     }
   }, [hasSelectedToken, hasSelectedSentence])
 
-  // 抽取：显示“知识点已加入”提示卡片
+  // 抽取：显示"知识点已加入"提示卡片
   const showKnowledgeToast = (currentKnowledge) => {
+    console.log('🍞 [Toast Debug] showKnowledgeToast 被调用，参数:', currentKnowledge)
     const text = String(currentKnowledge ?? '').trim()
     const msg = `${text} 知识点已总结并加入列表`
+    console.log('🍞 [Toast Debug] 生成的 toast 消息:', msg)
     // 兼容旧的单实例
     setToastMessage(msg)
     setShowToast(true)
     // 新：推入多实例栈
     const id = Date.now() + Math.random()
+    console.log('🍞 [Toast Debug] 生成的 toast ID:', id)
     // 为每个 toast 设置独立的显示时间，避免同一批次由父层重渲染触发同一时刻开始计时
     setTimeout(() => {
       setToasts(prev => {
         const slot = prev.length // 固定槽位：加入时的序号
-        return [...prev, { id, message: msg, slot }]
+        const newToast = { id, message: msg, slot }
+        console.log('🍞 [Toast Debug] 添加 toast 到栈，当前栈长度:', prev.length, '新 toast:', newToast)
+        return [...prev, newToast]
       })
     }, 0)
   }
 
   // 新增：监听messages变化，自动滚动到底部（只在有新消息时）
   useEffect(() => {
+    // 🔧 调试：记录消息变化
+    addLog('info', '🔄 [ChatView] messages 状态变化', { 
+      messagesCount: messages.length,
+      messages: messages.map(m => ({ id: m.id, text: m.text?.substring(0, 30), isUser: m.isUser })),
+      messageIds: messages.map(m => m.id)
+    })
     // 只有在消息数量大于1时才自动滚动（避免初始化时滚动）
     if (messages.length > 1) {
       setShouldAutoScroll(true)
       scrollToBottom()
     }
-  }, [messages])
+  }, [messages]) // 🔧 直接依赖 messages 数组
 
   // 新增：监听待发送消息
   useEffect(() => {
     if (pendingMessage) {
+      addLog('info', '📥 [ChatView] 收到 pendingMessage', pendingMessage)
       // 判断消息类型：如果没有 quotedText，说明是 AI 直接响应
       if (!pendingMessage.quotedText) {
         // AI 响应消息
+        // 🔧 解析 AI 响应，去除 JSON 符号
+        const parsedResponse = parseAIResponse(pendingMessage.text)
         const aiMessage = {
           id: Date.now(),
-          text: pendingMessage.text,
+          text: parsedResponse,
           isUser: false,
           timestamp: new Date()
         }
-        setMessages(prev => [...prev, aiMessage])
+        addLog('info', '📝 [ChatView] 添加 AI 消息到 UI', aiMessage)
+        setMessages(prev => {
+          const newMessages = [...prev, aiMessage]
+          addLog('success', '✅ [ChatView] 消息列表已更新（AI消息）', { 
+            totalMessages: newMessages.length,
+            allMessages: newMessages.map(m => ({ id: m.id, text: m.text?.substring(0, 50), isUser: m.isUser }))
+          })
+          return newMessages
+        })
+        // 🔧 延迟清除，确保状态更新完成
+        setTimeout(() => {
+          clearPendingMessage()
+        }, 0)
       } else {
-        // 用户提问消息
+        // 用户提问消息 - 需要触发 API 调用
+        const questionText = pendingMessage.text
+        const currentQuotedText = pendingMessage.quotedText
+        // 🔧 优先使用 pendingContext（从 sendMessageToChat 传递），否则使用 selectionContext prop
+        const currentSelectionContext = pendingContext || selectionContext
+        
+        addLog('info', '📝 [ChatView] 处理用户消息', {
+          questionText,
+          currentQuotedText,
+          hasSelectionContext: !!currentSelectionContext,
+          hasPendingContext: !!pendingContext,
+          hasSelectionContextProp: !!selectionContext,
+          isProcessing,
+          pendingContext: pendingContext ? {
+            hasSentence: !!pendingContext.sentence,
+            hasTokens: !!pendingContext.tokens,
+            tokensCount: pendingContext.tokens?.length || 0,
+            tokenInfo: pendingContext.tokens?.[0] ? {
+              token_body: pendingContext.tokens[0].token_body,
+              sentence_token_id: pendingContext.tokens[0].sentence_token_id,
+              global_token_id: pendingContext.tokens[0].global_token_id
+            } : null
+          } : null,
+          selectionContextProp: selectionContext ? {
+            hasSentence: !!selectionContext.sentence,
+            hasTokens: !!selectionContext.tokens,
+            tokensCount: selectionContext.tokens?.length || 0
+          } : null
+        })
+        
+        // 添加用户消息到 UI
         const userMessage = {
           id: Date.now(),
-          text: pendingMessage.text,
+          text: questionText,
           isUser: true,
-          timestamp: pendingMessage.timestamp,
-          quote: pendingMessage.quotedText
+          timestamp: pendingMessage.timestamp || new Date(),
+          quote: currentQuotedText
         }
-        setMessages(prev => [...prev, userMessage])
+        addLog('info', '📝 [ChatView] 添加用户消息到 UI', userMessage)
         
-        // 清空当前引用（如果有的话）
+        // 🔧 先添加消息到 UI，然后再清除 pendingMessage（避免状态冲突）
+        const messageId = Date.now()
+        const userMessageWithId = {
+          id: messageId,
+          text: questionText,
+          isUser: true,
+          timestamp: pendingMessage.timestamp || new Date(),
+          quote: currentQuotedText
+        }
+        
+        // 🔧 使用函数式更新，确保基于最新状态
+        setMessages(prev => {
+          // 🔧 检查是否已经存在相同的消息（避免重复添加）
+          const exists = prev.some(m => m.id === messageId)
+          if (exists) {
+            addLog('warning', '⚠️ [ChatView] 消息已存在，跳过添加', { messageId, currentMessages: prev.length })
+            return prev
+          }
+          
+          const newMessages = [...prev, userMessageWithId]
+          addLog('success', '✅ [ChatView] 消息列表已更新（用户消息）', { 
+            totalMessages: newMessages.length,
+            prevLength: prev.length,
+            lastMessage: newMessages[newMessages.length - 1],
+            allMessages: newMessages.map(m => ({ id: m.id, text: m.text?.substring(0, 50), isUser: m.isUser }))
+          })
+          // 🔧 强制触发重新渲染检查
+          console.log('🔍 [ChatView] setMessages 调用 - 用户消息:', {
+            prevLength: prev.length,
+            newLength: newMessages.length,
+            newMessage: userMessageWithId,
+            prevMessages: prev.map(m => ({ id: m.id, text: m.text?.substring(0, 30) })),
+            newMessages: newMessages.map(m => ({ id: m.id, text: m.text?.substring(0, 30) }))
+          })
+          // 🔧 确保返回新数组，触发 React 重新渲染
+          return newMessages
+        })
+        
+        // 🔧 立即检查状态是否更新（用于调试）
+        setTimeout(() => {
+          setMessages(current => {
+            addLog('info', '🔍 [ChatView] 状态检查（用户消息后）', {
+              currentLength: current.length,
+              currentIds: current.map(m => m.id),
+              expectedId: messageId
+            })
+            return current // 不修改状态，只用于调试
+          })
+        }, 100)
+        
+        // 🔧 保存 currentSelectionContext 到局部变量，避免在异步函数中丢失
+        const savedSelectionContext = currentSelectionContext
+        
+        // 🔧 延迟清除 pendingMessage，确保状态更新完成
+        setTimeout(() => {
+      clearPendingMessage()
+          clearPendingContext()
+        }, 0)
+        
+        // 🔧 触发 API 调用（类似于 handleSendMessage 的逻辑）
+        if (!isProcessing && questionText.trim() !== '') {
+          addLog('info', '🚀 [ChatView] 开始处理 API 调用', { questionText })
+          setIsProcessing(true)
+          
+          // 异步调用 API
+          ;(async () => {
+            try {
+              const { apiService } = await import('../../../services/api')
+              
+              // 🔧 关键：如果有新的选择上下文，先更新 session state，确保后端使用最新的句子和token
+              // 🔧 使用保存的 savedSelectionContext，而不是 currentSelectionContext（可能已被清除）
+              if (savedSelectionContext && savedSelectionContext.sentence) {
+                addLog('info', '🔧 [ChatView] 检测到新的选择上下文（自动发送），先更新 session state', savedSelectionContext)
+                try {
+                  const preUpdatePayload = {
+                    sentence: savedSelectionContext.sentence
+                  }
+                  
+                  // 添加token信息（如果有）
+                  if (savedSelectionContext.tokens && savedSelectionContext.tokens.length > 0) {
+                    if (savedSelectionContext.tokens.length > 1) {
+                      preUpdatePayload.token = {
+                        multiple_tokens: savedSelectionContext.tokens,
+                        token_indices: savedSelectionContext.tokenIndices,
+                        token_text: savedSelectionContext.selectedTexts.join(' ')
+                      }
+                      addLog('info', '🔧 [ChatView] 更新多个 token 信息', preUpdatePayload.token)
+                    } else {
+                      const token = savedSelectionContext.tokens[0]
+                      // 🔧 确保 token 对象有必要的字段
+                      const tokenPayload = {
+                        token_body: token.token_body || token.token || '',
+                        sentence_token_id: token.sentence_token_id || null
+                      }
+                      // 🔧 只有在存在时才添加 global_token_id
+                      if (token.global_token_id) {
+                        tokenPayload.global_token_id = token.global_token_id
+                      }
+                      preUpdatePayload.token = tokenPayload
+                      addLog('info', '🔧 [ChatView] 更新单个 token 信息', {
+                        tokenPayload,
+                        originalToken: token,
+                        hasTokenBody: !!token.token_body,
+                        hasSentenceTokenId: !!token.sentence_token_id,
+                        sentenceId: savedSelectionContext.sentence?.sentence_id,
+                        textId: savedSelectionContext.sentence?.text_id
+                      })
+                    }
+                  } else {
+                    // 如果只选择了句子而没有token，清除旧的token
+                    preUpdatePayload.token = null
+                    addLog('warning', '⚠️ [ChatView] 没有 token 信息，清除 token', {
+                      hasTokens: !!savedSelectionContext.tokens,
+                      tokensLength: savedSelectionContext.tokens?.length || 0
+                    })
+                  }
+                  
+                  await apiService.session.updateContext(preUpdatePayload)
+                  addLog('success', '✅ [ChatView] Session state 已更新为最新选择（自动发送）', preUpdatePayload)
+                  
+                  // 等待一下确保后端已处理
+                  await new Promise(resolve => setTimeout(resolve, 100))
+                } catch (error) {
+                  addLog('error', '❌ [ChatView] 更新 session state 失败（自动发送）', { error: error.message })
+                  // 继续执行，不阻止发送消息
+                }
+              } else {
+                addLog('warning', '⚠️ [ChatView] 没有选择上下文，直接发送消息')
+              }
+              
+              // 更新 current_input
+              const updatePayload = {
+                current_input: questionText
+              }
+              
+              await apiService.session.updateContext(updatePayload)
+              addLog('success', '✅ [ChatView] 已更新 current_input', updatePayload)
+              
+              // 调用 chat 接口
+              addLog('info', '📤 [ChatView] 调用 chat API...', { questionText })
+              const response = await apiService.sendChat({
+                user_question: questionText
+              })
+              addLog('info', '📥 [ChatView] 收到 API 响应', { 
+                hasResponse: !!response,
+                hasAiResponse: !!response?.ai_response,
+                responseKeys: response ? Object.keys(response) : []
+              })
+              
+              // 显示 AI 回答
+              if (response && response.ai_response) {
+                const parsedResponse = parseAIResponse(response.ai_response)
+                const aiMessage = {
+                  id: Date.now() + 1,
+                  text: parsedResponse,
+                  isUser: false,
+                  timestamp: new Date()
+                }
+                addLog('info', '📝 [ChatView] 添加 AI 回答到 UI', aiMessage)
+                // 🔧 使用函数式更新，确保基于最新状态
+                setMessages(prev => {
+                  // 🔧 检查是否已经存在相同的消息（避免重复添加）
+                  const exists = prev.some(m => m.id === aiMessage.id)
+                  if (exists) {
+                    addLog('warning', '⚠️ [ChatView] AI 消息已存在，跳过添加', { messageId: aiMessage.id, currentMessages: prev.length })
+                    return prev
+                  }
+                  
+                  const newMessages = [...prev, aiMessage]
+                  addLog('success', '✅ [ChatView] 消息列表已更新（包含AI回答）', { 
+                    totalMessages: newMessages.length,
+                    prevLength: prev.length,
+                    aiResponse: parsedResponse.substring(0, 100) + '...',
+                    allMessages: newMessages.map(m => ({ id: m.id, text: m.text?.substring(0, 50), isUser: m.isUser }))
+                  })
+                  // 🔧 强制触发重新渲染检查
+                  console.log('🔍 [ChatView] setMessages 调用 - AI回答:', {
+                    prevLength: prev.length,
+                    newLength: newMessages.length,
+                    newMessage: aiMessage,
+                    prevMessages: prev.map(m => ({ id: m.id, text: m.text?.substring(0, 30) })),
+                    newMessages: newMessages.map(m => ({ id: m.id, text: m.text?.substring(0, 30) }))
+                  })
+                  // 🔧 确保返回新数组，触发 React 重新渲染
+                  return newMessages
+                })
+                
+                // 🔧 立即检查状态是否更新（用于调试）
+                setTimeout(() => {
+                  setMessages(current => {
+                    addLog('info', '🔍 [ChatView] 状态检查（AI回答后）', {
+                      currentLength: current.length,
+                      currentIds: current.map(m => m.id),
+                      expectedId: aiMessage.id
+                    })
+                    return current // 不修改状态，只用于调试
+                  })
+                }, 100)
+              } else {
+                addLog('warning', '⚠️ [ChatView] API 响应中没有 ai_response', { response })
+              }
+              
+              // 处理 notations（如果有）
+              if (response?.created_grammar_notations && response.created_grammar_notations.length > 0) {
+                response.created_grammar_notations.forEach(n => {
+                  if (addGrammarNotationToCache) addGrammarNotationToCache(n)
+                })
+              }
+              if (response?.created_vocab_notations && response.created_vocab_notations.length > 0) {
+                response.created_vocab_notations.forEach(n => {
+                  if (addVocabNotationToCache) addVocabNotationToCache(n)
+                })
+              }
+              
+              setIsProcessing(false)
+              addLog('success', '✅ [ChatView] API 调用完成')
+            } catch (error) {
+              addLog('error', '❌ [ChatView] 自动发送消息失败', { 
+                error: error.message, 
+                stack: error.stack 
+              })
+              setIsProcessing(false)
+            }
+          })()
+        } else {
+          addLog('warning', '⚠️ [ChatView] 跳过 API 调用', { 
+            isProcessing, 
+            questionText: questionText.trim() 
+          })
+        }
+        
+        // 清空当前引用（在消息发送后清空，避免影响显示）
         if (onClearQuote) {
-          onClearQuote()
+          // 延迟清空，确保消息已显示
+          setTimeout(() => {
+            onClearQuote()
+          }, 100)
         }
       }
-      
-      // 清除待发送消息
-      clearPendingMessage()
     }
-  }, [pendingMessage, clearPendingMessage, onClearQuote])
+  }, [pendingMessage, pendingContext, selectionContext, isProcessing, addLog, addGrammarNotationToCache, addVocabNotationToCache, onClearQuote, setIsProcessing])
 
   // 新增：监听跨组件触发的 toast
   useEffect(() => {
@@ -145,7 +443,10 @@ export default function ChatView({
   // }, [])
 
   const handleSendMessage = async () => {
-    if (inputText.trim() === '') return
+    if (inputText.trim() === '' || isProcessing) return
+    
+    // 🔧 设置处理状态为 true
+    setIsProcessing(true)
     
     // 添加到父组件的调试日志
     if (typeof addDebugLog === 'undefined') {
@@ -156,9 +457,47 @@ export default function ChatView({
     }
 
     const questionText = inputText
-    // 保存当前的引用文本和上下文，因为后面会清空
+    // 🔧 保存当前的引用文本和上下文（用于 UI 显示）
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
+    
+    // 🔧 关键：如果有新的选择上下文，先更新 session state，确保后端使用最新的句子
+    // 这样可以避免使用旧的 session state 中的句子
+    if (currentSelectionContext && currentSelectionContext.sentence) {
+      console.log('🔧 [ChatView] 检测到新的选择上下文，先更新 session state 以确保使用最新句子...')
+      try {
+        const { apiService } = await import('../../../services/api')
+        const preUpdatePayload = {
+          sentence: currentSelectionContext.sentence
+        }
+        
+        // 添加token信息（如果有）
+        if (currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+          if (currentSelectionContext.tokens.length > 1) {
+            preUpdatePayload.token = {
+              multiple_tokens: currentSelectionContext.tokens,
+              token_indices: currentSelectionContext.tokenIndices,
+              token_text: currentSelectionContext.selectedTexts.join(' ')
+            }
+          } else {
+            const token = currentSelectionContext.tokens[0]
+            preUpdatePayload.token = {
+              token_body: token.token_body,
+              sentence_token_id: token.sentence_token_id
+            }
+          }
+        } else {
+          // 如果只选择了句子而没有token，清除旧的token
+          preUpdatePayload.token = null
+        }
+        
+        await apiService.session.updateContext(preUpdatePayload)
+        console.log('✅ [ChatView] Session state 已更新为最新选择')
+      } catch (error) {
+        console.error('❌ [ChatView] 更新 session state 失败:', error)
+        // 继续执行，不阻止发送消息
+      }
+    }
     
     // Add user message with quote if exists
     const userMessage = {
@@ -177,10 +516,6 @@ export default function ChatView({
     try {
       document.title = '等待后端响应...'
       console.log('\n' + '='.repeat(80))
-      console.log('💬 [ChatView] ========== 发送消息 ==========')
-      console.log('📝 [ChatView] 问题文本:', questionText)
-      console.log('📌 [ChatView] 引用文本 (quotedText):', currentQuotedText || '无')
-      console.log('📋 [ChatView] 选择上下文 (selectionContext):')
       if (currentSelectionContext) {
         console.log('  - 句子 ID:', currentSelectionContext.sentence?.sentence_id)
         console.log('  - 文章 ID:', currentSelectionContext.sentence?.text_id)
@@ -194,51 +529,23 @@ export default function ChatView({
       
       const { apiService } = await import('../../../services/api')
       
-      // 构建更新payload
+      // 🔧 关键修复：只更新 current_input，不更新句子和token
+      // 因为句子和token已经在选择时更新了（或者在发送前刚刚更新）
+      // 这样可以确保使用后端当前已设置的 session state，而不是前端可能已过时的上下文
       const updatePayload = {
         current_input: questionText
       }
       
-      // 如果有选择上下文，重新发送句子和token信息以确保后端有完整上下文
-      if (currentSelectionContext && currentSelectionContext.sentence) {
-        console.log('💬 [ChatView] 重新发送完整的句子和token上下文到后端...')
-        
-        // 添加句子信息
-        updatePayload.sentence = currentSelectionContext.sentence
-        
-        // 添加token信息
-        if (currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
-          if (currentSelectionContext.tokens.length > 1) {
-            // 多个token
-            updatePayload.token = {
-              multiple_tokens: currentSelectionContext.tokens,
-              token_indices: currentSelectionContext.tokenIndices,
-              token_text: currentSelectionContext.selectedTexts.join(' ')
-            }
-          } else {
-            // 单个token
-            const token = currentSelectionContext.tokens[0]
-            updatePayload.token = {
-              token_body: token.token_body,
-              sentence_token_id: token.sentence_token_id
-              // 🔧 移除 global_token_id：后端只使用 sentence_token_id
-            }
-          }
-        } else {
-          // 🔧 重要：如果只选择了句子而没有token，必须明确清除旧的token
-          console.log('💬 [ChatView] 只选择了句子，清除 token 选择')
-          updatePayload.token = null
-        }
-        
-        console.log('📤 [ChatView] 发送的完整payload:', JSON.stringify(updatePayload, null, 2))
-      } else if (!currentQuotedText) {
-        // 如果没有引用文本，清除旧的token选择
-        console.log('💬 [ChatView] 没有引用文本，清除旧 token 选择')
-        updatePayload.token = null
-      }
+      console.log('💬 [ChatView] 只更新 current_input，使用后端当前已设置的 session state')
+      console.log('💬 [ChatView] 当前选择上下文（仅用于日志）:', {
+        hasContext: !!currentSelectionContext,
+        sentenceId: currentSelectionContext?.sentence?.sentence_id,
+        sentenceBody: currentSelectionContext?.sentence?.sentence_body?.substring(0, 50),
+        tokenCount: currentSelectionContext?.tokens?.length || 0
+      })
       
       const updateResponse = await apiService.session.updateContext(updatePayload)
-      console.log('✅ [ChatView] Session context 更新完成:', updateResponse)
+      console.log('✅ [ChatView] Session context 更新完成（仅更新 current_input）:', updateResponse)
       
       // 调用 chat 接口
       console.log('💬 [Frontend] 步骤4: 调用 /api/chat 接口...')
@@ -255,9 +562,11 @@ export default function ChatView({
       // 🔧 立即显示 AI 回答（不等待后续流程）
       if (response && response.ai_response) {
         document.title = '显示 AI 回答...'
+        // 🔧 解析 AI 响应，去除 JSON 符号
+        const parsedResponse = parseAIResponse(response.ai_response)
         const aiMessage = {
           id: Date.now() + 1,
-          text: response.ai_response,
+          text: parsedResponse,
           isUser: false,
           timestamp: new Date()
         }
@@ -309,62 +618,12 @@ export default function ChatView({
         })
       }
       
-      // 🔧 如果响应中没有 notations，说明后台正在创建，启动轮询机制
+      // 🔧 移除旧的轮询机制（检查 notations），改用新的 pending-knowledge API 轮询
+      // 新的轮询机制在下面的 toast 处理逻辑中统一实现
+      
+      // 🔧 检查是否有新创建的 notations
       const hasGrammarNotations = response?.created_grammar_notations && Array.isArray(response.created_grammar_notations) && response.created_grammar_notations.length > 0
       const hasVocabNotations = response?.created_vocab_notations && Array.isArray(response.created_vocab_notations) && response.created_vocab_notations.length > 0
-      
-      console.log('🔍 [ChatView] 检查是否需要启动轮询:', {
-        hasGrammarNotations,
-        hasVocabNotations,
-        created_grammar_notations: response?.created_grammar_notations,
-        created_vocab_notations: response?.created_vocab_notations,
-        refreshGrammarNotations: typeof refreshGrammarNotations
-      })
-      
-      if (!hasGrammarNotations && !hasVocabNotations) {
-        console.log('🔄 [ChatView] ========== 响应中没有notations，启动轮询机制等待后台创建 ==========')
-        // 轮询获取新创建的notations（最多轮询15次，每次间隔500ms，更快响应）
-        let pollCount = 0
-        const maxPolls = 15
-        const pollInterval = 500  // 🔧 减少轮询间隔到500ms，更快响应
-        
-        const pollForNotations = setInterval(async () => {
-          pollCount++
-          console.log(`🔄 [ChatView] 轮询获取notations (${pollCount}/${maxPolls})...`)
-          
-          try {
-            // 刷新notations缓存
-            if (refreshGrammarNotations) {
-              console.log('🔄 [ChatView] 调用 refreshGrammarNotations() 刷新缓存...')
-              await refreshGrammarNotations()
-              console.log('✅ [ChatView] Notations缓存已刷新')
-            } else {
-              console.warn('⚠️ [ChatView] refreshGrammarNotations 函数不存在')
-            }
-          } catch (error) {
-            console.error('❌ [ChatView] 轮询刷新notations失败:', error)
-          }
-          
-          // 如果达到最大轮询次数，停止轮询
-          if (pollCount >= maxPolls) {
-            clearInterval(pollForNotations)
-            console.log('⏹️ [ChatView] 轮询结束（达到最大次数）')
-          }
-        }, pollInterval)
-        
-        // 7.5秒后自动停止轮询
-        setTimeout(() => {
-          clearInterval(pollForNotations)
-          console.log('⏹️ [ChatView] 轮询结束（超时）')
-        }, maxPolls * pollInterval)
-        
-        console.log('✅ [ChatView] 轮询机制已启动')
-      } else {
-        console.log('⏭️ [ChatView] 响应中已有notations，跳过轮询:', {
-          hasGrammarNotations,
-          hasVocabNotations
-        })
-      }
       
       // 🔧 自动刷新 grammar/vocab 列表（如果有新数据或新notations）
       const hasNewGrammar = response?.grammar_to_add && response.grammar_to_add.length > 0
@@ -372,24 +631,150 @@ export default function ChatView({
       
       // 如果有新语法被创建，或者有新的 grammar notation（为现有语法添加例句），都刷新
       if (hasNewGrammar || hasGrammarNotations) {
-        console.log('🔄 [ChatView] 检测到新语法或grammar notation，自动刷新 grammar 列表...')
         refreshGrammar()
       }
       
       // 如果有新词汇被创建，或者有新的 vocab notation（为现有词汇添加例句），都刷新
       if (hasNewVocab || hasVocabNotations) {
-        console.log('🔄 [ChatView] 检测到新词汇或vocab notation，自动刷新 vocab 列表...')
         refreshVocab()
       }
       
-      // Toast
-      const toasts = []
-      response.grammar_to_add?.forEach(g => toasts.push(`🆕 语法: ${g.name}`))
-      response.vocab_to_add?.forEach(v => toasts.push(`🆕 词汇: ${v.vocab}`))
-      toasts.forEach((t, i) => setTimeout(() => showKnowledgeToast(t), i * 600))
+      // Toast - 从响应中直接获取新创建的知识点
+      // 🔧 统一处理 toast，避免重复显示
+      const toastItems = []
+      
+      if (response?.grammar_to_add && response.grammar_to_add.length > 0) {
+        response.grammar_to_add.forEach(g => {
+          if (g.name) {
+            toastItems.push(`🆕 语法: ${g.name}`)
+          }
+        })
+      }
+      
+      if (response?.vocab_to_add && response.vocab_to_add.length > 0) {
+        response.vocab_to_add.forEach(v => {
+          if (v.vocab) {
+            toastItems.push(`🆕 词汇: ${v.vocab}`)
+          }
+        })
+      }
+      
+        // 如果响应中没有 vocab_to_add/grammar_to_add，但后台可能正在创建，启动轮询
+        // 🔧 使用上面已定义的 hasGrammarNotations 和 hasVocabNotations
+        if (toastItems.length === 0 && (!hasGrammarNotations && !hasVocabNotations)) {
+          // 🔧 轮询获取后台任务创建的新知识点
+          let textId = selectionContext?.sentence?.text_id || articleId
+          // 确保 textId 是整数类型
+          if (textId) {
+            textId = parseInt(textId) || textId
+          }
+          // 从 localStorage 获取 user_id
+          const storedUserId = typeof localStorage !== 'undefined' ? localStorage.getItem('user_id') : null
+          const userId = storedUserId ? parseInt(storedUserId) : 2
+          
+          console.log('🍞 [Toast Debug] 启动轮询检测新知识点:', { userId, textId, articleId, selectionContext: !!selectionContext })
+          
+          // 确保 textId 存在
+          if (!textId) {
+            console.warn('⚠️ [Toast Debug] textId 不存在，无法启动轮询')
+          } else {
+            let pollCount = 0
+            const maxPolls = 10
+            const pollInterval = 500
+            
+            const pollPendingKnowledge = setInterval(async () => {
+              pollCount++
+              console.log(`🍞 [Toast Debug] 轮询第 ${pollCount} 次，检查新知识点...`)
+              
+              try {
+                const { apiService } = await import('../../../services/api')
+                const pendingResponse = await apiService.getPendingKnowledge(userId, textId)
+                
+                console.log('🍞 [Toast Debug] 轮询响应:', pendingResponse)
+                console.log('🍞 [Toast Debug] 轮询响应类型:', typeof pendingResponse)
+                console.log('🍞 [Toast Debug] 轮询响应 keys:', pendingResponse ? Object.keys(pendingResponse) : 'null')
+                
+                // 🔧 处理响应格式：API 拦截器可能已经提取了内层 data
+                let grammar_to_add = []
+                let vocab_to_add = []
+                
+                if (pendingResponse) {
+                  // 🔧 处理响应格式：API 拦截器已经保留了完整结构 { success: true, data: {...} }
+                  if (pendingResponse.success !== undefined && pendingResponse.data) {
+                    grammar_to_add = pendingResponse.data.grammar_to_add || []
+                    vocab_to_add = pendingResponse.data.vocab_to_add || []
+                    console.log('🍞 [Toast Debug] 从 success.data 中提取:', { grammar_to_add, vocab_to_add })
+                  }
+                  // 如果响应格式已经被拦截器提取为 { grammar_to_add: [], vocab_to_add: [] }
+                  else if (pendingResponse.grammar_to_add !== undefined || pendingResponse.vocab_to_add !== undefined) {
+                    grammar_to_add = pendingResponse.grammar_to_add || []
+                    vocab_to_add = pendingResponse.vocab_to_add || []
+                    console.log('🍞 [Toast Debug] 从直接字段中提取:', { grammar_to_add, vocab_to_add })
+                  } else {
+                    console.warn('🍞 [Toast Debug] 无法解析响应格式:', pendingResponse)
+                  }
+                } else {
+                  console.warn('🍞 [Toast Debug] pendingResponse 为空')
+                }
+                
+                console.log('🍞 [Toast Debug] 解析后的数据:', { grammar_to_add, vocab_to_add })
+                
+                const pendingToasts = []
+                
+                if (grammar_to_add && grammar_to_add.length > 0) {
+                  grammar_to_add.forEach(g => {
+                    if (g.name) {
+                      pendingToasts.push(`🆕 语法: ${g.name}`)
+                    }
+                  })
+                }
+                
+                if (vocab_to_add && vocab_to_add.length > 0) {
+                  vocab_to_add.forEach(v => {
+                    if (v.vocab) {
+                      pendingToasts.push(`🆕 词汇: ${v.vocab}`)
+                    }
+                  })
+                }
+                
+                if (pendingToasts.length > 0) {
+                  console.log('🍞 [Toast Debug] 从轮询获取到新知识点，准备显示 toast:', pendingToasts)
+                  pendingToasts.forEach((item, idx) => {
+                    setTimeout(() => {
+                      console.log('🍞 [Toast Debug] 调用 showKnowledgeToast:', item)
+                      showKnowledgeToast(item)
+                    }, idx * 600)
+                  })
+                  clearInterval(pollPendingKnowledge)
+                } else {
+                  console.log('🍞 [Toast Debug] 没有新知识点需要显示')
+                }
+              } catch (err) {
+                console.warn('⚠️ [ChatView] 轮询获取新知识点失败:', err)
+              }
+              
+              if (pollCount >= maxPolls) {
+                console.log('🍞 [Toast Debug] 达到最大轮询次数，停止轮询')
+                clearInterval(pollPendingKnowledge)
+              }
+            }, pollInterval)
+            
+            // 5秒后自动停止轮询
+            setTimeout(() => {
+              clearInterval(pollPendingKnowledge)
+            }, maxPolls * pollInterval)
+          }
+      } else if (toastItems.length > 0) {
+        // 立即显示 toast
+        console.log('🍞 [Toast Debug] 立即显示 toast:', toastItems)
+        toastItems.forEach((item, idx) => {
+          setTimeout(() => {
+            showKnowledgeToast(item)
+          }, idx * 600)
+        })
+      }
       
       document.title = '完成'
-      console.log('✅ [ChatView] handleSendMessage 主流程完成（AI回答已显示）')
       
     } catch (error) {
       console.error('💥 [Frontend] Chat request 发生错误:', error)
@@ -730,6 +1115,9 @@ export default function ChatView({
       // ✅ 不再自动清空引用 - 保持引用以便用户继续追问
       // 引用会在用户选择新的 token 或点击文章空白处时自动更新/清空
       console.log('✅ [ChatView] 消息发送完成，保持引用以便继续追问')
+      
+      // 🔧 处理完成，重置处理状态
+      setIsProcessing(false)
     } catch (error) {
       console.error('💥 [Frontend] ❌❌❌ Chat request 发生错误 (handleSendMessage) ❌❌❌')
       console.error('💥 [Frontend] 错误对象:', error)
@@ -775,6 +1163,9 @@ export default function ChatView({
       setMessages(prev => [...prev, errorMsg])
       
       // ✅ 即使出错也不清空引用，保持引用以便用户重试
+      
+      // 🔧 处理完成（即使出错），重置处理状态
+      setIsProcessing(false)
     */
   }
 
@@ -790,10 +1181,145 @@ export default function ChatView({
     setToastMessage('')
   }
 
+  // 🔧 解析 AI 响应，去除 JSON 符号
+  const parseAIResponse = (responseText) => {
+    if (!responseText) return ''
+    
+    // 如果响应是对象，直接提取 answer 字段
+    if (typeof responseText === 'object' && responseText.answer) {
+      return responseText.answer
+    }
+    
+    // 如果响应是字符串，尝试解析 JSON
+    if (typeof responseText === 'string') {
+      const trimmed = responseText.trim()
+      
+      // 尝试使用 JSON.parse（处理标准 JSON 格式 {"answer": "..."}）
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (parsed && typeof parsed === 'object' && parsed.answer) {
+          return parsed.answer
+        }
+      } catch (e) {
+        // 不是标准 JSON，继续处理
+      }
+      
+      // 尝试匹配 {'answer': '...'} 或 {"answer": "..."} 格式
+      // 使用更可靠的方法：手动解析字符串
+      if (trimmed.startsWith('{') && (trimmed.includes("'answer'") || trimmed.includes('"answer"'))) {
+        // 找到 'answer': ' 或 "answer": " 的位置
+        const answerKeyPattern = /['"]answer['"]\s*:\s*['"]/
+        const keyMatch = trimmed.match(answerKeyPattern)
+        
+        if (keyMatch) {
+          const startIndex = keyMatch.index + keyMatch[0].length
+          const quoteChar = trimmed[startIndex - 1] // 获取引号字符（' 或 "）
+          
+          // 从开始位置向后查找，找到匹配的结束引号（考虑转义）
+          let endIndex = startIndex
+          let escaped = false
+          let foundEnd = false
+          
+          while (endIndex < trimmed.length) {
+            const char = trimmed[endIndex]
+            if (escaped) {
+              escaped = false
+            } else if (char === '\\') {
+              escaped = true
+            } else if (char === quoteChar) {
+              // 找到结束引号
+              foundEnd = true
+              break
+            }
+            endIndex++
+          }
+          
+          if (foundEnd) {
+            const answer = trimmed.substring(startIndex, endIndex)
+            // 处理转义字符
+            let processed = answer
+            processed = processed.replace(/\\n/g, '\n')
+            processed = processed.replace(/\\'/g, "'")
+            processed = processed.replace(/\\"/g, '"')
+            processed = processed.replace(/\\\\/g, '\\')
+            processed = processed.replace(/\\t/g, '\t')
+            processed = processed.replace(/\\r/g, '\r')
+            return processed
+          }
+        }
+      }
+      
+      // 如果以上方法都失败，尝试简单的正则匹配（作为后备方案）
+      // 匹配 {'answer': '...'} 格式，支持多行（但可能不准确处理转义）
+      const simpleMatch = trimmed.match(/['"]answer['"]\s*:\s*['"]([\s\S]*?)['"]\s*\}/)
+      if (simpleMatch && simpleMatch[1]) {
+        let answer = simpleMatch[1]
+        // 处理常见的转义字符
+        answer = answer.replace(/\\n/g, '\n')
+        answer = answer.replace(/\\'/g, "'")
+        answer = answer.replace(/\\"/g, '"')
+        answer = answer.replace(/\\\\/g, '\\')
+        answer = answer.replace(/\\t/g, '\t')
+        answer = answer.replace(/\\r/g, '\r')
+        return answer
+      }
+    }
+    
+    // 否则返回原始文本
+    return responseText
+  }
+
   const handleSuggestedQuestionSelect = async (question) => {
-    // 保存当前的引用文本和上下文，因为后面会清空
+    // 🔧 如果正在处理，禁止发送新的提问
+    if (isProcessing) {
+      console.log('⚠️ [ChatView] Main assistant 正在处理中，禁止发送新的提问')
+      return
+    }
+    
+    // 🔧 设置处理状态为 true
+    setIsProcessing(true)
+    
+    // 🔧 保存当前的引用文本和上下文（用于 UI 显示）
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
+    
+    // 🔧 关键：如果有新的选择上下文，先更新 session state，确保后端使用最新的句子
+    // 这样可以避免使用旧的 session state 中的句子
+    if (currentSelectionContext && currentSelectionContext.sentence) {
+      console.log('🔧 [ChatView] 检测到新的选择上下文（建议问题），先更新 session state 以确保使用最新句子...')
+      try {
+        const { apiService } = await import('../../../services/api')
+        const preUpdatePayload = {
+          sentence: currentSelectionContext.sentence
+        }
+        
+        // 添加token信息（如果有）
+        if (currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
+          if (currentSelectionContext.tokens.length > 1) {
+            preUpdatePayload.token = {
+              multiple_tokens: currentSelectionContext.tokens,
+              token_indices: currentSelectionContext.tokenIndices,
+              token_text: currentSelectionContext.selectedTexts.join(' ')
+            }
+          } else {
+            const token = currentSelectionContext.tokens[0]
+            preUpdatePayload.token = {
+              token_body: token.token_body,
+              sentence_token_id: token.sentence_token_id
+            }
+          }
+        } else {
+          // 如果只选择了句子而没有token，清除旧的token
+          preUpdatePayload.token = null
+        }
+        
+        await apiService.session.updateContext(preUpdatePayload)
+        console.log('✅ [ChatView] Session state 已更新为最新选择（建议问题）')
+      } catch (error) {
+        console.error('❌ [ChatView] 更新 session state 失败（建议问题）:', error)
+        // 继续执行，不阻止发送消息
+      }
+    }
     
     // 自动发送已选择的问题
     const userMessage = {
@@ -808,69 +1334,26 @@ export default function ChatView({
 
     // 调用后端 chat API（与 handleSendMessage 相同的逻辑）
     try {
-      console.log('\n' + '='.repeat(80))
-      console.log('💬 [ChatView] ========== 发送建议问题 ==========')
-      console.log('📝 [ChatView] 问题文本:', question)
-      console.log('📌 [ChatView] 引用文本 (quotedText):', currentQuotedText || '无')
-      console.log('📋 [ChatView] 选择上下文 (selectionContext):')
-      if (currentSelectionContext) {
-        console.log('  - 句子 ID:', currentSelectionContext.sentence?.sentence_id)
-        console.log('  - 文章 ID:', currentSelectionContext.sentence?.text_id)
-        console.log('  - 句子原文:', currentSelectionContext.sentence?.sentence_body)
-        console.log('  - 选中的 tokens:', currentSelectionContext.selectedTexts)
-        console.log('  - Token 数量:', currentSelectionContext.tokens?.length)
-      } else {
-        console.log('  - 无上下文（未选择任何token）')
-      }
-      console.log('='.repeat(80) + '\n')
       
       const { apiService } = await import('../../../services/api')
       
-      // 构建更新payload
+      // 🔧 关键修复：只更新 current_input，不更新句子和token
+      // 因为句子和token已经在选择时更新了（或者在发送前刚刚更新）
+      // 这样可以确保使用后端当前已设置的 session state，而不是前端可能已过时的上下文
       const updatePayload = {
         current_input: question
       }
       
-      // 如果有选择上下文，重新发送句子和token信息以确保后端有完整上下文
-      if (currentSelectionContext && currentSelectionContext.sentence) {
-        console.log('💬 [ChatView] 重新发送完整的句子和token上下文到后端...')
-        
-        // 添加句子信息
-        updatePayload.sentence = currentSelectionContext.sentence
-        
-        // 添加token信息
-        if (currentSelectionContext.tokens && currentSelectionContext.tokens.length > 0) {
-          if (currentSelectionContext.tokens.length > 1) {
-            // 多个token
-            updatePayload.token = {
-              multiple_tokens: currentSelectionContext.tokens,
-              token_indices: currentSelectionContext.tokenIndices,
-              token_text: currentSelectionContext.selectedTexts.join(' ')
-            }
-          } else {
-            // 单个token
-            const token = currentSelectionContext.tokens[0]
-            updatePayload.token = {
-              token_body: token.token_body,
-              sentence_token_id: token.sentence_token_id
-              // 🔧 移除 global_token_id：后端只使用 sentence_token_id
-            }
-          }
-        } else {
-          // 🔧 重要：如果只选择了句子而没有token，必须明确清除旧的token
-          console.log('💬 [ChatView] 只选择了句子，清除 token 选择')
-          updatePayload.token = null
-        }
-        
-        console.log('📤 [ChatView] 发送的完整payload:', JSON.stringify(updatePayload, null, 2))
-      } else if (!currentQuotedText) {
-        // 如果没有引用文本，清除旧的token选择
-        console.log('💬 [ChatView] 没有引用文本，清除旧 token 选择')
-        updatePayload.token = null
-      }
+      console.log('💬 [ChatView] 只更新 current_input（建议问题），使用后端当前已设置的 session state')
+      console.log('💬 [ChatView] 当前选择上下文（仅用于日志，建议问题）:', {
+        hasContext: !!currentSelectionContext,
+        sentenceId: currentSelectionContext?.sentence?.sentence_id,
+        sentenceBody: currentSelectionContext?.sentence?.sentence_body?.substring(0, 50),
+        tokenCount: currentSelectionContext?.tokens?.length || 0
+      })
       
       const updateResponse = await apiService.session.updateContext(updatePayload)
-      console.log('✅ [ChatView] Session context 更新完成:', updateResponse)
+      console.log('✅ [ChatView] Session context 更新完成（仅更新 current_input，建议问题）:', updateResponse)
       
       // 调用 chat 接口
       const response = await apiService.sendChat({
@@ -882,9 +1365,11 @@ export default function ChatView({
       // 🔧 立即显示 AI 回答（不等待后续流程）
       if (response && response.ai_response) {
         document.title = '显示 AI 回答...'
+        // 🔧 解析 AI 响应，去除 JSON 符号
+        const parsedResponse = parseAIResponse(response.ai_response)
         const aiMessage = {
           id: Date.now() + 1,
-          text: response.ai_response,
+          text: parsedResponse,
           isUser: false,
           timestamp: new Date()
         }
@@ -935,62 +1420,12 @@ export default function ChatView({
         })
       }
       
-      // 🔧 如果响应中没有 notations，说明后台正在创建，启动轮询机制
+      // 🔧 移除旧的轮询机制（检查 notations），改用新的 pending-knowledge API 轮询
+      // 新的轮询机制在下面的 toast 处理逻辑中统一实现
+      
+      // 🔧 检查是否有新创建的 notations
       const hasGrammarNotations = response?.created_grammar_notations && Array.isArray(response.created_grammar_notations) && response.created_grammar_notations.length > 0
       const hasVocabNotations = response?.created_vocab_notations && Array.isArray(response.created_vocab_notations) && response.created_vocab_notations.length > 0
-      
-      console.log('🔍 [ChatView] 检查是否需要启动轮询 (建议问题):', {
-        hasGrammarNotations,
-        hasVocabNotations,
-        created_grammar_notations: response?.created_grammar_notations,
-        created_vocab_notations: response?.created_vocab_notations,
-        refreshGrammarNotations: typeof refreshGrammarNotations
-      })
-      
-      if (!hasGrammarNotations && !hasVocabNotations) {
-        console.log('🔄 [ChatView] ========== 响应中没有notations，启动轮询机制等待后台创建 (建议问题) ==========')
-        // 轮询获取新创建的notations（最多轮询15次，每次间隔500ms，更快响应）
-        let pollCount = 0
-        const maxPolls = 15
-        const pollInterval = 500  // 🔧 减少轮询间隔到500ms，更快响应
-        
-        const pollForNotations = setInterval(async () => {
-          pollCount++
-          console.log(`🔄 [ChatView] 轮询获取notations (${pollCount}/${maxPolls})... (建议问题)`)
-          
-          try {
-            // 刷新notations缓存
-            if (refreshGrammarNotations) {
-              console.log('🔄 [ChatView] 调用 refreshGrammarNotations() 刷新缓存 (建议问题)...')
-              await refreshGrammarNotations()
-              console.log('✅ [ChatView] Notations缓存已刷新 (建议问题)')
-            } else {
-              console.warn('⚠️ [ChatView] refreshGrammarNotations 函数不存在 (建议问题)')
-            }
-          } catch (error) {
-            console.error('❌ [ChatView] 轮询刷新notations失败 (建议问题):', error)
-          }
-          
-          // 如果达到最大轮询次数，停止轮询
-          if (pollCount >= maxPolls) {
-            clearInterval(pollForNotations)
-            console.log('⏹️ [ChatView] 轮询结束（达到最大次数）(建议问题)')
-          }
-        }, pollInterval)
-        
-        // 7.5秒后自动停止轮询
-        setTimeout(() => {
-          clearInterval(pollForNotations)
-          console.log('⏹️ [ChatView] 轮询结束（超时）(建议问题)')
-        }, maxPolls * pollInterval)
-        
-        console.log('✅ [ChatView] 轮询机制已启动 (建议问题)')
-      } else {
-        console.log('⏭️ [ChatView] 响应中已有notations，跳过轮询 (建议问题):', {
-          hasGrammarNotations,
-          hasVocabNotations
-        })
-      }
       
       // 🔧 自动刷新 grammar/vocab 列表（如果有新数据或新notations）
       const hasNewGrammar = response?.grammar_to_add && response.grammar_to_add.length > 0
@@ -1176,7 +1611,7 @@ export default function ChatView({
       
       // 响应拦截器已经提取了 innerData，所以 response 直接就是 data
       if (response && response.ai_response !== undefined) {
-        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples } = response
+        const { ai_response, grammar_summaries, vocab_summaries, grammar_to_add, vocab_to_add, examples, created_grammar_notations, created_vocab_notations } = response
         
         // 详细打印session state中的vocab/grammar/example状态
         console.log('\n' + '='.repeat(80))
@@ -1206,6 +1641,10 @@ export default function ChatView({
         } else {
           console.log('🆕 新增词汇 (vocab_to_add): 无')
         }
+        
+        // 检查 created_vocab_notations 和 created_grammar_notations
+        console.log('🍞 [Toast Debug] created_vocab_notations:', created_vocab_notations)
+        console.log('🍞 [Toast Debug] created_grammar_notations:', created_grammar_notations)
         
         // 相关语法总结
         if (grammar_summaries && grammar_summaries.length > 0) {
@@ -1244,41 +1683,141 @@ export default function ChatView({
         
         console.log('='.repeat(80) + '\n')
         
-        // 🔧 注意：AI 回答已在上面立即显示（第255-267行），这里不再重复显示
+        // 🔧 注意：AI 回答已在上面立即显示（第1016-1027行），这里不再重复显示
         
-        // 显示总结的语法和词汇（通过 Toast）
-        const summaryItems = []
+        // Toast - 从响应中直接获取新创建的知识点
+        // 🔧 统一处理 toast，避免重复显示
+        const toastItems = []
         
         if (grammar_to_add && grammar_to_add.length > 0) {
           grammar_to_add.forEach(g => {
-            summaryItems.push(`🆕 语法: ${g.name}`)
+            if (g.name) {
+              toastItems.push(`🆕 语法: ${g.name}`)
+            }
           })
         }
         
         if (vocab_to_add && vocab_to_add.length > 0) {
           vocab_to_add.forEach(v => {
-            summaryItems.push(`🆕 词汇: ${v.vocab}`)
+            if (v.vocab) {
+              toastItems.push(`🆕 词汇: ${v.vocab}`)
+            }
           })
         }
         
-        if (grammar_summaries && grammar_summaries.length > 0) {
-          grammar_summaries.forEach(g => {
-            summaryItems.push(`📚 语法: ${g.name}`)
+        // 如果响应中没有 vocab_to_add/grammar_to_add，但后台可能正在创建，启动轮询
+        if (toastItems.length === 0) {
+          // 🔧 轮询获取后台任务创建的新知识点
+          let textId = currentSelectionContext?.sentence?.text_id || articleId
+          // 确保 textId 是整数类型
+          if (textId) {
+            textId = parseInt(textId) || textId
+          }
+          // 从 localStorage 获取 user_id
+          const storedUserId = typeof localStorage !== 'undefined' ? localStorage.getItem('user_id') : null
+          const userId = storedUserId ? parseInt(storedUserId) : 2
+          
+          console.log('🍞 [Toast Debug] 启动轮询检测新知识点 (建议问题):', { userId, textId, articleId, currentSelectionContext: !!currentSelectionContext })
+          
+          // 确保 textId 存在
+          if (!textId) {
+            console.warn('⚠️ [Toast Debug] textId 不存在，无法启动轮询 (建议问题)')
+          } else {
+            let pollCount = 0
+            const maxPolls = 10
+            const pollInterval = 500
+            
+            const pollPendingKnowledge = setInterval(async () => {
+              pollCount++
+              console.log(`🍞 [Toast Debug] 轮询第 ${pollCount} 次，检查新知识点 (建议问题)...`)
+              
+              try {
+                const { apiService } = await import('../../../services/api')
+                const pendingResponse = await apiService.getPendingKnowledge(userId, textId)
+                
+                console.log('🍞 [Toast Debug] 轮询响应 (建议问题):', pendingResponse)
+                console.log('🍞 [Toast Debug] 轮询响应类型 (建议问题):', typeof pendingResponse)
+                console.log('🍞 [Toast Debug] 轮询响应 keys (建议问题):', pendingResponse ? Object.keys(pendingResponse) : 'null')
+                
+                // 🔧 处理响应格式：API 拦截器可能已经提取了内层 data
+                let pending_grammar = []
+                let pending_vocab = []
+                
+                if (pendingResponse) {
+                  // 🔧 处理响应格式：API 拦截器已经保留了完整结构 { success: true, data: {...} }
+                  if (pendingResponse.success !== undefined && pendingResponse.data) {
+                    pending_grammar = pendingResponse.data.grammar_to_add || []
+                    pending_vocab = pendingResponse.data.vocab_to_add || []
+                    console.log('🍞 [Toast Debug] 从 success.data 中提取 (建议问题):', { pending_grammar, pending_vocab })
+                  }
+                  // 如果响应格式已经被拦截器提取为 { grammar_to_add: [], vocab_to_add: [] }
+                  else if (pendingResponse.grammar_to_add !== undefined || pendingResponse.vocab_to_add !== undefined) {
+                    pending_grammar = pendingResponse.grammar_to_add || []
+                    pending_vocab = pendingResponse.vocab_to_add || []
+                    console.log('🍞 [Toast Debug] 从直接字段中提取 (建议问题):', { pending_grammar, pending_vocab })
+                  } else {
+                    console.warn('🍞 [Toast Debug] 无法解析响应格式 (建议问题):', pendingResponse)
+                  }
+                } else {
+                  console.warn('🍞 [Toast Debug] pendingResponse 为空 (建议问题)')
+                }
+                
+                console.log('🍞 [Toast Debug] 解析后的数据 (建议问题):', { pending_grammar, pending_vocab })
+                
+                const pendingToasts = []
+                
+                if (pending_grammar && pending_grammar.length > 0) {
+                  pending_grammar.forEach(g => {
+                    if (g.name) {
+                      pendingToasts.push(`🆕 语法: ${g.name}`)
+                    }
+                  })
+                }
+                
+                if (pending_vocab && pending_vocab.length > 0) {
+                  pending_vocab.forEach(v => {
+                    if (v.vocab) {
+                      pendingToasts.push(`🆕 词汇: ${v.vocab}`)
+                    }
+                  })
+                }
+                
+                if (pendingToasts.length > 0) {
+                  console.log('🍞 [Toast Debug] 从轮询获取到新知识点 (建议问题)，准备显示 toast:', pendingToasts)
+                  pendingToasts.forEach((item, idx) => {
+                    setTimeout(() => {
+                      console.log('🍞 [Toast Debug] 调用 showKnowledgeToast (建议问题):', item)
+                      showKnowledgeToast(item)
+                    }, idx * 600)
+                  })
+                  clearInterval(pollPendingKnowledge)
+                } else {
+                  console.log('🍞 [Toast Debug] 没有新知识点需要显示 (建议问题)')
+                }
+              } catch (err) {
+                console.warn('⚠️ [ChatView] 轮询获取新知识点失败 (建议问题):', err)
+              }
+              
+              if (pollCount >= maxPolls) {
+                console.log('🍞 [Toast Debug] 达到最大轮询次数，停止轮询 (建议问题)')
+                clearInterval(pollPendingKnowledge)
+              }
+            }, pollInterval)
+            
+            // 5秒后自动停止轮询
+            setTimeout(() => {
+              clearInterval(pollPendingKnowledge)
+            }, maxPolls * pollInterval)
+          }
+        } else if (toastItems.length > 0) {
+          // 立即显示 toast
+          console.log('🍞 [Toast Debug] 立即显示 toast (建议问题):', toastItems)
+          toastItems.forEach((item, idx) => {
+            setTimeout(() => {
+              showKnowledgeToast(item)
+            }, idx * 600)
           })
         }
-        
-        if (vocab_summaries && vocab_summaries.length > 0) {
-          vocab_summaries.forEach(v => {
-            summaryItems.push(`📖 词汇: ${v.vocab}`)
-          })
-        }
-        
-        // 逐个显示 Toast
-        summaryItems.forEach((item, idx) => {
-          setTimeout(() => {
-            showKnowledgeToast(item)
-          }, idx * 600)
-        })
       } else {
         console.error('❌ [Frontend] Chat request failed or returned empty response')
         console.error('  Response:', response)
@@ -1294,6 +1833,9 @@ export default function ChatView({
       
       // ✅ 不再自动清空引用 - 保持引用以便用户继续追问
       console.log('✅ [ChatView] 建议问题发送完成，保持引用以便继续追问')
+      
+      // 🔧 处理完成，重置处理状态
+      setIsProcessing(false)
     } catch (error) {
       console.error('💥 [Frontend] ❌❌❌ Chat request 发生错误 (handleSuggestedQuestionSelect) ❌❌❌')
       console.error('💥 [Frontend] 错误对象:', error)
@@ -1339,6 +1881,9 @@ export default function ChatView({
       setMessages(prev => [...prev, errorMsg])
       
       // ✅ 即使出错也不清空引用，保持引用以便用户重试
+      
+      // 🔧 处理完成（即使出错），重置处理状态
+      setIsProcessing(false)
     }
   }
 
@@ -1360,9 +1905,9 @@ export default function ChatView({
   }
 
   return (
-    <div className={`w-80 flex flex-col bg-white rounded-lg shadow-md h-full relative ${disabled ? 'opacity-50' : ''}`}>
+    <div className={`w-80 flex flex-col bg-white rounded-lg shadow-md flex-shrink-0 relative ${disabled ? 'opacity-50' : ''}`}>
       {/* Chat Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+      <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-shrink-0">
         <h2 className="text-lg font-semibold text-gray-800">
           {disabled ? '聊天助手 (暂时不可用)' : '聊天助手'}
         </h2>
@@ -1372,8 +1917,17 @@ export default function ChatView({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 max-h-[calc(100vh-200px)]">
-        {messages.map((message) => (
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        {/* 🔧 调试：显示消息数量 */}
+        <div className="text-xs text-gray-400 mb-2">
+          消息数量: {messages.length} | 消息IDs: [{messages.map(m => m.id).join(', ')}] | 最后更新: {new Date().toLocaleTimeString()}
+        </div>
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-400 py-8">
+            <p>暂无消息</p>
+          </div>
+        ) : (
+          messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
@@ -1381,45 +1935,66 @@ export default function ChatView({
             <div
               className={`max-w-xs px-3 py-2 rounded-lg ${
                 message.isUser
-                  ? 'bg-blue-500 text-white rounded-br-none'
+                  ? 'bg-white text-gray-900 border border-gray-300 rounded-br-none'
                   : 'bg-gray-100 text-gray-800 rounded-bl-none'
               }`}
             >
               {/* Quote display */}
               {message.quote && (
-                <div className={`mb-2 p-2 rounded text-xs ${
-                  message.isUser 
-                    ? 'bg-blue-400 text-blue-50' 
-                    : 'bg-gray-200 text-gray-600'
-                }`}>
+                <div 
+                  className={`mb-2 p-2 rounded text-xs ${
+                    message.isUser 
+                      ? '' 
+                      : 'bg-gray-200 text-gray-600'
+                  }`}
+                  style={message.isUser ? {
+                    backgroundColor: colors.primary[100],
+                    color: colors.semantic.text.primary
+                  } : {}}
+                >
                   <div className="font-medium mb-1">引用</div>
                   <div className="italic">"{message.quote}"</div>
                 </div>
               )}
               
               <p className="text-sm">{message.text}</p>
-              <p className={`text-xs mt-1 ${
-                message.isUser ? 'text-blue-100' : 'text-gray-500'
-              }`}>
+              <p 
+                className={`text-xs mt-1 ${
+                  message.isUser ? 'text-gray-500' : 'text-gray-500'
+                }`}
+              >
                 {formatTime(message.timestamp)}
               </p>
             </div>
           </div>
-        ))}
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Quote Display */}
       {quotedText && (
-        <div className={`px-4 py-2 border-t ${hasSelectedSentence ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+        <div 
+          className={`px-4 py-2 border-t flex-shrink-0 ${hasSelectedSentence ? 'bg-green-50 border-green-200' : ''}`}
+          style={!hasSelectedSentence ? {
+            backgroundColor: colors.primary[50],
+            borderColor: colors.primary[200]
+          } : {}}
+        >
           <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0">
-              <div className={`text-xs font-medium mb-1 ${hasSelectedSentence ? 'text-green-600' : 'text-blue-600'}`}>
+              <div 
+                className={`text-xs font-medium mb-1 ${hasSelectedSentence ? 'text-green-600' : ''}`}
+                style={!hasSelectedSentence ? {
+                  color: colors.primary[600]
+                } : {}}
+              >
                 {hasSelectedSentence ? '引用整句（继续提问将保持此引用）' : '引用（继续提问将保持此引用）'}
               </div>
               <div 
-                className={`text-sm italic ${hasSelectedSentence ? 'text-green-800' : 'text-blue-800'}`}
+                className={`text-sm italic ${hasSelectedSentence ? 'text-green-800' : ''}`}
                 style={{
+                  ...(!hasSelectedSentence ? { color: colors.primary[800] } : {}),
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: 'vertical',
@@ -1432,10 +2007,31 @@ export default function ChatView({
             </div>
             <button
               onClick={onClearQuote}
-              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${hasSelectedSentence ? 'hover:bg-green-100' : 'hover:bg-blue-100'}`}
+              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${hasSelectedSentence ? 'hover:bg-green-100' : ''}`}
+              style={!hasSelectedSentence ? {
+                '--hover-bg': colors.primary[100]
+              } : {}}
+              onMouseEnter={(e) => {
+                if (!hasSelectedSentence) {
+                  e.currentTarget.style.backgroundColor = colors.primary[100]
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!hasSelectedSentence) {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }
+              }}
               title="清空引用"
             >
-              <svg className={`w-4 h-4 ${hasSelectedSentence ? 'text-green-600' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg 
+                className={`w-4 h-4 ${hasSelectedSentence ? 'text-green-600' : ''}`} 
+                style={!hasSelectedSentence ? {
+                  color: colors.primary[600]
+                } : {}}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -1452,10 +2048,11 @@ export default function ChatView({
         onQuestionClick={handleQuestionClick}
         tokenCount={selectedTokenCount}
         hasSelectedSentence={hasSelectedSentence}
+        disabled={isProcessing}
       />
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+      <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
         <div className="flex space-x-2">
           <input
             type="text"
@@ -1464,16 +2061,30 @@ export default function ChatView({
             onKeyPress={handleKeyPress}
             placeholder={
               disabled ? "聊天暂时不可用" : 
+              isProcessing ? "AI 正在处理中，请稍候..." :
               (!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" :
               (quotedText ? `回复引用："${quotedText}"` : "输入消息...")
             }
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={disabled || (!hasSelectedToken && !hasSelectedSentence)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+            style={{
+              '--tw-ring-color': colors.primary[500]
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = `0 0 0 2px ${colors.primary[500]}40`
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = ''
+            }}
+            disabled={disabled || isProcessing || (!hasSelectedToken && !hasSelectedSentence)}
           />
           <button
             onClick={handleSendMessage}
-            disabled={inputText.trim() === '' || disabled || (!hasSelectedToken && !hasSelectedSentence)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={inputText.trim() === '' || disabled || isProcessing || (!hasSelectedToken && !hasSelectedSentence)}
+            className="px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:brightness-95 active:brightness-90"
+            style={{
+              backgroundColor: colors.primary[600],
+              '--tw-ring-color': colors.primary[300],
+            }}
             title={(!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" : "发送消息"}
           >
             发送
@@ -1497,7 +2108,7 @@ export default function ChatView({
             <ToastNotice
               message={t.message}
               isVisible={true}
-              duration={20000}
+              duration={60000} // 调试阶段：1分钟
               onClose={() => setToasts(prev => prev.filter(x => x.id !== t.id))}
             />
           </div>

@@ -160,5 +160,23 @@
     "type": "token",
     "vocab_id": 84,
     "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": 1763884325,
+    "sentence_id": 16,
+    "sentence_token_id": 27,
+    "type": "token",
+    "vocab_id": 189,
+    "grammar_id": null
+  },
+  {
+    "user_id": "default_user",
+    "text_id": "1763884325",
+    "sentence_id": 16,
+    "sentence_token_id": 27,
+    "type": "token",
+    "vocab_id": 189,
+    "grammar_id": null
   }
 ]

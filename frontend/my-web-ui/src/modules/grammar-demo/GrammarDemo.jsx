@@ -5,6 +5,7 @@ import LearnDetailPage from '../shared/components/LearnDetailPage'
 import ReviewCard from '../shared/components/ReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import GrammarReviewCard from '../../components/features/review/GrammarReviewCard'
+import GrammarDetailCard from '../../components/features/grammar/GrammarDetailCard'
 import { useGrammarList, useToggleGrammarStar, useRefreshData, useArticles } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
@@ -125,6 +126,7 @@ const GrammarDemo = () => {
 
   const [selectedGrammar, setSelectedGrammar] = useState(null)
   const [selectedGrammarId, setSelectedGrammarId] = useState(null)
+  const [selectedGrammarIndex, setSelectedGrammarIndex] = useState(-1)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [reviewItems, setReviewItems] = useState([])
@@ -320,72 +322,75 @@ const GrammarDemo = () => {
 
   // 详情页
   if (selectedGrammarId) {
+    // 计算当前过滤和排序后的列表
+    const allGrammar = grammarData?.data || []
+    const filteredGrammar = allGrammar
+      .filter((g) => (filterText ? (g.rule_name || g.name || '').toLowerCase().includes(filterText.toLowerCase()) : true))
+    
+    const sortedList = [...filteredGrammar].sort((a, b) => {
+      const timeA = a.updated_at || a.created_at
+      const timeB = b.updated_at || b.created_at
+      
+      if (timeA && timeB) {
+        const dateA = new Date(timeA).getTime()
+        const dateB = new Date(timeB).getTime()
+        if (sortOrder === 'desc') {
+          return dateB - dateA
+        } else {
+          return dateA - dateB
+        }
+      }
+      
+      const idA = a.rule_id || 0
+      const idB = b.rule_id || 0
+      if (sortOrder === 'desc') {
+        return idB - idA
+      } else {
+        return idA - idB
+      }
+    })
+    
+    // 找到当前语法在列表中的索引
+    const currentIndex = sortedList.findIndex(g => g.rule_id === selectedGrammarId)
+    
+    const handlePreviousGrammar = () => {
+      if (currentIndex > 0) {
+        const prevGrammar = sortedList[currentIndex - 1]
+        setSelectedGrammarId(prevGrammar.rule_id)
+        setSelectedGrammarIndex(currentIndex - 1)
+      }
+    }
+    
+    const handleNextGrammar = () => {
+      if (currentIndex < sortedList.length - 1) {
+        const nextGrammar = sortedList[currentIndex + 1]
+        setSelectedGrammarId(nextGrammar.rule_id)
+        setSelectedGrammarIndex(currentIndex + 1)
+      }
+    }
+    
     return (
       <div className="h-full bg-gray-100 p-8">
         <div className="max-w-6xl mx-auto">
-          <LearnDetailPage 
-            type="grammar" 
-            data={selectedGrammar}
+          <GrammarDetailCard
+            grammar={selectedGrammar}
             loading={isLoadingDetail}
-            error={!isLoadingDetail && !selectedGrammar ? '语法规则未找到或加载失败' : null}
+            onPrevious={currentIndex > 0 ? handlePreviousGrammar : null}
+            onNext={currentIndex < sortedList.length - 1 ? handleNextGrammar : null}
             onBack={() => {
               setSelectedGrammar(null)
               setSelectedGrammarId(null)
+              setSelectedGrammarIndex(-1)
             }}
-            onToggleStar={handleToggleStar}
+            currentIndex={currentIndex}
+            totalCount={sortedList.length}
           />
         </div>
       </div>
     )
   }
 
-  // 加载状态
-  if (isLoading) {
-    return (
-      <LearnPageLayout
-        title={t('语法学习')}
-        onStartReview={startReview}
-        onSearch={(value) => setFilterText(value)}
-        onFilterChange={handleFilterChange}
-        showFilters={true}
-        showSearch={true}
-        backgroundClass="bg-gray-100"
-        onRefresh={handleRefreshData}
-        showRefreshButton={true}
-        sortOrder={sortOrder}
-        onSortChange={setSortOrder}
-      >
-        <div className="col-span-full flex justify-center items-center h-32">
-          <div className="text-gray-500">{t('加载语法数据中...')}</div>
-        </div>
-      </LearnPageLayout>
-    )
-  }
-
-  // 错误状态
-  if (isError) {
-    return (
-      <LearnPageLayout
-        title={t('语法学习')}
-        onStartReview={startReview}
-        onSearch={(value) => setFilterText(value)}
-        onFilterChange={handleFilterChange}
-        showFilters={true}
-        showSearch={true}
-        backgroundClass="bg-gray-100"
-        onRefresh={handleRefreshData}
-        showRefreshButton={true}
-        sortOrder={sortOrder}
-        onSortChange={setSortOrder}
-      >
-        <div className="col-span-full flex justify-center items-center h-32">
-          <div className="text-red-500">{t('加载语法数据失败')}: {error?.message}</div>
-        </div>
-      </LearnPageLayout>
-    )
-  }
-
-  // 配置过滤器
+  // 配置过滤器（在所有状态下都需要）
   const articles = Array.isArray(articlesData) ? articlesData : []
   console.log('🔍 [GrammarDemo] 文章数据:', articles.length, '篇', articles.length > 0 ? articles[0] : '')
   
@@ -393,10 +398,13 @@ const GrammarDemo = () => {
     { value: 'all', label: t('全部文章') },
     ...articles
       .filter(article => article && (article.id || article.text_id)) // 过滤掉无效的文章
-      .map(article => ({
-        value: String(article.id || article.text_id),
-        label: article.title || article.text_title || `${t('文章')} ${article.id || article.text_id}`
-      }))
+      .map(article => {
+        const fallbackLabel = `${t('文章')} ${article.id || article.text_id}`
+        return {
+          value: String(article.id || article.text_id),
+          label: article.title || article.text_title || fallbackLabel
+        }
+      })
   ]
   
   console.log('🔍 [GrammarDemo] 文章选项:', articleOptions.length, '个', articleOptions.map(opt => opt.label))
@@ -422,6 +430,54 @@ const GrammarDemo = () => {
     }
   ]
 
+  // 加载状态
+  if (isLoading) {
+    return (
+      <LearnPageLayout
+        title={t('语法学习')}
+        onStartReview={startReview}
+        onSearch={(value) => setFilterText(value)}
+        onFilterChange={handleFilterChange}
+        filters={filters}
+        showFilters={true}
+        showSearch={true}
+        backgroundClass="bg-gray-100"
+        onRefresh={handleRefreshData}
+        showRefreshButton={true}
+        sortOrder={sortOrder}
+        onSortChange={setSortOrder}
+      >
+        <div className="col-span-full flex justify-center items-center h-32">
+          <div className="text-gray-500">{t('加载语法数据中...')}</div>
+        </div>
+      </LearnPageLayout>
+    )
+  }
+
+  // 错误状态
+  if (isError) {
+    return (
+      <LearnPageLayout
+        title={t('语法学习')}
+        onStartReview={startReview}
+        onSearch={(value) => setFilterText(value)}
+        onFilterChange={handleFilterChange}
+        filters={filters}
+        showFilters={true}
+        showSearch={true}
+        backgroundClass="bg-gray-100"
+        onRefresh={handleRefreshData}
+        showRefreshButton={true}
+        sortOrder={sortOrder}
+        onSortChange={setSortOrder}
+      >
+        <div className="col-span-full flex justify-center items-center h-32">
+          <div className="text-red-500">{t('加载语法数据失败')}: {error?.message}</div>
+        </div>
+      </LearnPageLayout>
+    )
+  }
+
   // 列表页：使用统一布局
   return (
     <LearnPageLayout
@@ -439,14 +495,12 @@ const GrammarDemo = () => {
       onSortChange={setSortOrder}
     >
       {/* 显示当前语言过滤状态 */}
-      {selectedLanguage !== 'all' && (
-        <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-700">
-            <span className="font-medium">{t('当前筛选：')}</span>{selectedLanguage}
-            <span className="ml-2 text-gray-600">({list.length} {t('个语法规则')})</span>
-          </p>
-        </div>
-      )}
+      <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-sm text-blue-700">
+          <span className="font-medium">{t('当前筛选：')}</span>{selectedLanguage}
+          <span className="ml-2 text-gray-600">({list.length} {t('个语法规则')})</span>
+        </p>
+      </div>
       
       {/* 空状态提示 */}
       {list.length === 0 && !isLoading && (
@@ -460,7 +514,12 @@ const GrammarDemo = () => {
           key={g.rule_id} 
           type="grammar" 
           data={g} 
-          onClick={() => setSelectedGrammarId(g.rule_id)}
+          onClick={() => {
+            setSelectedGrammarId(g.rule_id)
+            // 计算当前语法在列表中的索引
+            const index = list.findIndex(item => item.rule_id === g.rule_id)
+            setSelectedGrammarIndex(index)
+          }}
           onToggleStar={handleToggleStar}
         />
       ))}

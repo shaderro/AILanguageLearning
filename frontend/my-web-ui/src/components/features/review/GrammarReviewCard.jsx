@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { BaseButton, BaseCard, BaseBadge } from '../../base'
 import { colors } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
+import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
 
 // 解析和格式化解释文本（从 ReviewCard 复制）
 const parseExplanation = (text) => {
@@ -81,6 +82,7 @@ const GrammarReviewCard = ({
   onKnow,
 }) => {
   const t = useUIText()
+  const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
   const [showDefinitions, setShowDefinitions] = useState(false)
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [grammarWithExamples, setGrammarWithExamples] = useState(grammar)
@@ -138,6 +140,108 @@ const GrammarReviewCard = ({
     const currentGrammar = grammarWithExamples || grammar
     return parseExplanation(currentGrammar?.rule_summary || currentGrammar?.explanation || '暂无解释')
   }, [grammarWithExamples, grammar])
+  
+  // 🔧 朗读功能
+  const [speakingSentenceIndex, setSpeakingSentenceIndex] = useState(null)
+  
+  // 组件卸载时清理朗读
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
+  
+  // 🔧 根据语言代码获取对应的语音
+  const getVoiceForLanguage = useCallback((langCode) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      return null
+    }
+    
+    const availableVoices = window.speechSynthesis.getVoices()
+    
+    if (!availableVoices || availableVoices.length === 0) {
+      console.warn('⚠️ [GrammarReviewCard] 没有可用的语音')
+      return null
+    }
+    
+    const targetLang = languageCodeToBCP47(langCode)
+    
+    // 优先查找完全匹配的语音
+    let voice = availableVoices.find(v => v.lang === targetLang)
+    
+    // 如果找不到，查找语言代码前缀匹配的
+    if (!voice) {
+      const langPrefix = targetLang.split('-')[0]
+      voice = availableVoices.find(v => v.lang && v.lang.startsWith(langPrefix))
+    }
+    
+    // 如果还是找不到，使用默认语音（通常是第一个）
+    if (!voice && availableVoices.length > 0) {
+      voice = availableVoices[0]
+      console.warn(`⚠️ [GrammarReviewCard] 未找到 ${targetLang} 语音，使用默认语音: ${voice.name}`)
+    }
+    
+    return voice || null
+  }, [])
+
+  // 🔧 通用朗读函数（使用全局语言状态）
+  const handleSpeak = useCallback((text, onStart, onEnd) => {
+    if (!text) return
+    
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // 🔧 使用全局语言状态
+      const langCode = languageNameToCode(selectedLanguage)
+      const targetLang = languageCodeToBCP47(langCode)
+      
+      // 🔧 获取对应的语音对象
+      const voice = getVoiceForLanguage(langCode)
+      
+      const utterance = new SpeechSynthesisUtterance(text)
+      
+      // 🔧 显式设置语音对象（这是关键！）
+      if (voice) {
+        utterance.voice = voice
+      }
+      utterance.lang = targetLang
+      utterance.rate = 0.9
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+      
+      utterance.onstart = () => {
+        if (onStart) onStart()
+      }
+      
+      utterance.onend = () => {
+        if (onEnd) onEnd()
+      }
+      
+      utterance.onerror = () => {
+        if (onEnd) onEnd()
+      }
+      
+      window.speechSynthesis.speak(utterance)
+    }
+  }, [selectedLanguage, getVoiceForLanguage])
+  
+  const handleSpeakSentence = (sentence, index) => {
+    if (!sentence) return
+    
+    // 如果正在朗读这个句子，停止朗读
+    if (speakingSentenceIndex === index && typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      setSpeakingSentenceIndex(null)
+      return
+    }
+    
+    // 🔧 开始朗读句子，使用全局语言状态
+    handleSpeak(
+      sentence,
+      () => setSpeakingSentenceIndex(index),
+      () => setSpeakingSentenceIndex(null)
+    )
+  }
 
   const handlePreviousExample = () => {
     if (currentExampleIndex > 0) {
@@ -271,9 +375,30 @@ const GrammarReviewCard = ({
           {/* Example Sentence Card */}
           {exampleSentences.length > 0 && (
             <div className="bg-gray-100 rounded-lg p-4">
-              <p className="text-lg text-gray-800 text-center mb-4 whitespace-normal break-words">
-                {exampleSentences[currentExampleIndex]}
-              </p>
+              <div className="flex items-start gap-2 mb-4">
+                <p className="text-lg text-gray-800 text-center flex-1 whitespace-normal break-words">
+                  {exampleSentences[currentExampleIndex]}
+                </p>
+                {/* 🔧 朗读图标按钮 */}
+                <button
+                  onClick={() => handleSpeakSentence(exampleSentences[currentExampleIndex], currentExampleIndex)}
+                  className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors flex-shrink-0"
+                  aria-label={speakingSentenceIndex === currentExampleIndex ? '停止朗读' : '朗读句子'}
+                  title={speakingSentenceIndex === currentExampleIndex ? '停止朗读' : '朗读句子'}
+                >
+                  {speakingSentenceIndex === currentExampleIndex ? (
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <rect x="9" y="9" width="6" height="6" rx="1" />
+                      <circle cx="12" cy="12" r="10" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </svg>
+                  )}
+                </button>
+              </div>
 
               {/* Sentence Explanation - 显示在灰色框内，当 showDefinitions 为 true 时 */}
               {showDefinitions && exampleData[currentExampleIndex]?.explanation && (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { colors } from '../../../design-tokens'
 
 const SuggestedQuestions = ({ 
   quotedText, 
@@ -7,7 +8,8 @@ const SuggestedQuestions = ({
   inputValue = '',
   onQuestionClick,
   tokenCount = 1,  // 新增：选中的token数量，默认为1
-  hasSelectedSentence = false  // 新增：是否选择了整句
+  hasSelectedSentence = false,  // 新增：是否选择了整句
+  disabled = false  // 🔧 新增：是否禁用（main assistant 正在处理时）
 }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null)
 
@@ -65,7 +67,7 @@ const SuggestedQuestions = ({
   }, [inputValue])
 
   const handleQuestionClick = (question) => {
-    setSelectedQuestion(question)
+    // 不再设置 selectedQuestion，避免持续深色状态
     onQuestionSelect(question)
     // 通知父组件问题被点击
     if (onQuestionClick) {
@@ -85,7 +87,7 @@ const SuggestedQuestions = ({
 
   return (
     <div 
-      className="w-full bg-gray-50 border-t border-gray-200 px-4 py-3"
+      className="w-full bg-gray-50 border-t border-gray-200 px-4 py-3 flex-shrink-0"
       onClick={handleContainerClick}
     >
       <div className="text-sm text-gray-600 mb-2">
@@ -96,13 +98,47 @@ const SuggestedQuestions = ({
           <button
             key={index}
             onClick={() => handleQuestionClick(question)}
-            className={`
-              px-3 py-1.5 text-sm rounded-lg border transition-all duration-200
-              ${selectedQuestion === question
-                ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700'
+            disabled={disabled}
+            className="px-3 py-1.5 text-sm rounded-lg border bg-white text-gray-700 border-gray-300 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              '--hover-bg': colors.primary[50],
+              '--hover-border': colors.primary[300],
+              '--hover-text': colors.primary[700],
+              '--active-bg': colors.primary[600],
+              '--active-border': colors.primary[600],
+              '--active-text': '#ffffff'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary[50]
+              e.currentTarget.style.borderColor = colors.primary[300]
+              e.currentTarget.style.color = colors.primary[700]
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white'
+              e.currentTarget.style.borderColor = '#d1d5db'
+              e.currentTarget.style.color = '#374151'
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.backgroundColor = colors.primary[600]
+              e.currentTarget.style.borderColor = colors.primary[600]
+              e.currentTarget.style.color = '#ffffff'
+            }}
+            onMouseUp={(e) => {
+              // 松开后立即恢复悬停状态（如果鼠标还在按钮上）或默认状态
+              const rect = e.currentTarget.getBoundingClientRect()
+              const x = e.clientX
+              const y = e.clientY
+              // 检查鼠标是否仍在按钮内
+              if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                e.currentTarget.style.backgroundColor = colors.primary[50]
+                e.currentTarget.style.borderColor = colors.primary[300]
+                e.currentTarget.style.color = colors.primary[700]
+              } else {
+                e.currentTarget.style.backgroundColor = 'white'
+                e.currentTarget.style.borderColor = '#d1d5db'
+                e.currentTarget.style.color = '#374151'
               }
-            `}
+            }}
           >
             "{question}"
           </button>

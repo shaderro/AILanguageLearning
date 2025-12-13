@@ -15,6 +15,7 @@ import VocabDetailCard from '../../components/features/vocab/VocabDetailCard'
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
   const [selectedWordId, setSelectedWordId] = useState(null)
+  const [selectedWordIndex, setSelectedWordIndex] = useState(-1)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [reviewWords, setReviewWords] = useState([])
@@ -118,6 +119,36 @@ function WordDemo() {
   const handleWordSelect = (word) => {
     // 🔧 修改：设置 ID 触发详情加载，而不是直接使用列表数据
     setSelectedWordId(word.vocab_id)
+    // 计算当前词汇在列表中的索引
+    const allVocabs = vocabData?.data || []
+    const filteredVocabs = allVocabs
+      .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
+    
+    const sortedList = [...filteredVocabs].sort((a, b) => {
+      const timeA = a.updated_at || a.created_at
+      const timeB = b.updated_at || b.created_at
+      
+      if (timeA && timeB) {
+        const dateA = new Date(timeA).getTime()
+        const dateB = new Date(timeB).getTime()
+        if (sortOrder === 'desc') {
+          return dateB - dateA
+        } else {
+          return dateA - dateB
+        }
+      }
+      
+      const idA = a.vocab_id || 0
+      const idB = b.vocab_id || 0
+      if (sortOrder === 'desc') {
+        return idB - idA
+      } else {
+        return idA - idB
+      }
+    })
+    
+    const index = sortedList.findIndex(w => w.vocab_id === word.vocab_id)
+    setSelectedWordIndex(index)
   }
 
   const handleStartReview = () => {
@@ -293,26 +324,69 @@ function WordDemo() {
 
   // 详情页面
   if (selectedWordId) {
+    // 计算当前过滤和排序后的列表
+    const allVocabs = vocabData?.data || []
+    const filteredVocabs = allVocabs
+      .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
+    
+    const sortedList = [...filteredVocabs].sort((a, b) => {
+      const timeA = a.updated_at || a.created_at
+      const timeB = b.updated_at || b.created_at
+      
+      if (timeA && timeB) {
+        const dateA = new Date(timeA).getTime()
+        const dateB = new Date(timeB).getTime()
+        if (sortOrder === 'desc') {
+          return dateB - dateA
+        } else {
+          return dateA - dateB
+        }
+      }
+      
+      const idA = a.vocab_id || 0
+      const idB = b.vocab_id || 0
+      if (sortOrder === 'desc') {
+        return idB - idA
+      } else {
+        return idA - idB
+      }
+    })
+    
+    // 找到当前词汇在列表中的索引
+    const currentIndex = sortedList.findIndex(w => w.vocab_id === selectedWordId)
+    
+    const handlePreviousVocab = () => {
+      if (currentIndex > 0) {
+        const prevWord = sortedList[currentIndex - 1]
+        setSelectedWordId(prevWord.vocab_id)
+        setSelectedWordIndex(currentIndex - 1)
+      }
+    }
+    
+    const handleNextVocab = () => {
+      if (currentIndex < sortedList.length - 1) {
+        const nextWord = sortedList[currentIndex + 1]
+        setSelectedWordId(nextWord.vocab_id)
+        setSelectedWordIndex(currentIndex + 1)
+      }
+    }
+    
     return (
       <div className="h-full bg-gray-100 p-8">
         <div className="max-w-6xl mx-auto">
           <VocabDetailCard
             vocab={selectedWord}
             loading={isLoadingDetail}
-            onPrevious={null}
-            onNext={null}
+            onPrevious={currentIndex > 0 ? handlePreviousVocab : null}
+            onNext={currentIndex < sortedList.length - 1 ? handleNextVocab : null}
+            onBack={() => {
+              setSelectedWord(null)
+              setSelectedWordId(null)
+              setSelectedWordIndex(-1)
+            }}
+            currentIndex={currentIndex}
+            totalCount={sortedList.length}
           />
-          <div className="mt-4">
-            <button
-              onClick={() => {
-                setSelectedWord(null)
-                setSelectedWordId(null)
-              }}
-              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              {t('返回')}
-            </button>
-          </div>
         </div>
       </div>
     )
@@ -410,14 +484,12 @@ function WordDemo() {
       onSortChange={setSortOrder}
     >
       {/* 显示当前语言过滤状态 */}
-      {selectedLanguage !== 'all' && (
-        <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-700">
-            <span className="font-medium">当前筛选：</span>{selectedLanguage}
-            <span className="ml-2 text-gray-600">({list.length} 个词汇)</span>
-          </p>
-        </div>
-      )}
+      <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-sm text-blue-700">
+          <span className="font-medium">当前筛选：</span>{selectedLanguage}
+          <span className="ml-2 text-gray-600">({list.length} 个词汇)</span>
+        </p>
+      </div>
       {/* 搜索建议区域（可选） */}
       {wordInfo.isSuccess && wordInfo.data?.status === 'success' && (
         <div className="col-span-1 md:col-span-2 lg:col-span-3">

@@ -13,9 +13,10 @@ export const useChatEvent = () => {
 export const ChatEventProvider = ({ children }) => {
   const [pendingMessage, setPendingMessage] = useState(null)
   const [pendingToast, setPendingToast] = useState(null)
+  const [pendingContext, setPendingContext] = useState(null) // 新增：保存待发送消息的 context
 
   // 发送消息到Chat
-  const sendMessageToChat = (message, quotedText = null) => {
+  const sendMessageToChat = (message, quotedText = null, context = null) => {
     // 过滤空消息
     if (!message || String(message).trim() === '' || message === 'null' || message === 'undefined') {
       console.warn('⚠️ [ChatEvent] Ignoring empty/null message:', message)
@@ -27,6 +28,16 @@ export const ChatEventProvider = ({ children }) => {
       quotedText: quotedText,
       timestamp: new Date()
     })
+    
+    // 如果有 context，也保存起来
+    if (context) {
+      setPendingContext(context)
+    }
+  }
+  
+  // 清除待发送的 context
+  const clearPendingContext = () => {
+    setPendingContext(null)
   }
 
   // 清除待发送消息
@@ -46,6 +57,8 @@ export const ChatEventProvider = ({ children }) => {
       pendingMessage,
       sendMessageToChat,
       clearPendingMessage,
+      pendingContext,
+      clearPendingContext,
       pendingToast,
       triggerKnowledgeToast,
       clearPendingToast

@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
+import { colors } from '../../../design-tokens'
 
 const UserAvatar = ({ userId, onLogout, onOpenProfile }) => {
   const [showMenu, setShowMenu] = useState(false)
@@ -29,7 +30,10 @@ const UserAvatar = ({ userId, onLogout, onOpenProfile }) => {
         className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
       >
         {/* 头像图标 */}
-        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+        <div 
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+          style={{ backgroundColor: colors.primary[400] }}
+        >
           {userId.toString().slice(-1)}
         </div>
         

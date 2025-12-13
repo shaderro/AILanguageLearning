@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { apiService } from '../../../../services/api'
 
@@ -104,6 +104,8 @@ export default function VocabNotationCard({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [portalStyle, setPortalStyle] = useState({})
+  const cardRef = useRef(null)
+  const [cardHeight, setCardHeight] = useState(null)
   const portalContainerRef = useRef(null)
 
   useEffect(() => {
@@ -204,25 +206,49 @@ export default function VocabNotationCard({
     const rect = anchorRef.current.getBoundingClientRect()
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const measuredHeight =
+      cardRef.current?.getBoundingClientRect().height ||
+      cardHeight ||
+      DEFAULT_CARD_MAX_HEIGHT
+    
+    // 左对齐到 token 的左边
     const desiredLeft = rect.left
     const maxLeft = viewportWidth - DEFAULT_CARD_WIDTH - CARD_MARGIN
     const left = Math.max(CARD_MARGIN, Math.min(desiredLeft, maxLeft))
+    
+    // 默认显示在 token 正下方
     let top = rect.bottom + CARD_MARGIN
-    const maxTop = viewportHeight - CARD_MARGIN
-    const estimatedHeight = DEFAULT_CARD_MAX_HEIGHT
-    if (top + estimatedHeight > maxTop && rect.top > estimatedHeight + CARD_MARGIN) {
-      top = rect.top - estimatedHeight - CARD_MARGIN
+    const spaceBelow = viewportHeight - rect.bottom - CARD_MARGIN
+    const spaceAbove = rect.top
+    
+    // 如果下方空间不够（无法完整显示卡片），且上方有足够空间，则显示在上方
+    if (spaceBelow < measuredHeight && spaceAbove >= measuredHeight) {
+      // 显示在 token 正上方，卡片底部与 token 行上边对齐（无间隙）
+      top = rect.top - measuredHeight
     }
+    
+    // 确保不会超出视口边界
+    const finalTop = Math.max(0, Math.min(top, viewportHeight - measuredHeight))
+    
     setPortalStyle({
       position: 'fixed',
-      top: `${Math.max(CARD_MARGIN, top)}px`,
+      top: `${finalTop}px`,
       left: `${left}px`,
       width: `${DEFAULT_CARD_WIDTH}px`,
       opacity: show ? 1 : 0,
       pointerEvents: show ? 'auto' : 'none',
       ...(position || {})
     })
-  }, [anchorRef, show, position])
+  }, [anchorRef, show, position, cardHeight])
+
+  useLayoutEffect(() => {
+    if (show && cardRef.current) {
+      const h = cardRef.current.getBoundingClientRect().height
+      if (h && h !== cardHeight) {
+        setCardHeight(h)
+      }
+    }
+  }, [show, cardHeight])
 
   useEffect(() => {
     if (!show) return
@@ -262,9 +288,6 @@ export default function VocabNotationCard({
         <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
           {parseExplanation(vocabExample.context_explanation)}
         </div>
-        {vocabExample.vocab_id && (
-          <div className="text-xs text-gray-400 mt-2">Vocab ID: {vocabExample.vocab_id}</div>
-        )}
       </div>
     )
   } else if (vocabExample === null && !isLoading) {
@@ -282,9 +305,9 @@ export default function VocabNotationCard({
       onMouseLeave={onMouseLeave}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="absolute top-1 left-4 w-2 h-2 bg-gray-200 transform rotate-45 border-l border-t border-gray-300"></div>
       <div 
-        className="bg-gray-100 border border-gray-300 rounded-lg shadow-lg p-3"
+        ref={cardRef}
+        className="bg-white border border-gray-300 rounded-lg shadow-lg p-3"
         style={{
           maxHeight: `${DEFAULT_CARD_MAX_HEIGHT}px`,
           overflowY: 'auto'

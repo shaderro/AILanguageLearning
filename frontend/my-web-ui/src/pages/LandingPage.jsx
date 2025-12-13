@@ -1,10 +1,48 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useUser } from '../contexts/UserContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useArticles, useVocabList, useGrammarList } from '../hooks/useApi'
 import { useUIText } from '../i18n/useUIText'
+import { apiService } from '../services/api'
 import ArticlePreviewCardLanding from '../components/features/article/ArticlePreviewCardLanding'
 import QuickReviewCard from '../components/features/review/QuickReviewCard'
+
+const PREVIEW_CACHE_KEY = 'articlePreviewCache'
+const previewCache = new Map()
+let previewCacheLoaded = false
+
+const ensurePreviewCacheLoaded = () => {
+  if (previewCacheLoaded || typeof window === 'undefined') {
+    return
+  }
+  try {
+    const raw = window.localStorage.getItem(PREVIEW_CACHE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      Object.entries(parsed).forEach(([id, value]) => {
+        if (typeof value === 'string' && value.trim()) {
+          previewCache.set(id, value)
+        }
+      })
+    }
+  } catch (err) {
+    console.warn('⚠️ [LandingPage] 读取摘要缓存失败:', err)
+  } finally {
+    previewCacheLoaded = true
+  }
+}
+
+const persistPreviewCache = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  try {
+    const serialized = JSON.stringify(Object.fromEntries(previewCache))
+    window.localStorage.setItem(PREVIEW_CACHE_KEY, serialized)
+  } catch (err) {
+    console.warn('⚠️ [LandingPage] 保存摘要缓存失败:', err)
+  }
+}
 
 const extractArray = (response) => {
   if (!response) {
@@ -70,13 +108,102 @@ const LandingPage = ({
   const { data: vocabResponse } = useVocabList(effectiveUserId, isGuest, selectedLanguage)
   const { data: grammarResponse } = useGrammarList(effectiveUserId, isGuest, selectedLanguage)
 
+  const fallbackPreview = t('暂无摘要')
+  
+  ensurePreviewCacheLoaded()
+
   const articles = useMemo(() => {
     if (!isAuthenticated) {
       return []
     }
     const normalized = extractArray(articleResponse)
-    return normalized.map((article) => normalizeArticle(article, t('暂无摘要')))
-  }, [articleResponse, isAuthenticated, t])
+    return normalized.map((article) => {
+      const normalized = normalizeArticle(article, fallbackPreview)
+      // 如果缓存中有预览，使用缓存的预览
+      const cachedPreview = previewCache.get(normalized.id)
+      return {
+        ...normalized,
+        preview: cachedPreview || normalized.preview,
+      }
+    })
+  }, [articleResponse, isAuthenticated, t, fallbackPreview])
+
+  const [previewOverrides, setPreviewOverrides] = useState(() => {
+    const initial = {}
+    articles.forEach((article) => {
+      if (previewCache.has(article.id)) {
+        initial[article.id] = previewCache.get(article.id)
+      }
+    })
+    return initial
+  })
+
+  // 异步加载缺失的预览
+  useEffect(() => {
+    let cancelled = false
+    const CONCURRENCY = 3
+    
+    const fetchMissingPreviews = async () => {
+      const pending = articles.filter(
+        (article) =>
+          (!article.preview || article.preview === fallbackPreview) &&
+          !previewCache.has(article.id),
+      )
+      if (pending.length === 0) {
+        return
+      }
+
+      for (let i = 0; i < pending.length && !cancelled; i += CONCURRENCY) {
+        const batch = pending.slice(i, i + CONCURRENCY)
+        await Promise.all(
+          batch.map(async (article) => {
+            try {
+              const resp = await apiService.getArticleSentences(article.id, { limit: 1 })
+              const sentences =
+                resp?.data?.data?.sentences ||
+                resp?.data?.sentences ||
+                resp?.data ||
+                resp?.sentences ||
+                []
+              const firstSentence = Array.isArray(sentences) && sentences.length > 0
+                ? sentences[0]?.sentence_body || sentences[0]?.text || sentences[0]?.sentence
+                : null
+              if (firstSentence && !cancelled) {
+                previewCache.set(article.id, firstSentence)
+                persistPreviewCache()
+                setPreviewOverrides((prev) => {
+                  if (prev[article.id] === firstSentence) {
+                    return prev
+                  }
+                  return {
+                    ...prev,
+                    [article.id]: firstSentence,
+                  }
+                })
+              }
+            } catch (err) {
+              console.warn('⚠️ [LandingPage] 获取文章首句失败:', article.id, err)
+            }
+          }),
+        )
+      }
+    }
+
+    fetchMissingPreviews()
+
+    return () => {
+      cancelled = true
+    }
+  }, [articles, fallbackPreview])
+
+  const enrichedArticles = useMemo(
+    () =>
+      articles.map((article) => ({
+        ...article,
+        preview: previewOverrides[article.id] ?? previewCache.get(article.id) ?? article.preview,
+      })),
+    [articles, previewOverrides],
+  )
 
   const vocabList = useMemo(() => {
     if (!isAuthenticated) {
@@ -102,7 +229,7 @@ const LandingPage = ({
   const noReviewData = vocabCount === 0 && grammarCount === 0
   const hideContent = !hasArticles || noReviewData
 
-  const recentArticles = articles.slice(0, 3)
+  const recentArticles = enrichedArticles.slice(0, 3)
 
   return (
     <div className="py-10 px-4 sm:px-6 lg:px-8">

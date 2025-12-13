@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { BaseCard } from '../../base'
 import { colors } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
+import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
 
 // 解析和格式化解释文本
 const parseExplanation = (text) => {
@@ -95,9 +96,13 @@ const VocabDetailCard = ({
   vocab,
   onPrevious,
   onNext,
+  onBack,
+  currentIndex,
+  totalCount,
   loading = false,
 }) => {
   const t = useUIText()
+  const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
   const [vocabWithDetails, setVocabWithDetails] = useState(vocab)
   const [articleTitles, setArticleTitles] = useState({}) // text_id -> title 映射
 
@@ -168,6 +173,238 @@ const VocabDetailCard = ({
   // 提取释义与语法说明文本（如果能拆分则拆分，否则释义包含全部）
   const { definitionText, grammarText } = extractSections(vocabWithDetails?.explanation || '')
   const explanation = parseExplanation(vocabWithDetails?.explanation || '')
+  
+  // 🔧 朗读功能
+  const [isSpeakingVocab, setIsSpeakingVocab] = useState(false)
+  const [speakingSentenceIndex, setSpeakingSentenceIndex] = useState(null)
+  
+  // 组件卸载时清理朗读
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
+  
+  // 🔧 根据语言代码获取对应的语音
+  const getVoiceForLanguage = useCallback((langCode) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      return null
+    }
+    
+    const availableVoices = window.speechSynthesis.getVoices()
+    
+    if (!availableVoices || availableVoices.length === 0) {
+      console.warn('⚠️ [VocabDetailCard] 没有可用的语音')
+      return null
+    }
+    
+    const targetLang = languageCodeToBCP47(langCode)
+    
+    // 🔧 优先查找非多语言的、完全匹配的语音（避免多语言语音自动检测语言）
+    let voice = availableVoices.find(v => 
+      v.lang === targetLang && 
+      !v.name.toLowerCase().includes('multilingual')
+    )
+    
+    // 如果找不到非多语言的，再查找完全匹配的（包括多语言）
+    if (!voice) {
+      voice = availableVoices.find(v => v.lang === targetLang)
+    }
+    
+    // 如果找不到，查找语言代码前缀匹配的（优先非多语言）
+    if (!voice) {
+      const langPrefix = targetLang.split('-')[0]
+      voice = availableVoices.find(v => 
+        v.lang && 
+        v.lang.startsWith(langPrefix) && 
+        !v.name.toLowerCase().includes('multilingual')
+      )
+    }
+    
+    // 如果还是找不到，查找任何匹配语言的语音
+    if (!voice) {
+      const langPrefix = targetLang.split('-')[0]
+      voice = availableVoices.find(v => v.lang && v.lang.startsWith(langPrefix))
+    }
+    
+    // 如果还是找不到，使用默认语音（通常是第一个）
+    if (!voice && availableVoices.length > 0) {
+      voice = availableVoices[0]
+      console.warn(`⚠️ [VocabDetailCard] 未找到 ${targetLang} 语音，使用默认语音: ${voice.name}`)
+    }
+    
+    console.log('🔊 [VocabDetailCard] 选择的语音:', {
+      name: voice?.name,
+      lang: voice?.lang,
+      isMultilingual: voice?.name?.toLowerCase().includes('multilingual'),
+      allMatchingVoices: availableVoices.filter(v => v.lang === targetLang).map(v => ({
+        name: v.name,
+        lang: v.lang,
+        isMultilingual: v.name.toLowerCase().includes('multilingual')
+      }))
+    })
+    
+    return voice || null
+  }, [])
+
+  // 🔧 通用朗读函数（使用全局语言状态）
+  const handleSpeak = useCallback(async (text, onStart, onEnd) => {
+    if (!text) return
+    
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // 🔧 先取消任何正在进行的朗读
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel()
+        // 等待一小段时间，确保 cancel 完成
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      
+      // 🔧 使用全局语言状态
+      const langCode = languageNameToCode(selectedLanguage)
+      const targetLang = languageCodeToBCP47(langCode)
+      
+      // 🔧 确保语音列表已加载（某些浏览器需要触发 getVoices 才能加载）
+      let availableVoices = window.speechSynthesis.getVoices()
+      if (availableVoices.length === 0) {
+        // 如果语音列表为空，等待一下再试
+        await new Promise(resolve => setTimeout(resolve, 100))
+        availableVoices = window.speechSynthesis.getVoices()
+      }
+      
+      // 🔧 重新验证并获取语音对象（确保使用最新的语音列表）
+      let validVoice = null
+      const voice = getVoiceForLanguage(langCode)
+      if (voice) {
+        // 从当前可用的语音列表中查找匹配的语音（通过名称和语言）
+        validVoice = availableVoices.find(v => 
+          v.name === voice.name && v.lang === voice.lang
+        ) || availableVoices.find(v => v.lang === voice.lang)
+      }
+      
+      // 如果找不到匹配的语音，重新获取
+      if (!validVoice) {
+        validVoice = getVoiceForLanguage(langCode)
+      }
+      
+      // 🔧 如果还是找不到，尝试查找任何德语语音（优先非多语言）
+      if (!validVoice && langCode === 'de') {
+        validVoice = availableVoices.find(v => 
+          v.lang && 
+          v.lang.startsWith('de') && 
+          !v.name.toLowerCase().includes('multilingual')
+        ) || availableVoices.find(v => v.lang && v.lang.startsWith('de'))
+      }
+      
+      // 🔧 显示所有可用的德语语音（用于调试）
+      const germanVoices = availableVoices.filter(v => v.lang && v.lang.startsWith('de'))
+      console.log('🔊 [VocabDetailCard] 所有可用的德语语音:', germanVoices.map(v => ({
+        name: v.name,
+        lang: v.lang,
+        isMultilingual: v.name.toLowerCase().includes('multilingual')
+      })))
+      
+      console.log('🔊 [VocabDetailCard] 朗读设置:', {
+        selectedLanguage,
+        langCode,
+        targetLang,
+        voice: validVoice ? validVoice.name : 'null',
+        voiceLang: validVoice ? validVoice.lang : 'null',
+        textLength: text.length,
+        text: text.substring(0, 50), // 显示文本内容（用于调试）
+        availableVoicesCount: availableVoices.length
+      })
+      
+      const utterance = new SpeechSynthesisUtterance(text)
+      
+      // 🔧 关键：先设置 lang，再设置 voice（某些浏览器需要这个顺序）
+      utterance.lang = targetLang
+      
+      // 🔧 显式设置语音对象（这是关键！）
+      if (validVoice) {
+        utterance.voice = validVoice
+        console.log('🔊 [VocabDetailCard] 使用语音:', validVoice.name, validVoice.lang)
+        // 🔧 再次确认 voice 设置成功
+        console.log('🔊 [VocabDetailCard] utterance.voice 确认:', utterance.voice?.name, utterance.voice?.lang)
+        
+        // 🔧 如果使用的是多语言语音，添加警告
+        if (validVoice.name.toLowerCase().includes('multilingual')) {
+          console.warn('⚠️ [VocabDetailCard] 警告：使用的是多语言语音，可能会根据文本内容自动检测语言')
+        }
+      } else {
+        console.warn('⚠️ [VocabDetailCard] 未找到有效语音，使用浏览器默认语音')
+      }
+      
+      utterance.rate = 0.9
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+      
+      utterance.onstart = () => {
+        console.log('🔊 [VocabDetailCard] onStart - 实际使用的语音:', {
+          voiceName: utterance.voice?.name,
+          voiceLang: utterance.voice?.lang,
+          utteranceLang: utterance.lang,
+          text: text.substring(0, 50),
+          isMultilingual: utterance.voice?.name?.toLowerCase().includes('multilingual')
+        })
+        if (onStart) onStart()
+      }
+      
+      utterance.onend = () => {
+        if (onEnd) onEnd()
+      }
+      
+      utterance.onerror = (event) => {
+        // 🔧 interrupted 错误通常是正常的（用户停止或新的朗读取消旧的），不需要记录为错误
+        if (event.error === 'interrupted') {
+          console.log('🔊 [VocabDetailCard] 朗读被中断（正常情况）')
+          if (onEnd) onEnd()
+          return
+        }
+        console.error('❌ [VocabDetailCard] 朗读错误:', event.error)
+        if (onEnd) onEnd()
+      }
+      
+      window.speechSynthesis.speak(utterance)
+    }
+  }, [selectedLanguage, getVoiceForLanguage]) // 🔧 确保当 selectedLanguage 改变时，函数会重新创建
+  
+  const handleSpeakVocab = () => {
+    if (!vocabBody) return
+    
+    // 如果正在朗读，停止朗读
+    if (isSpeakingVocab && typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      setIsSpeakingVocab(false)
+      return
+    }
+    
+    // 🔧 开始朗读，使用全局语言状态
+    handleSpeak(
+      vocabBody,
+      () => setIsSpeakingVocab(true),
+      () => setIsSpeakingVocab(false)
+    )
+  }
+  
+  const handleSpeakSentence = (sentence, index) => {
+    if (!sentence) return
+    
+    // 如果正在朗读这个句子，停止朗读
+    if (speakingSentenceIndex === index && typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      setSpeakingSentenceIndex(null)
+      return
+    }
+    
+    // 🔧 开始朗读句子，使用全局语言状态
+    handleSpeak(
+      sentence,
+      () => setSpeakingSentenceIndex(index),
+      () => setSpeakingSentenceIndex(null)
+    )
+  }
   
   // 解析释义，尝试提取多个定义
   const definitions = useMemo(() => {
@@ -247,81 +484,118 @@ const VocabDetailCard = ({
   }
 
   return (
-    <BaseCard
-      padding="lg"
-      className="w-full max-w-4xl mx-auto"
-      style={{
-        '--card-bg': colors.semantic.bg.primary,
-        '--card-border': colors.semantic.border.default,
-      }}
-    >
-      <div className="space-y-6">
-        {/* 词汇标题区域 - 包含导航按钮（只有图标） */}
-        <div className="flex items-center justify-center gap-6">
-          {/* 上一个按钮 - 只有图标 */}
-          {onPrevious && (
-            <button
-              onClick={onPrevious}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="上一个"
-              style={{
-                color: colors.primary[500],
-              }}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+    <div className="w-full max-w-4xl mx-auto">
+      <BaseCard
+        padding="lg"
+        className="w-full relative"
+        style={{
+          '--card-bg': colors.semantic.bg.primary,
+          '--card-border': colors.semantic.border.default,
+        }}
+      >
+        {/* 左上角返回按钮 - 绝对定位在卡片左上角 */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="absolute top-6 left-6 z-10 px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            aria-label="返回"
+          >
+            {t('返回')}
+          </button>
+        )}
+        
+        {/* 右上角分页控件 */}
+        {(onPrevious || onNext) && currentIndex !== undefined && totalCount !== undefined && (
+          <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
+            <span className="text-sm" style={{ color: colors.semantic.text.secondary }}>
+              {currentIndex + 1}/{totalCount}
+            </span>
+            {onPrevious && (
+              <button
+                onClick={onPrevious}
+                className="p-1.5 rounded hover:bg-gray-100 transition-colors"
+                aria-label="上一个"
+                style={{
+                  color: colors.semantic.text.secondary,
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          )}
-
-          {/* 词汇和词性 */}
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <h1 className="text-4xl font-bold text-center" style={{ color: colors.semantic.text.primary }}>
-              {vocabBody}
-            </h1>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+            )}
+            {onNext && (
+              <button
+                onClick={onNext}
+                className="p-1.5 rounded hover:bg-gray-100 transition-colors"
+                aria-label="下一个"
+                style={{
+                  color: colors.semantic.text.secondary,
+                }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+        
+        <div className="space-y-6">
+          {/* 词汇标题区域 */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-bold text-center" style={{ color: colors.semantic.text.primary }}>
+                {vocabBody}
+              </h1>
+              {/* 🔧 朗读图标按钮 */}
+              <button
+                onClick={handleSpeakVocab}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label={isSpeakingVocab ? '停止朗读' : '朗读'}
+                title={isSpeakingVocab ? '停止朗读' : '朗读'}
+              >
+                {isSpeakingVocab ? (
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="6" height="6" rx="1" />
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    {/* 扬声器锥形 */}
+                    <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                    {/* 声波线条 */}
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                  </svg>
+                )}
+              </button>
+            </div>
             {partOfSpeech && (
               <span className="text-sm" style={{ color: colors.semantic.text.secondary }}>
                 {partOfSpeech}
               </span>
             )}
           </div>
-
-          {/* 下一个按钮 - 只有图标 */}
-          {onNext && (
-            <button
-              onClick={onNext}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="下一个"
-              style={{
-                color: colors.primary[500],
-              }}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
 
         {/* 释义 + 语法说明 合并为单卡片，使用 Primary-50 背景 */}
         {(definitions.length > 0 || grammarPoints.length > 0) && (
@@ -395,8 +669,29 @@ const VocabDetailCard = ({
                   }}
                 >
                   {/* 句子部分 */}
-                  <div className="text-lg mb-2 font-medium" style={{ color: colors.semantic.text.primary }}>
-                    {example.sentence}
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="text-lg font-medium flex-1" style={{ color: colors.semantic.text.primary }}>
+                      {example.sentence}
+                    </div>
+                    {/* 🔧 朗读图标按钮 */}
+                    <button
+                      onClick={() => handleSpeakSentence(example.sentence, index)}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                      aria-label={speakingSentenceIndex === index ? '停止朗读' : '朗读句子'}
+                      title={speakingSentenceIndex === index ? '停止朗读' : '朗读句子'}
+                    >
+                      {speakingSentenceIndex === index ? (
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <rect x="9" y="9" width="6" height="6" rx="1" />
+                          <circle cx="12" cy="12" r="10" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                   {/* 来源部分 - 绿色文字和链接图标 */}
                   {(example.text_id || example.source) && (
@@ -448,69 +743,9 @@ const VocabDetailCard = ({
           </section>
         )}
 
-        {/* 底部导航栏 - 左边"< 上一个"，中间"来源: qa"，右边"下一个 >" */}
-        <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: colors.gray[200] }}>
-          {/* 左边：上一个 */}
-          <div className="flex items-center gap-2">
-            {onPrevious && (
-              <button
-                onClick={onPrevious}
-                className="flex items-center gap-1 px-3 py-1 text-sm hover:bg-gray-100 rounded-lg transition-colors"
-                style={{ color: colors.semantic.text.secondary }}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                上一个
-              </button>
-            )}
-          </div>
-          
-          {/* 中间：来源 */}
-          {vocabWithDetails?.source && (
-            <div className="text-sm" style={{ color: colors.semantic.text.secondary }}>
-              来源: <span className="font-medium">{vocabWithDetails.source}</span>
-            </div>
-          )}
-
-          {/* 右边：下一个 */}
-          <div className="flex items-center gap-2">
-            {onNext && (
-              <button
-                onClick={onNext}
-                className="flex items-center gap-1 px-3 py-1 text-sm hover:bg-gray-100 rounded-lg transition-colors"
-                style={{ color: colors.semantic.text.secondary }}
-              >
-                下一个
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </BaseCard>
+    </div>
   )
 }
 

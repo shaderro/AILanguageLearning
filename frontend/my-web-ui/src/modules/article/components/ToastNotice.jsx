@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const ToastNotice = ({ 
   message = "知识点已总结加入列表", 
-  duration = 2000, 
+  duration = 60000, // 调试阶段：1分钟
   onClose,
   isVisible = false 
 }) => {
@@ -37,10 +37,26 @@ const ToastNotice = ({
 
   if (!isShowing) return null
 
+  // 解析消息，将知识点名称部分加粗
+  const renderMessage = () => {
+    const suffix = ' 知识点已总结并加入列表'
+    if (message.endsWith(suffix)) {
+      const knowledgePart = message.slice(0, -suffix.length)
+      return (
+        <>
+          <span className="font-bold">{knowledgePart}</span>
+          <span>{suffix}</span>
+        </>
+      )
+    }
+    // 如果没有匹配到标准格式，直接显示原消息
+    return message
+  }
+
   return (
     <div 
       className={`
-        bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg
+        bg-success-200 text-black px-4 py-3 rounded-lg shadow-lg
         transform transition-all duration-1000 ease-in-out
         ${isFading ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}
         pointer-events-auto
@@ -61,7 +77,7 @@ const ToastNotice = ({
         </svg>
         <div className="flex-1">
           <div className="font-medium leading-5 mb-0.5">知识点总结</div>
-          <p className="text-sm leading-snug break-words">{message}</p>
+          <p className="text-sm leading-snug break-words">{renderMessage()}</p>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { apiService } from '../../../../services/api'
+import { colors } from '../../../../design-tokens'
 
 // 解析和格式化解释文本
 const parseExplanation = (text) => {
@@ -237,7 +238,7 @@ export default function GrammarNotationCard({
               borderRadius: '50%',
               height: '24px',
               width: '24px',
-              borderBottom: '2px solid #3b82f6'
+              borderBottom: `2px solid ${colors.primary[600]}`
             }}></div>
             <span style={{ marginLeft: '8px', color: '#6b7280' }}>加载中...</span>
           </div>
@@ -267,7 +268,7 @@ export default function GrammarNotationCard({
               >
                 <div style={{ 
                   fontWeight: '600', 
-                  color: '#2563eb', 
+                  color: colors.primary[600], 
                   marginBottom: '8px',
                   fontSize: '16px'
                 }}>
@@ -278,7 +279,7 @@ export default function GrammarNotationCard({
                   <div style={{ 
                     marginTop: '4px', 
                     paddingLeft: '8px', 
-                    borderLeft: '2px solid #dbeafe',
+                    borderLeft: `2px solid ${colors.primary[100]}`,
                     padding: '4px 0 4px 8px',
                     whiteSpace: 'pre-wrap'
                   }}>

@@ -1010,6 +1010,24 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
         vocab_summaries = []
         grammar_to_add = []
         vocab_to_add = []
+        # 预先记录本轮之前已有的 vocab notations（用于后续差集推断）
+        notation_manager = None
+        initial_vocab_keys = set()
+        user_id_for_notation = getattr(session_state, 'user_id', None) or payload.get('user_id') or 'default_user'
+        try:
+            from backend.data_managers.unified_notation_manager import get_unified_notation_manager
+            notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
+            if current_sentence and hasattr(current_sentence, 'text_id'):
+                initial_vocab_keys = notation_manager.get_notations(
+                    notation_type="vocab",
+                    text_id=current_sentence.text_id,
+                    user_id=user_id_for_notation
+                ) or set()
+                if not isinstance(initial_vocab_keys, set):
+                    initial_vocab_keys = set(initial_vocab_keys)
+        except Exception as pre_e:
+            print(f"⚠️ [Chat] 预读取 vocab notations 失败（忽略）: {pre_e}")
+
         try:
             from backend.assistants import main_assistant as _ma_mod
             prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
@@ -1039,14 +1057,46 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
                 for g in session_state.grammar_to_add:
                     grammar_to_add.append({'name': g.rule_name, 'explanation': g.rule_explanation})
             if session_state.vocab_to_add:
-                # 尝试补齐 vocab_id（若已存在于全局词库）
+                # 🔧 关键修复：从数据库查询新创建的词汇，确保 vocab_id 正确
+                print(f"🔍 [Chat] 处理 session_state.vocab_to_add: {len(session_state.vocab_to_add)} 个词汇")
                 for v in session_state.vocab_to_add:
+                    vocab_body = getattr(v, 'vocab', None)
                     vocab_id = None
-                    for vid, vbundle in global_dc.vocab_manager.vocab_bundles.items():
-                        if vbundle.vocab_body == getattr(v, 'vocab', None):
-                            vocab_id = vid
-                            break
-                    vocab_to_add.append({'vocab': getattr(v, 'vocab', None), 'vocab_id': vocab_id})
+                    
+                    # 首先尝试从数据库查询（因为 add_new_to_data() 刚刚创建了这些词汇）
+                    try:
+                        from database_system.database_manager import DatabaseManager
+                        from database_system.business_logic.models import VocabExpression
+                        db_manager = DatabaseManager('development')
+                        session = db_manager.get_session()
+                        try:
+                            vocab_model = session.query(VocabExpression).filter(
+                                VocabExpression.vocab_body == vocab_body,
+                                VocabExpression.user_id == user_id_for_notation
+                            ).order_by(VocabExpression.vocab_id.desc()).first()
+                            if vocab_model:
+                                vocab_id = vocab_model.vocab_id
+                                print(f"✅ [Chat] 从数据库找到 vocab_id={vocab_id} for vocab='{vocab_body}'")
+                        finally:
+                            session.close()
+                    except Exception as db_err:
+                        print(f"⚠️ [Chat] 从数据库查询 vocab_id 失败: {db_err}")
+                    
+                    # 如果数据库查询失败，回退到从全局词库查找
+                    if vocab_id is None:
+                        for vid, vbundle in global_dc.vocab_manager.vocab_bundles.items():
+                            vocab_body_from_bundle = getattr(vbundle, 'vocab_body', None) or (getattr(vbundle, 'vocab', None) and getattr(vbundle.vocab, 'vocab_body', None))
+                            if vocab_body_from_bundle == vocab_body:
+                                vocab_id = vid
+                                print(f"✅ [Chat] 从全局词库找到 vocab_id={vocab_id} for vocab='{vocab_body}'")
+                                break
+                    
+                    if vocab_id:
+                        vocab_to_add.append({'vocab': vocab_body, 'vocab_id': vocab_id})
+                        print(f"✅ [Chat] 添加 vocab_to_add: vocab='{vocab_body}', vocab_id={vocab_id}")
+                    else:
+                        print(f"⚠️ [Chat] 无法找到 vocab_id for vocab='{vocab_body}'，但仍添加到响应中")
+                        vocab_to_add.append({'vocab': vocab_body, 'vocab_id': None})
             print("✅ [Chat] 即时摘要准备完成：", {
                 'grammar_summaries': len(grammar_summaries),
                 'vocab_summaries': len(vocab_summaries),
@@ -1065,6 +1115,89 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks):
         # 因为后台任务会调用 reset_processing_results() 清空这些数据
         created_grammar_notations_snapshot = list(session_state.created_grammar_notations) if hasattr(session_state, 'created_grammar_notations') else []
         created_vocab_notations_snapshot = list(session_state.created_vocab_notations) if hasattr(session_state, 'created_vocab_notations') else []
+
+        # 🔧 差集推断：如果 snapshot 为空，尝试用本次新增的 vocab notations 推断
+        try:
+            if notation_manager and current_sentence and hasattr(current_sentence, 'text_id'):
+                latest_vocab_keys = notation_manager.get_notations(
+                    notation_type="vocab",
+                    text_id=current_sentence.text_id,
+                    user_id=user_id_for_notation
+                ) or set()
+                if not isinstance(latest_vocab_keys, set):
+                    latest_vocab_keys = set(latest_vocab_keys)
+                new_keys = latest_vocab_keys - initial_vocab_keys
+                if new_keys:
+                    inferred = []
+                    for key in new_keys:
+                        # 解析 key: text_id:sentence_id:token_id
+                        parts = str(key).split(':')
+                        if len(parts) != 3:
+                            continue
+                        try:
+                            _, s_id, t_id = parts
+                            sentence_id = int(s_id)
+                            token_id = int(t_id)
+                        except Exception:
+                            continue
+                        try:
+                            detail = notation_manager.get_notation_details(
+                                notation_type="vocab",
+                                user_id=user_id_for_notation,
+                                text_id=current_sentence.text_id,
+                                sentence_id=sentence_id,
+                                token_id=token_id
+                            )
+                        except Exception as det_e:
+                            print(f"⚠️ [Chat] 获取 notation 详情失败: {det_e}")
+                            detail = None
+                        vocab_id = None
+                        if detail is not None and hasattr(detail, 'vocab_id'):
+                            vocab_id = detail.vocab_id
+                        vocab_name = None
+                        if vocab_id and vocab_id in dc.vocab_manager.vocab_bundles:
+                            vb = dc.vocab_manager.vocab_bundles[vocab_id]
+                            vocab_name = getattr(vb, 'vocab_body', None) or getattr(getattr(vb, 'vocab', None), 'vocab_body', None)
+                        inferred.append({
+                            'text_id': current_sentence.text_id,
+                            'sentence_id': sentence_id,
+                            'token_id': token_id,
+                            'vocab_id': vocab_id,
+                            'vocab': vocab_name,
+                            'user_id': user_id_for_notation
+                        })
+                    if inferred and not created_vocab_notations_snapshot:
+                        created_vocab_notations_snapshot = inferred
+        except Exception as diff_e:
+            print(f"⚠️ [Chat] 差集推断 created_vocab_notations 失败: {diff_e}")
+        
+        # 🔧 Fallback: 如果 vocab_to_add 为空，但有新建的 vocab notation，尝试根据 vocab_id 补全 vocab 名称
+        if (not vocab_to_add) and created_vocab_notations_snapshot:
+            try:
+                vocab_names = []
+                for n in created_vocab_notations_snapshot:
+                    vid = n.get('vocab_id')
+                    if vid and vid in global_dc.vocab_manager.vocab_bundles:
+                        vb = global_dc.vocab_manager.vocab_bundles[vid]
+                        # 新结构或旧结构下的 vocab 字段名称
+                        vocab_body = getattr(vb, 'vocab_body', None) or getattr(vb.vocab, 'vocab_body', None)
+                        if vocab_body:
+                            vocab_names.append({'vocab': vocab_body, 'vocab_id': vid})
+                            # 也把名称写回 snapshot，方便前端直接使用
+                            n['vocab'] = vocab_body
+                # 去重后再写入
+                if vocab_names:
+                    seen = set()
+                    dedup = []
+                    for v in vocab_names:
+                        key = v['vocab_id']
+                        if key in seen:
+                            continue
+                        seen.add(key)
+                        dedup.append(v)
+                    vocab_to_add = dedup
+            except Exception as enrich_err:
+                print(f"⚠️ [Chat] Fallback enrich vocab_to_add failed: {enrich_err}")
         
         print(f"📸 [Chat] 快照 notations（启动后台任务前）:")
         print(f"  - Grammar notations: {len(created_grammar_notations_snapshot)}")

@@ -437,6 +437,10 @@ DIALOGUE_HISTORY_PATH = os.path.join(DATA_DIR, "dialogue_history.json")
 global_dc = data_controller.DataController(max_turns=100)
 print("✅ Global DataController created")
 
+# 🔧 临时存储：用于存储后台任务创建的新知识点，供前端轮询获取
+# 格式: {(user_id, text_id): {'vocab_to_add': [...], 'grammar_to_add': [...], 'timestamp': ...}}
+pending_knowledge_points = {}
+
 # 加载数据
 try:
     global_dc.load_data(
@@ -1214,7 +1218,7 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, 
         print("✅ [Chat] 主回答就绪，立即返回给前端")
         
         # 🔧 先立即返回主回答，然后在后台处理 grammar/vocab 和创建 notations
-        # 这样主回答能立即显示，notations 通过轮询获取
+        # 这样主回答能立即显示，toast 通过后台任务完成后返回的数据显示
         
         # 保存主回答，立即返回
         initial_response = {
@@ -1248,6 +1252,64 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, 
                 print("🧠 [Background] 执行 add_new_to_data()...")
                 main_assistant.add_new_to_data()
                 print("✅ [Background] add_new_to_data() 完成")
+                
+                # 🔧 关键修复：在后台任务完成后，存储新创建的 vocab_to_add 和 grammar_to_add
+                # 供前端轮询获取并显示 toast
+                grammar_to_add_list = []
+                vocab_to_add_list = []
+                
+                if local_state.grammar_to_add:
+                    for g in local_state.grammar_to_add:
+                        grammar_to_add_list.append({'name': g.rule_name, 'explanation': g.rule_explanation})
+                
+                if local_state.vocab_to_add:
+                    print(f"🔍 [Background] 处理 session_state.vocab_to_add: {len(local_state.vocab_to_add)} 个词汇")
+                    for v in local_state.vocab_to_add:
+                        vocab_body = getattr(v, 'vocab', None)
+                        vocab_id = None
+                        
+                        # 从数据库查询新创建的词汇
+                        try:
+                            from database_system.database_manager import DatabaseManager
+                            from database_system.business_logic.models import VocabExpression
+                            db_manager = DatabaseManager('development')
+                            session = db_manager.get_session()
+                            try:
+                                vocab_model = session.query(VocabExpression).filter(
+                                    VocabExpression.vocab_body == vocab_body,
+                                    VocabExpression.user_id == user_id
+                                ).order_by(VocabExpression.vocab_id.desc()).first()
+                                if vocab_model:
+                                    vocab_id = vocab_model.vocab_id
+                                    print(f"✅ [Background] 从数据库找到 vocab_id={vocab_id} for vocab='{vocab_body}'")
+                            finally:
+                                session.close()
+                        except Exception as db_err:
+                            print(f"⚠️ [Background] 从数据库查询 vocab_id 失败: {db_err}")
+                        
+                        if vocab_id:
+                            vocab_to_add_list.append({'vocab': vocab_body, 'vocab_id': vocab_id})
+                            print(f"✅ [Background] 添加 vocab_to_add: vocab='{vocab_body}', vocab_id={vocab_id}")
+                        else:
+                            vocab_to_add_list.append({'vocab': vocab_body, 'vocab_id': None})
+                
+                # 存储到临时存储中，供前端轮询获取
+                if grammar_to_add_list or vocab_to_add_list:
+                    text_id = current_sentence.text_id if hasattr(current_sentence, 'text_id') else None
+                    if text_id:
+                        # 🔧 确保 text_id 是整数类型（与前端一致）
+                        text_id = int(text_id) if text_id else None
+                        if text_id:
+                            key = (user_id, text_id)
+                            pending_knowledge_points[key] = {
+                                'grammar_to_add': grammar_to_add_list,
+                                'vocab_to_add': vocab_to_add_list,
+                                'timestamp': datetime.now().isoformat()
+                            }
+                            print(f"✅ [Background] 存储新知识点到临时存储: user_id={user_id}, text_id={text_id} (type={type(text_id).__name__}), grammar={len(grammar_to_add_list)}, vocab={len(vocab_to_add_list)}")
+                            print(f"🔍 [Background] 临时存储的 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
+                    else:
+                        print(f"⚠️ [Background] text_id 不存在，无法存储新知识点")
                 
                 # 同步到数据库
                 print("💾 [Background] 同步数据到数据库...")
@@ -1287,6 +1349,62 @@ async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, 
             "error": str(e),
             "error_type": type(e).__name__,
             "traceback": traceback.format_exc()
+        }
+
+@app.get("/api/chat/pending-knowledge")
+async def get_pending_knowledge(
+    user_id: int = Query(..., description="用户ID"),
+    text_id: int = Query(..., description="文章ID"),
+    authorization: Optional[str] = Header(None)
+):
+    """
+    获取后台任务创建的新知识点（vocab_to_add 和 grammar_to_add）
+    供前端轮询获取并显示 toast
+    """
+    try:
+        # 🔧 确保 text_id 是整数类型（与存储时一致）
+        text_id = int(text_id) if text_id else None
+        if not text_id:
+            print(f"⚠️ [PendingKnowledge] text_id 无效: {text_id}")
+            return {
+                'success': True,
+                'data': {
+                    'grammar_to_add': [],
+                    'vocab_to_add': []
+                }
+            }
+        
+        key = (user_id, text_id)
+        print(f"🔍 [PendingKnowledge] 查找 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
+        
+        if key in pending_knowledge_points:
+            data = pending_knowledge_points[key]
+            # 返回后删除，避免重复获取
+            del pending_knowledge_points[key]
+            print(f"✅ [PendingKnowledge] 返回新知识点: user_id={user_id}, text_id={text_id}, grammar={len(data['grammar_to_add'])}, vocab={len(data['vocab_to_add'])}")
+            return {
+                'success': True,
+                'data': {
+                    'grammar_to_add': data['grammar_to_add'],
+                    'vocab_to_add': data['vocab_to_add']
+                }
+            }
+        else:
+            print(f"⚠️ [PendingKnowledge] key {key} 不存在于临时存储中")
+            return {
+                'success': True,
+                'data': {
+                    'grammar_to_add': [],
+                    'vocab_to_add': []
+                }
+            }
+    except Exception as e:
+        print(f"❌ [PendingKnowledge] 获取新知识点失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
         }
 
 @app.get("/api/vocab-example-by-location")

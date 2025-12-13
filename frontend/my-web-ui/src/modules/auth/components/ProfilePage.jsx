@@ -224,7 +224,6 @@ const ProfilePage = ({ onClose, onLogout }) => {
                   onChange={(e) => setSelectedLanguage(e.target.value)}
                   className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">{uiLanguage === 'en' ? 'All' : '全部'}</option>
                   <option value="中文">{uiLanguage === 'en' ? 'Chinese' : '中文'}</option>
                   <option value="英文">{uiLanguage === 'en' ? 'English' : '英文'}</option>
                   <option value="德文">{uiLanguage === 'en' ? 'German' : '德文'}</option>

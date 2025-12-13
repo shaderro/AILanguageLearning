@@ -83,6 +83,12 @@ api.interceptors.response.use(
       return response.data;
     }
     
+    // 🔧 特殊处理：pending-knowledge API 需要保留完整结构
+    if (urlPath.includes('/api/chat/pending-knowledge')) {
+      console.log('🔍 [DEBUG] PendingKnowledge endpoint detected - returning full response.data');
+      return response.data;
+    }
+    
     // 数据库API返回格式: { success: true, data: {...} }
     // Mock API返回格式: 直接返回数据
     if (response.data && response.data.success !== undefined) {
@@ -692,6 +698,13 @@ export const apiService = {
     const finalPayload = needFullFlow ? { ...payload, full_flow: true } : payload;
     if (needFullFlow) console.log('🔧 [Frontend] full_flow enabled for this request');
     return api.post("/api/chat", finalPayload);
+  },
+
+  // 获取后台任务创建的新知识点（用于显示 toast）
+  getPendingKnowledge: (userId, textId) => {
+    // 🔧 确保 textId 是整数类型
+    const textIdInt = parseInt(textId) || textId
+    return api.get(`/api/chat/pending-knowledge?user_id=${userId}&text_id=${textIdInt}`);
   },
 
   // 按位置查找词汇例句

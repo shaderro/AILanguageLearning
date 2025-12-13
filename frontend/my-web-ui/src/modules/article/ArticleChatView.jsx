@@ -8,11 +8,15 @@ import { ChatEventProvider } from './contexts/ChatEventContext'
 import { NotationContext } from './contexts/NotationContext'
 import { SelectionProvider } from './selection/SelectionContext'
 import { useSelection } from './selection/hooks/useSelection'
+import { TranslationDebugProvider } from '../../contexts/TranslationDebugContext'
+import TranslationDebugPanel from '../../components/TranslationDebugPanel'
+import { useChatEvent } from './contexts/ChatEventContext'
+import { useTranslationDebug } from '../../contexts/TranslationDebugContext'
 
 function ArticleCanvas({ children }) {
   const { clearSelection } = useSelection()
   return (
-    <div onClick={() => clearSelection()}>
+    <div className="flex-1 min-h-0 flex flex-col" onClick={() => clearSelection()}>
       {children}
     </div>
   )
@@ -107,8 +111,14 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     console.log('  - hasSelectedToken:', selectedTexts.length > 0)
     console.log('  - quotedText:', selectedTexts.join(' '))
     
-    // Send selection context to backend session state
+    // 🔧 Send selection context to backend session state
+    // 🔧 关键：如果正在处理，不更新 session state，避免覆盖正在使用的句子
     if (context && context.sentence && selectedTexts.length > 0) {
+      if (isProcessing) {
+        console.log('⚠️ [ArticleChatView] 正在处理中，跳过更新 session state（token选择），避免覆盖正在使用的句子')
+        return
+      }
+      
       try {
         console.log('📤 [ArticleChatView] Sending selection context to backend...')
         
@@ -154,6 +164,9 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }
 
+  // 🔧 新增：跟踪是否正在处理，防止在处理过程中更新 session state
+  const [isProcessing, setIsProcessing] = useState(false)
+  
   const handleClearQuote = () => {
     console.log('🧹 [ArticleChatView] Clearing all selections and quotes')
     setQuotedText('')
@@ -202,7 +215,13 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       console.log('  - hasSelectedSentence:', true)
       console.log('  - quotedText:', sentenceText)
       
-      // 发送句子上下文到后端session state（统一字段为后端期望的 snake_case）
+      // 🔧 发送句子上下文到后端session state（统一字段为后端期望的 snake_case）
+      // 🔧 关键：如果正在处理，不更新 session state，避免覆盖正在使用的句子
+      if (isProcessing) {
+        console.log('⚠️ [ArticleChatView] 正在处理中，跳过更新 session state，避免覆盖正在使用的句子')
+        return
+      }
+      
       try {
         // 归一化句子数据，防止 camelCase / snake_case 混用导致会话态错乱
         const normalizedSentence = {
@@ -388,33 +407,140 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     grammarNotations.length  // 🔧 只依赖长度，避免数组引用变化导致不必要的重新渲染
   ])
 
-  // 🔧 错误边界：捕获渲染错误
-  try {
+  // 🔧 新增：处理 AI 详细解释请求（内部组件，可以使用 useChatEvent）
+  const ArticleChatViewInner = () => {
+    const { sendMessageToChat } = useChatEvent()
+    const { addLog } = useTranslationDebug()
+    
+    const handleAskAI = async (token, sentenceIndex) => {
+      if (!token || sentenceIndex == null || isProcessing) {
+        const msg = '⚠️ [ArticleChatView] handleAskAI: 无效参数或正在处理中'
+        console.warn(msg)
+        addLog('warning', msg, { token, sentenceIndex, isProcessing })
+        return
+      }
+      
+      addLog('info', '🚀 [ArticleChatView] handleAskAI 开始', { token, sentenceIndex })
+      
+      try {
+        // 1. 获取文章数据以构建 context
+        const articleData = await apiService.getArticleById(articleId)
+        const sentences = articleData?.data?.sentences || []
+        const sentence = sentences[sentenceIndex]
+        
+        if (!sentence) {
+          const msg = '❌ [ArticleChatView] handleAskAI: 找不到句子数据'
+          console.error(msg)
+          addLog('error', msg, { sentenceIndex, articleId, sentencesCount: sentences.length })
+          return
+        }
+        
+        addLog('info', '✅ [ArticleChatView] 找到句子数据', { 
+          sentenceIndex, 
+          sentenceId: sentenceIndex + 1,
+          tokensCount: sentence.tokens?.length || 0 
+        })
+        
+        // 2. 构建 context
+        const tokenText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
+        
+        // 从句子中找到对应的 token 对象（确保有正确的字段）
+        const sentenceTokens = sentence.tokens || []
+        const tokenIndex = sentenceTokens.findIndex(t => {
+          const tId = typeof t === 'string' ? t : (t?.token_body ?? t?.token ?? '')
+          return tId === tokenText
+        })
+        
+        if (tokenIndex === -1) {
+          const msg = '❌ [ArticleChatView] handleAskAI: 在句子中找不到对应的 token'
+          console.error(msg)
+          addLog('error', msg, { tokenText, sentenceTokens: sentenceTokens.length })
+          return
+        }
+        
+        addLog('info', '✅ [ArticleChatView] 找到 token', { 
+          tokenText, 
+          tokenIndex,
+          sentenceTokenId: tokenIndex + 1 
+        })
+        
+        // 获取 token 对象，确保有正确的字段
+        const tokenObj = typeof sentenceTokens[tokenIndex] === 'string' 
+          ? { token_body: sentenceTokens[tokenIndex], sentence_token_id: tokenIndex + 1 }
+          : sentenceTokens[tokenIndex]
+        
+        // 确保 token 对象有必要的字段
+        if (!tokenObj.token_body) {
+          tokenObj.token_body = tokenText
+        }
+        if (!tokenObj.sentence_token_id && tokenIndex !== -1) {
+          tokenObj.sentence_token_id = tokenIndex + 1
+        }
+        
+        const context = {
+          sentence: {
+            text_id: articleId,
+            sentence_id: sentenceIndex + 1,
+            sentence_body: sentenceTokens.map(t => typeof t === 'string' ? t : t.token_body).join(' ') || '',
+            tokens: sentenceTokens
+          },
+          tokens: [tokenObj],
+          tokenIndices: [tokenIndex],
+          selectedTexts: [tokenText]
+        }
+        
+        addLog('info', '🔍 [ArticleChatView] handleAskAI context 构建完成', {
+          tokenText,
+          tokenObj: {
+            token_body: tokenObj.token_body,
+            sentence_token_id: tokenObj.sentence_token_id,
+            global_token_id: tokenObj.global_token_id
+          },
+          tokenIndex,
+          sentenceId: sentenceIndex + 1,
+          textId: articleId,
+          contextTokens: context.tokens.map(t => ({
+            token_body: t.token_body,
+            sentence_token_id: t.sentence_token_id,
+            global_token_id: t.global_token_id
+          }))
+        })
+        
+        // 3. 选择 token（这会更新 session state）
+        addLog('info', '📤 [ArticleChatView] 开始选择 token', { tokenText })
+        await handleTokenSelect(tokenText, new Set([tokenText]), [tokenText], context)
+        addLog('success', '✅ [ArticleChatView] Token 选择完成', { tokenText })
+        
+        // 4. 等待 session state 更新完成（给更多时间确保后端已更新）
+        addLog('info', '⏳ [ArticleChatView] 等待 session state 更新...')
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        // 5. 更新 currentContext 以确保 ChatView 使用最新的 context
+        setCurrentContext(context)
+        addLog('info', '✅ [ArticleChatView] currentContext 已更新')
+        
+        // 6. 发送消息"这个词是什么意思?"，同时传递 context
+        addLog('info', '📤 [ArticleChatView] 准备发送消息到 ChatView', {
+          message: '这个词是什么意思?',
+          quotedText: tokenText
+        })
+        sendMessageToChat('这个词是什么意思?', tokenText, context)
+        addLog('success', '✅ [ArticleChatView] 消息已发送到 ChatView', {
+          message: '这个词是什么意思?',
+          quotedText: tokenText
+        })
+      } catch (error) {
+        const msg = '❌ [ArticleChatView] handleAskAI 失败'
+        console.error(msg, error)
+        addLog('error', msg, { error: error.message, stack: error.stack })
+      }
+    }
+    
     return (
-      <ChatEventProvider>
-        <NotationContext.Provider value={notationContextValue}>
-          <SelectionProvider>
+      <>
         <div className="h-full flex flex-col">
-          {/* Header with Back Button */}
-          <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 flex-shrink-0">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onBack}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>Back to Articles</span>
-              </button>
-            </div>
-            <div className="text-sm text-gray-500">
-              Article ID: {articleId}
-            </div>
-          </div>
-
           {/* Main Content - allow overlays to extend beyond article view */}
-          <div className="flex gap-8 flex-1 p-4 overflow-visible min-h-0">
+          <div className="flex gap-8 flex-1 p-4 overflow-hidden min-h-0">
             {isUploadMode ? (
               showUploadProgress ? (
                 <UploadProgress onComplete={handleProgressComplete} articleId={uploadedArticleId} />
@@ -444,45 +570,70 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                 />
               )
             ) : (
-              <ArticleCanvas>
-                <ArticleViewer 
-                  articleId={articleId} 
-                  onTokenSelect={handleTokenSelect}
-                  isTokenAsked={isTokenAsked}
-                  markAsAsked={markAsAsked}
-                  getNotationContent={getNotationContent}
-                  setNotationContent={setNotationContent}
-                  onSentenceSelect={handleSentenceSelect}
-                  targetSentenceId={targetSentenceId}
-                  onTargetSentenceScrolled={() => setTargetSentenceId(null)}
-                />
-              </ArticleCanvas>
+              <div className="flex-1 flex flex-col min-h-0 relative">
+                {/* Buttons above article view */}
+                <div className="flex items-center justify-between mb-2 px-1">
+                  {/* Back Button */}
+                  <button
+                    onClick={onBack}
+                    className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-50"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Back to Articles</span>
+                  </button>
+                  {/* Read Aloud Button - will be rendered by ArticleViewer */}
+                  <div id="read-aloud-button-container"></div>
+                </div>
+                {/* Article View */}
+                <ArticleCanvas>
+                  <ArticleViewer 
+                    articleId={articleId} 
+                    onTokenSelect={handleTokenSelect}
+                    isTokenAsked={isTokenAsked}
+                    markAsAsked={markAsAsked}
+                    getNotationContent={getNotationContent}
+                    setNotationContent={setNotationContent}
+                    onSentenceSelect={handleSentenceSelect}
+                    targetSentenceId={targetSentenceId}
+                    onTargetSentenceScrolled={() => setTargetSentenceId(null)}
+                    onAskAI={handleAskAI}
+                  />
+                </ArticleCanvas>
+              </div>
             )}
-          <ChatView 
-            quotedText={quotedText}
-            onClearQuote={handleClearQuote}
-            disabled={isUploadMode && !uploadComplete}
-            hasSelectedToken={hasSelectedToken}
-            selectedTokenCount={selectedTokens.length || 1}
-            selectionContext={currentContext}
-            markAsAsked={markAsAsked}  // 保留作为备用（向后兼容）
-            createVocabNotation={createVocabNotation}  // 新API（优先使用）
-            hasSelectedSentence={hasSelectedSentence}
-            selectedSentence={selectedSentence}
-            refreshAskedTokens={refreshAskedTokens}
-            refreshGrammarNotations={refreshNotationCache}
-            articleId={articleId}
-            // 实时缓存更新函数
-            addGrammarNotationToCache={addGrammarNotationToCache}
-            addVocabNotationToCache={addVocabNotationToCache}
-            addGrammarRuleToCache={addGrammarRuleToCache}
-            addVocabExampleToCache={addVocabExampleToCache}
-          />
+            <ChatView 
+              quotedText={quotedText}
+              onClearQuote={handleClearQuote}
+              disabled={isUploadMode && !uploadComplete}
+              hasSelectedToken={hasSelectedToken}
+              selectedTokenCount={selectedTokens.length || 1}
+              selectionContext={currentContext}
+              markAsAsked={markAsAsked}  // 保留作为备用（向后兼容）
+              createVocabNotation={createVocabNotation}  // 新API（优先使用）
+              hasSelectedSentence={hasSelectedSentence}
+              selectedSentence={selectedSentence}
+              refreshAskedTokens={refreshAskedTokens}
+              refreshGrammarNotations={refreshNotationCache}
+              articleId={articleId}
+              // 实时缓存更新函数
+              addGrammarNotationToCache={addGrammarNotationToCache}
+              addVocabNotationToCache={addVocabNotationToCache}
+              addGrammarRuleToCache={addGrammarRuleToCache}
+              addVocabExampleToCache={addVocabExampleToCache}
+              // 🔧 传递 isProcessing 状态和更新函数
+              isProcessing={isProcessing}
+              onProcessingChange={setIsProcessing}
+            />
+          </div>
         </div>
-      </div>
-      
-      {/* 长度超限对话框（在父组件中渲染，避免子组件卸载时丢失） */}
-      {showLengthDialog && pendingContent && (() => {
+        
+        {/* 翻译调试面板 */}
+        <TranslationDebugPanel />
+        
+        {/* 长度超限对话框（在父组件中渲染，避免子组件卸载时丢失） */}
+        {showLengthDialog && pendingContent && (() => {
         try {
           console.log('🎨 [ArticleChatView] 渲染对话框，showLengthDialog:', showLengthDialog, 'pendingContent:', {
             type: pendingContent?.type,
@@ -536,9 +687,22 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           return null
         }
       })()}
-    </SelectionProvider>
-    </NotationContext.Provider>
-    </ChatEventProvider>
+      </>
+    )
+  }
+
+  // 🔧 错误边界：捕获渲染错误
+  try {
+    return (
+      <TranslationDebugProvider>
+        <ChatEventProvider>
+          <NotationContext.Provider value={notationContextValue}>
+            <SelectionProvider>
+              <ArticleChatViewInner />
+            </SelectionProvider>
+          </NotationContext.Provider>
+        </ChatEventProvider>
+      </TranslationDebugProvider>
     )
   } catch (err) {
     console.error('❌ [ArticleChatView] 渲染错误:', err)
