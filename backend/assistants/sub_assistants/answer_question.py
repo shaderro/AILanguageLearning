@@ -6,7 +6,7 @@ class AnswerQuestionAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
             sys_prompt=answer_question_sys_prompt,
-            max_tokens=400,
+            max_tokens=600,
             parse_json=True
         )
 

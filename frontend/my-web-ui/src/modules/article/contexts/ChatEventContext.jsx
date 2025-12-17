@@ -17,11 +17,23 @@ export const ChatEventProvider = ({ children }) => {
 
   // 发送消息到Chat
   const sendMessageToChat = (message, quotedText = null, context = null) => {
+    console.log('📤 [ChatEvent] sendMessageToChat 被调用', {
+      message,
+      quotedText,
+      hasContext: !!context
+    })
+    
     // 过滤空消息
     if (!message || String(message).trim() === '' || message === 'null' || message === 'undefined') {
       console.warn('⚠️ [ChatEvent] Ignoring empty/null message:', message)
       return
     }
+    
+    console.log('✅ [ChatEvent] 设置 pendingMessage', {
+      text: message,
+      quotedText: quotedText,
+      hasContext: !!context
+    })
     
     setPendingMessage({
       text: message,
@@ -31,6 +43,11 @@ export const ChatEventProvider = ({ children }) => {
     
     // 如果有 context，也保存起来
     if (context) {
+      console.log('✅ [ChatEvent] 设置 pendingContext', {
+        hasSentence: !!context.sentence,
+        hasTokens: !!context.tokens,
+        tokensCount: context.tokens?.length || 0
+      })
       setPendingContext(context)
     }
   }

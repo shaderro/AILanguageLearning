@@ -32,6 +32,7 @@ export function useSentenceInteraction() {
     console.log('📝 [useSentenceInteraction.handleSentenceClick] 句子点击')
     console.log('  - sentenceIndex:', sentenceIndex)
     console.log('  - 当前 selectedSentenceIndex:', selectedSentenceIndex)
+    console.log('  - 调用 setSelectedSentenceIndex 前')
     
     setClickedSentenceIndex(sentenceIndex)
     // 切换句子选择状态
@@ -40,7 +41,9 @@ export function useSentenceInteraction() {
       setSelectedSentenceIndex(null) // 取消选择
     } else {
       console.log('  → 选择句子', sentenceIndex)
+      console.log('  - 调用 setSelectedSentenceIndex(', sentenceIndex, ')')
       setSelectedSentenceIndex(sentenceIndex) // 选择句子
+      console.log('  - setSelectedSentenceIndex 调用完成')
     }
   }
 

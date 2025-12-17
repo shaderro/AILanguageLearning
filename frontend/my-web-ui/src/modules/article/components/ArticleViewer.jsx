@@ -1,4 +1,4 @@
-﻿import { useMemo, useEffect, useRef, useState } from 'react'
+﻿import { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
@@ -90,13 +90,29 @@ export default function ArticleViewer({
     sentenceRefs,
     handleSentenceMouseEnter,
     handleSentenceMouseLeave,
-    handleSentenceClick,
+    handleSentenceClick: originalHandleSentenceClick,
     clearSentenceInteraction,
     clearSentenceSelection,
     getSentenceBackgroundStyle,
     isSentenceInteracting,
     isSentenceSelected
   } = useSentenceInteraction()
+  
+  // 🔧 包装 handleSentenceClick，添加调试日志
+  const handleSentenceClick = useCallback((sentenceIndex) => {
+    console.log('🔧 [ArticleViewer] 包装的 handleSentenceClick 被调用', { 
+      sentenceIndex, 
+      originalHandleSentenceClick: typeof originalHandleSentenceClick,
+      selectedSentenceIndex 
+    })
+    if (typeof originalHandleSentenceClick === 'function') {
+      console.log('🔧 [ArticleViewer] 调用 originalHandleSentenceClick')
+      originalHandleSentenceClick(sentenceIndex)
+      console.log('🔧 [ArticleViewer] originalHandleSentenceClick 调用完成')
+    } else {
+      console.error('❌ [ArticleViewer] originalHandleSentenceClick 不是函数!', originalHandleSentenceClick)
+    }
+  }, [originalHandleSentenceClick, selectedSentenceIndex])
 
   // Selection context (new system) - need to sync with old token selection system
   const { clearSelection: clearSelectionContext, selectTokens: selectTokensInContext } = useSelection()
@@ -147,6 +163,32 @@ export default function ArticleViewer({
 
   // 🔧 滚动容器 ref（用于自动滚动到目标句子）
   const scrollContainerRef = useRef(null)
+  const scrollPositionRef = useRef(0)
+  const scrollRestoredRef = useRef(false)
+  // 🔧 保持文章滚动位置，避免点击/重渲染时跳到顶部
+  useEffect(() => {
+    const sc = scrollContainerRef.current
+    if (!sc) return
+    const onScroll = () => {
+      scrollPositionRef.current = sc.scrollTop
+      if (articleId) {
+        sessionStorage.setItem(`article_scroll_${articleId}`, String(sc.scrollTop))
+      }
+    }
+    sc.addEventListener('scroll', onScroll, { passive: true })
+    return () => sc.removeEventListener('scroll', onScroll)
+  }, [articleId])
+
+  useLayoutEffect(() => {
+    if (scrollRestoredRef.current) return
+    const sc = scrollContainerRef.current
+    if (!sc) return
+    const saved = articleId ? sessionStorage.getItem(`article_scroll_${articleId}`) : null
+    const savedPos = saved ? parseInt(saved, 10) : 0
+    sc.scrollTop = isNaN(savedPos) ? 0 : savedPos
+    scrollPositionRef.current = sc.scrollTop
+    scrollRestoredRef.current = true
+  }, [articleId])
   
   // 🔧 目标句子闪烁状态
   const [flashingSentenceId, setFlashingSentenceId] = useState(null)
@@ -273,6 +315,15 @@ export default function ArticleViewer({
   // Handle sentence selection changes（防重复触发：仅在索引变化时上报）
   const lastEmittedSentenceIndexRef = useRef(null)
   useEffect(() => {
+    console.log('🔍 [ArticleViewer] useEffect triggered for sentence selection', {
+      selectedSentenceIndex,
+      lastEmitted: lastEmittedSentenceIndexRef.current,
+      hasOnSentenceSelect: !!onSentenceSelect,
+      sentencesLength: sentences?.length,
+      hasSentence: !!sentences?.[selectedSentenceIndex],
+      sentence: sentences?.[selectedSentenceIndex]
+    })
+    
     // 只有当 selectedSentenceIndex 发生变化且有对应的句子数据时才处理
     if (
       onSentenceSelect &&
@@ -285,8 +336,21 @@ export default function ArticleViewer({
         typeof token === 'string' ? token : token.token_body
       ).join(' ') || ''
 
+      console.log('✅ [ArticleViewer] Calling onSentenceSelect', {
+        selectedSentenceIndex,
+        sentenceText,
+        selectedSentence
+      })
+      
       lastEmittedSentenceIndexRef.current = selectedSentenceIndex
       onSentenceSelect(selectedSentenceIndex, sentenceText, selectedSentence)
+    } else {
+      console.log('⚠️ [ArticleViewer] onSentenceSelect not called', {
+        hasOnSentenceSelect: !!onSentenceSelect,
+        selectedSentenceIndex,
+        lastEmitted: lastEmittedSentenceIndexRef.current,
+        hasSentence: !!sentences?.[selectedSentenceIndex]
+      })
     }
     // 当 selectedSentenceIndex 变为 null 时，重置记录，避免下次选同一句子不触发
     if (selectedSentenceIndex === null) {
@@ -1075,9 +1139,31 @@ export default function ArticleViewer({
               onSentenceMouseEnter={handleSentenceMouseEnter}
               onSentenceMouseLeave={handleSentenceMouseLeave}
               onSentenceClick={(idx) => {
-                // 句子选择与 token 选择互斥：先清空 token 选择（触发前端 UI 与后端 token=null 同步）
-                clearSelection()
-                handleSentenceClick(idx)
+                console.log('🔘 [ArticleViewer] onSentenceClick 被调用', { idx })
+                // 句子选择与 token 选择互斥：清空 token 选择，但保留句子选择
+                clearSelection({ skipSentence: true })
+
+                // 🔧 直接调用 handleSentenceClick（用于交互状态）
+                if (typeof handleSentenceClick === 'function') {
+                  handleSentenceClick(idx)
+                }
+
+                // 🔧 关键修复：直接触发 onSentenceSelect，避免依赖 selectedSentenceIndex 更新
+                if (onSentenceSelect && sentences && sentences[idx]) {
+                  const s = sentences[idx]
+                  const sentenceText = s.tokens?.map(token =>
+                    typeof token === 'string' ? token : token.token_body
+                  ).join(' ') || ''
+                  console.log('✅ [ArticleViewer] 直接调用 onSentenceSelect', { idx, sentenceText, sentence: s })
+                  onSentenceSelect(idx, sentenceText, s)
+                } else {
+                  console.warn('⚠️ [ArticleViewer] 无法调用 onSentenceSelect', {
+                    hasOnSentenceSelect: !!onSentenceSelect,
+                    hasSentences: !!sentences,
+                    idx,
+                    sentenceExists: !!(sentences && sentences[idx])
+                  })
+                }
               }}
               getSentenceBackgroundStyle={(idx) => {
                 const baseStyle = getSentenceBackgroundStyle(idx)

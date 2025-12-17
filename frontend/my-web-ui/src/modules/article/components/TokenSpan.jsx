@@ -646,7 +646,25 @@ export default function TokenSpan({
           onSpeak={handleSpeak}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
-          onAskAI={onAskAI ? () => onAskAI(token, sentenceIdx) : null}
+          onAskAI={onAskAI ? () => {
+            console.log('🔘 [TokenSpan] onAskAI 回调被调用', { 
+              token, 
+              sentenceIdx,
+              displayText,
+              hasOnAskAI: !!onAskAI,
+              tokenType: typeof token,
+              sentenceIdxType: typeof sentenceIdx
+            })
+            try {
+              onAskAI(token, sentenceIdx)
+              console.log('✅ [TokenSpan] onAskAI 调用成功')
+            } catch (error) {
+              console.error('❌ [TokenSpan] onAskAI 调用失败', {
+                error: error.message,
+                stack: error.stack
+              })
+            }
+          } : null}
         />
       )}
       

@@ -12,7 +12,7 @@ class VocabExplanationAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
             sys_prompt=vocab_explanation_sys_prompt,
-            max_tokens=300,
+            max_tokens=800,
             parse_json=True  # 词汇解释需要 JSON 解析
         )
 

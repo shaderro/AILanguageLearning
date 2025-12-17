@@ -15,7 +15,7 @@ export default function QuickTranslationTooltip({
   onSpeak = null, // 朗读回调函数（可选）
   onMouseEnter = null, // tooltip hover 进入回调
   onMouseLeave = null, // tooltip hover 离开回调
-  onAskAI = null // AI详细解释回调函数（可选）
+  onAskAI = null // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
 }) {
   const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999 })
   const [isPositioned, setIsPositioned] = useState(false)
@@ -101,17 +101,23 @@ export default function QuickTranslationTooltip({
   if (!isVisible || (!translation && !isLoading)) {
     return null
   }
+  
+  // 调试日志：检查按钮渲染条件
+  console.log('🔍 [QuickTranslationTooltip] 渲染tooltip，检查AI按钮条件', {
+    word,
+    translation,
+    hasOnAskAI: !!onAskAI,
+    shouldShowButton: !!(onAskAI && word && translation)
+  })
 
   // 调试日志
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 [QuickTranslationTooltip] 渲染tooltip:', {
-      word,
-      translation,
-      isVisible,
-      position: tooltipPosition,
-      hasAnchor: !!anchorRef?.current
-    })
-  }
+  console.log('🔍 [QuickTranslationTooltip] 渲染tooltip:', {
+    word,
+    translation,
+    isVisible,
+    position: tooltipPosition,
+    hasAnchor: !!anchorRef?.current
+  })
 
   return (
     <div
@@ -165,18 +171,67 @@ export default function QuickTranslationTooltip({
         <div className="text-[0.5rem] text-gray-500 mt-1">自动翻译</div>
       )}
       {/* AI详细解释按钮 - 幽灵按钮样式 */}
-      {onAskAI && word && translation && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onAskAI(word)
-          }}
-          className="mt-2 w-full px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-transparent hover:border-gray-300 rounded transition-colors"
-          title="AI详细解释"
-        >
-          AI详细解释
-        </button>
-      )}
+      {(() => {
+        const shouldShowButton = onAskAI && word && translation
+        console.log('🔍 [QuickTranslationTooltip] 检查AI按钮渲染条件', {
+          hasOnAskAI: !!onAskAI,
+          hasWord: !!word,
+          hasTranslation: !!translation,
+          shouldShowButton,
+          wordValue: word,
+          translationValue: translation
+        })
+        
+        if (!shouldShowButton) {
+          console.log('⚠️ [QuickTranslationTooltip] 按钮不渲染，条件不满足', {
+            hasOnAskAI: !!onAskAI,
+            hasWord: !!word,
+            hasTranslation: !!translation
+          })
+          return null
+        }
+        
+        console.log('✅ [QuickTranslationTooltip] 按钮将渲染')
+        
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              console.log('🔘 [QuickTranslationTooltip] AI详细解释按钮被点击', { 
+                word, 
+                translation,
+                hasOnAskAI: !!onAskAI,
+                onAskAIType: typeof onAskAI
+              })
+              // 🔧 调用 onAskAI，它可能接收 (word) 或 (token, sentenceIdx) 两种格式
+              // 如果是函数，直接调用；如果是箭头函数包装，也会正确处理
+              if (typeof onAskAI === 'function') {
+                try {
+                  console.log('🔘 [QuickTranslationTooltip] 准备调用 onAskAI')
+                  onAskAI()
+                  console.log('✅ [QuickTranslationTooltip] onAskAI 调用成功')
+                } catch (error) {
+                  console.error('❌ [QuickTranslationTooltip] onAskAI 调用失败', {
+                    error: error.message,
+                    stack: error.stack
+                  })
+                }
+              } else {
+                console.warn('⚠️ [QuickTranslationTooltip] onAskAI 不是函数', { onAskAI })
+              }
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation()
+              console.log('🔘 [QuickTranslationTooltip] AI详细解释按钮 onMouseDown', { word })
+            }}
+            className="mt-2 w-full px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-transparent hover:border-gray-300 rounded transition-colors"
+            title="AI详细解释"
+          >
+            AI详细解释
+          </button>
+        )
+      })()}
       {/* 小箭头指示器 - 白色背景，灰色边框 */}
       {position === 'bottom' && (
         <>

@@ -700,6 +700,18 @@ export const apiService = {
     return api.post("/api/chat", finalPayload);
   },
 
+  // 获取聊天历史（跨设备）
+  getChatHistory: ({ textId = null, sentenceId = null, userId = null, limit = 100, offset = 0 } = {}) => {
+    const params = {}
+    if (textId != null) params.text_id = textId
+    if (sentenceId != null) params.sentence_id = sentenceId
+    if (userId != null) params.user_id = userId
+    params.limit = limit
+    params.offset = offset
+    console.log('💬 [Frontend] Fetching chat history params:', params)
+    return api.get("/api/chat/history", { params })
+  },
+
   // 获取后台任务创建的新知识点（用于显示 toast）
   getPendingKnowledge: (userId, textId) => {
     // 🔧 确保 textId 是整数类型

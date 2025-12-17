@@ -116,10 +116,15 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
     }
   }
 
-  const clearSelection = () => {
+  const clearSelection = (options = {}) => {
+    const { skipSentence = false } = options
     // 写入标题栏
     document.title = 'clearSelection() called!'
-    console.log('🧹 [useTokenSelection.clearSelection] Called')
+    console.log('🧹 [useTokenSelection.clearSelection] Called', { 
+      skipSentence, 
+      hasClearSentenceSelection: !!clearSentenceSelection,
+      options 
+    })
     console.trace('🧹 [useTokenSelection.clearSelection] Call stack')
     
     const empty = new Set()
@@ -127,8 +132,14 @@ export function useTokenSelection({ sentences, onTokenSelect, articleId, clearSe
     activeSentenceRef.current = null
     setActiveSentenceIndex(null)
     // 清除句子交互状态
-    if (clearSentenceSelection) {
+    if (!skipSentence && clearSentenceSelection) {
+      console.log('🧹 [useTokenSelection.clearSelection] 调用 clearSentenceSelection')
       clearSentenceSelection()
+    } else {
+      console.log('🧹 [useTokenSelection.clearSelection] 跳过 clearSentenceSelection', { 
+        skipSentence, 
+        hasClearSentenceSelection: !!clearSentenceSelection 
+      })
     }
   }
 

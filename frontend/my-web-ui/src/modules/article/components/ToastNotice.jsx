@@ -6,36 +6,42 @@ const ToastNotice = ({
   onClose,
   isVisible = false 
 }) => {
-  const [isShowing, setIsShowing] = useState(false)
+  // 🔧 修复：如果 isVisible 为 true，初始状态就应该是 showing
+  const [isShowing, setIsShowing] = useState(isVisible)
   const [isFading, setIsFading] = useState(false)
 
   useEffect(() => {
     if (isVisible) {
+      console.log('🍞 [ToastNotice] isVisible 为 true，设置 isShowing 为 true')
       setIsShowing(true)
       setIsFading(false)
       
       const timer = setTimeout(() => {
+        console.log('🍞 [ToastNotice] 开始渐隐动画')
         setIsFading(true)
         
-        // 先触发渐隐和上移动画，动画结束后再关闭
-        const fadeTimer = setTimeout(() => {
-          setIsFading(true) // 开始渐隐和上移
-          // 1000ms后（动画结束）再隐藏（与下方 CSS 过渡时长一致）
-          const hideTimer = setTimeout(() => {
-            setIsShowing(false)
-            onClose && onClose()
-          }, 600)
-          // 清理hideTimer
-          return () => clearTimeout(hideTimer)
-        }, 0) // 立即执行渐隐和上移
-        return () => clearTimeout(fadeTimer)
+        // 动画结束后再关闭
+        const hideTimer = setTimeout(() => {
+          console.log('🍞 [ToastNotice] 隐藏 toast 并调用 onClose')
+          setIsShowing(false)
+          onClose && onClose()
+        }, 1000) // 等待渐隐动画完成（duration-1000ms）
+        
+        return () => clearTimeout(hideTimer)
       }, duration)
       
       return () => clearTimeout(timer)
+    } else {
+      setIsShowing(false)
     }
-  }, [isVisible, duration])
+  }, [isVisible, duration, onClose])
 
-  if (!isShowing) return null
+  console.log('🍞 [ToastNotice] 渲染，isVisible:', isVisible, 'isShowing:', isShowing, 'message:', message)
+
+  if (!isShowing) {
+    console.log('🍞 [ToastNotice] isShowing 为 false，不渲染')
+    return null
+  }
 
   // 解析消息，将知识点名称部分加粗
   const renderMessage = () => {

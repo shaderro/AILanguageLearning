@@ -2,6 +2,7 @@ from typing import Dict, List, Tuple, Optional, Union
 from backend.data_managers.data_classes import Sentence
 from backend.data_managers.data_classes_new import Sentence as NewSentence
 from backend.assistants.chat_info.selected_token import SelectedToken
+from backend.data_managers.chat_message_manager_db import ChatMessageManagerDB
 import json
 import chardet
 import os
@@ -15,6 +16,9 @@ class DialogueRecordBySentence:
         #Tuple[text_id, sentence_id], List[Dict[user question, Optional[ai response ]]]
         self.messages_history: List[Dict] = []
         self.max_turns: int = 100  # 默认保留最近100条消息
+        # 新增：数据库持久化 Manager（跨设备聊天记录）
+        self.db_manager = ChatMessageManagerDB()
+        print(f"✅ [DialogueRecordBySentence] 数据库管理器已初始化: {self.db_manager.db_path}")
 
     def add_user_message(self, sentence: SentenceType, user_input: str, selected_token: Optional[SelectedToken] = None):
         key = (sentence.text_id, sentence.sentence_id)
@@ -30,6 +34,24 @@ class DialogueRecordBySentence:
         
         self.records[key].append(message_record)
 
+        # 同步写入数据库（用户消息）
+        try:
+            self.db_manager.add_message(
+                user_id=None,
+                text_id=sentence.text_id,
+                sentence_id=sentence.sentence_id,
+                is_user=True,
+                content=user_input,
+                quote_sentence_id=sentence.sentence_id,
+                quote_text=sentence.sentence_body,
+                selected_token=selected_token.to_dict() if selected_token else None,
+            )
+            print(f"✅ [DB] Chat message added: User=True, Text='{user_input[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
+        except Exception as e:
+            print(f"⚠️ [DialogueRecordBySentence] Failed to persist user message to DB: {e}")
+            import traceback
+            traceback.print_exc()
+
     def add_ai_response(self, sentence: SentenceType, ai_response: str):
         key = (sentence.text_id, sentence.sentence_id)
         if key in self.records and self.records[key]:
@@ -37,13 +59,32 @@ class DialogueRecordBySentence:
             for turn in reversed(self.records[key]):
                 if isinstance(turn, dict) and turn.get("ai_response") is None:
                     turn["ai_response"] = ai_response
-                    return
-        # 如果没有找到，就直接加一个完整条目
-        self.records.setdefault(key, []).append({
-            "user_input": "[Missing user input]",
-            "ai_response": ai_response,
-            "selected_token": None
-        })
+                    break
+        else:
+            # 如果没有找到，就直接加一个完整条目
+            self.records.setdefault(key, []).append({
+                "user_input": "[Missing user input]",
+                "ai_response": ai_response,
+                "selected_token": None
+            })
+
+        # 同步写入数据库（AI 消息）
+        try:
+            self.db_manager.add_message(
+                user_id=None,
+                text_id=sentence.text_id,
+                sentence_id=sentence.sentence_id,
+                is_user=False,
+                content=ai_response,
+                quote_sentence_id=sentence.sentence_id,
+                quote_text=sentence.sentence_body,
+                selected_token=None,
+            )
+            print(f"✅ [DB] Chat message added: User=False, Text='{ai_response[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
+        except Exception as e:
+            print(f"⚠️ [DialogueRecordBySentence] Failed to persist AI message to DB: {e}")
+            import traceback
+            traceback.print_exc()
 
     def get_records_by_sentence(self, sentence: SentenceType) -> List[Dict[str, Optional[str]]]:
         return self.records.get((sentence.text_id, sentence.sentence_id), [])

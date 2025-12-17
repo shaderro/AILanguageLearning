@@ -50,6 +50,33 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
   const [hasSelectedSentence, setHasSelectedSentence] = useState(false)  // 新增：是否有选中的句子
+
+  // 🔧 初始化时从后端加载聊天历史（跨设备）
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!articleId) return
+      try {
+        const resp = await apiService.getChatHistory({ textId: articleId, limit: 200 })
+        const items = resp?.data?.data?.items || []
+        if (!Array.isArray(items) || items.length === 0) return
+        console.log('💬 [ArticleChatView] Loaded chat history from backend:', {
+          count: items.length,
+          ids: items.map(m => m.id)
+        })
+        const mapped = items.map(m => ({
+          id: m.id,
+          text: m.text,
+          isUser: !!m.is_user,
+          quote: m.quote_text || '',
+          timestamp: new Date(m.created_at),
+        }))
+        window.chatViewMessagesRef = mapped
+      } catch (err) {
+        console.error('❌ [ArticleChatView] 加载聊天历史失败:', err)
+      }
+    }
+    fetchHistory()
+  }, [articleId])
   
   // 获取asked tokens功能（统一在这里管理，避免多次调用）
   const { askedTokenKeys, isTokenAsked, markAsAsked, refreshAskedTokens } = useAskedTokens(articleId, 'default_user')
@@ -211,9 +238,37 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       setHasSelectedSentence(true)
       setQuotedText(sentenceText)
       
+      // 🔧 关键修复：更新 currentContext，确保 ChatView 能正确检测到句子选择
+      // 归一化句子数据，防止 camelCase / snake_case 混用
+      const normalizedSentence = {
+        text_id: sentenceData?.text_id ?? sentenceData?.textId ?? articleId,
+        sentence_id: sentenceData?.sentence_id ?? sentenceData?.sentenceId ?? (typeof sentenceIndex === 'number' ? sentenceIndex + 1 : undefined),
+        sentence_body: sentenceData?.sentence_body ?? sentenceData?.sentenceBody ?? sentenceText ?? sentenceData?.text ?? '',
+        sentence_difficulty_level: sentenceData?.sentence_difficulty_level ?? sentenceData?.sentenceDifficultyLevel ?? null,
+        tokens: sentenceData?.tokens ?? [],
+        word_tokens: sentenceData?.word_tokens ?? sentenceData?.wordTokens ?? null,
+        language: sentenceData?.language ?? null,
+        language_code: sentenceData?.language_code ?? sentenceData?.languageCode ?? null,
+        is_non_whitespace: sentenceData?.is_non_whitespace ?? sentenceData?.isNonWhitespace ?? null
+      }
+      
+      // 设置 selectionContext，只包含句子信息，不包含 token
+      setCurrentContext({
+        sentence: normalizedSentence,
+        tokens: [], // 句子选择时，没有 token
+        tokenIndices: [],
+        selectedTexts: []
+      })
+      
       console.log('✅ [ArticleChatView] Sentence selection state updated:')
       console.log('  - hasSelectedSentence:', true)
       console.log('  - quotedText:', sentenceText)
+      console.log('  - currentContext:', {
+        sentence: normalizedSentence,
+        tokens: [],
+        tokenIndices: [],
+        selectedTexts: []
+      })
       
       // 🔧 发送句子上下文到后端session state（统一字段为后端期望的 snake_case）
       // 🔧 关键：如果正在处理，不更新 session state，避免覆盖正在使用的句子
@@ -223,18 +278,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       }
       
       try {
-        // 归一化句子数据，防止 camelCase / snake_case 混用导致会话态错乱
-        const normalizedSentence = {
-          text_id: sentenceData?.text_id ?? sentenceData?.textId ?? articleId,
-          sentence_id: sentenceData?.sentence_id ?? sentenceData?.sentenceId ?? (typeof sentenceIndex === 'number' ? sentenceIndex + 1 : undefined),
-          sentence_body: sentenceData?.sentence_body ?? sentenceData?.sentenceBody ?? sentenceText ?? sentenceData?.text ?? '',
-          sentence_difficulty_level: sentenceData?.sentence_difficulty_level ?? sentenceData?.sentenceDifficultyLevel ?? null,
-          tokens: sentenceData?.tokens ?? [],
-          word_tokens: sentenceData?.word_tokens ?? sentenceData?.wordTokens ?? null,
-          language: sentenceData?.language ?? null,
-          language_code: sentenceData?.language_code ?? sentenceData?.languageCode ?? null,
-          is_non_whitespace: sentenceData?.is_non_whitespace ?? sentenceData?.isNonWhitespace ?? null
-        }
+        // 使用上面已经归一化的句子数据
         // 无条件显式清空后端 token，避免任何历史残留导致错配
         const updatePayload = { sentence: normalizedSentence, token: null }
         
@@ -413,14 +457,30 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     const { addLog } = useTranslationDebug()
     
     const handleAskAI = async (token, sentenceIndex) => {
-      if (!token || sentenceIndex == null || isProcessing) {
-        const msg = '⚠️ [ArticleChatView] handleAskAI: 无效参数或正在处理中'
-        console.warn(msg)
+      console.log('🔘 [ArticleChatView] handleAskAI 被调用', {
+        token,
+        sentenceIndex,
+        isProcessing,
+        tokenType: typeof token,
+        sentenceIndexType: typeof sentenceIndex
+      })
+      
+      if (!token || sentenceIndex == null) {
+        const msg = '⚠️ [ArticleChatView] handleAskAI: 无效参数'
+        console.warn(msg, { token, sentenceIndex })
         addLog('warning', msg, { token, sentenceIndex, isProcessing })
         return
       }
       
+      if (isProcessing) {
+        const msg = '⚠️ [ArticleChatView] handleAskAI: 正在处理中，跳过'
+        console.warn(msg, { isProcessing })
+        addLog('warning', msg, { isProcessing })
+        return
+      }
+      
       addLog('info', '🚀 [ArticleChatView] handleAskAI 开始', { token, sentenceIndex })
+      console.log('🚀 [ArticleChatView] handleAskAI 开始执行', { token, sentenceIndex })
       
       try {
         // 1. 获取文章数据以构建 context
@@ -604,6 +664,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
               </div>
             )}
             <ChatView 
+              key={`chatview-${articleId}`}  // 🔧 添加稳定的 key，防止不必要的重新挂载
               quotedText={quotedText}
               onClearQuote={handleClearQuote}
               disabled={isUploadMode && !uploadComplete}

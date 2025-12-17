@@ -359,6 +359,14 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import grammar_routes: {e}")
 
+# 注册聊天历史API路由
+try:
+    from backend.api.chat_history_routes import router as chat_history_router
+    app.include_router(chat_history_router)
+    print("[OK] 注册聊天历史API路由: /api/chat/history")
+except ImportError as e:
+    print(f"Warning: Could not import chat_history_routes: {e}")
+
 @app.get("/")
 async def root():
     return {"message": "AI Language Learning API"}
@@ -1132,13 +1140,31 @@ def _sync_to_database(user_id: int = None):
         traceback.print_exc()
 
 @app.post("/api/chat")
-async def chat_with_assistant(payload: dict, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
+async def chat_with_assistant(
+    payload: dict, 
+    background_tasks: BackgroundTasks, 
+    authorization: Optional[str] = Header(None)
+):
     """聊天功能（完整 MainAssistant 集成）"""
     import traceback
     try:
         import time
         request_id = int(time.time() * 1000) % 10000
-        user_id = current_user.user_id  # 获取当前用户ID
+        
+        # 🔧 支持可选认证：如果有 token 则使用认证用户，否则使用默认用户
+        user_id = 2  # 默认用户 ID
+        if authorization and authorization.startswith("Bearer "):
+            try:
+                token = authorization.replace("Bearer ", "")
+                from backend.utils.auth import decode_access_token
+                payload_data = decode_access_token(token)
+                if payload_data and "sub" in payload_data:
+                    user_id = int(payload_data["sub"])
+                    print(f"✅ [Chat #{request_id}] 使用认证用户: {user_id}")
+            except Exception as e:
+                print(f"⚠️ [Chat #{request_id}] Token 解析失败，使用默认用户: {e}")
+        else:
+            print(f"ℹ️ [Chat #{request_id}] 未提供认证 token，使用默认用户: {user_id}")
         
         print("\n" + "="*80)
         print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")

@@ -11,7 +11,7 @@ class SummarizeVocabAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
             sys_prompt=summarize_vocab_sys_prompt,  # 默认使用空格语言的 prompt
-            max_tokens=100,
+            max_tokens=200,
             parse_json=True
         )
         # 保存原始的 sys_prompt，以便在需要时切换
