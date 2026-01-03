@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react'
 export default function QuickTranslationTooltip({
   word,
   translation,
+  translationSource = null, // 'dictionary' | 'translation' | null
   isVisible,
   anchorRef,
   position = 'top', // 'top' | 'bottom' | 'left' | 'right'
@@ -97,8 +98,9 @@ export default function QuickTranslationTooltip({
     }
   }, [isVisible])
 
-  // 如果不可见，或者既没有翻译也没有在加载，则不显示
-  if (!isVisible || (!translation && !isLoading)) {
+  // 🔧 修复：如果不可见，则不显示
+  // 如果可见但没有翻译且不在加载，仍然显示（可能是查询失败，显示空状态）
+  if (!isVisible) {
     return null
   }
   
@@ -164,12 +166,18 @@ export default function QuickTranslationTooltip({
               </button>
             )}
           </div>
-        ) : null}
+        ) : (
+          // 🔧 修复：如果没有翻译且不在加载，显示提示信息
+          <div className="text-sm text-gray-500 italic">
+            暂无翻译
+            <div className="text-xs text-gray-400 mt-1">可能原因：网络问题、API限制或单词无法翻译</div>
+          </div>
+        )}
       </div>
-      {/* "自动翻译"标题 - 放到最后一行，字号为原来的2/3 (text-xs = 0.75rem, 2/3 = 0.5rem) */}
-      {(translation || isLoading) && (
-        <div className="text-[0.5rem] text-gray-500 mt-1">自动翻译</div>
-      )}
+      {/* 🔧 显示来源信息：词典或翻译 */}
+      <div className="text-[0.5rem] text-gray-500 mt-1">
+        {translationSource === 'dictionary' ? '词典' : translationSource === 'translation' ? '翻译' : '自动翻译'}
+      </div>
       {/* AI详细解释按钮 - 幽灵按钮样式 */}
       {(() => {
         const shouldShowButton = onAskAI && word && translation
@@ -204,21 +212,39 @@ export default function QuickTranslationTooltip({
                 hasOnAskAI: !!onAskAI,
                 onAskAIType: typeof onAskAI
               })
-              // 🔧 调用 onAskAI，它可能接收 (word) 或 (token, sentenceIdx) 两种格式
-              // 如果是函数，直接调用；如果是箭头函数包装，也会正确处理
+              // 🔧 调用 onAskAI
+              // TokenSpan 已经将 onAskAI 包装成箭头函数，会传递 token 和 sentenceIdx
+              // 所以这里直接调用即可，不需要传递参数
               if (typeof onAskAI === 'function') {
                 try {
-                  console.log('🔘 [QuickTranslationTooltip] 准备调用 onAskAI')
-                  onAskAI()
-                  console.log('✅ [QuickTranslationTooltip] onAskAI 调用成功')
+                  console.log('🔘 [QuickTranslationTooltip] 准备调用 onAskAI', {
+                    hasOnAskAI: !!onAskAI,
+                    onAskAIType: typeof onAskAI,
+                    word
+                  })
+                  // 🔧 直接调用，TokenSpan 已经包装了参数
+                  const result = onAskAI()
+                  console.log('✅ [QuickTranslationTooltip] onAskAI 调用成功', { result })
+                  
+                  // 🔧 如果是 Promise，等待完成
+                  if (result && typeof result.then === 'function') {
+                    result.catch(err => {
+                      console.error('❌ [QuickTranslationTooltip] onAskAI Promise 失败', err)
+                    })
+                  }
                 } catch (error) {
                   console.error('❌ [QuickTranslationTooltip] onAskAI 调用失败', {
                     error: error.message,
-                    stack: error.stack
+                    stack: error.stack,
+                    word
                   })
                 }
               } else {
-                console.warn('⚠️ [QuickTranslationTooltip] onAskAI 不是函数', { onAskAI })
+                console.warn('⚠️ [QuickTranslationTooltip] onAskAI 不是函数', { 
+                  onAskAI,
+                  onAskAIType: typeof onAskAI,
+                  word
+                })
               }
             }}
             onMouseDown={(e) => {

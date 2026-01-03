@@ -9,7 +9,9 @@ import { useUser } from '../../../contexts/UserContext'
 import { useSelection } from '../selection/hooks/useSelection'
 import { useSpeechSynthesis } from 'react-speech-kit'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import SentenceContainer from './SentenceContainer'
+import { useTokenHighlight } from '../hooks/useTokenHighlight'
 
 /**
  * ArticleViewer - Main component for displaying and interacting with article content
@@ -32,6 +34,7 @@ export default function ArticleViewer({
   // Debug logging removed to improve performance
   const { userId } = useUser()
   const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
+  const { addLog: addDebugLog } = useTranslationDebug() // 🔧 仅用于 useTokenDrag 的日志
   const { data, isLoading, isError, error } = useArticle(articleId, userId)
 
   const normalizeLanguageCode = (language) => {
@@ -117,34 +120,60 @@ export default function ArticleViewer({
   // Selection context (new system) - need to sync with old token selection system
   const { clearSelection: clearSelectionContext, selectTokens: selectTokensInContext } = useSelection()
 
+  // 🔧 稳定 useTokenSelection 的参数，避免因为参数引用变化导致 hook 重新执行
+  const tokenSelectionParams = useMemo(() => ({
+    sentences,
+    onTokenSelect,
+    articleId,
+    clearSentenceSelection,
+    selectTokensInContext,
+    addDebugLog
+  }), [
+    sentences, // sentences 已经用 useMemo 稳定了
+    onTokenSelect, // 来自 props，应该稳定
+    articleId, // 来自 props，应该稳定
+    clearSentenceSelection, // 来自 useSentenceInteraction，可能不稳定
+    selectTokensInContext, // 来自 useSelection，可能不稳定
+    addDebugLog // 来自 useTranslationDebug，可能不稳定
+  ])
+
   // Token selection management
   const {
     selectedTokenIds,
     activeSentenceIndex,
     activeSentenceRef,
+    selectedTokenIdsRef, // 🔧 获取 ref，传递给 useTokenDrag
     clearSelection,
     addSingle,
+    selectRange, // 🔧 获取 selectRange 函数
     emitSelection
-  } = useTokenSelection({ sentences, onTokenSelect, articleId, clearSentenceSelection, selectTokensInContext })
+  } = useTokenSelection(tokenSelectionParams)
 
-  // Token drag selection management
+  // 🔧 稳定 selectRange 函数引用，避免 useTokenDrag 的 useEffect 频繁重新执行
+  const selectRangeRef = useRef(selectRange)
+  useEffect(() => {
+    selectRangeRef.current = selectRange
+  }, [selectRange])
+
+  // Token click selection management
   const {
-    isDraggingRef,
-    wasDraggingRef,
-    tokenRefsRef,
-    handleMouseDownToken,
-    handleMouseEnterToken,
-    handleMouseMove,
-    handleMouseUp,
     handleBackgroundClick
   } = useTokenDrag({
-    sentences,
-    selectedTokenIds,
+    selectedTokenIdsRef,
     activeSentenceRef,
-    emitSelection,
     clearSelection,
     clearSentenceSelection,
-    clearSelectionContext
+    addDebugLog,
+    sentences,
+    selectRange: selectRangeRef.current // 🔧 使用稳定的引用
+  })
+
+  // 🔧 Token highlight management (独立于 useTokenDrag)
+  const {
+    highlightedRange
+  } = useTokenHighlight({
+    addDebugLog,
+    sentences
   })
 
   // Grammar notations management - 现在从props接收，不再创建新的hook实例
@@ -1095,9 +1124,6 @@ export default function ArticleViewer({
         ref={scrollContainerRef}
         className="flex-1 p-4 overflow-auto min-h-0 h-full"
         onClick={handleBackgroundClick}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
       >
       <style>{`
         @keyframes sentenceFlash {
@@ -1121,16 +1147,12 @@ export default function ArticleViewer({
               articleId={articleId}
               selectedTokenIds={selectedTokenIds}
               activeSentenceIndex={activeSentenceIndex}
-              isDraggingRef={isDraggingRef}
-              wasDraggingRef={wasDraggingRef}
-              tokenRefsRef={tokenRefsRef}
               hasExplanation={hasExplanation}
               getExplanation={getExplanation}
               hoveredTokenId={hoveredTokenId}
               setHoveredTokenId={setHoveredTokenId}
+              highlightedRange={highlightedRange}
               handleGetExplanation={handleGetExplanation}
-              handleMouseDownToken={handleMouseDownToken}
-              handleMouseEnterToken={handleMouseEnterToken}
               addSingle={addSingle}
               isTokenAsked={isTokenAsked}
               markAsAsked={markAsAsked}

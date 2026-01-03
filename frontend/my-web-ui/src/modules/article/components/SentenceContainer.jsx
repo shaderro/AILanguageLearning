@@ -18,16 +18,11 @@ export default function SentenceContainer({
   articleId,
   selectedTokenIds,
   activeSentenceIndex,
-  isDraggingRef,
-  wasDraggingRef,
-  tokenRefsRef,
   hasExplanation,
   getExplanation,
   hoveredTokenId,
   setHoveredTokenId,
   handleGetExplanation,
-  handleMouseDownToken,
-  handleMouseEnterToken,
   addSingle,
   isTokenAsked,
   markAsAsked,
@@ -41,7 +36,9 @@ export default function SentenceContainer({
   isSentenceInteracting,
   currentReadingToken = null, // 当前正在朗读的 token {sentenceIndex, tokenIndex}
   // 🔧 新增：AI详细解释回调
-  onAskAI = null
+  onAskAI = null,
+  // 🔧 新增：高亮范围
+  highlightedRange = null
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -81,19 +78,7 @@ export default function SentenceContainer({
   }
 
   const handleSentenceClick = async (e) => {
-    // 如果正在拖拽或刚结束拖拽，跳过句子点击（避免清空 token 选择）
-    if (isDraggingRef.current || wasDraggingRef.current) {
-      console.log(`⏭️ [SentenceContainer] Sentence click blocked - dragging or just finished dragging`)
-      e.stopPropagation()
-      return
-    }
-    
-    // Always trigger sentence click for now - we'll let the token components handle their own clicks
     e.stopPropagation()
-    
-    // 移除多余的API调用 - 语法例句数据已通过GrammarNotationCard在hover时获取
-    console.log(`🔍 [SentenceContainer] Clicking sentence ${sentenceId} - no API call needed`)
-    
     onSentenceClick(sentenceIndex)
   }
 
@@ -104,13 +89,19 @@ export default function SentenceContainer({
   const sentenceId = sentence?.sentence_id || (typeof sentence === 'object' && sentence?.id) || (sentenceIndex + 1)
   
   // Check if this sentence has grammar notations
-  const hasGrammar = hasGrammarNotation ? hasGrammarNotation(sentenceId) : false
-  const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
+  // 🔧 使用 useMemo 缓存结果，避免每次渲染都调用函数（可能导致无限循环）
+  const hasGrammar = useMemo(() => {
+    return hasGrammarNotation ? hasGrammarNotation(sentenceId) : false
+  }, [hasGrammarNotation, sentenceId])
   
-  // Debug logging
-  if (grammarNotations.length > 0) {
-    console.log('🔍 [SentenceContainer] Grammar notations for sentence', sentenceId, ':', grammarNotations)
-  }
+  const grammarNotations = useMemo(() => {
+    return getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
+  }, [getGrammarNotationsForSentence, sentenceId])
+  
+  // 🔧 移除调试日志，避免刷屏（如果需要调试，可以使用条件判断）
+  // if (grammarNotations.length > 0) {
+  //   console.log('🔍 [SentenceContainer] Grammar notations for sentence', sentenceId, ':', grammarNotations)
+  // }
 
   // Selection hook（句子级选择）
   const { className: selectionSentenceClass, onMouseEnter: selOnEnter, onMouseLeave: selOnLeave, onClick: selOnClick } = useSentenceSelectable({
@@ -129,7 +120,7 @@ export default function SentenceContainer({
   
   // 🔧 整句翻译相关状态
   const { selectedLanguage } = useLanguage()
-  const { addLog: addDebugLog } = useTranslationDebug()
+  // 清除调试日志
   const [sentenceTranslation, setSentenceTranslation] = useState(null)
   const [showSentenceTranslation, setShowSentenceTranslation] = useState(false)
   const [isLoadingSentenceTranslation, setIsLoadingSentenceTranslation] = useState(false)
@@ -236,21 +227,27 @@ export default function SentenceContainer({
     setIsLoadingSentenceTranslation(true)
     setShowSentenceTranslation(true)
     
-    const debugLogger = (level, message, data) => {
-      addDebugLog(level, `[SentenceContainer] ${message}`, data)
-    }
+    // 🔧 关闭翻译调试日志
+    // const debugLogger = (level, message, data) => {
+    //   addDebugLog(level, `[SentenceContainer] ${message}`, data)
+    // }
     
     try {
       const finalTargetLang = targetLang || 'en'
-      const logData = { text, sourceLang, targetLang: finalTargetLang }
-      debugLogger('info', `开始查询整句翻译: "${text.substring(0, 50)}..."`, logData)
+      // 🔧 关闭翻译调试日志
+      // const logData = { text, sourceLang, targetLang: finalTargetLang }
+      // debugLogger('info', `开始查询整句翻译: "${text.substring(0, 50)}..."`, logData)
       
+      // 🔧 句子查询：直接使用翻译API（跳过词典查询）
       const translation = await getQuickTranslation(text, sourceLang, finalTargetLang, {
-        debugLogger
+        // debugLogger, // 🔧 关闭调试日志
+        isWord: false, // 明确指定为句子查询
+        useDictionary: false // 句子不使用词典API
       })
       
-      const resultData = { text: text.substring(0, 50) + '...', translation }
-      debugLogger(translation ? 'success' : 'warning', `整句翻译查询完成`, resultData)
+      // 🔧 关闭翻译调试日志
+      // const resultData = { text: text.substring(0, 50) + '...', translation }
+      // debugLogger(translation ? 'success' : 'warning', `整句翻译查询完成`, resultData)
       
       // 检查查询是否已被取消
       if (sentenceTranslationQueryRef.current === currentQuery) {
@@ -261,8 +258,9 @@ export default function SentenceContainer({
         sentenceTranslationQueryRef.current = null
       }
     } catch (error) {
-      const errorData = { text: text.substring(0, 50) + '...', error: error.message }
-      debugLogger('error', `整句翻译查询失败`, errorData)
+      // 🔧 关闭翻译调试日志
+      // const errorData = { text: text.substring(0, 50) + '...', error: error.message }
+      // debugLogger('error', `整句翻译查询失败`, errorData)
       
       if (sentenceTranslationQueryRef.current === currentQuery) {
         setSentenceTranslation(null)
@@ -271,7 +269,7 @@ export default function SentenceContainer({
         sentenceTranslationQueryRef.current = null
       }
     }
-  }, [sourceLang, targetLang, addDebugLog])
+  }, [sourceLang, targetLang])
   
   // 🔧 清理整句翻译定时器
   const clearSentenceTranslationTimer = useCallback(() => {
@@ -420,27 +418,16 @@ export default function SentenceContainer({
               articleId={articleId}
               selectedTokenIds={selectedTokenIds}
               activeSentenceIndex={activeSentenceIndex}
-              isDraggingRef={isDraggingRef}
-              wasDraggingRef={wasDraggingRef}
-              tokenRefsRef={tokenRefsRef}
               hasExplanation={hasExplanation}
               getExplanation={getExplanation}
               hoveredTokenId={hoveredTokenId}
               setHoveredTokenId={setHoveredTokenId}
               handleGetExplanation={handleGetExplanation}
-              handleMouseDownToken={handleMouseDownToken}
-              handleMouseEnterToken={(sIdx, tIdx, t) => {
-                // 🔧 当 hover token 时，也显示分词下划线
-                if (shouldShowSegmentationUnderline) {
-                  setIsHovered(true)
-                }
-                handleTokenHoverEnter() // 标记正在 hover token
-                handleMouseEnterToken(sIdx, tIdx, t)
-              }}
               onTokenMouseLeave={handleTokenHoverLeave}
               addSingle={addSingle}
               isTokenAsked={isTokenAsked}
               markAsAsked={markAsAsked}
+              highlightedRange={highlightedRange}
               getNotationContent={getNotationContent}
               setNotationContent={setNotationContent}
               // 🔧 新增：分词下划线相关 props

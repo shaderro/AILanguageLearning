@@ -21,16 +21,11 @@ export default function TokenSpan({
   articleId,
   selectedTokenIds,
   activeSentenceIndex,
-  isDraggingRef,
-  wasDraggingRef,
-  tokenRefsRef,
   hasExplanation,
   getExplanation,
   hoveredTokenId,
   setHoveredTokenId,
   handleGetExplanation,
-  handleMouseDownToken,
-  handleMouseEnterToken,
   addSingle,
   isTokenAsked,
   markAsAsked,
@@ -44,7 +39,9 @@ export default function TokenSpan({
   // 🔧 新增：token hover 离开回调（用于整句翻译）
   onTokenMouseLeave = null,
   // 🔧 新增：AI详细解释回调
-  onAskAI = null
+  onAskAI = null,
+  // 🔧 新增：高亮范围
+  highlightedRange = null
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -67,8 +64,9 @@ export default function TokenSpan({
 
   // 🔧 新增：hover翻译相关状态和逻辑
   const { selectedLanguage } = useLanguage() // 获取全局语言状态（目标语言）
-  const { addLog: addDebugLog } = useTranslationDebug() // 获取调试日志函数
+  // 清除调试日志
   const [quickTranslation, setQuickTranslation] = useState(null)
+  const [translationSource, setTranslationSource] = useState(null) // 'dictionary' | 'translation'
   const [showQuickTranslation, setShowQuickTranslation] = useState(false)
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false)
   const hoverTranslationTimerRef = useRef(null)
@@ -108,10 +106,8 @@ export default function TokenSpan({
       preferredLang,
       finalTargetLang: preferredLang
     }
-    console.log('🔧 [TokenSpan] 目标语言设置:', logData)
-    addDebugLog('info', '目标语言设置', logData)
     return preferredLang
-  }, [selectedLanguage, sourceLang, addDebugLog])
+  }, [selectedLanguage, sourceLang])
 
   // 🔧 hover翻译查询函数
   const queryQuickTranslation = useCallback(async (word) => {
@@ -127,59 +123,92 @@ export default function TokenSpan({
     const currentQuery = {}
     translationQueryRef.current = currentQuery
 
-    // 创建调试日志函数
-    const debugLogger = (level, message, data) => {
-      addDebugLog(level, `[TokenSpan] ${message}`, data)
-    }
+    // 🔧 关闭翻译调试日志
+    // const debugLogger = (level, message, data) => {
+    //   addDebugLog(level, `[TokenSpan] ${message}`, data)
+    // }
+    
+    // 🔧 设置全局debug logger为空函数，关闭翻译服务内部日志
+    const { setGlobalDebugLogger } = await import('../../../services/translationService')
+    setGlobalDebugLogger(() => {}) // 空函数，不输出日志
 
     try {
-      const logData = { word, sourceLang, targetLang }
-      console.log('🔍 [TokenSpan] 调用getQuickTranslation:', logData)
-      addDebugLog('info', `开始查询翻译: "${word}"`, logData)
+      // 🔧 关闭翻译调试日志
+      // const logData = { word, sourceLang, targetLang }
+      // console.log('🔍 [TokenSpan] 调用getQuickTranslation:', logData)
+      // addDebugLog('info', `开始查询翻译: "${word}"`, logData)
       
       // 设置加载状态
       setIsLoadingTranslation(true)
       setShowQuickTranslation(true)
       
-      const translation = await getQuickTranslation(word, sourceLang, targetLang, {
-        debugLogger
+      // 🔧 单词查询：优先使用词典，如果词典没有结果再使用翻译API
+      // 🔧 返回包含来源信息的对象
+      const translationResult = await getQuickTranslation(word, sourceLang, targetLang, {
+        // debugLogger, // 🔧 关闭调试日志
+        isWord: true, // 明确指定为单词查询
+        useDictionary: true, // 使用词典API
+        returnWithSource: true // 返回包含来源信息的对象
       })
       
-      const resultData = { word, translation }
-      console.log('✅ [TokenSpan] 翻译查询结果:', resultData)
-      addDebugLog(translation ? 'success' : 'warning', `翻译查询完成: "${word}"`, resultData)
+      // 处理返回结果（可能是字符串或对象）
+      let translation = null
+      let translationSource = null
+      if (translationResult) {
+        if (typeof translationResult === 'object' && translationResult.text) {
+          translation = translationResult.text
+          translationSource = translationResult.source
+        } else {
+          translation = translationResult
+          // 如果没有来源信息，默认为翻译（向后兼容）
+          translationSource = 'translation'
+        }
+      }
+      
+      // 🔧 关闭翻译调试日志
+      // const resultData = { word, translation, source: translationSource }
+      // console.log('✅ [TokenSpan] 翻译查询结果:', resultData)
+      // addDebugLog(translation ? 'success' : 'warning', `翻译查询完成: "${word}"`, resultData)
       
       // 检查查询是否已被取消
       if (translationQueryRef.current === currentQuery) {
         setQuickTranslation(translation)
+        setTranslationSource(translationSource) // 保存来源信息
         setIsLoadingTranslation(false)
         // 即使没有翻译结果，也保持显示状态
         setShowQuickTranslation(true)
-        const stateData = { 
-          translation, 
-          showQuickTranslation: true,
-          isLoading: false
-        }
-        console.log('✅ [TokenSpan] 翻译tooltip状态更新:', stateData)
-        addDebugLog('info', `Tooltip状态更新: ${translation ? '显示翻译' : '显示空状态'}`, stateData)
+        // 🔧 关闭翻译调试日志
+        // const stateData = { 
+        //   translation, 
+        //   showQuickTranslation: true,
+        //   isLoading: false
+        // }
+        // console.log('✅ [TokenSpan] 翻译tooltip状态更新:', stateData)
+        // addDebugLog('info', `Tooltip状态更新: ${translation ? '显示翻译' : '显示空状态'}`, stateData)
         translationQueryRef.current = null
       } else {
-        console.log('⚠️ [TokenSpan] 翻译查询已被取消，忽略结果')
-        addDebugLog('warning', '翻译查询已被取消，忽略结果', { word })
+        // 🔧 关闭翻译调试日志
+        // console.log('⚠️ [TokenSpan] 翻译查询已被取消，忽略结果')
+        // addDebugLog('warning', '翻译查询已被取消，忽略结果', { word })
         setIsLoadingTranslation(false)
       }
     } catch (error) {
-      const errorData = { word, error: error.message, stack: error.stack }
-      console.error('❌ [TokenSpan] 翻译查询失败:', error)
-      addDebugLog('error', `翻译查询失败: "${word}"`, errorData)
+      // 🔧 关闭翻译调试日志
+      // const errorData = { word, error: error.message, stack: error.stack }
+      // console.error('❌ [TokenSpan] 翻译查询失败:', error)
+      // addDebugLog('error', `翻译查询失败: "${word}"`, errorData)
       if (translationQueryRef.current === currentQuery) {
+        // 🔧 修复：即使查询失败，也保持 tooltip 显示，显示"无翻译"状态
         setQuickTranslation(null)
         setIsLoadingTranslation(false)
-        setShowQuickTranslation(false)
+        // 🔧 保持显示状态，让 tooltip 组件显示"无翻译"状态
+        setShowQuickTranslation(true)
         translationQueryRef.current = null
+        // 🔧 不立即隐藏 tooltip，让用户看到"无翻译"状态
+        // tooltip 会在鼠标离开时通过 clearTranslation 隐藏
       }
     }
-  }, [sourceLang, targetLang, addDebugLog])
+  }, [sourceLang, targetLang])
 
   // 🔧 清理函数
   const clearTranslationTimer = useCallback(() => {
@@ -406,12 +435,21 @@ export default function TokenSpan({
   // 如果vocab notation存在，就不需要检查asked tokens了
   const hasVocabVisual = hasVocabNotationForToken || (isAsked && !hasVocabNotationForToken)
 
-  // 🔧 朗读高亮优先级最高，然后是选中，最后是 hover
+  // 🔧 检查是否在高亮范围内
+  const isHighlighted = highlightedRange && 
+    highlightedRange.sentenceIdx === sentenceIdx &&
+    tokenIdx >= highlightedRange.startTokenIdx &&
+    tokenIdx <= highlightedRange.endTokenIdx
+  
+  // 🔧 朗读高亮优先级最高，然后是选中，然后是拖拽高亮（仅在拖拽过程中显示），最后是 hover
+  // 注意：拖拽高亮（isHighlighted）只在拖拽过程中显示，不影响选中状态（selected）
   const bgClass = isCurrentlyReading
     ? 'bg-green-200' // success-200 颜色
     : (selected
-      ? 'bg-yellow-300'
-      : (hoverAllowed ? 'bg-transparent hover:bg-yellow-200' : 'bg-transparent'))
+      ? 'bg-yellow-300' // 选中状态优先级高于拖拽高亮
+      : (isHighlighted
+        ? 'bg-yellow-200' // 拖拽高亮颜色改为黄色（仅在拖拽过程中）
+        : (hoverAllowed ? 'bg-transparent hover:bg-yellow-200' : 'bg-transparent')))
   const tokenHasExplanation = isTextToken && hasExplanation(token)
   const tokenExplanation = isTextToken ? getExplanation(token) : null
   const isHovered = hoveredTokenId === uid
@@ -464,12 +502,11 @@ export default function TokenSpan({
     >
       <span
         data-token="1"
+        data-token-id={uid || undefined} // 🔧 添加 data-token-id 属性，用于拖拽时识别 token
         ref={(el) => {
-          if (!tokenRefsRef.current[sentenceIdx]) tokenRefsRef.current[sentenceIdx] = {}
-          tokenRefsRef.current[sentenceIdx][tokenIdx] = el
+          // tokenRefsRef 已移除（不再需要拖拽功能）
         }}
-        onMouseDown={(e) => handleMouseDownToken(sentenceIdx, tokenIdx, token, e)}
-        onMouseEnter={() => {
+        onMouseEnter={(e) => {
           // 只有可选择的token才触发hover效果
           if (selectable) {
             selOnEnter()
@@ -482,7 +519,6 @@ export default function TokenSpan({
             cancelHideNotation()  // 取消任何待处理的隐藏
             setShowNotation(true)
           }
-          handleMouseEnterToken(sentenceIdx, tokenIdx, token)
 
           // 🔧 新增：hover翻译功能（延迟触发，避免频繁查询）
           // 只在没有vocab notation的情况下显示快速翻译（避免重复显示）
@@ -496,13 +532,15 @@ export default function TokenSpan({
               sourceLang,
               targetLang
             }
-            console.log('🔍 [TokenSpan] Hover翻译触发条件检查:', hoverData)
-            addDebugLog('info', `Hover触发: "${displayText}"`, hoverData)
+            // 🔧 关闭翻译调试日志
+            // console.log('🔍 [TokenSpan] Hover翻译触发条件检查:', hoverData)
+            // addDebugLog('info', `Hover触发: "${displayText}"`, hoverData)
             clearTranslationTimer()
             // 延迟250ms触发翻译查询（避免鼠标快速移动时频繁查询）
             hoverTranslationTimerRef.current = setTimeout(() => {
-              console.log('🔍 [TokenSpan] 开始查询翻译:', displayText)
-              addDebugLog('info', `延迟250ms后开始查询: "${displayText}"`, { word: displayText })
+              // 🔧 关闭翻译调试日志
+              // console.log('🔍 [TokenSpan] 开始查询翻译:', displayText)
+              // addDebugLog('info', `延迟250ms后开始查询: "${displayText}"`, { word: displayText })
               queryQuickTranslation(displayText)
             }, 250)
           } else {
@@ -517,8 +555,9 @@ export default function TokenSpan({
               word: displayText,
               reason
             }
-            console.log('⚠️ [TokenSpan] Hover翻译未触发:', skipData)
-            addDebugLog('warning', `Hover未触发: "${displayText}"`, skipData)
+            // 🔧 关闭翻译调试日志
+            // console.log('⚠️ [TokenSpan] Hover翻译未触发:', skipData)
+            // addDebugLog('warning', `Hover未触发: "${displayText}"`, skipData)
           }
         }}
         onMouseLeave={() => {
@@ -535,11 +574,24 @@ export default function TokenSpan({
           }
           // 🔧 新增：延迟清除hover翻译（给用户时间移动到 tooltip）
           if (isTextToken && displayText.trim().length > 0) {
-            addDebugLog('info', `Hover离开: "${displayText}"`, { word: displayText })
+            // 🔧 关闭翻译调试日志
+            // addDebugLog('info', `Hover离开: "${displayText}"`, { word: displayText })
+            // 🔧 修复：如果翻译查询还在进行中，等待查询完成后再决定是否隐藏
             // 延迟清除，如果鼠标移动到 tooltip 上，tooltip 的 onMouseEnter 会取消这个清除
             clearTranslationTimer()
             hoverTranslationTimerRef.current = setTimeout(() => {
-              clearTranslation()
+              // 🔧 检查是否还有正在进行的查询
+              // 如果有，延长延迟时间，让查询完成后再清除
+              if (translationQueryRef.current) {
+                // 🔧 关闭翻译调试日志
+                // console.log('⏳ [TokenSpan] 翻译查询还在进行中，延长延迟清除时间')
+                // 延长延迟时间到 500ms，给查询更多时间完成
+                hoverTranslationTimerRef.current = setTimeout(() => {
+                  clearTranslation()
+                }, 500)
+              } else {
+                clearTranslation()
+              }
             }, 200)
           } else {
             clearTranslation()
@@ -552,20 +604,20 @@ export default function TokenSpan({
           // 这里不需要额外处理，因为当鼠标离开整个句子时，SentenceContainer 会处理
         }}
         onClick={(e) => { 
-          // 如果正在拖拽或刚结束拖拽，完全跳过点击处理（避免拖拽结束时误触发切换）
-          if (isDraggingRef.current || wasDraggingRef.current) {
-            console.log('⏭️ [TokenSpan] onClick blocked - dragging or just finished dragging')
-            e.preventDefault()
-            e.stopPropagation()
-            return
-          }
           // 只有可选择的token才响应点击
           if (selectable) { 
-            selOnClick()
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            addSingle(sentenceIdx, token) 
-          } 
+            if (typeof selOnClick === 'function') {
+              selOnClick()
+            }
+            
+            // 直接处理点击选择（toggle 行为）
+            if (typeof addSingle === 'function') {
+              addSingle(sentenceIdx, token)
+            }
+            
+            e.preventDefault()
+            e.stopPropagation()
+          }
         }}
         className={[
           'px-0.5 rounded-sm transition-colors duration-150 select-none relative',
@@ -638,6 +690,7 @@ export default function TokenSpan({
         <QuickTranslationTooltip
           word={displayText}
           translation={quickTranslation}
+          translationSource={translationSource}
           isVisible={showQuickTranslation}
           anchorRef={anchorRef}
           position="bottom"
@@ -646,7 +699,7 @@ export default function TokenSpan({
           onSpeak={handleSpeak}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
-          onAskAI={onAskAI ? () => {
+          onAskAI={onAskAI ? async () => {
             console.log('🔘 [TokenSpan] onAskAI 回调被调用', { 
               token, 
               sentenceIdx,
@@ -656,12 +709,19 @@ export default function TokenSpan({
               sentenceIdxType: typeof sentenceIdx
             })
             try {
-              onAskAI(token, sentenceIdx)
+              // 🔧 调用 onAskAI，它可能是异步函数
+              const result = onAskAI(token, sentenceIdx)
+              // 🔧 如果是 Promise，等待完成
+              if (result && typeof result.then === 'function') {
+                await result
+              }
               console.log('✅ [TokenSpan] onAskAI 调用成功')
             } catch (error) {
               console.error('❌ [TokenSpan] onAskAI 调用失败', {
                 error: error.message,
-                stack: error.stack
+                stack: error.stack,
+                token,
+                sentenceIdx
               })
             }
           } : null}

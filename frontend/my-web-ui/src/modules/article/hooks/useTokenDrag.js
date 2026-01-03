@@ -1,196 +1,305 @@
-import { useRef } from 'react'
-import { getTokenId, rectsOverlap } from '../utils/tokenUtils'
+import { useRef, useEffect } from 'react'
 
 /**
- * Custom hook to manage token drag selection
+ * Custom hook to manage token click selection
+ * 支持：
+ * 1. 点击多选（toggle 行为）
+ * 2. 记录鼠标按下和松开时的位置和 token 信息（仅在同一 sentence 内时打印）
+ * 3. 记录鼠标按下时在同一个 sentence 内 hover 的位置（每 0.5 秒打印一次）
  */
 export function useTokenDrag({ 
-  sentences, 
-  selectedTokenIds, 
+  selectedTokenIdsRef,
   activeSentenceRef,
-  emitSelection,
   clearSelection,
   clearSentenceSelection,
-  clearSelectionContext
+  addDebugLog,
+  sentences,
+  selectRange // 🔧 接收 selectRange 函数
 }) {
+  // 🔧 使用 ref 存储 selectRange，避免 useEffect 依赖项变化导致重新注册事件监听器
+  const selectRangeRef = useRef(selectRange)
+  useEffect(() => {
+    selectRangeRef.current = selectRange
+  }, [selectRange])
+  // 记录鼠标按下时的 token 信息
+  const pressTokenRef = useRef(null)
+  // 记录鼠标是否按下
+  const isMouseDownRef = useRef(false)
+  // 记录鼠标移动时的位置和 token 信息（用于 OnMousePressing）
+  const lastHoverTokenRef = useRef(null)
+  // 定时器引用（用于每 0.5 秒打印一次）
+  const pressingLogIntervalRef = useRef(null)
+  // 🔧 记录鼠标按下时的位置，用于区分点击和拖拽
+  const pressPositionRef = useRef(null)
+  // 🔧 记录是否真的拖拽了（鼠标移动了）
+  const hasDraggedRef = useRef(false)
+  
+  // 🔧 拖拽状态管理
+  // 拖拽阈值（像素）
+  const DRAG_THRESHOLD = 5
+  // 是否正在拖拽
   const isDraggingRef = useRef(false)
-  const wasDraggingRef = useRef(false)
-  const hasMovedRef = useRef(false)
-  const dragSentenceIndexRef = useRef(null)
-  const dragStartIndexRef = useRef(null)
-  const selectionBeforeDragRef = useRef(null)
-  const suppressNextClickRef = useRef(false)
-  const dragStartPointRef = useRef({ x: 0, y: 0 })
-  const tokenRefsRef = useRef({})
+  // 记录按下时的鼠标位置 {x, y}
+  const dragStartPositionRef = useRef(null)
+  // 记录最后一次调用的范围（用于节流）
+  const lastSelectRangeRef = useRef(null)
+  // 🔧 标记刚完成拖拽，用于防止拖拽后立即触发点击事件
+  const justFinishedDragRef = useRef(false)
+  
+  /**
+   * 检测鼠标位置下的 token
+   * @param {number} x - 鼠标 X 坐标
+   * @param {number} y - 鼠标 Y 坐标
+   * @returns {Object|null} - { sentenceIdx, tokenIdx } 或 null
+   */
+  const detectTokenAtPosition = (x, y) => {
+    const elementUnderMouse = document.elementFromPoint(x, y)
+    const tokenElement = elementUnderMouse?.closest('[data-token-id]')
+    
+    if (!tokenElement) {
+      return null
+    }
+    
+    const tokenId = tokenElement.getAttribute('data-token-id')
+    if (!tokenId) {
+      return null
+    }
+    
+    // 解析 tokenId: "sentenceIdx-sentence_token_id"
+    const parts = tokenId.split('-')
+    if (parts.length < 2) {
+      return null
+    }
+    
+    const sIdxStr = parts[0]
+    const tokenIdStr = parts.slice(1).join('-')
+    const sIdx = parseInt(sIdxStr, 10)
+    const sentenceTokenId = parseInt(tokenIdStr, 10)
+    
+    if (isNaN(sIdx) || isNaN(sentenceTokenId)) {
+      return null
+    }
+    
+    // 查找 token 在数组中的索引
+    if (!sentences || !sentences[sIdx]) {
+      return null
+    }
+    
+    const tokens = sentences[sIdx].tokens || []
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i]
+      if (token && typeof token === 'object') {
+        const tokenSentenceTokenId = token?.sentence_token_id ?? token?.sentenceTokenId
+        if (tokenSentenceTokenId != null && Number(tokenSentenceTokenId) === Number(sentenceTokenId)) {
+          return {
+            sentenceIdx: sIdx,
+            tokenIdx: i
+          }
+        }
+      }
+    }
+    
+    return null
+  }
 
-  const handleMouseDownToken = (sIdx, tIdx, token, e) => {
-    console.log('🖱️ [useTokenDrag] mouseDown:', { sIdx, tIdx, token: token?.token_body, selectable: token?.selectable })
-    if (!token?.selectable) return
-    
-    // 任何 token 选择都应取消句子级选择（清除两个选择系统）
-    if (typeof clearSentenceSelection === 'function') {
-      console.log('🧹 [useTokenDrag] 准备清除句子选择（旧系统）')
-      try { 
-        clearSentenceSelection()
-        console.log('✅ [useTokenDrag] 句子选择已清除（旧系统）')
-      } catch (e) {
-        console.error('❌ [useTokenDrag] 清除句子选择时出错（旧系统）:', e)
+  // 监听全局鼠标按下和松开事件
+  useEffect(() => {
+    const handleGlobalMouseDown = (e) => {
+      // 🔧 调试：确保事件被触发
+      console.log('🔧 [useTokenDrag] handleGlobalMouseDown 被调用', { 
+        clientX: e.clientX, 
+        clientY: e.clientY,
+        hasAddDebugLog: !!addDebugLog,
+        hasSelectRange: !!selectRange
+      })
+      
+      const tokenInfo = detectTokenAtPosition(e.clientX, e.clientY)
+      
+      // 🔧 记录按下时的鼠标位置到 dragStartPositionRef
+      dragStartPositionRef.current = { x: e.clientX, y: e.clientY }
+      // 🔧 初始化 isDraggingRef.current = false
+      isDraggingRef.current = false
+      // 🔧 清空 lastSelectRangeRef.current
+      lastSelectRangeRef.current = null
+      
+      // 记录按下时的 token 信息和位置
+      pressTokenRef.current = tokenInfo
+      isMouseDownRef.current = true
+      pressPositionRef.current = { x: e.clientX, y: e.clientY }
+      hasDraggedRef.current = false // 🔧 重置拖拽标志
+      
+      // 🔧 调试：打印按下时的状态
+      if (addDebugLog) {
+        addDebugLog('info', `🔍 [useTokenDrag] MouseDown - tokenInfo: ${tokenInfo ? `句子${tokenInfo.sentenceIdx} Token${tokenInfo.tokenIdx}` : 'null'}, pressTokenRef已设置: ${!!pressTokenRef.current}`, null)
       }
+      
+      // 只在 Token 索引不为空时打印
+      if (addDebugLog && tokenInfo && tokenInfo.tokenIdx != null) {
+        const logMessage = `OnMousePressPos - X: ${e.clientX}, Y: ${e.clientY} | 句子索引: ${tokenInfo.sentenceIdx}, Token索引: ${tokenInfo.tokenIdx}`
+        addDebugLog('info', logMessage, null)
+      }
+      
+      // 启动定时器，每 0.5 秒打印一次 OnMousePressing
+      if (pressingLogIntervalRef.current) {
+        clearInterval(pressingLogIntervalRef.current)
+      }
+      pressingLogIntervalRef.current = setInterval(() => {
+        if (isMouseDownRef.current && lastHoverTokenRef.current && 
+            pressTokenRef.current && pressTokenRef.current.tokenIdx != null &&
+            lastHoverTokenRef.current.sentenceIdx === pressTokenRef.current.sentenceIdx) {
+          const hoverToken = lastHoverTokenRef.current
+          const logMessage = `OnMousePressing - X: ${hoverToken.mouseX}, Y: ${hoverToken.mouseY} | 句子索引: ${hoverToken.sentenceIdx}, Token索引: ${hoverToken.tokenIdx}`
+          if (addDebugLog) {
+            addDebugLog('info', logMessage, null)
+          }
+        }
+      }, 500)
     }
     
-    // 清除新选择系统的状态
-    if (typeof clearSelectionContext === 'function') {
-      console.log('🧹 [useTokenDrag] 准备清除选择（新系统SelectionContext）')
-      try { 
-        clearSelectionContext()
-        console.log('✅ [useTokenDrag] 选择已清除（新系统）')
-      } catch (e) {
-        console.error('❌ [useTokenDrag] 清除选择时出错（新系统）:', e)
+    const handleGlobalMouseUp = (e) => {
+      // 🔧 调试：确保事件被触发
+      console.log('🔧 [useTokenDrag] handleGlobalMouseUp 被调用', { 
+        clientX: e.clientX, 
+        clientY: e.clientY,
+        hasAddDebugLog: !!addDebugLog,
+        hasSelectRange: !!selectRange
+      })
+      
+      const tokenInfo = detectTokenAtPosition(e.clientX, e.clientY)
+      
+      // 🔧 调试：打印检测到的 token 信息
+      if (addDebugLog) {
+        addDebugLog('info', `🔍 [useTokenDrag] MouseUp 检测到 token - tokenInfo: ${tokenInfo ? `句子${tokenInfo.sentenceIdx} Token${tokenInfo.tokenIdx}` : 'null'}, pressToken: ${pressTokenRef.current ? `句子${pressTokenRef.current.sentenceIdx} Token${pressTokenRef.current.tokenIdx}` : 'null'}`, null)
       }
-    }
-    
-    if (activeSentenceRef.current != null && activeSentenceRef.current !== sIdx) {
-      e.preventDefault()
-      console.log('🔄 [useTokenDrag] Switching to new sentence, clearing previous selection')
-      clearSelection()
-      // 设置新的活跃句子
-      activeSentenceRef.current = sIdx
-      // 重新开始选择，只选择当前token
-      const startUid = getTokenId(token, sIdx)
-      if (startUid) {
-        const next = new Set([startUid])
-        selectionBeforeDragRef.current = new Set(next)
-        emitSelection(next, token?.token_body ?? '')
+      
+      // 只在 Token 索引不为空且在同一 sentence 内时打印
+      if (addDebugLog && tokenInfo && tokenInfo.tokenIdx != null && 
+          pressTokenRef.current && pressTokenRef.current.tokenIdx != null &&
+          tokenInfo.sentenceIdx === pressTokenRef.current.sentenceIdx) {
+        const logMessage = `OnMouseEndPressPos - X: ${e.clientX}, Y: ${e.clientY} | 句子索引: ${tokenInfo.sentenceIdx}, Token索引: ${tokenInfo.tokenIdx}`
+        addDebugLog('info', logMessage, null)
       }
+      
+      // 🔧 只有在真正拖拽时才调用 selectRange（区分点击和拖拽）
+      // 条件：1. 鼠标移动了（hasDraggedRef.current === true）
+      //       2. 按下和松开的 token 不同
+      //       3. 在同一 sentence 内
+      
+      // 🔧 只有在 pressToken 存在时才检查 selectRange（避免点击空白处时的多余日志）
+      if (selectRangeRef.current && pressTokenRef.current && pressTokenRef.current.tokenIdx != null) {
+        // 🔧 调试：打印检查条件（只在有 pressToken 时打印）
+        if (addDebugLog) {
+          addDebugLog('info', `🔍 [useTokenDrag] MouseUp 检查 - selectRange存在: ${!!selectRangeRef.current}, pressToken存在: ${!!pressTokenRef.current}, tokenIdx: ${pressTokenRef.current?.tokenIdx}`, null)
+        }
+        const startTokenIdx = pressTokenRef.current.tokenIdx
+        const endTokenIdx = tokenInfo && tokenInfo.tokenIdx != null && 
+                           tokenInfo.sentenceIdx === pressTokenRef.current.sentenceIdx
+                           ? tokenInfo.tokenIdx
+                           : pressTokenRef.current.tokenIdx
+        
+        // 判断是否真的拖拽了：
+        // 1. 鼠标移动了（hasDraggedRef.current === true）
+        // 2. 或者按下和松开的 token 不同
+        const isRealDrag = hasDraggedRef.current || (startTokenIdx !== endTokenIdx)
+        
+        // 🔧 调试：打印拖拽判断
+        if (addDebugLog) {
+          addDebugLog('info', `🔍 [useTokenDrag] 拖拽判断 - hasDragged: ${hasDraggedRef.current}, startTokenIdx: ${startTokenIdx}, endTokenIdx: ${endTokenIdx}, isRealDrag: ${isRealDrag}, tokenInfo存在: ${!!tokenInfo}, 同一句子: ${tokenInfo?.sentenceIdx === pressTokenRef.current.sentenceIdx}`, null)
+        }
+        
+        // 只在真正拖拽且在同一 sentence 内时调用 selectRange
+        if (isRealDrag && tokenInfo && tokenInfo.sentenceIdx === pressTokenRef.current.sentenceIdx) {
+          // 🔧 检查是否有已选择的 token，如果有且在同一句子内，则合并选择
+          const hasExistingSelection = selectedTokenIdsRef.current && 
+                                      selectedTokenIdsRef.current.size > 0
+          const isSameSentence = activeSentenceRef.current === pressTokenRef.current.sentenceIdx
+          const shouldMerge = hasExistingSelection && isSameSentence
+          
+          // 🔧 调试：打印调用 selectRange 的信息
+          if (addDebugLog) {
+            addDebugLog('info', `✅ [useTokenDrag] 调用 selectRange - 句子: ${pressTokenRef.current.sentenceIdx}, 起始: ${startTokenIdx}, 结束: ${endTokenIdx}, 合并: ${shouldMerge}`, null)
+          }
+          
+          selectRangeRef.current(pressTokenRef.current.sentenceIdx, startTokenIdx, endTokenIdx, shouldMerge)
     } else {
-      e.preventDefault()
-      console.log('🎯 [useTokenDrag] Starting drag in same sentence')
-      isDraggingRef.current = true
-      wasDraggingRef.current = true
-      hasMovedRef.current = false
-      dragSentenceIndexRef.current = sIdx
-      dragStartIndexRef.current = tIdx
-      selectionBeforeDragRef.current = new Set(selectedTokenIds)
-      console.log('📦 [useTokenDrag] selectionBeforeDrag saved:', Array.from(selectionBeforeDragRef.current))
-      if (activeSentenceRef.current == null) {
-        activeSentenceRef.current = sIdx
+          // 🔧 调试：打印为什么没有调用 selectRange
+          if (addDebugLog) {
+            addDebugLog('info', `❌ [useTokenDrag] 未调用 selectRange - isRealDrag: ${isRealDrag}, tokenInfo存在: ${!!tokenInfo}, 同一句子: ${tokenInfo?.sentenceIdx === pressTokenRef.current.sentenceIdx}`, null)
+          }
+        }
       }
-      dragStartPointRef.current = { x: e.clientX, y: e.clientY }
-      const startUid = getTokenId(token, sIdx)
-      if (startUid) {
-        const next = new Set(selectionBeforeDragRef.current)
-        next.add(startUid)
-        selectionBeforeDragRef.current = new Set(next)
-        console.log('➕ [useTokenDrag] Added start token, selection now:', Array.from(next))
-        emitSelection(next, token?.token_body ?? '')
-      }
-    }
-    suppressNextClickRef.current = true
-    setTimeout(() => { suppressNextClickRef.current = false }, 0)
-  }
-
-  const handleMouseEnterToken = (sIdx, tIdx, token) => {
-    if (!isDraggingRef.current) return
-    if (dragSentenceIndexRef.current !== sIdx) return
-    if (!token?.selectable) return
-
-    hasMovedRef.current = true
-
-    const start = dragStartIndexRef.current ?? tIdx
-    const end = tIdx
-    const [from, to] = start <= end ? [start, end] : [end, start]
-
-    const base = selectionBeforeDragRef.current ?? new Set()
-    const rangeSet = new Set(base)
-
-    const tokens = (sentences[sIdx]?.tokens || [])
-    for (let i = from; i <= to; i++) {
-      const tk = tokens[i]
-      if (tk && typeof tk === 'object' && tk.selectable) {
-        const id = getTokenId(tk, sIdx)
-        if (id) rangeSet.add(id)
+      // 🔧 注意：如果 pressToken 不存在（如点击空白处），不打印日志，这是正常情况
+      
+      // 重置按下时的 token 信息和拖拽标志
+      pressTokenRef.current = null
+      isMouseDownRef.current = false
+      lastHoverTokenRef.current = null
+      pressPositionRef.current = null
+      hasDraggedRef.current = false
+      
+      // 清除定时器
+      if (pressingLogIntervalRef.current) {
+        clearInterval(pressingLogIntervalRef.current)
+        pressingLogIntervalRef.current = null
       }
     }
     
-    // 调试信息显示在标题栏
-    document.title = `drag: start=${start} end=${end} range=[${from}-${to}] count=${rangeSet.size}`
-    
-    emitSelection(rangeSet, token?.token_body ?? '')
-  }
-
-  const handleMouseMove = (e) => {
-    // 🔧 禁用：让 handleMouseEnterToken 完全负责拖拽选择逻辑
-    // handleMouseMove 的矩形覆盖判断会导致跨行拖拽时的选择错误
-    // 改为依赖 TokenSpan 的 onMouseEnter 事件来跟踪当前 token
-    return
-  }
-
-  const handleMouseUp = () => {
-    // 写入标题栏以便无控制台时看到
-    document.title = `mouseUp: size=${selectedTokenIds.size}, hasMoved=${hasMovedRef.current}`
-    
-    console.log('🆙 [useTokenDrag] mouseUp:', {
-      isDragging: isDraggingRef.current,
-      wasDragging: wasDraggingRef.current,
-      hasMoved: hasMovedRef.current,
-      currentSelection: Array.from(selectedTokenIds)
-    })
-    
-    if (isDraggingRef.current || wasDraggingRef.current) {
-      suppressNextClickRef.current = true
-      setTimeout(() => { 
-        suppressNextClickRef.current = false
-        console.log('🔓 [useTokenDrag] suppressNextClick released')
-      }, 100)
+    const handleGlobalMouseMove = (e) => {
+      // 只有在鼠标按下时才记录 hover 的 token 信息
+      if (isMouseDownRef.current && pressTokenRef.current && pressTokenRef.current.tokenIdx != null) {
+        // 🔧 检查是否真的拖拽了（鼠标移动超过 5 像素）
+        if (pressPositionRef.current) {
+          const deltaX = Math.abs(e.clientX - pressPositionRef.current.x)
+          const deltaY = Math.abs(e.clientY - pressPositionRef.current.y)
+          if (deltaX > 5 || deltaY > 5) {
+            hasDraggedRef.current = true
+          }
+        }
+        
+        const tokenInfo = detectTokenAtPosition(e.clientX, e.clientY)
+        
+        // 只有在同一 sentence 内时才记录
+        if (tokenInfo && tokenInfo.tokenIdx != null && 
+            tokenInfo.sentenceIdx === pressTokenRef.current.sentenceIdx) {
+          lastHoverTokenRef.current = {
+            ...tokenInfo,
+            mouseX: e.clientX,
+            mouseY: e.clientY
+          }
+    } else {
+          // 如果不在同一 sentence 内，清空记录
+          lastHoverTokenRef.current = null
+        }
+      }
     }
-    isDraggingRef.current = false
-    // 延迟重置 wasDraggingRef，确保后续事件能识别"刚结束拖拽"
-    setTimeout(() => { 
-      wasDraggingRef.current = false
-      console.log('🔓 [useTokenDrag] wasDragging reset')
-    }, 150)
-    hasMovedRef.current = false
-    dragSentenceIndexRef.current = null
-    dragStartIndexRef.current = null
-    // 不再清空 selectionBeforeDragRef，避免意外丢失选择
-    console.log('✅ [useTokenDrag] mouseUp complete, selection preserved')
-  }
+    
+    document.addEventListener('mousedown', handleGlobalMouseDown)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    
+    return () => {
+      document.removeEventListener('mousedown', handleGlobalMouseDown)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      
+      // 清理定时器
+      if (pressingLogIntervalRef.current) {
+        clearInterval(pressingLogIntervalRef.current)
+        pressingLogIntervalRef.current = null
+      }
+    }
+  }, [addDebugLog, sentences]) // 🔧 移除 selectRange 依赖，使用 ref 访问
 
   const handleBackgroundClick = (e) => {
-    console.log('🖱️ [useTokenDrag] backgroundClick:', {
-      wasDragging: wasDraggingRef.current,
-      suppressNextClick: suppressNextClickRef.current,
-      target: e.target?.tagName
-    })
+    // 点击背景时清空选择
+    const isBackgroundClick = e.target === e.currentTarget || !e.target.closest('[data-token-id]')
     
-    // 如果刚结束拖拽（点击触发时机晚于 mouseup），不清空选择
-    if (wasDraggingRef.current) {
-      console.log('⏭️ [useTokenDrag] Skipping clear - just finished dragging')
-      return
-    }
-    if (suppressNextClickRef.current) {
-      console.log('⏭️ [useTokenDrag] Skipping clear - click suppressed')
-      suppressNextClickRef.current = false
-      return
-    }
-    const el = e.target?.closest ? e.target.closest('[data-token="1"]') : null
-    if (!el) {
-      console.log('🧹 [useTokenDrag] Clearing selection - clicked on background')
+    if (isBackgroundClick) {
       clearSelection()
-    } else {
-      console.log('⏭️ [useTokenDrag] Not clearing - clicked on token')
     }
   }
 
   return {
-    isDraggingRef,
-    wasDraggingRef,
-    tokenRefsRef,
-    handleMouseDownToken,
-    handleMouseEnterToken,
-    handleMouseMove,
-    handleMouseUp,
     handleBackgroundClick
   }
 }
-

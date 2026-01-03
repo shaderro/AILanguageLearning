@@ -23,7 +23,13 @@ const parseExplanation = (text) => {
           // 如果不是标准 JSON，尝试处理 Python 字典格式（单引号）
           // 使用更智能的方法：只替换键和字符串分隔符的单引号
           // 先尝试直接提取 explanation 字段的值（支持多行和转义字符）
-          const explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
+          // 🔧 修复：处理被截断的 JSON（缺少结束引号或右大括号）
+          // 先尝试完整匹配（有结束引号）
+          let explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
+          if (!explanationMatch) {
+            // 如果完整匹配失败，尝试匹配到字符串末尾（处理被截断的 JSON）
+            explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)(?:['"]\s*[,}]|$)/s)
+          }
           if (explanationMatch) {
             cleanText = explanationMatch[1]
               .replace(/\\n/g, '\n')  // 处理转义的换行符
@@ -36,10 +42,29 @@ const parseExplanation = (text) => {
               const parsed = JSON.parse(normalized)
               cleanText = parsed.explanation || parsed.definition || text
             } catch (e2) {
-              // 如果还是失败，使用原始文本
-              cleanText = text
+              // 如果还是失败，尝试从截断的 JSON 中提取 explanation 值
+              // 查找 "explanation": " 之后的所有内容（直到字符串结束或找到引号）
+              const truncatedMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*)/)
+              if (truncatedMatch) {
+                cleanText = truncatedMatch[1]
+                  .replace(/\\n/g, '\n')
+                  .replace(/\\'/g, "'")
+                  .replace(/\\"/g, '"')
+              } else {
+                // 如果还是失败，使用原始文本
+                cleanText = text
+              }
             }
           }
+        }
+      } else {
+        // 🔧 修复：如果没有找到完整的 JSON 对象（可能被截断），尝试直接提取 explanation 字段
+        const truncatedMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*)/)
+        if (truncatedMatch) {
+          cleanText = truncatedMatch[1]
+            .replace(/\\n/g, '\n')
+            .replace(/\\'/g, "'")
+            .replace(/\\"/g, '"')
         }
       }
     } catch (e) {

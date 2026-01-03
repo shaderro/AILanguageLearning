@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useMemo } from 'react'
+﻿import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
@@ -16,7 +16,21 @@ import { useTranslationDebug } from '../../contexts/TranslationDebugContext'
 function ArticleCanvas({ children }) {
   const { clearSelection } = useSelection()
   return (
-    <div className="flex-1 min-h-0 flex flex-col" onClick={() => clearSelection()}>
+    <div className="flex-1 min-h-0 flex flex-col" onClick={(e) => {
+      console.log('🖱️ [ArticleCanvas] onClick 被触发', {
+        target: e.target?.tagName,
+        currentTarget: e.currentTarget?.tagName,
+        targetClass: e.target?.className,
+        isTokenSpan: e.target?.closest('[data-token-id]') !== null
+      })
+      // 🔧 如果点击的是 token，不清除选择（让 TokenSpan 的 onClick 处理）
+      if (e.target?.closest('[data-token-id]') !== null) {
+        console.log('⏭️ [ArticleCanvas] 点击的是 token，跳过清除选择')
+        return
+      }
+      console.log('🧹 [ArticleCanvas] 清除选择')
+      clearSelection()
+    }}>
       {children}
     </div>
   )
@@ -37,6 +51,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   }
   const [targetSentenceId, setTargetSentenceId] = useState(getSentenceIdFromURL())
   
+  // 🔧 使用 useCallback 包装回调函数，避免 ArticleViewer 重新挂载
+  const handleTargetSentenceScrolled = useCallback(() => {
+    setTargetSentenceId(null)
+  }, [])
+  
   // 空白处清空选择逻辑已移至 ArticleCanvas（在 SelectionProvider 内部使用 useSelection）
   const [selectedTokens, setSelectedTokens] = useState([])
   const [quotedText, setQuotedText] = useState('')
@@ -51,32 +70,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
   const [hasSelectedSentence, setHasSelectedSentence] = useState(false)  // 新增：是否有选中的句子
 
-  // 🔧 初始化时从后端加载聊天历史（跨设备）
-  useEffect(() => {
-    const fetchHistory = async () => {
-      if (!articleId) return
-      try {
-        const resp = await apiService.getChatHistory({ textId: articleId, limit: 200 })
-        const items = resp?.data?.data?.items || []
-        if (!Array.isArray(items) || items.length === 0) return
-        console.log('💬 [ArticleChatView] Loaded chat history from backend:', {
-          count: items.length,
-          ids: items.map(m => m.id)
-        })
-        const mapped = items.map(m => ({
-          id: m.id,
-          text: m.text,
-          isUser: !!m.is_user,
-          quote: m.quote_text || '',
-          timestamp: new Date(m.created_at),
-        }))
-        window.chatViewMessagesRef = mapped
-      } catch (err) {
-        console.error('❌ [ArticleChatView] 加载聊天历史失败:', err)
-      }
-    }
-    fetchHistory()
-  }, [articleId])
+  // 🔧 修复：移除在这里设置全局 window.chatViewMessagesRef 的逻辑
+  // ChatView 组件会在 articleId 改变时自动从后端加载对应文章的历史记录
   
   // 获取asked tokens功能（统一在这里管理，避免多次调用）
   const { askedTokenKeys, isTokenAsked, markAsAsked, refreshAskedTokens } = useAskedTokens(articleId, 'default_user')
@@ -114,7 +109,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   // Sample text for the ArticleViewer
   const sampleText = isUploadMode ? '' : 'Sample text for demo'
 
-  const handleTokenSelect = async (tokenText, selectedSet, selectedTexts = [], context = null) => {
+  // 🔧 新增：跟踪是否正在处理，防止在处理过程中更新 session state
+  // 必须在 handleTokenSelect 之前定义，因为 handleTokenSelect 的依赖项中使用了 isProcessing
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  const handleTokenSelect = useCallback(async (tokenText, selectedSet, selectedTexts = [], context = null) => {
     console.log('🎯 [ArticleChatView] Token selection triggered:')
     console.log('  - Token text:', tokenText)
     console.log('  - Selected texts:', selectedTexts)
@@ -189,10 +188,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         console.error('❌ [ArticleChatView] Failed to clear backend token:', error)
       }
     }
-  }
-
-  // 🔧 新增：跟踪是否正在处理，防止在处理过程中更新 session state
-  const [isProcessing, setIsProcessing] = useState(false)
+  }, [articleId, hasSelectedToken, isProcessing, hasSelectedSentence, selectedSentence])
   
   const handleClearQuote = () => {
     console.log('🧹 [ArticleChatView] Clearing all selections and quotes')
@@ -212,7 +208,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }
 
-  const handleSentenceSelect = async (sentenceIndex, sentenceText, sentenceData) => {
+  const handleSentenceSelect = useCallback(async (sentenceIndex, sentenceText, sentenceData) => {
     console.log('📝 [ArticleChatView] Sentence selection triggered:')
     console.log('  - Sentence index:', sentenceIndex)
     console.log('  - Sentence text:', sentenceText)
@@ -296,7 +292,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       setHasSelectedSentence(false)
       setQuotedText('')
     }
-  }
+  }, [articleId, hasSelectedToken, selectedTokens, isProcessing])
 
   const handleUploadStart = (show = true) => {
     setShowUploadProgress(show)
@@ -454,33 +450,15 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   // 🔧 新增：处理 AI 详细解释请求（内部组件，可以使用 useChatEvent）
   const ArticleChatViewInner = () => {
     const { sendMessageToChat } = useChatEvent()
-    const { addLog } = useTranslationDebug()
     
-    const handleAskAI = async (token, sentenceIndex) => {
-      console.log('🔘 [ArticleChatView] handleAskAI 被调用', {
-        token,
-        sentenceIndex,
-        isProcessing,
-        tokenType: typeof token,
-        sentenceIndexType: typeof sentenceIndex
-      })
-      
+    const handleAskAI = useCallback(async (token, sentenceIndex) => {
       if (!token || sentenceIndex == null) {
-        const msg = '⚠️ [ArticleChatView] handleAskAI: 无效参数'
-        console.warn(msg, { token, sentenceIndex })
-        addLog('warning', msg, { token, sentenceIndex, isProcessing })
         return
       }
       
       if (isProcessing) {
-        const msg = '⚠️ [ArticleChatView] handleAskAI: 正在处理中，跳过'
-        console.warn(msg, { isProcessing })
-        addLog('warning', msg, { isProcessing })
         return
       }
-      
-      addLog('info', '🚀 [ArticleChatView] handleAskAI 开始', { token, sentenceIndex })
-      console.log('🚀 [ArticleChatView] handleAskAI 开始执行', { token, sentenceIndex })
       
       try {
         // 1. 获取文章数据以构建 context
@@ -489,17 +467,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         const sentence = sentences[sentenceIndex]
         
         if (!sentence) {
-          const msg = '❌ [ArticleChatView] handleAskAI: 找不到句子数据'
-          console.error(msg)
-          addLog('error', msg, { sentenceIndex, articleId, sentencesCount: sentences.length })
           return
         }
-        
-        addLog('info', '✅ [ArticleChatView] 找到句子数据', { 
-          sentenceIndex, 
-          sentenceId: sentenceIndex + 1,
-          tokensCount: sentence.tokens?.length || 0 
-        })
         
         // 2. 构建 context
         const tokenText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
@@ -512,17 +481,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         })
         
         if (tokenIndex === -1) {
-          const msg = '❌ [ArticleChatView] handleAskAI: 在句子中找不到对应的 token'
-          console.error(msg)
-          addLog('error', msg, { tokenText, sentenceTokens: sentenceTokens.length })
           return
         }
-        
-        addLog('info', '✅ [ArticleChatView] 找到 token', { 
-          tokenText, 
-          tokenIndex,
-          sentenceTokenId: tokenIndex + 1 
-        })
         
         // 获取 token 对象，确保有正确的字段
         const tokenObj = typeof sentenceTokens[tokenIndex] === 'string' 
@@ -549,52 +509,21 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           selectedTexts: [tokenText]
         }
         
-        addLog('info', '🔍 [ArticleChatView] handleAskAI context 构建完成', {
-          tokenText,
-          tokenObj: {
-            token_body: tokenObj.token_body,
-            sentence_token_id: tokenObj.sentence_token_id,
-            global_token_id: tokenObj.global_token_id
-          },
-          tokenIndex,
-          sentenceId: sentenceIndex + 1,
-          textId: articleId,
-          contextTokens: context.tokens.map(t => ({
-            token_body: t.token_body,
-            sentence_token_id: t.sentence_token_id,
-            global_token_id: t.global_token_id
-          }))
-        })
-        
         // 3. 选择 token（这会更新 session state）
-        addLog('info', '📤 [ArticleChatView] 开始选择 token', { tokenText })
         await handleTokenSelect(tokenText, new Set([tokenText]), [tokenText], context)
-        addLog('success', '✅ [ArticleChatView] Token 选择完成', { tokenText })
         
         // 4. 等待 session state 更新完成（给更多时间确保后端已更新）
-        addLog('info', '⏳ [ArticleChatView] 等待 session state 更新...')
         await new Promise(resolve => setTimeout(resolve, 300))
         
         // 5. 更新 currentContext 以确保 ChatView 使用最新的 context
         setCurrentContext(context)
-        addLog('info', '✅ [ArticleChatView] currentContext 已更新')
         
         // 6. 发送消息"这个词是什么意思?"，同时传递 context
-        addLog('info', '📤 [ArticleChatView] 准备发送消息到 ChatView', {
-          message: '这个词是什么意思?',
-          quotedText: tokenText
-        })
         sendMessageToChat('这个词是什么意思?', tokenText, context)
-        addLog('success', '✅ [ArticleChatView] 消息已发送到 ChatView', {
-          message: '这个词是什么意思?',
-          quotedText: tokenText
-        })
       } catch (error) {
-        const msg = '❌ [ArticleChatView] handleAskAI 失败'
-        console.error(msg, error)
-        addLog('error', msg, { error: error.message, stack: error.stack })
+        // 静默处理错误
       }
-    }
+    }, [articleId, isProcessing, handleTokenSelect, setCurrentContext, sendMessageToChat])
     
     return (
       <>
@@ -649,6 +578,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                 {/* Article View */}
                 <ArticleCanvas>
                   <ArticleViewer 
+                    key={`article-viewer-${articleId}`}
                     articleId={articleId} 
                     onTokenSelect={handleTokenSelect}
                     isTokenAsked={isTokenAsked}
@@ -657,7 +587,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                     setNotationContent={setNotationContent}
                     onSentenceSelect={handleSentenceSelect}
                     targetSentenceId={targetSentenceId}
-                    onTargetSentenceScrolled={() => setTargetSentenceId(null)}
+                    onTargetSentenceScrolled={handleTargetSentenceScrolled}
                     onAskAI={handleAskAI}
                   />
                 </ArticleCanvas>
