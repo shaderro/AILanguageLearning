@@ -7,7 +7,18 @@ from assistants.utility import parse_json_from_text
 
 class SubAssistant:
     def __init__(self, sys_prompt, max_tokens, parse_json):
-        self.client = OpenAI(api_key="sk-4035e2a8e00b48c2a335b8cadbd98979", base_url="https://api.deepseek.com")
+        # 从统一配置模块导入 API Key
+        try:
+            from backend.config import OPENAI_API_KEY
+            api_key = OPENAI_API_KEY
+        except ImportError:
+            # 如果导入失败，直接从环境变量读取（向后兼容）
+            import os
+            api_key = os.getenv("OPENAI_API_KEY")
+        
+        if not api_key:
+            raise ValueError("⚠️ OPENAI_API_KEY 环境变量未设置！请在 .env 文件中设置 OPENAI_API_KEY")
+        self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
         self.sys_prompt = sys_prompt
         self.max_tokens = max_tokens
         self.parse_json = parse_json

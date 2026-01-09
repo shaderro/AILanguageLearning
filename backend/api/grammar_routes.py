@@ -39,7 +39,16 @@ def get_db_session():
     - 失败时自动 rollback
     - 请求结束时自动 close
     """
-    db_manager = DatabaseManager('development')
+    # 从环境变量读取环境配置
+    try:
+        from backend.config import ENV
+        environment = ENV
+    except ImportError:
+        # 如果导入失败，直接从环境变量读取（向后兼容）
+        import os
+        environment = os.getenv("ENV", "development")
+    
+    db_manager = DatabaseManager(environment)
     session = db_manager.get_session()
     print(f"[DEBUG] Created session, engine URL: {db_manager.get_engine().url}")
     try:

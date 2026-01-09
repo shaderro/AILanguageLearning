@@ -7,8 +7,16 @@ from typing import Optional
 import bcrypt
 from jose import JWTError, jwt
 
+# 从统一配置模块导入
+try:
+    from backend.config import JWT_SECRET
+    SECRET_KEY = JWT_SECRET or "your-secret-key-change-in-production"
+except ImportError:
+    # 如果导入失败，直接从环境变量读取（向后兼容）
+    import os
+    SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+
 # JWT 配置
-SECRET_KEY = "your-secret-key-change-in-production"  # ⚠️ 生产环境需要改为环境变量
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7天
 

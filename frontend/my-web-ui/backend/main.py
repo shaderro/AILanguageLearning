@@ -292,14 +292,36 @@ def _derive_language_context(sentence_data: dict):
 # 创建FastAPI应用
 app = FastAPI(title="AI Language Learning API", version="1.0.0")
 
-# 添加CORS中间件
+# ==================== CORS 配置（白名单模式）====================
+# ⚠️ 安全：只允许指定的前端域名访问，防止其他网站调用你的 API
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",      # Vite 开发服务器（默认端口）
+    "http://127.0.0.1:5173",       # 本地回环地址
+    "http://localhost:5174",       # Vite 备用端口
+    "http://127.0.0.1:5174",       # 本地回环地址（备用）
+    # 生产环境域名（部署时取消注释并填写实际域名）
+    # "https://your-frontend-domain.com",
+]
+
+# 添加CORS中间件（白名单模式）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,  # ✅ 只允许白名单中的域名
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# ==================== Rate Limit 中间件 ====================
+# ⚠️ 安全：限制 API 调用频率，防止滥用（特别是 AI 接口）
+try:
+    from backend.middleware.rate_limit import rate_limit_middleware
+    app.middleware("http")(rate_limit_middleware)
+    print("[OK] Rate limit 中间件已启用")
+    print("   - /api/chat: 每个用户每分钟最多 20 次请求")
+    print("   - 其他接口: 每个用户每分钟最多 100 次请求")
+except ImportError as e:
+    print(f"[WARN] Rate limit 中间件加载失败: {e}")
 
 # 添加请求日志中间件（用于调试）
 @app.middleware("http")

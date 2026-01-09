@@ -26,6 +26,7 @@ tqdm==4.67.1
 typing-inspection==0.4.1
 typing_extensions==4.14.0
 urllib3==2.5.0
+python-dotenv>=1.0.0  # 环境变量管理（用于加载 .env 文件）
 # HTML 提取依赖（可选，按优先级排序）
 trafilatura>=1.6.0  # 推荐：最好的 HTML 正文提取库
 readability-lxml>=0.8.1  # Fallback 1：基于 readability 的提取

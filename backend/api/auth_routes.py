@@ -27,7 +27,16 @@ from backend.utils.auth import (
 
 def get_db_session():
     """获取数据库 Session"""
-    db_manager = DatabaseManager('development')
+    # 从环境变量读取环境配置
+    try:
+        from backend.config import ENV
+        environment = ENV
+    except ImportError:
+        # 如果导入失败，直接从环境变量读取（向后兼容）
+        import os
+        environment = os.getenv("ENV", "development")
+    
+    db_manager = DatabaseManager(environment)
     session = db_manager.get_session()
     try:
         yield session

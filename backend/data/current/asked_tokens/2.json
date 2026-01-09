@@ -1510,5 +1510,32 @@
     "type": "sentence",
     "vocab_id": null,
     "grammar_id": 22
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763901274,
+    "sentence_id": 1,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 21
+  },
+  {
+    "user_id": 2,
+    "text_id": "1763901274",
+    "sentence_id": 2,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 21
+  },
+  {
+    "user_id": 2,
+    "text_id": 1763901274,
+    "sentence_id": 6,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 21
   }
 ]

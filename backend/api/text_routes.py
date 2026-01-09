@@ -5,8 +5,10 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 # 导入数据库管理器
 from database_system.database_manager import DatabaseManager
@@ -41,7 +43,16 @@ def get_db_session():
     - 失败时自动 rollback
     - 请求结束时自动 close
     """
-    db_manager = DatabaseManager('development')
+    # 从环境变量读取环境配置
+    try:
+        from backend.config import ENV
+        environment = ENV
+    except ImportError:
+        # 如果导入失败，直接从环境变量读取（向后兼容）
+        import os
+        environment = os.getenv("ENV", "development")
+    
+    db_manager = DatabaseManager(environment)
     session = db_manager.get_session()
     try:
         yield session
@@ -129,17 +140,35 @@ async def get_all_texts(
         from sqlalchemy import func
         
         # 直接使用数据库查询，支持语言过滤
-        query = session.query(OriginalText).filter(OriginalText.user_id == current_user.user_id)
+        # 🔧 使用 LEFT JOIN 获取最后打开时间，按最后打开时间排序（最新的在前）
+        from database_system.business_logic.models import UserArticleAccess
+        
+        query = session.query(
+            OriginalText,
+            UserArticleAccess.last_opened_at.label('last_opened_at')
+        ).outerjoin(
+            UserArticleAccess,
+            (UserArticleAccess.text_id == OriginalText.text_id) & 
+            (UserArticleAccess.user_id == current_user.user_id)
+        ).filter(OriginalText.user_id == current_user.user_id)
         
         # 语言过滤
         if language and language != 'all':
             query = query.filter(OriginalText.language == language)
         
-        text_models = query.all()
+        # 🔧 按最后打开时间排序（最新的在前），如果从未打开过，则按创建时间排序（最新的在前）
+        query = query.order_by(
+            func.coalesce(UserArticleAccess.last_opened_at, OriginalText.created_at).desc()
+        )
+        
+        results = query.all()
         
         # 为每篇文章计算句子数和token数
         texts_with_stats = []
-        for t in text_models:
+        for result in results:
+            # result 是 (OriginalText, last_opened_at) 元组
+            t = result[0] if isinstance(result, tuple) else result
+            last_opened_at = result[1] if isinstance(result, tuple) and len(result) > 1 else None
             # 使用SQL查询统计句子数
             sentence_count = session.query(func.count(Sentence.id)).filter(
                 Sentence.text_id == t.text_id
@@ -158,6 +187,7 @@ async def get_all_texts(
                 "total_sentences": sentence_count,
                 "total_tokens": token_count,
                 "sentence_count": sentence_count,  # 保持向后兼容
+                "last_opened_at": last_opened_at.isoformat() if last_opened_at else None,  # 🔧 添加最后打开时间
                 "sentences": [
                     {
                         "sentence_id": s.sentence_id,
@@ -179,6 +209,67 @@ async def get_all_texts(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/{text_id}/access", summary="记录文章访问（更新最后打开时间）")
+async def record_article_access(
+    text_id: int,
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    记录用户打开文章（更新最后打开时间，用于跨设备排序）
+    
+    - **text_id**: 文章ID
+    
+    需要认证：是
+    """
+    try:
+        from database_system.business_logic.models import UserArticleAccess
+        
+        # 验证文章是否存在且属于当前用户
+        text_model = session.query(OriginalText).filter(
+            OriginalText.text_id == text_id,
+            OriginalText.user_id == current_user.user_id
+        ).first()
+        
+        if not text_model:
+            raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+        
+        # 查找或创建访问记录
+        access = session.query(UserArticleAccess).filter(
+            UserArticleAccess.user_id == current_user.user_id,
+            UserArticleAccess.text_id == text_id
+        ).first()
+        
+        if access:
+            # 更新最后打开时间
+            access.last_opened_at = datetime.now()
+            access.updated_at = datetime.now()
+        else:
+            # 创建新记录
+            access = UserArticleAccess(
+                user_id=current_user.user_id,
+                text_id=text_id,
+                last_opened_at=datetime.now()
+            )
+            session.add(access)
+        
+        session.commit()
+        
+        return {
+            "success": True,
+            "message": "Article access recorded",
+            "data": {
+                "text_id": text_id,
+                "last_opened_at": access.last_opened_at.isoformat()
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{text_id}", summary="获取单个文章")
 async def get_text(
     text_id: int,
@@ -196,6 +287,31 @@ async def get_text(
     """
     try:
         print(f"[API] Getting text {text_id}, include_sentences={include_sentences}, user_id={current_user.user_id}")
+        
+        # 🔧 记录文章访问（异步，不阻塞）
+        try:
+            from database_system.business_logic.models import UserArticleAccess
+            
+            access = session.query(UserArticleAccess).filter(
+                UserArticleAccess.user_id == current_user.user_id,
+                UserArticleAccess.text_id == text_id
+            ).first()
+            
+            if access:
+                access.last_opened_at = datetime.now()
+                access.updated_at = datetime.now()
+            else:
+                access = UserArticleAccess(
+                    user_id=current_user.user_id,
+                    text_id=text_id,
+                    last_opened_at=datetime.now()
+                )
+                session.add(access)
+            session.commit()
+        except Exception as e:
+            print(f"⚠️ [API] 记录文章访问失败: {e}")
+            session.rollback()
+            # 不抛出异常，继续处理文章获取
         
         # 先验证文章是否存在且属于当前用户
         text_model = session.query(OriginalText).filter(
