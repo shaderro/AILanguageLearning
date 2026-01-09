@@ -2,6 +2,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .data_storage.config.config import DATABASE_CONFIG, DB_FILES
+import os
 
 class DatabaseManager:
     def __init__(self, environment: str = 'development'):
@@ -14,17 +15,56 @@ class DatabaseManager:
 
     def get_engine(self):
         if self._engine is None:
-            db_path = DB_FILES['dev' if self.environment == 'development' else (
-                'test' if self.environment == 'testing' else 'prod'
-            )]
-            Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-            self._engine = create_engine(self.database_url, echo=False, future=True)
+            # 检查是否是 PostgreSQL（云平台）
+            is_postgres = (self.database_url.startswith('postgresql://') or 
+                          self.database_url.startswith('postgresql+psycopg2://') or
+                          self.database_url.startswith('postgres://'))
+            
+            if is_postgres:
+                # PostgreSQL 配置（云平台）
+                # 使用连接池优化性能
+                self._engine = create_engine(
+                    self.database_url,
+                    echo=False,
+                    future=True,
+                    pool_size=5,  # 连接池大小
+                    max_overflow=10,  # 最大溢出连接
+                    pool_pre_ping=True,  # 连接前检查（重要：避免连接超时）
+                    pool_recycle=3600,  # 1小时后回收连接
+                    connect_args={
+                        "connect_timeout": 10,  # 连接超时 10 秒
+                    }
+                )
+                print(f"[OK] 创建 PostgreSQL 数据库引擎（环境: {self.environment}）")
+            else:
+                # SQLite 配置（本地开发）
+                db_path = DB_FILES.get(
+                    'dev' if self.environment == 'development' else (
+                        'test' if self.environment == 'testing' else 'prod'
+                    ),
+                    None
+                )
+                if db_path:
+                    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+                    print(f"[OK] 创建 SQLite 数据库引擎（环境: {self.environment}, 路径: {db_path}）")
+                else:
+                    print(f"[OK] 创建 SQLite 数据库引擎（环境: {self.environment}）")
+                self._engine = create_engine(
+                    self.database_url,
+                    echo=False,
+                    future=True
+                )
         return self._engine
 
     def get_session(self):
         if self._Session is None:
             engine = self.get_engine()
-            self._Session = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+            self._Session = sessionmaker(
+                bind=engine,
+                autoflush=False,
+                autocommit=False,
+                future=True
+            )
         return self._Session()
 
 
