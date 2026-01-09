@@ -1,0 +1,13 @@
+# ===== Python =====
+__pycache__/
+*.pyc
+
+# ===== Databases =====
+*.db
+
+# ===== Environment variables =====
+.env
+
+# ===== OS junk =====
+.DS_Store
+._*
