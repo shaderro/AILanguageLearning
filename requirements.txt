@@ -1,6 +1,8 @@
 # Web 框架和服务器
 fastapi>=0.104.0  # FastAPI Web 框架
 uvicorn[standard]>=0.24.0  # ASGI 服务器（用于运行 FastAPI）
+python-multipart>=0.0.6  # 用于处理表单数据和文件上传（Form, File, UploadFile）
+python-jose[cryptography]>=3.3.0  # JWT 认证（用于 auth_routes 等）
 
 # 数据库相关
 sqlalchemy>=2.0.0  # SQL ORM 框架
