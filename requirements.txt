@@ -1,3 +1,12 @@
+# Web 框架和服务器
+fastapi>=0.104.0  # FastAPI Web 框架
+uvicorn[standard]>=0.24.0  # ASGI 服务器（用于运行 FastAPI）
+
+# 数据库相关
+sqlalchemy>=2.0.0  # SQL ORM 框架
+psycopg2-binary>=2.9.9  # PostgreSQL 驱动（用于云平台 PostgreSQL）
+
+# 基础依赖
 annotated-types==0.7.0
 anyio==4.9.0
 bcrypt==4.2.1
@@ -13,8 +22,6 @@ httpx==0.28.1
 idna==3.10
 jieba==0.42.1
 jiter==0.10.0
-Kivy==2.3.1
-Kivy-Garden==0.1.5
 openai==1.84.0
 pydantic==2.11.5
 pydantic_core==2.33.2
@@ -27,6 +34,7 @@ typing-inspection==0.4.1
 typing_extensions==4.14.0
 urllib3==2.5.0
 python-dotenv>=1.0.0  # 环境变量管理（用于加载 .env 文件）
+
 # HTML 提取依赖（可选，按优先级排序）
 trafilatura>=1.6.0  # 推荐：最好的 HTML 正文提取库
 readability-lxml>=0.8.1  # Fallback 1：基于 readability 的提取

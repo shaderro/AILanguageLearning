@@ -9,9 +9,6 @@
 ### Backend 后端 (`backend/`)
 包含所有后端功能模块，提供AI助手、数据管理和预处理服务。
 
-### Legacy UI 旧版界面 (`legacy-ui/`)
-基于Kivy框架的旧版用户界面，包含完整的语言学习功能。
-
 ### Frontend 前端 (`frontend/`)
 新的前端开发目录，支持Web、移动端和桌面端开发。
 
@@ -77,11 +74,7 @@ langApp514/
 │   ├── data/                     # 数据文件
 │   ├── main.py                   # 主程序入口
 │   └── integrated_language_system.py
-├── legacy-ui/                    # 旧版Kivy界面
-│   ├── ui/                       # Kivy UI组件
-│   ├── LangUI/                   # 语言学习UI组件
-│   └── run_main_ui.py            # UI启动文件
-├── frontend/                     # 新版前端开发
+├── frontend/                     # 前端开发
 │   └── README.md                 # 前端开发指南
 ├── requirements.txt              # 依赖包
 └── README.md                     # 项目说明
@@ -97,12 +90,6 @@ langApp514/
 ```bash
 cd backend
 python main.py
-```
-
-### 运行旧版UI
-```bash
-cd legacy-ui
-python run_main_ui.py
 ```
 
 ### 基本使用示例
