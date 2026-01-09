@@ -323,6 +323,66 @@ try:
 except ImportError as e:
     print(f"[WARN] Rate limit 中间件加载失败: {e}")
 
+# ==================== 数据库初始化（应用启动时）====================
+@app.on_event("startup")
+async def startup_event():
+    """应用启动时自动初始化数据库表结构"""
+    try:
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import Base
+        from backend.config import ENV
+        
+        print("\n" + "="*60)
+        print("🔧 初始化数据库表结构...")
+        print("="*60)
+        
+        # 获取数据库管理器
+        db_manager = DatabaseManager(ENV)
+        engine = db_manager.get_engine()
+        
+        # 检查是否是 PostgreSQL
+        database_url = db_manager.database_url
+        is_postgres = (database_url.startswith('postgresql://') or 
+                      database_url.startswith('postgresql+psycopg2://') or
+                      database_url.startswith('postgres://'))
+        
+        if is_postgres:
+            print("📊 检测到 PostgreSQL 数据库")
+            # 检查表是否已存在
+            from sqlalchemy import inspect
+            inspector = inspect(engine)
+            existing_tables = inspector.get_table_names()
+            
+            if existing_tables:
+                print(f"✅ 数据库表已存在 ({len(existing_tables)} 个表)")
+                for table in sorted(existing_tables):
+                    print(f"   - {table}")
+            else:
+                print("📋 创建数据库表结构...")
+                Base.metadata.create_all(engine)
+                print("✅ 数据库表创建完成")
+                
+                # 显示创建的表
+                inspector = inspect(engine)
+                new_tables = inspector.get_table_names()
+                print(f"✅ 共创建 {len(new_tables)} 个表:")
+                for table in sorted(new_tables):
+                    columns = inspector.get_columns(table)
+                    print(f"   - {table} ({len(columns)} 列)")
+        else:
+            print("📊 检测到 SQLite 数据库")
+            # SQLite: 确保表结构存在
+            Base.metadata.create_all(engine)
+            print("✅ SQLite 数据库表已初始化")
+        
+        print("="*60 + "\n")
+        
+    except Exception as e:
+        print(f"⚠️ 数据库初始化失败: {e}")
+        import traceback
+        traceback.print_exc()
+        print("⚠️ 应用将继续启动，但数据库功能可能不可用")
+
 # 添加请求日志中间件（用于调试）
 @app.middleware("http")
 async def log_requests(request, call_next):
