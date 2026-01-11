@@ -44,6 +44,13 @@ except ImportError as e:
 # 导入 asked tokens manager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
 
+# 导入环境配置
+try:
+    from backend.config import ENV
+except ImportError:
+    import os
+    ENV = os.getenv("ENV", "development")
+
 # 文章长度限制（字符数）
 MAX_ARTICLE_LENGTH = 5000
 
@@ -464,7 +471,7 @@ async def debug_db_info():
     import sqlite3
     import os
     
-    db_manager = DatabaseManager('development')
+    db_manager = DatabaseManager(ENV)
     engine = db_manager.get_engine()
     db_url = str(engine.url)
     
@@ -590,7 +597,7 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
         from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import User
         
-        db_manager = DatabaseManager('development')
+        db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -823,7 +830,7 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
         try:
             from database_system.database_manager import DatabaseManager
             from database_system.business_logic.models import OriginalText
-            db_manager = DatabaseManager('development')
+            db_manager = DatabaseManager(ENV)
             session = db_manager.get_session()
             try:
                 text_model = session.query(OriginalText).filter(
@@ -1018,7 +1025,7 @@ def _sync_to_database(user_id: int = None):
         from database_system.database_manager import DatabaseManager
         from backend.data_managers import GrammarRuleManagerDB, VocabManagerDB
         
-        db_manager = DatabaseManager('development')
+        db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -1380,7 +1387,7 @@ async def chat_with_assistant(
                         try:
                             from database_system.database_manager import DatabaseManager
                             from database_system.business_logic.models import VocabExpression
-                            db_manager = DatabaseManager('development')
+                            db_manager = DatabaseManager(ENV)
                             session = db_manager.get_session()
                             try:
                                 vocab_model = session.query(VocabExpression).filter(
@@ -1531,7 +1538,7 @@ async def get_vocab_example_by_location(
         from database_system.business_logic.models import VocabExpressionExample, OriginalText
         from backend.adapters import VocabExampleAdapter
         
-        db_manager = DatabaseManager('development')
+        db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -1868,7 +1875,7 @@ async def upload_file(
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
         from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
-        db_manager = DatabaseManager('development')
+        db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         try:
             # 创建文章记录（状态为"processing"）
@@ -1997,7 +2004,7 @@ async def upload_url(
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
         from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
-        db_manager = DatabaseManager('development')
+        db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         try:
             # 创建文章记录（状态为"processing"）
@@ -2183,7 +2190,7 @@ async def upload_text(
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
         from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
-        db_manager = DatabaseManager('development')
+        db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         try:
             # 创建文章记录（状态为"processing"）
