@@ -39,8 +39,8 @@ python -m pip --version
 
 **Windows PowerShell：**
 ```powershell
-$env:JWT_SECRET="g7OSIbi12WrTCvcKHxqGmDzdReXtNyZV4uP9M5kB3sUjwnhaAJolQYp6EFL08f"
-$env:OPENAI_API_KEY="sk-4035e2a8e00b48c2a335b8cadbd98979"
+$env:JWT_SECRET="your-secret-key-here"
+$env:OPENAI_API_KEY="sk-your-api-key-here"
 $env:ENV="development"
 ```
 

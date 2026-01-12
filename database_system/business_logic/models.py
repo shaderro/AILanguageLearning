@@ -308,6 +308,26 @@ class GrammarNotation(Base):
     grammar_rule = relationship('GrammarRule', backref='notations')
     text = relationship('OriginalText', backref='grammar_notations')
 
+class UserArticleAccess(Base):
+    """用户文章访问记录（用于记录最后打开时间，支持跨设备排序）"""
+    __tablename__ = 'user_article_access'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False, index=True)
+    last_opened_at = Column(DateTime, default=datetime.now, nullable=False)  # 最后打开时间
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+    
+    __table_args__ = (
+        UniqueConstraint('user_id', 'text_id', name='uq_user_article_access'),
+    )
+    
+    # 关联关系
+    user = relationship('User', backref='article_accesses')
+    text = relationship('OriginalText', backref='user_accesses')
+
+
 class User(Base):
     __tablename__ = 'users'
     

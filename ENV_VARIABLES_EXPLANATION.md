@@ -78,8 +78,8 @@ DATABASE_URL=mysql://user:password@localhost:3306/mydb
 你的 `.env` 文件应该类似这样：
 
 ```env
-JWT_SECRET=g7OSIbi12WrTCvcKHxqGmDzdReXtNyZV4uP9M5kB3sUjwnhaAJolQYp6EFL08f
-OPENAI_API_KEY=sk-4035e2a8e00b48c2a335b8cadbd98979
+JWT_SECRET=your-secret-key-here
+OPENAI_API_KEY=sk-your-api-key-here
 ENV=development
 # DATABASE_URL=  # 可选，不设置会使用默认值
 ```

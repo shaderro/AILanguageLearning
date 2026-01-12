@@ -98,7 +98,7 @@ ENV=development
 from backend.config import JWT_SECRET, OPENAI_API_KEY, ENV
 
 # ❌ 错误：硬编码在代码中
-SECRET_KEY = "sk-4035e2a8e00b48c2a335b8cadbd98979"  # 绝对不要这样做！
+SECRET_KEY = "sk-your-api-key-here"  # 绝对不要这样做！
 ```
 
 ## 🔍 检查清单
@@ -122,7 +122,7 @@ SECRET_KEY = "sk-4035e2a8e00b48c2a335b8cadbd98979"  # 绝对不要这样做！
    - ✅ 现在：从 `JWT_SECRET` 环境变量读取
 
 2. **`backend/assistants/sub_assistants/sub_assistant.py`**
-   - ❌ 之前：`api_key="sk-4035e2a8e00b48c2a335b8cadbd98979"`
+   - ❌ 之前：`api_key="sk-your-api-key-here"`（硬编码）
    - ✅ 现在：从 `OPENAI_API_KEY` 环境变量读取
 
 3. **`backend/api/text_routes.py`**

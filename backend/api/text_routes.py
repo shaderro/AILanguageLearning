@@ -166,9 +166,10 @@ async def get_all_texts(
         # 为每篇文章计算句子数和token数
         texts_with_stats = []
         for result in results:
-            # result 是 (OriginalText, last_opened_at) 元组
-            t = result[0] if isinstance(result, tuple) else result
-            last_opened_at = result[1] if isinstance(result, tuple) and len(result) > 1 else None
+            # result 是 Row 对象，包含 (OriginalText, last_opened_at)
+            # 使用索引访问：result[0] 是 OriginalText 对象，result[1] 是 last_opened_at
+            t = result[0]  # OriginalText 对象
+            last_opened_at = result[1] if len(result) > 1 else None
             # 使用SQL查询统计句子数
             sentence_count = session.query(func.count(Sentence.id)).filter(
                 Sentence.text_id == t.text_id
@@ -194,8 +195,8 @@ async def get_all_texts(
                         "sentence_body": s.sentence_body,
                         "difficulty_level": s.sentence_difficulty_level
                     }
-                    for s in t.text_by_sentence
-                ] if include_sentences and hasattr(t, 'text_by_sentence') else []
+                    for s in (t.sentences if hasattr(t, 'sentences') else [])
+                ] if include_sentences and hasattr(t, 'sentences') else []
             })
         
         return {
@@ -206,6 +207,9 @@ async def get_all_texts(
             }
         }
     except Exception as e:
+        print(f"[ERROR] Failed to get all texts: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -330,8 +334,8 @@ async def get_text(
             print(f"[API] Text {text_id} not found")
             raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
         
-        # 🔧 安全处理 text_by_sentence（可能为 None 或空列表）
-        text_by_sentence = text.text_by_sentence if text.text_by_sentence else []
+        # 🔧 安全处理 sentences（可能为 None 或空列表）
+        text_by_sentence = text.sentences if hasattr(text, 'sentences') and text.sentences else []
         sentence_count = len(text_by_sentence) if text_by_sentence else 0
         
         print(f"[API] Found text {text_id}: {text.text_title}, sentences: {sentence_count}")
@@ -447,7 +451,7 @@ async def create_text(
                 "text_id": text.text_id,
                 "text_title": text.text_title,
                 "language": text.language,
-                "sentence_count": len(text.text_by_sentence)
+                "sentence_count": len(text.sentences) if hasattr(text, 'sentences') and text.sentences else 0
             }
         }
     except Exception as e:

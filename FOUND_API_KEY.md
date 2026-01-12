@@ -2,11 +2,9 @@
 
 ## 之前硬编码的 API Key
 
-从 Git 历史记录中找到了之前硬编码在代码中的 API Key：
+从 Git 历史记录中找到了之前硬编码在代码中的 API Key。
 
-```
-sk-4035e2a8e00b48c2a335b8cadbd98979
-```
+**⚠️ 注意：实际 API Key 已从本文档中移除，现在只存储在 .env 文件中（不提交到 Git）。**
 
 ### 位置
 - **文件**：`backend/assistants/sub_assistants/sub_assistant.py`（已修复）
@@ -27,9 +25,9 @@ sk-4035e2a8e00b48c2a335b8cadbd98979
    OPENAI_API_KEY=sk-your-api-key-here
    ```
 
-3. 替换为：
+3. 替换为您的实际 API Key：
    ```
-   OPENAI_API_KEY=sk-4035e2a8e00b48c2a335b8cadbd98979
+   OPENAI_API_KEY=sk-your-api-key-here
    ```
 
 4. 保存文件（Ctrl+S）
