@@ -501,6 +501,20 @@ async def debug_db_info():
     
     return info
 
+@app.get("/api/db-test")
+async def db_test():
+    """数据库连接测试接口"""
+    from database_system.database_manager import DatabaseManager
+    from sqlalchemy import text
+    
+    db_manager = DatabaseManager(ENV)
+    session = db_manager.get_session()
+    try:
+        result = session.execute(text("SELECT 1")).fetchone()
+        return {"db_ok": True, "result": result[0]}
+    finally:
+        session.close()
+
 # ==================== Session Management API ====================
 # 这些API原本在server_frontend_mock.py中，现在添加到主服务器以支持前端功能
 
