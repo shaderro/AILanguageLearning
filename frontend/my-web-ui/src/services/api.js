@@ -18,7 +18,8 @@ function getApiTarget() {
   return 'db'; // 默认使用数据库模式
 }
 const API_TARGET = getApiTarget();
-const BASE_URL = "http://localhost:8000";  // 统一使用8000端口（mock和db都在8000）
+// 从环境变量获取 API 基础 URL，默认使用 localhost:8000（本地开发）
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 // 创建 axios 实例
 const api = axios.create({

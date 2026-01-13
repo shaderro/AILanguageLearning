@@ -299,24 +299,27 @@ def _derive_language_context(sentence_data: dict):
 # 创建FastAPI应用
 app = FastAPI(title="AI Language Learning API", version="1.0.0")
 
-# ==================== CORS 配置（白名单模式）====================
-# ⚠️ 安全：只允许指定的前端域名访问，防止其他网站调用你的 API
-ALLOWED_ORIGINS = [
-    "http://localhost:5173",      # Vite 开发服务器（默认端口）
-    "http://127.0.0.1:5173",       # 本地回环地址
-    "http://localhost:5174",       # Vite 备用端口
-    "http://127.0.0.1:5174",       # 本地回环地址（备用）
-    # 生产环境域名（部署时取消注释并填写实际域名）
-    # "https://your-frontend-domain.com",
-]
+# ==================== CORS 配置 =====================
+# MVP 阶段：允许所有来源（方便开发和测试）
+# 后续生产环境：应收紧为指定域名列表，提高安全性
+#
+# 推荐的生产环境配置（取消注释并修改）：
+# ALLOWED_ORIGINS = [
+#     "https://your-frontend-domain.vercel.app",  # Vercel 生产环境
+#     "https://your-frontend-domain.com",            # 自定义域名（如果有）
+#     "http://localhost:5173",                       # 本地开发（可选）
+#     "http://127.0.0.1:5173",                      # 本地开发（可选）
+# ]
+# 
+# 然后修改下面的 allow_origins=ALLOWED_ORIGINS
 
-# 添加CORS中间件（白名单模式）
+# MVP 阶段：允许所有来源
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,  # ✅ 只允许白名单中的域名
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # MVP 阶段：允许所有来源（Vercel 前端可正常访问）
+    allow_credentials=True,  # 允许携带认证信息（Cookie、Authorization header）
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # 允许的 HTTP 方法
+    allow_headers=["*"],  # 允许所有请求头（包括 Authorization、Content-Type 等）
 )
 
 # ==================== Rate Limit 中间件 ====================
