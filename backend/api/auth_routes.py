@@ -4,7 +4,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -46,6 +46,24 @@ def get_db_session():
         raise e
     finally:
         session.close()
+
+
+# SessionLocal 用于临时调试接口
+def _get_session_local():
+    """创建 SessionLocal（用于临时调试接口）"""
+    try:
+        from backend.config import ENV
+        environment = ENV
+    except ImportError:
+        import os
+        environment = os.getenv("ENV", "development")
+    
+    db_manager = DatabaseManager(environment)
+    engine = db_manager.get_engine()
+    SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+    return SessionLocal
+
+SessionLocal = _get_session_local()
 
 
 # HTTP Bearer token 认证
@@ -521,4 +539,18 @@ async def get_all_users_debug(session: Session = Depends(get_db_session)):
             "count": len(users)
         }
     }
+
+
+@router.get("/debug/users")
+def debug_users():
+    """临时调试接口：验证 PostgreSQL 数据"""
+    db = SessionLocal()
+    try:
+        users = db.query(User).all()
+        return [
+            {"id": u.user_id, "email": u.email}
+            for u in users
+        ]
+    finally:
+        db.close()
 
