@@ -704,8 +704,19 @@ export const apiService = {
   // 获取聊天历史（跨设备）
   getChatHistory: ({ textId = null, sentenceId = null, userId = null, limit = 100, offset = 0 } = {}) => {
     const params = {}
-    if (textId != null) params.text_id = textId
-    if (sentenceId != null) params.sentence_id = sentenceId
+    // 🔧 确保 textId 和 sentenceId 是整数类型（如果提供）
+    if (textId != null) {
+      const textIdInt = parseInt(textId)
+      if (!isNaN(textIdInt)) {
+        params.text_id = textIdInt
+      }
+    }
+    if (sentenceId != null) {
+      const sentenceIdInt = parseInt(sentenceId)
+      if (!isNaN(sentenceIdInt)) {
+        params.sentence_id = sentenceIdInt
+      }
+    }
     if (userId != null) params.user_id = userId
     params.limit = limit
     params.offset = offset
