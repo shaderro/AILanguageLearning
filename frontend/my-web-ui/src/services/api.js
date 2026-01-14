@@ -527,19 +527,15 @@ export const apiService = {
       if (API_TARGET === 'mock') {
         return api.get(`/api/articles/${id}`);
       } else {
-        // 数据库模式：优先尝试 v2 API，失败则回退到文件系统
+        // 数据库模式：只使用 v2 API（有用户隔离），不再回退到文件系统
+        // 文件系统API没有用户隔离，会导致显示不属于当前用户的文章
         try {
           const dbResult = await api.get(`/api/v2/texts/${id}?include_sentences=true`);
-          // 检查是否有句子数据，如果没有则回退到文件系统
-          const sentenceCount = dbResult?.data?.sentence_count ?? dbResult?.data?.sentences?.length ?? 0;
-          if (sentenceCount === 0) {
-            console.log('🔄 [API] 数据库中无句子数据，回退到文件系统');
-            return api.get(`/api/articles/${id}`);
-          }
           return dbResult;
         } catch (dbError) {
-          console.log('🔄 [API] 数据库API失败，回退到文件系统:', dbError.message);
-          return api.get(`/api/articles/${id}`);
+          console.error('❌ [API] 数据库API失败:', dbError.message);
+          // 不再回退到文件系统，直接抛出错误（避免显示其他用户的文章）
+          throw dbError;
         }
       }
     } catch (e) {

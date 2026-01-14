@@ -1807,20 +1807,52 @@ async def get_stats():
 @app.get("/api/articles", response_model=ApiResponse)
 async def list_articles(current_user: User = Depends(get_current_user)):
     """
-    获取文章列表摘要（文件系统版本，已废弃，建议使用 /api/v2/texts/）
+    获取文章列表摘要（已废弃，重定向到数据库版本）
     
-    ⚠️ 警告：此端点没有用户隔离，返回所有文件系统中的文章。
-    建议使用 /api/v2/texts/ 端点，它有完整的用户隔离。
+    ⚠️ 此端点已废弃，现在从数据库查询，只返回属于当前用户的文章。
+    建议前端直接使用 /api/v2/texts/ 端点。
     """
     try:
-        # 即使使用文件系统，也记录用户信息（用于调试）
-        print(f"⚠️ [API] /api/articles 被调用（用户 {current_user.user_id}），此端点没有用户隔离")
-        summaries = _collect_articles_summary()
-        return create_success_response(
-            data=summaries,
-            message=f"成功获取文章列表，共 {len(summaries)} 篇（⚠️ 注意：包含所有用户的文章）"
-        )
+        print(f"⚠️ [API] /api/articles 被调用（用户 {current_user.user_id}），重定向到数据库查询")
+        
+        # 🔧 从数据库查询，确保用户隔离
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import OriginalText
+        from backend.config import ENV
+        
+        db_manager = DatabaseManager(ENV)
+        session = db_manager.get_session()
+        
+        try:
+            # 查询当前用户的所有文章
+            texts = session.query(OriginalText).filter(
+                OriginalText.user_id == current_user.user_id
+            ).order_by(OriginalText.created_at.desc()).all()
+            
+            summaries = [
+                {
+                    "text_id": t.text_id,
+                    "text_title": t.text_title,
+                    "language": t.language,
+                    "processing_status": t.processing_status,
+                    "sentence_count": 0,  # 简化版本，不计算句子数
+                    "total_sentences": 0
+                }
+                for t in texts
+            ]
+            
+            print(f"✅ [API] 从数据库获取 {len(summaries)} 篇文章（用户 {current_user.user_id}）")
+            return create_success_response(
+                data=summaries,
+                message=f"成功获取文章列表，共 {len(summaries)} 篇（仅当前用户）"
+            )
+        finally:
+            session.close()
+            
     except Exception as e:
+        print(f"❌ [API] 获取文章列表失败: {e}")
+        import traceback
+        traceback.print_exc()
         return create_error_response(f"获取文章列表失败: {str(e)}")
 
 @app.get("/api/v2/texts/fallback")
@@ -1840,32 +1872,81 @@ async def get_texts_fallback():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/articles/{article_id}", response_model=ApiResponse)
-async def get_article_detail(article_id: int):
-    """获取单篇文章详情，并标记 token 的可选择性（只有 text 类型可选）"""
+async def get_article_detail(
+    article_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取单篇文章详情（数据库版本，带用户隔离）
+    
+    ⚠️ 此接口已改为从数据库查询，只返回属于当前用户的文章。
+    """
     try:
-        # 先尝试目录结构
-        data = _load_article_detail_from_dir(article_id)
-        if data is None:
-            # 兼容历史单文件
-            for path in _iter_processed_files():
-                try:
-                    fdata = _load_json_file(path)
-                    if int(fdata.get("text_id", -1)) == article_id:
-                        data = fdata
-                        break
-                except Exception:
-                    continue
-
-        if data is None:
-            return create_error_response(f"文章不存在: {article_id}")
-
-        data = _mark_tokens_selectable(data)
-
-        return create_success_response(
-            data=data,
-            message=f"成功获取文章详情: {data.get('text_title', '')}"
-        )
+        print(f"🔍 [API] /api/articles/{article_id} 被调用 - user_id: {current_user.user_id}")
+        
+        # 🔧 从数据库查询，确保用户隔离
+        from database_system.database_manager import DatabaseManager
+        from database_system.business_logic.models import OriginalText
+        from backend.config import ENV
+        
+        db_manager = DatabaseManager(ENV)
+        session = db_manager.get_session()
+        
+        try:
+            # 查询文章，确保属于当前用户
+            text_model = session.query(OriginalText).filter(
+                OriginalText.text_id == article_id,
+                OriginalText.user_id == current_user.user_id
+            ).first()
+            
+            if not text_model:
+                print(f"❌ [API] 文章 {article_id} 不存在或不属于用户 {current_user.user_id}")
+                return create_error_response(
+                    f"文章不存在或无权访问: {article_id}",
+                    status_code=404
+                )
+            
+            # 使用 v2 API 的数据格式
+            from backend.data_managers import OriginalTextManagerDB
+            text_manager = OriginalTextManagerDB(session)
+            text = text_manager.get_text_by_id(article_id, include_sentences=True)
+            
+            if not text:
+                return create_error_response(f"文章不存在: {article_id}", status_code=404)
+            
+            # 转换为前端期望的格式
+            data = {
+                "text_id": text.text_id,
+                "text_title": text.text_title,
+                "language": text.language,
+                "processing_status": text.processing_status,
+                "sentences": [
+                    {
+                        "sentence_id": s.sentence_id,
+                        "sentence_body": s.sentence_body,
+                        "difficulty_level": s.sentence_difficulty_level,
+                        "grammar_annotations": s.grammar_annotations or [],
+                        "vocab_annotations": s.vocab_annotations or []
+                    }
+                    for s in (text.sentences if hasattr(text, 'sentences') and text.sentences else [])
+                ] if hasattr(text, 'sentences') else []
+            }
+            
+            # 标记 token 的可选择性
+            data = _mark_tokens_selectable(data)
+            
+            print(f"✅ [API] 成功获取文章 {article_id}（用户 {current_user.user_id}）")
+            return create_success_response(
+                data=data,
+                message=f"成功获取文章详情: {text.text_title}"
+            )
+        finally:
+            session.close()
+            
     except Exception as e:
+        print(f"❌ [API] 获取文章详情失败: {e}")
+        import traceback
+        traceback.print_exc()
         return create_error_response(f"获取文章详情失败: {str(e)}")
 
 # 新增：文件上传处理API
