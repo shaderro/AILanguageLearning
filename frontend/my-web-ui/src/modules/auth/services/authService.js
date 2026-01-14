@@ -15,6 +15,25 @@ const authApi = axios.create({
   },
 })
 
+// 🔧 添加请求拦截器：自动添加 Authorization header（与 api.js 保持一致）
+authApi.interceptors.request.use(
+  (config) => {
+    // 从 localStorage 获取 token 并添加到请求头
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      console.log('🔑 [authApi] Added Authorization header')
+    } else {
+      console.log('⚠️ [authApi] No access token found in localStorage')
+    }
+    return config
+  },
+  (error) => {
+    console.error('❌ [authApi] Request Error:', error)
+    return Promise.reject(error)
+  }
+)
+
 export const authService = {
   /**
    * 用户注册

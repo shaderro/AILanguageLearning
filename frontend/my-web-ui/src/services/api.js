@@ -35,13 +35,13 @@ api.interceptors.request.use(
   (config) => {
     console.log("🌐 API Request:", config.method?.toUpperCase(), config.url);
     
-    // 从 localStorage 获取 token 并添加到请求头
+    // 🔧 从 localStorage 获取 token 并添加到请求头
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("🔑 Added Authorization header");
+      console.log("🔑 Added Authorization header with token:", token.substring(0, 20) + "...");
     } else {
-      console.log("⚠️ No access token found in localStorage");
+      console.warn("⚠️ No access token found in localStorage - API request may fail with 401");
     }
     
     // 🔧 如果是 FormData，移除 Content-Type 让浏览器自动设置（包含 boundary）

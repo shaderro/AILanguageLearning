@@ -134,6 +134,7 @@ def get_current_user(
         print(f"⚠️ [Auth] get_current_user 数据库查询较慢: {query_elapsed:.2f}ms (user_id: {user_id})")
     
     if user is None:
+        print(f"❌ [Auth] 用户不存在: user_id={user_id}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户不存在",
@@ -143,6 +144,9 @@ def get_current_user(
     total_elapsed = (time.time() - start_time) * 1000
     if total_elapsed > 100:  # 如果总耗时超过 100ms，记录警告
         print(f"⚠️ [Auth] get_current_user 总耗时较长: {total_elapsed:.2f}ms (user_id: {user_id})")
+    
+    # 🔧 添加调试日志：记录成功认证的用户
+    print(f"✅ [Auth] 用户认证成功: user_id={user.user_id}, email={user.email}")
     
     return user
 

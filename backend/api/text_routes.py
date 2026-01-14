@@ -136,6 +136,9 @@ async def get_all_texts(
     需要认证：是
     """
     try:
+        # 🔧 添加调试日志：记录当前用户ID
+        print(f"🔍 [TextAPI] get_all_texts called - user_id: {current_user.user_id}, email: {current_user.email}")
+        
         from database_system.business_logic.models import Sentence, Token, OriginalText
         from sqlalchemy import func
         
@@ -151,6 +154,10 @@ async def get_all_texts(
             (UserArticleAccess.text_id == OriginalText.text_id) & 
             (UserArticleAccess.user_id == current_user.user_id)
         ).filter(OriginalText.user_id == current_user.user_id)
+        
+        # 🔧 添加调试日志：记录查询结果数量
+        total_count = query.count()
+        print(f"🔍 [TextAPI] Found {total_count} articles for user_id: {current_user.user_id}")
         
         # 语言过滤
         if language and language != 'all':
