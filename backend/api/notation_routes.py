@@ -15,11 +15,20 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from data_managers.unified_notation_manager import get_unified_notation_manager
 from database_system.database_manager import DatabaseManager
+from backend.api.auth_routes import get_current_user
+from database_system.business_logic.models import User
 
 # 依赖注入：数据库Session
 def get_db_session():
     """提供数据库Session"""
-    db_manager = DatabaseManager('development')
+    # 从环境变量读取环境配置（与其他 v2 路由保持一致）
+    try:
+        from backend.config import ENV
+        environment = ENV
+    except ImportError:
+        import os
+        environment = os.getenv("ENV", "development")
+    db_manager = DatabaseManager(environment)
     session = db_manager.get_session()
     try:
         yield session
@@ -36,7 +45,8 @@ router = APIRouter(prefix="/api/v2/notations", tags=["notations"])
 
 class VocabNotationRequest(BaseModel):
     """词汇标注请求模型"""
-    user_id: str
+    # 兼容字段：前端可能会传 user_id，但后端会强制使用 current_user.user_id
+    user_id: Optional[str] = None
     text_id: int
     sentence_id: int
     token_id: int
@@ -44,7 +54,8 @@ class VocabNotationRequest(BaseModel):
 
 class GrammarNotationRequest(BaseModel):
     """语法标注请求模型"""
-    user_id: str
+    # 兼容字段：前端可能会传 user_id，但后端会强制使用 current_user.user_id
+    user_id: Optional[str] = None
     text_id: int
     sentence_id: int
     grammar_id: Optional[int] = None
@@ -60,15 +71,16 @@ class NotationResponse(BaseModel):
 # ==================== 词汇标注 API ====================
 
 @router.post("/vocab", response_model=NotationResponse)
-async def create_vocab_notation(request: VocabNotationRequest):
+async def create_vocab_notation(request: VocabNotationRequest, current_user: User = Depends(get_current_user)):
     """创建词汇标注"""
     try:
         print(f"[API] Creating vocab notation: {request}")
+        effective_user_id = str(current_user.user_id)
         
         manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
         success = manager.mark_notation(
             notation_type="vocab",
-            user_id=request.user_id,
+            user_id=effective_user_id,
             text_id=request.text_id,
             sentence_id=request.sentence_id,
             token_id=request.token_id,
@@ -97,12 +109,17 @@ async def create_vocab_notation(request: VocabNotationRequest):
 @router.get("/vocab", response_model=NotationResponse)
 async def get_vocab_notations(
     text_id: int = Query(..., description="文章ID"),
-    user_id: Optional[int] = Query(None, description="用户ID"),
+    user_id: Optional[int] = Query(None, description="用户ID（将被忽略，实际以当前登录用户为准）"),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db_session)
 ):
     """获取词汇标注（使用数据库模式）"""
     try:
-        print(f"[API] Getting vocab notations: text_id={text_id}, user_id={user_id}")
+        # ✅ 强制按当前用户过滤
+        effective_user_id = int(current_user.user_id)
+        if user_id is not None and int(user_id) != effective_user_id:
+            print(f"⚠️ [Notations] Ignoring user_id={user_id}, using current_user.user_id={effective_user_id}")
+        print(f"[API] Getting vocab notations: text_id={text_id}, user_id={effective_user_id}")
         
         # 使用数据库ORM获取
         from database_system.business_logic.crud.notation_crud import VocabNotationCRUD
@@ -110,7 +127,7 @@ async def get_vocab_notations(
         crud = VocabNotationCRUD(session)
         
         # 获取该文章下的所有vocab notations
-        all_notations = crud.get_by_text(text_id, user_id)
+        all_notations = crud.get_by_text(text_id, effective_user_id)
         
         # 构建返回的notation列表，如果存在word_token_id，同时返回该word_token的所有token_ids
         print(f"[API] ========== 开始处理 {len(all_notations)} 个 vocab notations ==========")
@@ -294,15 +311,17 @@ async def delete_vocab_notation(
     text_id: int,
     sentence_id: int,
     token_id: int,
-    user_id: str = Query(..., description="用户ID")
+    user_id: str = Query(..., description="用户ID（将被忽略，实际以当前登录用户为准）"),
+    current_user: User = Depends(get_current_user),
 ):
     """删除词汇标注"""
     try:
         print(f"[API] Deleting vocab notation: {text_id}:{sentence_id}:{token_id}")
         
+        effective_user_id = str(current_user.user_id)
         manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
         notation_key = f"{text_id}:{sentence_id}:{token_id}"
-        success = manager.delete_notation("vocab", user_id, notation_key)
+        success = manager.delete_notation("vocab", effective_user_id, notation_key)
         
         if success:
             return NotationResponse(
@@ -325,15 +344,16 @@ async def delete_vocab_notation(
 # ==================== 语法标注 API ====================
 
 @router.post("/grammar", response_model=NotationResponse)
-async def create_grammar_notation(request: GrammarNotationRequest):
+async def create_grammar_notation(request: GrammarNotationRequest, current_user: User = Depends(get_current_user)):
     """创建语法标注"""
     try:
         print(f"[API] Creating grammar notation: {request}")
+        effective_user_id = str(current_user.user_id)
         
         manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
         success = manager.mark_notation(
             notation_type="grammar",
-            user_id=request.user_id,
+            user_id=effective_user_id,
             text_id=request.text_id,
             sentence_id=request.sentence_id,
             grammar_id=request.grammar_id,
@@ -362,12 +382,16 @@ async def create_grammar_notation(request: GrammarNotationRequest):
 @router.get("/grammar", response_model=NotationResponse)
 async def get_grammar_notations(
     text_id: int = Query(..., description="文章ID"),
-    user_id: Optional[int] = Query(None, description="用户ID"),
+    user_id: Optional[int] = Query(None, description="用户ID（将被忽略，实际以当前登录用户为准）"),
+    current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db_session)
 ):
     """获取语法标注（使用数据库模式）"""
     try:
-        print(f"[API] Getting grammar notations: text_id={text_id}, user_id={user_id}")
+        effective_user_id = int(current_user.user_id)
+        if user_id is not None and int(user_id) != effective_user_id:
+            print(f"⚠️ [Notations] Ignoring user_id={user_id}, using current_user.user_id={effective_user_id}")
+        print(f"[API] Getting grammar notations: text_id={text_id}, user_id={effective_user_id}")
         
         # 使用数据库ORM获取
         from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
@@ -375,7 +399,7 @@ async def get_grammar_notations(
         crud = GrammarNotationCRUD(session)
         
         # 获取该文章下的所有grammar notations
-        all_notations = crud.get_by_text(text_id, user_id)
+        all_notations = crud.get_by_text(text_id, effective_user_id)
         
         notation_list = [
             {
@@ -416,7 +440,8 @@ async def get_grammar_notations(
 async def get_grammar_notation_details(
     text_id: int,
     sentence_id: int,
-    user_id: str = Query("default_user", description="用户ID")
+    user_id: str = Query("default_user", description="用户ID（将被忽略，实际以当前登录用户为准）"),
+    current_user: User = Depends(get_current_user),
 ):
     """获取语法标注详情"""
     try:
@@ -426,12 +451,19 @@ async def get_grammar_notation_details(
         from database_system.database_manager import DatabaseManager
         from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
         
-        db_manager = DatabaseManager('development')
+        try:
+            from backend.config import ENV
+            environment = ENV
+        except ImportError:
+            import os
+            environment = os.getenv("ENV", "development")
+        db_manager = DatabaseManager(environment)
         session = db_manager.get_session()
         
         try:
             crud = GrammarNotationCRUD(session)
-            notation = crud.get_by_sentence(text_id, sentence_id, user_id)
+            effective_user_id = int(current_user.user_id)
+            notation = crud.get_by_sentence(text_id, sentence_id, effective_user_id)
             
             if notation:
                 data = {
@@ -472,15 +504,17 @@ async def get_grammar_notation_details(
 async def delete_grammar_notation(
     text_id: int,
     sentence_id: int,
-    user_id: str = Query(..., description="用户ID")
+    user_id: str = Query(..., description="用户ID（将被忽略，实际以当前登录用户为准）"),
+    current_user: User = Depends(get_current_user),
 ):
     """删除语法标注"""
     try:
         print(f"[API] Deleting grammar notation: {text_id}:{sentence_id}")
         
+        effective_user_id = str(current_user.user_id)
         manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
         notation_key = f"{text_id}:{sentence_id}"
-        success = manager.delete_notation("grammar", user_id, notation_key)
+        success = manager.delete_notation("grammar", effective_user_id, notation_key)
         
         if success:
             return NotationResponse(
@@ -505,14 +539,16 @@ async def delete_grammar_notation(
 @router.get("/all", response_model=NotationResponse)
 async def get_all_notations(
     text_id: int = Query(..., description="文章ID"),
-    user_id: Optional[str] = Query(None, description="用户ID")
+    user_id: Optional[str] = Query(None, description="用户ID（将被忽略，实际以当前登录用户为准）"),
+    current_user: User = Depends(get_current_user),
 ):
     """获取所有类型的标注"""
     try:
         print(f"[API] Getting all notations: text_id={text_id}, user_id={user_id}")
         
+        effective_user_id = str(current_user.user_id)
         manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
-        all_keys = manager.get_notations("all", text_id, user_id)
+        all_keys = manager.get_notations("all", text_id, effective_user_id)
         
         return NotationResponse(
             success=True,
@@ -534,17 +570,19 @@ async def get_all_notations(
 @router.get("/check", response_model=NotationResponse)
 async def check_notation_exists(
     notation_type: str = Query(..., description="标注类型: vocab 或 grammar"),
-    user_id: str = Query(..., description="用户ID"),
+    user_id: str = Query(..., description="用户ID（将被忽略，实际以当前登录用户为准）"),
     text_id: int = Query(..., description="文章ID"),
     sentence_id: int = Query(..., description="句子ID"),
-    token_id: Optional[int] = Query(None, description="Token ID（词汇标注必需）")
+    token_id: Optional[int] = Query(None, description="Token ID（词汇标注必需）"),
+    current_user: User = Depends(get_current_user),
 ):
     """检查标注是否存在"""
     try:
         print(f"[API] Checking notation exists: type={notation_type}, {text_id}:{sentence_id}:{token_id}")
         
+        effective_user_id = str(current_user.user_id)
         manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
-        exists = manager.is_notation_exists(notation_type, user_id, text_id, sentence_id, token_id)
+        exists = manager.is_notation_exists(notation_type, effective_user_id, text_id, sentence_id, token_id)
         
         return NotationResponse(
             success=True,

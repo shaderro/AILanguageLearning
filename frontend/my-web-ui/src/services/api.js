@@ -310,25 +310,22 @@ export const apiService = {
       if (API_TARGET === 'mock') {
         return api.get("/api/vocab");
       } else {
-        try {
-          const params = new URLSearchParams();
-          if (language && language !== 'all') {
-            params.append('language', language);
-          }
-          if (learnStatus && learnStatus !== 'all') {
-            params.append('learn_status', learnStatus);
-          }
-          if (textId && textId !== 'all') {
-            params.append('text_id', textId);
-          }
-          const queryString = params.toString();
-          const url = queryString ? `/api/v2/vocab/?${queryString}` : '/api/v2/vocab/';
-          console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
-          return await api.get(url);
-        } catch (dbError) {
-          console.log('🔄 [API] v2 vocab API失败，回退到兼容端点:', dbError.message);
-          return api.get("/api/vocab");
+        // 数据库模式：只使用 v2 API（有用户隔离），不再回退到旧端点
+        // 旧端点（/api/vocab）没有用户隔离，会导致不同用户看到同一份数据
+        const params = new URLSearchParams();
+        if (language && language !== 'all') {
+          params.append('language', language);
         }
+        if (learnStatus && learnStatus !== 'all') {
+          params.append('learn_status', learnStatus);
+        }
+        if (textId && textId !== 'all') {
+          params.append('text_id', textId);
+        }
+        const queryString = params.toString();
+        const url = queryString ? `/api/v2/vocab/?${queryString}` : '/api/v2/vocab/';
+        console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+        return await api.get(url);
       }
     } catch (e) {
       console.error('❌ [API] 获取词汇列表失败:', e);
@@ -363,25 +360,22 @@ export const apiService = {
       if (API_TARGET === 'mock') {
         return api.get("/api/grammar");
       } else {
-        try {
-          const params = new URLSearchParams();
-          if (language && language !== 'all') {
-            params.append('language', language);
-          }
-          if (learnStatus && learnStatus !== 'all') {
-            params.append('learn_status', learnStatus);
-          }
-          if (textId && textId !== 'all') {
-            params.append('text_id', textId);
-          }
-          const queryString = params.toString();
-          const url = queryString ? `/api/v2/grammar/?${queryString}` : '/api/v2/grammar/';
-          console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
-          return await api.get(url);
-        } catch (dbError) {
-          console.log('🔄 [API] v2 grammar API失败，回退到兼容端点:', dbError.message);
-          return api.get("/api/grammar");
+        // 数据库模式：只使用 v2 API（有用户隔离），不再回退到旧端点
+        // 旧端点（/api/grammar）没有用户隔离，会导致不同用户看到同一份数据
+        const params = new URLSearchParams();
+        if (language && language !== 'all') {
+          params.append('language', language);
         }
+        if (learnStatus && learnStatus !== 'all') {
+          params.append('learn_status', learnStatus);
+        }
+        if (textId && textId !== 'all') {
+          params.append('text_id', textId);
+        }
+        const queryString = params.toString();
+        const url = queryString ? `/api/v2/grammar/?${queryString}` : '/api/v2/grammar/';
+        console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+        return await api.get(url);
       }
     } catch (e) {
       console.error('❌ [API] 获取语法列表失败:', e);

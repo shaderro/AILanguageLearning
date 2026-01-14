@@ -1544,7 +1544,7 @@ async def get_vocab_example_by_location(
     text_id: int = Query(..., description="文章ID"),
     sentence_id: Optional[int] = Query(None, description="句子ID"),
     token_index: Optional[int] = Query(None, description="Token索引"),
-    authorization: Optional[str] = Header(None)
+    current_user: User = Depends(get_current_user),
 ):
     """按位置查找词汇例句"""
     try:
@@ -1559,18 +1559,8 @@ async def get_vocab_example_by_location(
         session = db_manager.get_session()
         
         try:
-            # 🔧 修复：支持 guest 用户（没有 token 时）
-            user_id = None
-            if authorization and authorization.startswith("Bearer "):
-                try:
-                    token = authorization.replace("Bearer ", "")
-                    from backend.utils.auth import decode_access_token
-                    payload = decode_access_token(token)
-                    if payload and "sub" in payload:
-                        user_id = int(payload["sub"])
-                except Exception:
-                    # 如果 token 无效，继续作为 guest 用户
-                    pass
+            # ✅ 强制使用当前认证用户（确保数据隔离）
+            user_id = int(current_user.user_id)
             
             # 🔧 先检查 text_id 是否属于当前用户（如果是登录用户）
             if user_id:
@@ -1604,7 +1594,9 @@ async def get_vocab_example_by_location(
                 query = query.filter(VocabExpression.user_id == user_id)
                 print(f"🔍 [VocabExample] Filtering by user_id={user_id}")
             else:
-                print(f"⚠️ [VocabExample] No user_id provided, querying all users' examples")
+                # 理论上不会发生（当前接口强制认证）
+                print(f"⚠️ [VocabExample] No user_id provided (unexpected), refusing to query cross-user data")
+                return {'success': False, 'data': None, 'message': 'Unauthorized'}
             
             if sentence_id is not None:
                 query = query.filter(VocabExpressionExample.sentence_id == sentence_id)
@@ -1613,28 +1605,10 @@ async def get_vocab_example_by_location(
             examples = query.all()
             print(f"🔍 [VocabExample] Found {len(examples)} example(s) before token_index filtering (user_id={user_id})")
             
-            # 🔧 修复：如果按当前用户找不到 example，尝试查询所有用户的 example
-            # 因为 example 是针对句子的，不是针对用户的，所以应该允许跨用户查询
-            if len(examples) == 0:
-                print(f"⚠️ [VocabExample] 没有找到属于用户 {user_id} 的 example，尝试查询所有用户的 example")
-                fallback_query = session.query(VocabExpressionExample).join(
-                    VocabExpression,
-                    VocabExpressionExample.vocab_id == VocabExpression.vocab_id
-                ).filter(
-                    VocabExpressionExample.text_id == text_id
-                )
-                if sentence_id is not None:
-                    fallback_query = fallback_query.filter(VocabExpressionExample.sentence_id == sentence_id)
-                examples = fallback_query.all()
-                print(f"🔍 [VocabExample] 所有用户的 example 数量: {len(examples)}")
-                for ex in examples[:5]:  # 只打印前5个
-                    vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
-                    print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
-            else:
-                # 打印找到的 examples 的详细信息
-                for ex in examples:
-                    vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
-                    print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
+            # ✅ 不再跨用户回退查询（确保用户数据隔离）
+            for ex in examples:
+                vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
+                print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
             
             # 🔧 2. 如果有 token_index，进一步过滤（检查 token_indices 是否包含 token_index）
             # 🔧 修复：如果 token_indices 为空，说明 example 是为整个句子创建的，应该匹配任何 token_index
@@ -1701,48 +1675,106 @@ async def get_vocab_example_by_location(
         return {'success': False, 'error': str(e)}
 
 @app.get("/api/vocab", response_model=ApiResponse)
-async def get_vocab_list():
-    """获取词汇列表"""
+async def get_vocab_list(current_user: User = Depends(get_current_user)):
+    """获取词汇列表（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
-        vocab_list = data_service.get_vocab_data()
-        
+        from database_system.business_logic.models import VocabExpression
+        db_manager = DatabaseManager(ENV)
+        session = db_manager.get_session()
+        try:
+            vocabs = session.query(VocabExpression).filter(VocabExpression.user_id == current_user.user_id).all()
+            data = [
+                {
+                    "vocab_id": v.vocab_id,
+                    "user_id": v.user_id,
+                    "vocab_body": v.vocab_body,
+                    "explanation": v.explanation,
+                    "language": v.language,
+                    "source": getattr(v.source, "value", v.source),
+                    "is_starred": v.is_starred,
+                    "learn_status": getattr(v.learn_status, "value", v.learn_status),
+                    "created_at": v.created_at.isoformat() if v.created_at else None,
+                    "updated_at": v.updated_at.isoformat() if v.updated_at else None,
+                }
+                for v in vocabs
+            ]
+        finally:
+            session.close()
+
         return create_success_response(
-            data=[vocab.model_dump() for vocab in vocab_list],
-            message=f"成功获取词汇列表，共 {len(vocab_list)} 条记录"
+            data=data,
+            message=f"成功获取词汇列表（user_id={current_user.user_id}），共 {len(data)} 条记录"
         )
-        
     except Exception as e:
         return create_error_response(f"获取词汇列表失败: {str(e)}")
 
 @app.get("/api/vocab/{vocab_id}", response_model=ApiResponse)
-async def get_vocab_detail(vocab_id: int):
-    """获取词汇详情"""
+async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_current_user)):
+    """获取词汇详情（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
-        vocab_list = data_service.get_vocab_data()
-        vocab = next((v for v in vocab_list if v.vocab_id == vocab_id), None)
-        
-        if not vocab:
-            return create_error_response(f"词汇不存在: {vocab_id}")
-        
+        from database_system.business_logic.models import VocabExpression
+        db_manager = DatabaseManager(ENV)
+        session = db_manager.get_session()
+        try:
+            vocab = session.query(VocabExpression).filter(
+                VocabExpression.vocab_id == vocab_id,
+                VocabExpression.user_id == current_user.user_id,
+            ).first()
+            if not vocab:
+                return create_error_response(f"词汇不存在或无权限访问: {vocab_id}")
+            data = {
+                "vocab_id": vocab.vocab_id,
+                "user_id": vocab.user_id,
+                "vocab_body": vocab.vocab_body,
+                "explanation": vocab.explanation,
+                "language": vocab.language,
+                "source": getattr(vocab.source, "value", vocab.source),
+                "is_starred": vocab.is_starred,
+                "learn_status": getattr(vocab.learn_status, "value", vocab.learn_status),
+                "created_at": vocab.created_at.isoformat() if vocab.created_at else None,
+                "updated_at": vocab.updated_at.isoformat() if vocab.updated_at else None,
+            }
+        finally:
+            session.close()
+
         return create_success_response(
-            data=vocab.model_dump(),
-            message=f"成功获取词汇详情: {vocab.vocab_body}"
+            data=data,
+            message=f"成功获取词汇详情: {data.get('vocab_body')}"
         )
-        
     except Exception as e:
         return create_error_response(f"获取词汇详情失败: {str(e)}")
 
 @app.get("/api/grammar", response_model=ApiResponse)
-async def get_grammar_list():
-    """获取语法规则列表"""
+async def get_grammar_list(current_user: User = Depends(get_current_user)):
+    """获取语法规则列表（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
-        grammar_list = data_service.get_grammar_data()
-        
+        from database_system.business_logic.models import GrammarRule
+        db_manager = DatabaseManager(ENV)
+        session = db_manager.get_session()
+        try:
+            rules = session.query(GrammarRule).filter(GrammarRule.user_id == current_user.user_id).all()
+            data = [
+                {
+                    "rule_id": r.rule_id,
+                    "user_id": r.user_id,
+                    "rule_name": r.rule_name,
+                    "rule_summary": r.rule_summary,
+                    "language": r.language,
+                    "source": getattr(r.source, "value", r.source),
+                    "is_starred": r.is_starred,
+                    "learn_status": getattr(r.learn_status, "value", r.learn_status),
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                    "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+                }
+                for r in rules
+            ]
+        finally:
+            session.close()
+
         return create_success_response(
-            data=[grammar.model_dump() for grammar in grammar_list],
-            message=f"成功获取语法规则列表，共 {len(grammar_list)} 条记录"
+            data=data,
+            message=f"成功获取语法规则列表（user_id={current_user.user_id}），共 {len(data)} 条记录"
         )
-        
     except Exception as e:
         return create_error_response(f"获取语法规则列表失败: {str(e)}")
 
@@ -2308,9 +2340,11 @@ async def upload_text(
 # ==================== Asked Tokens API ====================
 
 @app.get("/api/user/asked-tokens")
-async def get_asked_tokens(user_id: str = Query(..., description="用户ID"), 
+async def get_asked_tokens(
+                          user_id: str = Query(..., description="用户ID（将被忽略，实际以当前登录用户为准）"), 
                           text_id: int = Query(..., description="文章ID"),
-                          include_new_system: bool = Query(False, description="是否包含新系统数据")):
+                          include_new_system: bool = Query(False, description="是否包含新系统数据"),
+                          current_user: User = Depends(get_current_user)):
     """
     获取用户在指定文章下已提问的 token 键集合
     
@@ -2319,11 +2353,15 @@ async def get_asked_tokens(user_id: str = Query(..., description="用户ID"),
     2. 兼容模式（include_new_system=True）：合并新旧系统数据
     """
     try:
-        print(f"[AskedTokens] Getting asked tokens for user={user_id}, text_id={text_id}, include_new_system={include_new_system}")
+        # ✅ 强制使用当前认证用户，避免跨用户读取
+        effective_user_id = str(current_user.user_id)
+        if user_id != effective_user_id:
+            print(f"⚠️ [AskedTokens] Ignoring user_id={user_id}, using current_user.user_id={effective_user_id}")
+        print(f"[AskedTokens] Getting asked tokens for user={effective_user_id}, text_id={text_id}, include_new_system={include_new_system}")
         
         # 使用 JSON 文件模式（测试阶段）
         manager = get_asked_tokens_manager(use_database=False)
-        asked_tokens = manager.get_asked_tokens_for_article(user_id, text_id)
+        asked_tokens = manager.get_asked_tokens_for_article(effective_user_id, text_id)
         
         result_data = {
             "asked_tokens": list(asked_tokens),
@@ -2338,7 +2376,7 @@ async def get_asked_tokens(user_id: str = Query(..., description="用户ID"),
                 unified_manager = get_unified_notation_manager(use_database=False, use_legacy_compatibility=False)
                 
                 # 获取新系统的所有标注
-                new_notations = unified_manager.get_notations("all", text_id, user_id)
+                new_notations = unified_manager.get_notations("all", text_id, effective_user_id)
                 
                 # 合并数据（去重）
                 all_notations = set(asked_tokens)
@@ -2368,7 +2406,7 @@ async def get_asked_tokens(user_id: str = Query(..., description="用户ID"),
         return create_error_response(f"获取已提问 tokens 失败: {str(e)}")
 
 @app.post("/api/user/asked-tokens")
-async def mark_token_asked(payload: dict):
+async def mark_token_asked(payload: dict, current_user: User = Depends(get_current_user)):
     """
     标记 token 或 sentence 为已提问
     
@@ -2380,7 +2418,8 @@ async def mark_token_asked(payload: dict):
     新系统集成：同时创建 VocabNotation 或 GrammarNotation
     """
     try:
-        user_id = payload.get("user_id", "default_user")  # 默认用户ID
+        # ✅ 强制使用当前认证用户，避免跨用户写入
+        user_id = str(current_user.user_id)
         text_id = payload.get("text_id")
         sentence_id = payload.get("sentence_id")
         sentence_token_id = payload.get("sentence_token_id")
@@ -2396,7 +2435,7 @@ async def mark_token_asked(payload: dict):
                 type_param = "sentence"
         
         print(f"[AskedTokens] Marking as asked:")
-        print(f"  - user_id: {user_id}")
+        print(f"  - user_id (from current_user): {user_id}")
         print(f"  - text_id: {text_id}")
         print(f"  - sentence_id: {sentence_id}")
         print(f"  - sentence_token_id: {sentence_token_id}")
@@ -2473,10 +2512,11 @@ async def mark_token_asked(payload: dict):
         return create_error_response(f"标记 token 为已提问失败: {str(e)}")
 
 @app.delete("/api/user/asked-tokens")
-async def unmark_token_asked(payload: dict):
+async def unmark_token_asked(payload: dict, current_user: User = Depends(get_current_user)):
     """取消标记 token 为已提问"""
     try:
-        user_id = payload.get("user_id", "default_user")  # 默认用户ID
+        # ✅ 强制使用当前认证用户，避免跨用户删除
+        user_id = str(current_user.user_id)
         token_key = payload.get("token_key")
         
         print(f" [AskedTokens] Unmarking token: user={user_id}, key={token_key}")
