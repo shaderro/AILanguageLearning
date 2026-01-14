@@ -475,8 +475,28 @@ class MainAssistant:
             )
         
         print("AI Response:", ai_response)
-        if isinstance(ai_response, (dict, list)):
+        print("AI Response Type:", type(ai_response))
+        
+        # 🔧 处理 JSON 解析结果
+        if isinstance(ai_response, dict):
+            # 如果返回的是字典，尝试提取 answer 字段
+            if "answer" in ai_response:
+                ai_response = ai_response["answer"]
+                print("✅ 从字典中提取 answer 字段:", ai_response[:100] if len(str(ai_response)) > 100 else ai_response)
+            else:
+                # 如果没有 answer 字段，将整个字典转换为字符串（向后兼容）
+                print("⚠️ 字典中没有 answer 字段，转换为字符串")
+                ai_response = str(ai_response)
+        elif isinstance(ai_response, list):
+            # 如果是列表，转换为字符串（向后兼容）
+            print("⚠️ 返回的是列表，转换为字符串")
             ai_response = str(ai_response)
+        elif ai_response is None:
+            # 解析失败（这种情况应该不会发生，因为 SubAssistant.run() 现在返回原始文本）
+            print("❌ AI 响应为 None，使用错误提示")
+            ai_response = "抱歉，AI响应解析失败，请重试。"
+        # 如果已经是字符串，直接使用
+        
         # ✅ 设置响应（这里是唯一设置 current_response 的地方）
         self.session_state.set_current_response(ai_response)
         self.dialogue_history.add_message(user_input=user_question, ai_response=ai_response, quoted_sentence=quoted_sentence)

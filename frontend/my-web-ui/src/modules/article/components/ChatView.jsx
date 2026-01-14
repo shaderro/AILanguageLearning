@@ -315,47 +315,55 @@ export default function ChatView({
   const parseAIResponse = (responseText) => {
     if (!responseText) return ''
     
-    if (typeof responseText === 'object' && responseText.answer) {
+    // 如果已经是对象且包含 answer 字段
+    if (typeof responseText === 'object' && responseText !== null && responseText.answer) {
       return responseText.answer
     }
     
     if (typeof responseText === 'string') {
       const trimmed = responseText.trim()
       
+      // 🔧 尝试标准 JSON 解析
       try {
         const parsed = JSON.parse(trimmed)
-        if (parsed && typeof parsed === 'object' && parsed.answer) {
-          return parsed.answer
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.answer) {
+            return parsed.answer
+          }
+          // 如果解析成功但格式不对，返回原始文本
+          return trimmed
         }
       } catch (e) {
-        // 不是标准 JSON
+        // 不是标准 JSON，继续尝试其他方法
       }
       
-      if (trimmed.startsWith('{') && (trimmed.includes("'answer'") || trimmed.includes('"answer"'))) {
-        const answerKeyPattern = /['"]answer['"]\s*:\s*['"]/
-        const keyMatch = trimmed.match(answerKeyPattern)
-        
-        if (keyMatch) {
-          const startIndex = keyMatch.index + keyMatch[0].length
-          const quoteChar = trimmed[startIndex - 1]
-          
-          let endIndex = startIndex
-          let escaped = false
-          
-          while (endIndex < trimmed.length) {
-            const char = trimmed[endIndex]
-            if (escaped) {
-              escaped = false
-            } else if (char === '\\') {
-              escaped = true
-            } else if (char === quoteChar) {
-              return trimmed.substring(startIndex, endIndex).replace(/\\'/g, "'").replace(/\\"/g, '"')
-            }
-            endIndex++
-          }
-        }
+      // 🔧 尝试提取 JSON 中的 answer 字段（使用正则表达式）
+      // 匹配 {"answer": "..."} 或 {'answer': '...'} 格式
+      const jsonAnswerPattern = /['"]answer['"]\s*:\s*['"](.*?)['"]/s
+      const match = trimmed.match(jsonAnswerPattern)
+      if (match && match[1]) {
+        // 替换转义字符
+        return match[1]
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\'/g, "'")
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\')
       }
       
+      // 🔧 尝试多行 JSON（answer 字段可能跨多行）
+      const multiLineJsonPattern = /['"]answer['"]\s*:\s*['"]((?:[^'"]|\\['"])*)['"]/s
+      const multiLineMatch = trimmed.match(multiLineJsonPattern)
+      if (multiLineMatch && multiLineMatch[1]) {
+        return multiLineMatch[1]
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\'/g, "'")
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\')
+      }
+      
+      // 🔧 如果都失败了，直接返回原始文本
       return trimmed
     }
     

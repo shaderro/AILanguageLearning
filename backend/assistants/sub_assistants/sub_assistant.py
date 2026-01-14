@@ -49,7 +49,12 @@ class SubAssistant:
                     print("📬 Raw Response:\n", content)
                 if self.parse_json:
                     #print("📬 Parsing JSON from response...")
-                    return parse_json_from_text(content)
+                    parsed = parse_json_from_text(content)
+                    if parsed is None:
+                        # 🔧 JSON 解析失败，返回原始文本（而不是 None）
+                        print("⚠️ JSON 解析失败，返回原始文本")
+                        return content
+                    return parsed
                 return content
             except (APIConnectionError, APITimeoutError, httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout) as error:
                 last_error = error
