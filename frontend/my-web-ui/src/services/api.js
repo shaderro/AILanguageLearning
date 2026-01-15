@@ -408,19 +408,25 @@ export const apiService = {
       console.warn(`⚠️ [Frontend] Invalid textId for getGrammarNotations: ${textId}`);
       return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
     }
+    // 🔧 确保 textId 是数字类型（如果传入的是字符串数字，转换为数字）
+    const textIdInt = typeof textId === 'string' ? parseInt(textId) : textId
+    if (isNaN(textIdInt)) {
+      console.warn(`⚠️ [Frontend] Invalid textId for getGrammarNotations: ${textId}`);
+      return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
+    }
     // 🔧 如果没有传入 userId，从 localStorage 获取
     if (!userId) {
       const storedUserId = localStorage.getItem('user_id')
       userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
     }
     
-    // 🔧 统一使用数据库API路径（即使API_TARGET是'mock'，后端也可能没有mock路由）
-    const url = `/api/v2/notations/grammar?text_id=${textId}&user_id=${userId}`
+    // 🔧 统一使用数据库API路径，确保 text_id 是数字
+    const url = `/api/v2/notations/grammar?text_id=${textIdInt}${userId ? `&user_id=${userId}` : ''}`
     console.log(`🔍 [API] getGrammarNotations: ${url}`)
     return api.get(url).catch(error => {
       // 🔧 如果是404错误，返回空数组而不是抛出错误，避免无限重试
       if (error.response && error.response.status === 404) {
-        console.warn(`⚠️ [API] Grammar notations not found for textId=${textId}, returning empty array`)
+        console.warn(`⚠️ [API] Grammar notations not found for textId=${textIdInt}, returning empty array`)
         return { data: { success: true, data: { notations: [], count: 0 } } }
       }
       throw error
@@ -440,17 +446,29 @@ export const apiService = {
       console.warn(`⚠️ [Frontend] Invalid textId for getVocabNotations: ${textId}`);
       return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
     }
+    // 🔧 确保 textId 是数字类型（如果传入的是字符串数字，转换为数字）
+    const textIdInt = typeof textId === 'string' ? parseInt(textId) : textId
+    if (isNaN(textIdInt)) {
+      console.warn(`⚠️ [Frontend] Invalid textId for getVocabNotations: ${textId}`);
+      return Promise.reject(new Error(`Invalid textId: ${textId}. Expected a number.`));
+    }
     // 🔧 如果没有传入 userId，从 localStorage 获取
     if (!userId) {
       const storedUserId = localStorage.getItem('user_id')
       userId = storedUserId ? parseInt(storedUserId) : 1  // 默认 User 1
     }
     
-    return api.get(
-      API_TARGET === 'mock' 
-        ? `/api/vocab_notations/${textId}` 
-        : `/api/v2/notations/vocab?text_id=${textId}&user_id=${userId}`
-    )
+    // 🔧 统一使用数据库API路径，确保 text_id 是数字
+    const url = `/api/v2/notations/vocab?text_id=${textIdInt}${userId ? `&user_id=${userId}` : ''}`
+    console.log(`🔍 [API] getVocabNotations: ${url}`)
+    return api.get(url).catch(error => {
+      // 🔧 如果是404错误，返回空数组而不是抛出错误，避免无限重试
+      if (error.response && error.response.status === 404) {
+        console.warn(`⚠️ [API] Vocab notations not found for textId=${textIdInt}, returning empty array`)
+        return { data: { success: true, data: { notations: [], count: 0 } } }
+      }
+      throw error
+    })
   },
 
   // 获取句子的词汇注释
