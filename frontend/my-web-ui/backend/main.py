@@ -1933,6 +1933,8 @@ async def get_article_detail(
             
             # 转换为前端期望的格式
             # 🔧 注意：TextDTO 没有 processing_status 字段，需要从 text_model 获取
+            # 🔧 注意：TextDTO 的句子字段是 text_by_sentence，不是 sentences
+            text_sentences = getattr(text, 'text_by_sentence', None) or getattr(text, 'sentences', None) or []
             data = {
                 "text_id": text.text_id,
                 "text_title": text.text_title,
@@ -1942,12 +1944,12 @@ async def get_article_detail(
                     {
                         "sentence_id": s.sentence_id,
                         "sentence_body": s.sentence_body,
-                        "difficulty_level": s.sentence_difficulty_level,
-                        "grammar_annotations": s.grammar_annotations or [],
-                        "vocab_annotations": s.vocab_annotations or []
+                        "difficulty_level": getattr(s, 'sentence_difficulty_level', None) or getattr(s, 'difficulty_level', None),
+                        "grammar_annotations": getattr(s, 'grammar_annotations', None) or [],
+                        "vocab_annotations": getattr(s, 'vocab_annotations', None) or []
                     }
-                    for s in (text.sentences if hasattr(text, 'sentences') and text.sentences else [])
-                ] if hasattr(text, 'sentences') else []
+                    for s in text_sentences
+                ]
             }
             
             # 标记 token 的可选择性
