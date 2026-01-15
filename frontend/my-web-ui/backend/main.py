@@ -1932,11 +1932,12 @@ async def get_article_detail(
                 return create_error_response(f"文章不存在: {article_id}", status_code=404)
             
             # 转换为前端期望的格式
+            # 🔧 注意：TextDTO 没有 processing_status 字段，需要从 text_model 获取
             data = {
                 "text_id": text.text_id,
                 "text_title": text.text_title,
                 "language": text.language,
-                "processing_status": text.processing_status,
+                "processing_status": getattr(text_model, 'processing_status', 'completed'),  # 从 text_model 获取
                 "sentences": [
                     {
                         "sentence_id": s.sentence_id,
