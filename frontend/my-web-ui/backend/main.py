@@ -57,9 +57,18 @@ MAX_ARTICLE_LENGTH = 5000
 # 导入新的标注API路由
 try:
     from backend.api.notation_routes import router as notation_router
-    print("[OK] 加载新的标注API路由")
+    print("[OK] 加载新的标注API路由模块成功")
 except ImportError as e:
-    print(f"Warning: Could not import notation_routes: {e}")
+    import traceback
+    print(f"❌ [ERROR] 无法导入 notation_routes: {e}")
+    print("详细错误信息:")
+    traceback.print_exc()
+    notation_router = None
+except Exception as e:
+    import traceback
+    print(f"❌ [ERROR] 导入 notation_routes 时发生其他错误: {e}")
+    print("详细错误信息:")
+    traceback.print_exc()
     notation_router = None
 
 # 计算 backend/data/current/articles 目录（相对本文件位置）
@@ -411,8 +420,16 @@ async def log_requests(request, call_next):
 
 # 注册新的标注API路由
 if notation_router:
-    app.include_router(notation_router)
-    print("[OK] 注册新的标注API路由: /api/v2/notations")
+    try:
+        app.include_router(notation_router)
+        print("[OK] 注册新的标注API路由: /api/v2/notations")
+    except Exception as e:
+        import traceback
+        print(f"❌ [ERROR] 注册 notation_router 时发生错误: {e}")
+        print("详细错误信息:")
+        traceback.print_exc()
+else:
+    print("⚠️ [WARNING] notation_router 为 None，未注册标注API路由")
 
 # 注册认证API路由
 try:
