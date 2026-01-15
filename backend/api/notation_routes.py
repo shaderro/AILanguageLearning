@@ -10,10 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 # 导入统一管理器
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from data_managers.unified_notation_manager import get_unified_notation_manager
+from backend.data_managers.unified_notation_manager import get_unified_notation_manager
 from database_system.database_manager import DatabaseManager
 from backend.api.auth_routes import get_current_user
 from database_system.business_logic.models import User
