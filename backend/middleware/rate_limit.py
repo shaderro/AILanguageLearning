@@ -12,6 +12,11 @@ import time
 # 注意：这是简单的内存实现，重启后重置。生产环境建议使用 Redis
 _rate_limit_storage: Dict[int, Tuple[int, float]] = defaultdict(lambda: (0, 0.0))
 
+# 请求历史记录：用户ID -> [(时间戳, 路径, 方法), ...]
+# 用于调试：查看用户发送了哪些请求
+_request_history: Dict[int, list] = defaultdict(list)
+_MAX_HISTORY_SIZE = 50  # 每个用户最多记录50条请求历史
+
 # Rate limit 配置
 RATE_LIMIT_CONFIG = {
     # AI 接口：每个用户每分钟最多 20 次
@@ -75,6 +80,19 @@ def check_rate_limit(user_id: int, path: str) -> Tuple[bool, int, int]:
     return True, remaining, reset_in
 
 
+def get_user_request_history(user_id: int) -> list:
+    """获取用户的请求历史（用于调试）"""
+    return _request_history.get(user_id, [])
+
+
+def clear_user_request_history(user_id: int = None):
+    """清除请求历史（用于调试）"""
+    if user_id is None:
+        _request_history.clear()
+    else:
+        _request_history.pop(user_id, None)
+
+
 async def rate_limit_middleware(request: Request, call_next):
     """
     Rate limit 中间件
@@ -105,10 +123,31 @@ async def rate_limit_middleware(request: Request, call_next):
     if user_id is None:
         return await call_next(request)
     
-    # 检查 rate limit
+    # 检查 rate limit（先检查，再记录）
     allowed, remaining, reset_in = check_rate_limit(user_id, request.url.path)
+    config = get_rate_limit_config(request.url.path)
+    max_requests = config["max_requests"]
+    
+    # 记录请求历史（用于调试）
+    history = _request_history[user_id]
+    history.append((
+        time.time(),
+        request.url.path,
+        request.method,
+        f"{remaining}/{max_requests}"
+    ))
+    # 只保留最近的请求历史
+    if len(history) > _MAX_HISTORY_SIZE:
+        history.pop(0)
     
     if not allowed:
+        # 记录被限流的请求详情
+        print(f"🚫 [RateLimit] 用户 {user_id} 触发限制: {request.method} {request.url.path}")
+        print(f"   当前窗口内请求数: {_rate_limit_storage[user_id][0]}/{get_rate_limit_config(request.url.path)['max_requests']}")
+        print(f"   最近 {min(len(history), 10)} 条请求:")
+        for ts, path, method, _ in history[-10:]:
+            dt = datetime.fromtimestamp(ts).strftime("%H:%M:%S")
+            print(f"     {dt} {method} {path}")
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail={
@@ -129,6 +168,10 @@ async def rate_limit_middleware(request: Request, call_next):
     response.headers["X-RateLimit-Limit"] = str(get_rate_limit_config(request.url.path)["max_requests"])
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     response.headers["X-RateLimit-Reset"] = str(int(time.time()) + reset_in)
+    
+    # 调试日志：记录请求（仅在接近限制时）
+    if remaining < 5:
+        print(f"⚠️ [RateLimit] 用户 {user_id} 剩余 {remaining} 次请求: {request.method} {request.url.path}")
     
     return response
 
