@@ -146,6 +146,7 @@ async def get_all_texts(
         # 🔧 使用 LEFT JOIN 获取最后打开时间，按最后打开时间排序（最新的在前）
         from database_system.business_logic.models import UserArticleAccess
         
+        # 构建查询：包含 LEFT JOIN 获取最后打开时间
         query = session.query(
             OriginalText,
             UserArticleAccess.last_opened_at.label('last_opened_at')
@@ -155,13 +156,13 @@ async def get_all_texts(
             (UserArticleAccess.user_id == current_user.user_id)
         ).filter(OriginalText.user_id == current_user.user_id)
         
-        # 🔧 添加调试日志：记录查询结果数量
-        total_count = query.count()
-        print(f"🔍 [TextAPI] Found {total_count} articles for user_id: {current_user.user_id}")
-        
         # 语言过滤
         if language and language != 'all':
             query = query.filter(OriginalText.language == language)
+        
+        # 🔧 添加调试日志：记录查询结果数量
+        total_count = query.count()
+        print(f"🔍 [TextAPI] Found {total_count} articles for user_id: {current_user.user_id}, language={language}")
         
         # 🔧 按最后打开时间排序（最新的在前），如果从未打开过，则按创建时间排序（最新的在前）
         query = query.order_by(
@@ -177,15 +178,23 @@ async def get_all_texts(
             # 使用索引访问：result[0] 是 OriginalText 对象，result[1] 是 last_opened_at
             t = result[0]  # OriginalText 对象
             last_opened_at = result[1] if len(result) > 1 else None
-            # 使用SQL查询统计句子数
-            sentence_count = session.query(func.count(Sentence.id)).filter(
-                Sentence.text_id == t.text_id
-            ).scalar() or 0
+            # 使用SQL查询统计句子数（使用 try-except 防止查询失败）
+            try:
+                sentence_count = session.query(func.count(Sentence.id)).filter(
+                    Sentence.text_id == t.text_id
+                ).scalar() or 0
+            except Exception as e:
+                print(f"⚠️ [TextAPI] Error counting sentences for text_id={t.text_id}: {e}")
+                sentence_count = 0
             
-            # 使用SQL查询统计token数
-            token_count = session.query(func.count(Token.token_id)).filter(
-                Token.text_id == t.text_id
-            ).scalar() or 0
+            # 使用SQL查询统计token数（使用 try-except 防止查询失败）
+            try:
+                token_count = session.query(func.count(Token.token_id)).filter(
+                    Token.text_id == t.text_id
+                ).scalar() or 0
+            except Exception as e:
+                print(f"⚠️ [TextAPI] Error counting tokens for text_id={t.text_id}: {e}")
+                token_count = 0
             
             texts_with_stats.append({
                 "text_id": t.text_id,
