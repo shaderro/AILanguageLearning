@@ -342,10 +342,14 @@ async def get_text(
             raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
         
         # 🔧 安全处理 sentences（可能为 None 或空列表）
-        text_by_sentence = text.sentences if hasattr(text, 'sentences') and text.sentences else []
+        # 注意：TextDTO 的字段是 text_by_sentence，不是 sentences
+        text_by_sentence = getattr(text, 'text_by_sentence', None) or getattr(text, 'sentences', None) or []
         sentence_count = len(text_by_sentence) if text_by_sentence else 0
         
         print(f"[API] Found text {text_id}: {text.text_title}, sentences: {sentence_count}")
+        print(f"[API] Debug: text type={type(text)}, has text_by_sentence={hasattr(text, 'text_by_sentence')}, has sentences={hasattr(text, 'sentences')}")
+        if text_by_sentence:
+            print(f"[API] Debug: first sentence type={type(text_by_sentence[0])}, has sentence_body={hasattr(text_by_sentence[0], 'sentence_body')}")
         
         language_code = get_language_code(text.language) if text.language else None
         is_non_whitespace = is_non_whitespace_language(language_code) if language_code else None

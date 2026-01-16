@@ -1,11 +1,25 @@
 import axios from "axios";
 
-// 环境切换优先级：URL 参数 > localStorage > VITE_API_TARGET > 默认 db
+// 环境切换优先级：
+// 生产环境：强制使用 db（忽略 URL 参数和 localStorage）
+// 开发环境：URL 参数 > localStorage > VITE_API_TARGET > 默认 db
 // 用法：
-//  - 在地址栏加 ?api=mock 或 ?api=db
-//  - 或者在控制台执行 localStorage.setItem('API_TARGET','mock')
+//  - 在地址栏加 ?api=mock 或 ?api=db（仅开发环境有效）
+//  - 或者在控制台执行 localStorage.setItem('API_TARGET','mock')（仅开发环境有效）
 //  - 或者使用 VITE_API_TARGET=mock 启动
 function getApiTarget() {
+  // 🔧 生产环境强制使用 db 模式（确保上线版本使用正确的 API）
+  const isProduction = import.meta.env.PROD || 
+    (typeof window !== 'undefined' && 
+     !window.location.hostname.includes('localhost') && 
+     !window.location.hostname.includes('127.0.0.1'));
+  
+  if (isProduction) {
+    // 生产环境：强制使用 db，忽略所有其他设置
+    return 'db';
+  }
+  
+  // 开发环境：允许通过 URL 参数、localStorage 或环境变量切换
   try {
     const url = new URL(window.location.href);
     const param = url.searchParams.get('api');
@@ -312,20 +326,20 @@ export const apiService = {
       } else {
         // 数据库模式：只使用 v2 API（有用户隔离），不再回退到旧端点
         // 旧端点（/api/vocab）没有用户隔离，会导致不同用户看到同一份数据
-        const params = new URLSearchParams();
-        if (language && language !== 'all') {
-          params.append('language', language);
-        }
-        if (learnStatus && learnStatus !== 'all') {
-          params.append('learn_status', learnStatus);
-        }
-        if (textId && textId !== 'all') {
-          params.append('text_id', textId);
-        }
-        const queryString = params.toString();
-        const url = queryString ? `/api/v2/vocab/?${queryString}` : '/api/v2/vocab/';
-        console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
-        return await api.get(url);
+          const params = new URLSearchParams();
+          if (language && language !== 'all') {
+            params.append('language', language);
+          }
+          if (learnStatus && learnStatus !== 'all') {
+            params.append('learn_status', learnStatus);
+          }
+          if (textId && textId !== 'all') {
+            params.append('text_id', textId);
+          }
+          const queryString = params.toString();
+          const url = queryString ? `/api/v2/vocab/?${queryString}` : '/api/v2/vocab/';
+          console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+          return await api.get(url);
       }
     } catch (e) {
       console.error('❌ [API] 获取词汇列表失败:', e);
@@ -362,20 +376,20 @@ export const apiService = {
       } else {
         // 数据库模式：只使用 v2 API（有用户隔离），不再回退到旧端点
         // 旧端点（/api/grammar）没有用户隔离，会导致不同用户看到同一份数据
-        const params = new URLSearchParams();
-        if (language && language !== 'all') {
-          params.append('language', language);
-        }
-        if (learnStatus && learnStatus !== 'all') {
-          params.append('learn_status', learnStatus);
-        }
-        if (textId && textId !== 'all') {
-          params.append('text_id', textId);
-        }
-        const queryString = params.toString();
-        const url = queryString ? `/api/v2/grammar/?${queryString}` : '/api/v2/grammar/';
-        console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
-        return await api.get(url);
+          const params = new URLSearchParams();
+          if (language && language !== 'all') {
+            params.append('language', language);
+          }
+          if (learnStatus && learnStatus !== 'all') {
+            params.append('learn_status', learnStatus);
+          }
+          if (textId && textId !== 'all') {
+            params.append('text_id', textId);
+          }
+          const queryString = params.toString();
+          const url = queryString ? `/api/v2/grammar/?${queryString}` : '/api/v2/grammar/';
+          console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+          return await api.get(url);
       }
     } catch (e) {
       console.error('❌ [API] 获取语法列表失败:', e);

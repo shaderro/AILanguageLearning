@@ -421,8 +421,8 @@ async def log_requests(request, call_next):
 # 注册新的标注API路由
 if notation_router:
     try:
-        app.include_router(notation_router)
-        print("[OK] 注册新的标注API路由: /api/v2/notations")
+    app.include_router(notation_router)
+    print("[OK] 注册新的标注API路由: /api/v2/notations")
     except Exception as e:
         import traceback
         print(f"❌ [ERROR] 注册 notation_router 时发生错误: {e}")
@@ -1623,9 +1623,9 @@ async def get_vocab_example_by_location(
             print(f"🔍 [VocabExample] Found {len(examples)} example(s) before token_index filtering (user_id={user_id})")
             
             # ✅ 不再跨用户回退查询（确保用户数据隔离）
-            for ex in examples:
-                vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
-                print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
+                for ex in examples:
+                    vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
+                    print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
             
             # 🔧 2. 如果有 token_index，进一步过滤（检查 token_indices 是否包含 token_index）
             # 🔧 修复：如果 token_indices 为空，说明 example 是为整个句子创建的，应该匹配任何 token_index
@@ -1717,7 +1717,7 @@ async def get_vocab_list(current_user: User = Depends(get_current_user)):
             ]
         finally:
             session.close()
-
+        
         return create_success_response(
             data=data,
             message=f"成功获取词汇列表（user_id={current_user.user_id}），共 {len(data)} 条记录"
@@ -1737,7 +1737,7 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
                 VocabExpression.vocab_id == vocab_id,
                 VocabExpression.user_id == current_user.user_id,
             ).first()
-            if not vocab:
+        if not vocab:
                 return create_error_response(f"词汇不存在或无权限访问: {vocab_id}")
             data = {
                 "vocab_id": vocab.vocab_id,
@@ -1753,7 +1753,7 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
             }
         finally:
             session.close()
-
+        
         return create_success_response(
             data=data,
             message=f"成功获取词汇详情: {data.get('vocab_body')}"
@@ -1787,7 +1787,7 @@ async def get_grammar_list(current_user: User = Depends(get_current_user)):
             ]
         finally:
             session.close()
-
+        
         return create_success_response(
             data=data,
             message=f"成功获取语法规则列表（user_id={current_user.user_id}），共 {len(data)} 条记录"
@@ -1859,10 +1859,10 @@ async def list_articles(current_user: User = Depends(get_current_user)):
             ]
             
             print(f"✅ [API] 从数据库获取 {len(summaries)} 篇文章（用户 {current_user.user_id}）")
-            return create_success_response(
-                data=summaries,
+        return create_success_response(
+            data=summaries,
                 message=f"成功获取文章列表，共 {len(summaries)} 篇（仅当前用户）"
-            )
+        )
         finally:
             session.close()
             
@@ -1925,36 +1925,98 @@ async def get_article_detail(
             
             # 使用 v2 API 的数据格式
             from backend.data_managers import OriginalTextManagerDB
+            from backend.adapters.text_adapter import SentenceAdapter
+            from database_system.business_logic.models import Sentence as SentenceModel
+            
             text_manager = OriginalTextManagerDB(session)
             text = text_manager.get_text_by_id(article_id, include_sentences=True)
             
             if not text:
                 return create_error_response(f"文章不存在: {article_id}", status_code=404)
-            
+
             # 转换为前端期望的格式
             # 🔧 注意：TextDTO 没有 processing_status 字段，需要从 text_model 获取
             # 🔧 注意：TextDTO 的句子字段是 text_by_sentence，不是 sentences
             text_sentences = getattr(text, 'text_by_sentence', None) or getattr(text, 'sentences', None) or []
+            
+            # 🔧 获取语言代码（用于 tokens 处理）
+            from backend.preprocessing.language_classification import get_language_code, is_non_whitespace_language
+            language_code = get_language_code(text.language) if text.language else None
+            is_non_whitespace = is_non_whitespace_language(language_code) if language_code else None
+            
+            # 构建完整的句子数据（包含 tokens）
+            sentences_data = []
+            for s in text_sentences:
+                # 获取句子的 tokens（如果 DTO 中有）
+                sentence_tokens = getattr(s, 'tokens', None) or []
+                word_tokens = getattr(s, 'word_tokens', None) or []
+                
+                # 构建 tokens 数组
+                tokens = []
+                if sentence_tokens:
+                    # 从 DTO 的 tokens 构建
+                    for t in sentence_tokens:
+                        tokens.append({
+                            "token_body": t.token_body,
+                            "sentence_token_id": t.sentence_token_id,
+                            "token_type": str(t.token_type).lower() if t.token_type else "text",
+                            "difficulty_level": t.difficulty_level,
+                            "global_token_id": getattr(t, "global_token_id", None),
+                            "pos_tag": getattr(t, "pos_tag", None),
+                            "lemma": getattr(t, "lemma", None),
+                            "word_token_id": getattr(t, "word_token_id", None),
+                            "selectable": True,
+                        })
+                else:
+                    # Fallback: 按空格切分 sentence_body
+                    words = (s.sentence_body or "").split()
+                    tokens = [
+                        {
+                            "token_body": word,
+                            "sentence_token_id": idx,
+                            "token_type": "text",
+                            "selectable": True,
+                        }
+                        for idx, word in enumerate(words)
+                    ]
+                
+                # 构建 word_tokens 数组
+                word_tokens_data = []
+                if word_tokens:
+                    for wt in word_tokens:
+                        word_tokens_data.append({
+                            "word_token_id": wt.word_token_id,
+                            "word_body": wt.word_body,
+                            "token_ids": list(wt.token_ids) if hasattr(wt.token_ids, '__iter__') else [],
+                            "pos_tag": getattr(wt, "pos_tag", None),
+                            "lemma": getattr(wt, "lemma", None),
+                            "linked_vocab_id": getattr(wt, "linked_vocab_id", None),
+                        })
+                
+                sentences_data.append({
+                    "sentence_id": s.sentence_id,
+                    "sentence_body": s.sentence_body,
+                    "difficulty_level": getattr(s, 'sentence_difficulty_level', None) or getattr(s, 'difficulty_level', None),
+                    "grammar_annotations": list(getattr(s, 'grammar_annotations', None) or []),
+                    "vocab_annotations": list(getattr(s, 'vocab_annotations', None) or []),
+                    "tokens": tokens,
+                    "word_tokens": word_tokens_data,
+                    "language": text.language,
+                    "language_code": language_code,
+                    "is_non_whitespace": is_non_whitespace,
+                })
+            
             data = {
                 "text_id": text.text_id,
                 "text_title": text.text_title,
                 "language": text.language,
                 "processing_status": getattr(text_model, 'processing_status', 'completed'),  # 从 text_model 获取
-                "sentences": [
-                    {
-                        "sentence_id": s.sentence_id,
-                        "sentence_body": s.sentence_body,
-                        "difficulty_level": getattr(s, 'sentence_difficulty_level', None) or getattr(s, 'difficulty_level', None),
-                        "grammar_annotations": getattr(s, 'grammar_annotations', None) or [],
-                        "vocab_annotations": getattr(s, 'vocab_annotations', None) or []
-                    }
-                    for s in text_sentences
-                ]
+                "sentences": sentences_data
             }
             
             # 标记 token 的可选择性
             data = _mark_tokens_selectable(data)
-            
+
             print(f"✅ [API] 成功获取文章 {article_id}（用户 {current_user.user_id}）")
             return create_success_response(
                 data=data,

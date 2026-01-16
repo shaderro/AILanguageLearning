@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { flushSync } from 'react-dom'
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
@@ -328,7 +328,7 @@ export default function ChatView({
         const parsed = JSON.parse(trimmed)
         if (parsed && typeof parsed === 'object') {
           if (parsed.answer) {
-            return parsed.answer
+          return parsed.answer
           }
           // 如果解析成功但格式不对，返回原始文本
           return trimmed
@@ -361,7 +361,7 @@ export default function ChatView({
           .replace(/\\'/g, "'")
           .replace(/\\"/g, '"')
           .replace(/\\\\/g, '\\')
-      }
+          }
       
       // 🔧 如果都失败了，直接返回原始文本
       return trimmed
