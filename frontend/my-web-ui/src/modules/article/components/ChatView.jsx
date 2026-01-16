@@ -68,6 +68,7 @@ export default function ChatView({
   
   const scrollContainerRef = useRef(null)
   const messageIdCounterRef = useRef(0)
+  const pollPendingKnowledgeRef = useRef(null)  // 🔧 存储轮询定时器引用，用于清理
   const generateMessageId = () => {
     messageIdCounterRef.current += 1
     return Date.now() + Math.random() + messageIdCounterRef.current
@@ -156,6 +157,14 @@ export default function ChatView({
     }
     
     loadHistory()
+    
+    // 🔧 组件卸载时清理轮询
+    return () => {
+      if (pollPendingKnowledgeRef.current) {
+        clearInterval(pollPendingKnowledgeRef.current)
+        pollPendingKnowledgeRef.current = null
+      }
+    }
   }, [articleId, normalizedArticleId])
   
   // 🔧 添加消息（立即显示）
@@ -493,17 +502,23 @@ export default function ChatView({
         })
       }
       
-      // 🔧 轮询新知识点
+      // 🔧 轮询新知识点（优化：降低频率，确保清理）
       if (response && !response.grammar_to_add?.length && !response.vocab_to_add?.length) {
         const textId = currentSelectionContext?.sentence?.text_id || articleId
         const userId = parseInt(localStorage.getItem('user_id') || '2')
         
         if (textId) {
+          // 🔧 先清理之前的轮询（如果存在）
+          if (pollPendingKnowledgeRef.current) {
+            clearInterval(pollPendingKnowledgeRef.current)
+            pollPendingKnowledgeRef.current = null
+          }
+          
           let pollCount = 0
           const maxPolls = 10
-          const pollInterval = 1000
+          const pollInterval = 3000  // 🔧 改为3秒一次（原来是1秒），减少请求频率
           
-          const pollPendingKnowledge = setInterval(async () => {
+          pollPendingKnowledgeRef.current = setInterval(async () => {
             pollCount++
             try {
               const { apiService } = await import('../../../services/api')
@@ -531,18 +546,38 @@ export default function ChatView({
                   }, idx * 600)
                 })
                 
-                clearInterval(pollPendingKnowledge)
+                // 🔧 找到数据后立即停止轮询
+                if (pollPendingKnowledgeRef.current) {
+                  clearInterval(pollPendingKnowledgeRef.current)
+                  pollPendingKnowledgeRef.current = null
+                }
+                return
               }
             } catch (err) {
               console.warn('⚠️ [ChatView] 轮询失败:', err)
+              // 🔧 出错时也停止轮询，避免无限重试
+              if (pollPendingKnowledgeRef.current) {
+                clearInterval(pollPendingKnowledgeRef.current)
+                pollPendingKnowledgeRef.current = null
+              }
             }
             
+            // 🔧 达到最大轮询次数后停止
             if (pollCount >= maxPolls) {
-              clearInterval(pollPendingKnowledge)
+              if (pollPendingKnowledgeRef.current) {
+                clearInterval(pollPendingKnowledgeRef.current)
+                pollPendingKnowledgeRef.current = null
+              }
             }
           }, pollInterval)
           
-          setTimeout(() => clearInterval(pollPendingKnowledge), maxPolls * pollInterval)
+          // 🔧 设置超时清理（双重保险）
+          setTimeout(() => {
+            if (pollPendingKnowledgeRef.current) {
+              clearInterval(pollPendingKnowledgeRef.current)
+              pollPendingKnowledgeRef.current = null
+            }
+          }, maxPolls * pollInterval)
         }
       }
     } catch (error) {

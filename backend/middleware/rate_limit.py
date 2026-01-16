@@ -37,6 +37,10 @@ def get_rate_limit_config(path: str) -> Dict:
     # 精确匹配
     if path in RATE_LIMIT_CONFIG:
         return RATE_LIMIT_CONFIG[path]
+    # 🔧 pending-knowledge 是查询接口，不应该使用 AI 接口的严格限制
+    # 使用 startsWith 而不是精确匹配，避免 /api/chat/pending-knowledge 被误判为 /api/chat
+    if path.startswith("/api/chat/pending-knowledge"):
+        return RATE_LIMIT_CONFIG["default"]
     # 默认配置
     return RATE_LIMIT_CONFIG["default"]
 
