@@ -24,9 +24,9 @@ RATE_LIMIT_CONFIG = {
         "max_requests": 20,
         "window_seconds": 60,  # 1 分钟
     },
-    # 默认配置：每个用户每分钟最多 100 次
+    # 默认配置：每个用户每分钟最多 300 次（普通接口，不需要太严格）
     "default": {
-        "max_requests": 100,
+        "max_requests": 300,
         "window_seconds": 60,
     }
 }

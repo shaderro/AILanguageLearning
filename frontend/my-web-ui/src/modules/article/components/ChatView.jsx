@@ -118,10 +118,12 @@ export default function ChatView({
     }
   }, [messages.length])
   
-  // 🔧 从后端加载历史记录
+  // 🔧 从后端加载历史记录（添加去重机制，避免重复请求）
+  const loadingHistoryRef = useRef(false)
   useEffect(() => {
-    if (!articleId || isProcessing) return
+    if (!articleId || isProcessing || loadingHistoryRef.current) return
     
+    loadingHistoryRef.current = true
     const loadHistory = async () => {
       try {
         const { apiService } = await import('../../../services/api')
@@ -148,11 +150,13 @@ export default function ChatView({
         }
       } catch (error) {
         console.error('❌ [ChatView] 加载历史记录失败:', error)
+      } finally {
+        loadingHistoryRef.current = false
       }
     }
     
     loadHistory()
-  }, [articleId])
+  }, [articleId, normalizedArticleId])
   
   // 🔧 添加消息（立即显示）
   const addMessage = useCallback((newMessage) => {
@@ -212,36 +216,6 @@ export default function ChatView({
       
       setIsProcessing(true)
       
-      // 🔧 更新 session state
-      if (currentSelectionContext?.sentence) {
-        try {
-          const { apiService } = await import('../../../services/api')
-          const preUpdatePayload = { sentence: currentSelectionContext.sentence }
-          
-          if (currentSelectionContext.tokens?.length > 0) {
-            if (currentSelectionContext.tokens.length > 1) {
-              preUpdatePayload.token = {
-                multiple_tokens: currentSelectionContext.tokens,
-                token_indices: currentSelectionContext.tokenIndices,
-                token_text: currentSelectionContext.selectedTexts.join(' ')
-              }
-            } else {
-              const token = currentSelectionContext.tokens[0]
-              preUpdatePayload.token = {
-                token_body: token.token_body,
-                sentence_token_id: token.sentence_token_id
-              }
-            }
-          } else {
-            preUpdatePayload.token = null
-          }
-          
-          await apiService.session.updateContext(preUpdatePayload)
-        } catch (error) {
-          console.error('❌ [ChatView] 更新 session state 失败:', error)
-        }
-      }
-      
       // 🔧 立即添加用户消息
       const userMessage = {
         id: generateMessageId(),
@@ -252,10 +226,37 @@ export default function ChatView({
       }
       addMessage(userMessage)
       
-      // 🔧 调用 API
+      // 🔧 调用 API（合并 session 更新，避免重复请求）
       try {
         const { apiService } = await import('../../../services/api')
-        await apiService.session.updateContext({ current_input: questionText })
+        
+        // 🔧 合并 session 更新：将句子上下文和 current_input 合并到一次调用
+        const sessionUpdatePayload = { current_input: questionText }
+        
+        if (currentSelectionContext?.sentence) {
+          sessionUpdatePayload.sentence = currentSelectionContext.sentence
+          
+          if (currentSelectionContext.tokens?.length > 0) {
+            if (currentSelectionContext.tokens.length > 1) {
+              sessionUpdatePayload.token = {
+                multiple_tokens: currentSelectionContext.tokens,
+                token_indices: currentSelectionContext.tokenIndices,
+                token_text: currentSelectionContext.selectedTexts.join(' ')
+              }
+            } else {
+              const token = currentSelectionContext.tokens[0]
+              sessionUpdatePayload.token = {
+                token_body: token.token_body,
+                sentence_token_id: token.sentence_token_id
+              }
+            }
+          } else {
+            sessionUpdatePayload.token = null
+          }
+        }
+        
+        // 🔧 一次性更新所有上下文，而不是分两次调用
+        await apiService.session.updateContext(sessionUpdatePayload)
         
         const response = await apiService.sendChat({ user_question: questionText })
         
@@ -379,36 +380,6 @@ export default function ChatView({
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
     
-    // 🔧 更新 session state
-    if (currentSelectionContext?.sentence) {
-      try {
-        const { apiService } = await import('../../../services/api')
-        const preUpdatePayload = { sentence: currentSelectionContext.sentence }
-        
-        if (currentSelectionContext.tokens?.length > 0) {
-          if (currentSelectionContext.tokens.length > 1) {
-            preUpdatePayload.token = {
-              multiple_tokens: currentSelectionContext.tokens,
-              token_indices: currentSelectionContext.tokenIndices,
-              token_text: currentSelectionContext.selectedTexts.join(' ')
-            }
-          } else {
-            const token = currentSelectionContext.tokens[0]
-            preUpdatePayload.token = {
-              token_body: token.token_body,
-              sentence_token_id: token.sentence_token_id
-            }
-          }
-        } else {
-          preUpdatePayload.token = null
-        }
-        
-        await apiService.session.updateContext(preUpdatePayload)
-      } catch (error) {
-        console.error('❌ [ChatView] 更新 session state 失败:', error)
-      }
-    }
-    
     // 🔧 立即添加用户消息
     const userMessage = {
       id: generateMessageId(),
@@ -420,10 +391,37 @@ export default function ChatView({
     addMessage(userMessage)
     setInputText('')
     
-    // 🔧 调用 API
+    // 🔧 调用 API（合并 session 更新，避免重复请求）
     try {
       const { apiService } = await import('../../../services/api')
-      await apiService.session.updateContext({ current_input: questionText })
+      
+      // 🔧 合并 session 更新：将句子上下文和 current_input 合并到一次调用
+      const sessionUpdatePayload = { current_input: questionText }
+      
+      if (currentSelectionContext?.sentence) {
+        sessionUpdatePayload.sentence = currentSelectionContext.sentence
+        
+        if (currentSelectionContext.tokens?.length > 0) {
+          if (currentSelectionContext.tokens.length > 1) {
+            sessionUpdatePayload.token = {
+              multiple_tokens: currentSelectionContext.tokens,
+              token_indices: currentSelectionContext.tokenIndices,
+              token_text: currentSelectionContext.selectedTexts.join(' ')
+            }
+          } else {
+            const token = currentSelectionContext.tokens[0]
+            sessionUpdatePayload.token = {
+              token_body: token.token_body,
+              sentence_token_id: token.sentence_token_id
+            }
+          }
+        } else {
+          sessionUpdatePayload.token = null
+        }
+      }
+      
+      // 🔧 一次性更新所有上下文，而不是分两次调用
+      await apiService.session.updateContext(sessionUpdatePayload)
       
       const response = await apiService.sendChat({ user_question: questionText })
       
@@ -569,36 +567,6 @@ export default function ChatView({
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
     
-    // 🔧 更新 session state
-    if (currentSelectionContext?.sentence) {
-      try {
-        const { apiService } = await import('../../../services/api')
-        const preUpdatePayload = { sentence: currentSelectionContext.sentence }
-        
-        if (currentSelectionContext.tokens?.length > 0) {
-          if (currentSelectionContext.tokens.length > 1) {
-            preUpdatePayload.token = {
-              multiple_tokens: currentSelectionContext.tokens,
-              token_indices: currentSelectionContext.tokenIndices,
-              token_text: currentSelectionContext.selectedTexts.join(' ')
-            }
-          } else {
-            const token = currentSelectionContext.tokens[0]
-            preUpdatePayload.token = {
-              token_body: token.token_body,
-              sentence_token_id: token.sentence_token_id
-            }
-          }
-        } else {
-          preUpdatePayload.token = null
-        }
-        
-        await apiService.session.updateContext(preUpdatePayload)
-      } catch (error) {
-        console.error('❌ [ChatView] 更新 session state 失败:', error)
-      }
-    }
-    
     // 🔧 立即添加用户消息
     const userMessage = {
       id: generateMessageId(),
@@ -609,10 +577,37 @@ export default function ChatView({
     }
     addMessage(userMessage)
     
-    // 🔧 调用 API
+    // 🔧 调用 API（合并 session 更新，避免重复请求）
     try {
       const { apiService } = await import('../../../services/api')
-      await apiService.session.updateContext({ current_input: question })
+      
+      // 🔧 合并 session 更新：将句子上下文和 current_input 合并到一次调用
+      const sessionUpdatePayload = { current_input: question }
+      
+      if (currentSelectionContext?.sentence) {
+        sessionUpdatePayload.sentence = currentSelectionContext.sentence
+        
+        if (currentSelectionContext.tokens?.length > 0) {
+          if (currentSelectionContext.tokens.length > 1) {
+            sessionUpdatePayload.token = {
+              multiple_tokens: currentSelectionContext.tokens,
+              token_indices: currentSelectionContext.tokenIndices,
+              token_text: currentSelectionContext.selectedTexts.join(' ')
+            }
+          } else {
+            const token = currentSelectionContext.tokens[0]
+            sessionUpdatePayload.token = {
+              token_body: token.token_body,
+              sentence_token_id: token.sentence_token_id
+            }
+          }
+        } else {
+          sessionUpdatePayload.token = null
+        }
+      }
+      
+      // 🔧 一次性更新所有上下文，而不是分两次调用
+      await apiService.session.updateContext(sessionUpdatePayload)
       
       const response = await apiService.sendChat({ user_question: question })
       
