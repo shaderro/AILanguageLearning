@@ -421,8 +421,8 @@ async def log_requests(request, call_next):
 # 注册新的标注API路由
 if notation_router:
     try:
-    app.include_router(notation_router)
-    print("[OK] 注册新的标注API路由: /api/v2/notations")
+        app.include_router(notation_router)
+        print("[OK] 注册新的标注API路由: /api/v2/notations")
     except Exception as e:
         import traceback
         print(f"❌ [ERROR] 注册 notation_router 时发生错误: {e}")
@@ -1623,9 +1623,9 @@ async def get_vocab_example_by_location(
             print(f"🔍 [VocabExample] Found {len(examples)} example(s) before token_index filtering (user_id={user_id})")
             
             # ✅ 不再跨用户回退查询（确保用户数据隔离）
-                for ex in examples:
-                    vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
-                    print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
+            for ex in examples:
+                vocab_model = session.query(VocabExpression).filter(VocabExpression.vocab_id == ex.vocab_id).first()
+                print(f"  - Example: vocab_id={ex.vocab_id}, text_id={ex.text_id}, sentence_id={ex.sentence_id}, token_indices={ex.token_indices}, vocab_user_id={vocab_model.user_id if vocab_model else 'N/A'}")
             
             # 🔧 2. 如果有 token_index，进一步过滤（检查 token_indices 是否包含 token_index）
             # 🔧 修复：如果 token_indices 为空，说明 example 是为整个句子创建的，应该匹配任何 token_index
@@ -1696,6 +1696,7 @@ async def get_vocab_list(current_user: User = Depends(get_current_user)):
     """获取词汇列表（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
         from database_system.business_logic.models import VocabExpression
+        from database_system.database_manager import DatabaseManager
         db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         try:
@@ -1730,6 +1731,7 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
     """获取词汇详情（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
         from database_system.business_logic.models import VocabExpression
+        from database_system.database_manager import DatabaseManager
         db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         try:
@@ -1737,7 +1739,7 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
                 VocabExpression.vocab_id == vocab_id,
                 VocabExpression.user_id == current_user.user_id,
             ).first()
-        if not vocab:
+            if not vocab:
                 return create_error_response(f"词汇不存在或无权限访问: {vocab_id}")
             data = {
                 "vocab_id": vocab.vocab_id,
@@ -1766,6 +1768,7 @@ async def get_grammar_list(current_user: User = Depends(get_current_user)):
     """获取语法规则列表（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
         from database_system.business_logic.models import GrammarRule
+        from database_system.database_manager import DatabaseManager
         db_manager = DatabaseManager(ENV)
         session = db_manager.get_session()
         try:
@@ -1859,10 +1862,10 @@ async def list_articles(current_user: User = Depends(get_current_user)):
             ]
             
             print(f"✅ [API] 从数据库获取 {len(summaries)} 篇文章（用户 {current_user.user_id}）")
-        return create_success_response(
-            data=summaries,
+            return create_success_response(
+                data=summaries,
                 message=f"成功获取文章列表，共 {len(summaries)} 篇（仅当前用户）"
-        )
+            )
         finally:
             session.close()
             
