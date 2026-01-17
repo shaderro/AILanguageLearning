@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 
-# 内存存储：用户ID -> (请求次数, 时间窗口开始时间)
+# 内存存储：(用户ID, 配置键) -> (请求次数, 时间窗口开始时间)
 # 注意：这是简单的内存实现，重启后重置。生产环境建议使用 Redis
-_rate_limit_storage: Dict[int, Tuple[int, float]] = defaultdict(lambda: (0, 0.0))
+# 使用 (user_id, config_key) 作为键，确保不同路径配置有独立的计数器
+_rate_limit_storage: Dict[Tuple[int, str], Tuple[int, float]] = defaultdict(lambda: (0, 0.0))
 
 # 请求历史记录：用户ID -> [(时间戳, 路径, 方法), ...]
 # 用于调试：查看用户发送了哪些请求
@@ -32,17 +33,22 @@ RATE_LIMIT_CONFIG = {
 }
 
 
-def get_rate_limit_config(path: str) -> Dict:
-    """获取指定路径的 rate limit 配置"""
+def get_rate_limit_config(path: str) -> Tuple[Dict, str]:
+    """
+    获取指定路径的 rate limit 配置
+    
+    Returns:
+        (配置字典, 配置键) - 配置键用于区分不同的限制类型
+    """
     # 精确匹配
     if path in RATE_LIMIT_CONFIG:
-        return RATE_LIMIT_CONFIG[path]
+        return RATE_LIMIT_CONFIG[path], path
     # 🔧 pending-knowledge 是查询接口，不应该使用 AI 接口的严格限制
     # 使用 startsWith 而不是精确匹配，避免 /api/chat/pending-knowledge 被误判为 /api/chat
     if path.startswith("/api/chat/pending-knowledge"):
-        return RATE_LIMIT_CONFIG["default"]
+        return RATE_LIMIT_CONFIG["default"], "default"
     # 默认配置
-    return RATE_LIMIT_CONFIG["default"]
+    return RATE_LIMIT_CONFIG["default"], "default"
 
 
 def check_rate_limit(user_id: int, path: str) -> Tuple[bool, int, int]:
@@ -56,18 +62,21 @@ def check_rate_limit(user_id: int, path: str) -> Tuple[bool, int, int]:
     Returns:
         (是否允许, 剩余请求次数, 重置时间秒数)
     """
-    config = get_rate_limit_config(path)
+    config, config_key = get_rate_limit_config(path)
     max_requests = config["max_requests"]
     window_seconds = config["window_seconds"]
     
+    # 使用 (user_id, config_key) 作为存储键，确保不同路径配置有独立的计数器
+    storage_key = (user_id, config_key)
+    
     current_time = time.time()
-    request_count, window_start = _rate_limit_storage[user_id]
+    request_count, window_start = _rate_limit_storage[storage_key]
     
     # 如果时间窗口已过期，重置计数
     if current_time - window_start >= window_seconds:
         request_count = 0
         window_start = current_time
-        _rate_limit_storage[user_id] = (request_count, window_start)
+        _rate_limit_storage[storage_key] = (request_count, window_start)
     
     # 检查是否超过限制
     if request_count >= max_requests:
@@ -76,7 +85,7 @@ def check_rate_limit(user_id: int, path: str) -> Tuple[bool, int, int]:
     
     # 增加计数
     request_count += 1
-    _rate_limit_storage[user_id] = (request_count, window_start)
+    _rate_limit_storage[storage_key] = (request_count, window_start)
     
     remaining = max_requests - request_count
     reset_in = int(window_seconds - (current_time - window_start))
@@ -129,7 +138,7 @@ async def rate_limit_middleware(request: Request, call_next):
     
     # 检查 rate limit（先检查，再记录）
     allowed, remaining, reset_in = check_rate_limit(user_id, request.url.path)
-    config = get_rate_limit_config(request.url.path)
+    config, config_key = get_rate_limit_config(request.url.path)
     max_requests = config["max_requests"]
     
     # 记录请求历史（用于调试）
@@ -146,8 +155,10 @@ async def rate_limit_middleware(request: Request, call_next):
     
     if not allowed:
         # 记录被限流的请求详情
+        storage_key = (user_id, config_key)
+        current_count = _rate_limit_storage[storage_key][0]
         print(f"🚫 [RateLimit] 用户 {user_id} 触发限制: {request.method} {request.url.path}")
-        print(f"   当前窗口内请求数: {_rate_limit_storage[user_id][0]}/{get_rate_limit_config(request.url.path)['max_requests']}")
+        print(f"   配置类型: {config_key}, 当前窗口内请求数: {current_count}/{max_requests}")
         print(f"   最近 {min(len(history), 10)} 条请求:")
         for ts, path, method, _ in history[-10:]:
             dt = datetime.fromtimestamp(ts).strftime("%H:%M:%S")
@@ -160,7 +171,7 @@ async def rate_limit_middleware(request: Request, call_next):
                 "retry_after": reset_in
             },
             headers={
-                "X-RateLimit-Limit": str(get_rate_limit_config(request.url.path)["max_requests"]),
+                "X-RateLimit-Limit": str(max_requests),
                 "X-RateLimit-Remaining": "0",
                 "X-RateLimit-Reset": str(int(time.time()) + reset_in),
                 "Retry-After": str(reset_in)
@@ -169,7 +180,7 @@ async def rate_limit_middleware(request: Request, call_next):
     
     # 添加 rate limit 信息到响应头
     response = await call_next(request)
-    response.headers["X-RateLimit-Limit"] = str(get_rate_limit_config(request.url.path)["max_requests"])
+    response.headers["X-RateLimit-Limit"] = str(max_requests)
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     response.headers["X-RateLimit-Reset"] = str(int(time.time()) + reset_in)
     
