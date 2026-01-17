@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const ToastNotice = ({ 
   message = "知识点已总结加入列表", 
-  duration = 60000, // 调试阶段：1分钟
+  duration = 120000, // 调试阶段：2分钟
   onClose,
   isVisible = false 
 }) => {

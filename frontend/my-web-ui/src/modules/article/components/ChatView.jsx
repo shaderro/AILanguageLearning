@@ -268,6 +268,9 @@ export default function ChatView({
         await apiService.session.updateContext(sessionUpdatePayload)
         
         const response = await apiService.sendChat({ user_question: questionText })
+        console.log(`🔍 [ChatView] sendPendingMessage - sendChat 响应:`, response)
+        console.log(`🔍 [ChatView] sendPendingMessage - response.grammar_to_add:`, response?.grammar_to_add)
+        console.log(`🔍 [ChatView] sendPendingMessage - response.vocab_to_add:`, response?.vocab_to_add)
         
         // 🔧 添加 AI 回答
         if (response?.ai_response) {
@@ -301,6 +304,121 @@ export default function ChatView({
         }
         if (response?.vocab_to_add?.length > 0 || response?.created_vocab_notations?.length > 0) {
           refreshVocab()
+        }
+        
+        // 🔧 轮询新知识点（与 handleSendMessage 相同的逻辑）
+        console.log(`🔍 [ChatView] sendPendingMessage - 检查轮询条件: response存在=${!!response}, grammar_to_add长度=${response?.grammar_to_add?.length || 0}, vocab_to_add长度=${response?.vocab_to_add?.length || 0}`)
+        
+        if (response && !response.grammar_to_add?.length && !response.vocab_to_add?.length) {
+          const textId = currentSelectionContext?.sentence?.text_id || articleId
+          const userId = parseInt(localStorage.getItem('user_id') || '2')
+          
+          console.log(`🔍 [ChatView] sendPendingMessage - ✅ 满足轮询条件，准备启动轮询`)
+          console.log(`🔍 [ChatView] sendPendingMessage - 启动轮询: textId=${textId}, userId=${userId}`)
+          console.log(`🔍 [ChatView] sendPendingMessage - currentSelectionContext:`, currentSelectionContext)
+          console.log(`🔍 [ChatView] sendPendingMessage - articleId:`, articleId)
+          
+          if (textId) {
+            console.log(`🔍 [ChatView] sendPendingMessage - ✅ textId有效，开始设置轮询`)
+            // 🔧 先清理之前的轮询（如果存在）
+            if (pollPendingKnowledgeRef.current) {
+              clearInterval(pollPendingKnowledgeRef.current)
+              pollPendingKnowledgeRef.current = null
+            }
+            
+            let pollCount = 0
+            const maxPolls = 10
+            const pollInterval = 3000  // 🔧 改为3秒一次（原来是1秒），减少请求频率
+            
+            pollPendingKnowledgeRef.current = setInterval(async () => {
+              pollCount++
+              try {
+                const { apiService } = await import('../../../services/api')
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
+                const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
+                
+                // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
+                // 需要访问 resp.data，而不是 resp.data.data
+                const data = resp?.data || {}
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 提取的data:`, JSON.stringify(data, null, 2))
+                
+                // 🔧 修复：后端返回的字段名是 grammar_to_add 和 vocab_to_add
+                const pendingGrammar = data.grammar_to_add || []
+                const pendingVocab = data.vocab_to_add || []
+                
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 解析后的数据: grammar=${pendingGrammar.length} (${JSON.stringify(pendingGrammar)}), vocab=${pendingVocab.length} (${JSON.stringify(pendingVocab)})`)
+                
+                if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
+                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
+                  const items = [
+                    ...pendingGrammar.map(g => `🆕 语法: ${g.name || g.title || g.rule || '新语法'}`),
+                    ...pendingVocab.map(v => `🆕 词汇: ${v.vocab || '新词汇'}`)
+                  ]
+                  
+                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
+                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] items:`, items)
+                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 当前toasts数量:`, toasts.length)
+                  
+                  items.forEach((item, idx) => {
+                    setTimeout(() => {
+                      const id = Date.now() + Math.random()
+                      const newToast = { id, message: `${item} 知识点已总结并加入列表`, slot: toasts.length + idx }
+                      console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
+                      setToasts(prev => {
+                        const updated = [...prev, newToast]
+                        console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
+                        window.chatViewToastsRef = updated
+                        return updated
+                      })
+                    }, idx * 600)
+                  })
+                  
+                  // 🔧 找到数据后立即停止轮询
+                  if (pollPendingKnowledgeRef.current) {
+                    clearInterval(pollPendingKnowledgeRef.current)
+                    pollPendingKnowledgeRef.current = null
+                    console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ✅ 已停止轮询`)
+                  }
+                  return
+                } else {
+                  console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ⏸️ 暂无新知识点，继续轮询...`)
+                }
+              } catch (err) {
+                console.error(`⚠️ [ChatView] sendPendingMessage - [轮询${pollCount}] 轮询失败:`, err)
+                console.error(`⚠️ [ChatView] sendPendingMessage - [轮询${pollCount}] 错误详情:`, err.message, err.stack)
+                // 🔧 出错时也停止轮询，避免无限重试
+                if (pollPendingKnowledgeRef.current) {
+                  clearInterval(pollPendingKnowledgeRef.current)
+                  pollPendingKnowledgeRef.current = null
+                  console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ❌ 因错误停止轮询`)
+                }
+              }
+              
+              // 🔧 达到最大轮询次数后停止
+              if (pollCount >= maxPolls) {
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ⏸️ 达到最大轮询次数(${maxPolls})，停止轮询`)
+                if (pollPendingKnowledgeRef.current) {
+                  clearInterval(pollPendingKnowledgeRef.current)
+                  pollPendingKnowledgeRef.current = null
+                }
+              }
+            }, pollInterval)
+            
+            console.log(`🔍 [ChatView] sendPendingMessage - ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+            
+            // 🔧 设置超时清理（双重保险）
+            setTimeout(() => {
+              if (pollPendingKnowledgeRef.current) {
+                clearInterval(pollPendingKnowledgeRef.current)
+                pollPendingKnowledgeRef.current = null
+              }
+            }, maxPolls * pollInterval)
+          } else {
+            console.log(`🔍 [ChatView] sendPendingMessage - ❌ textId无效(${textId})，无法启动轮询`)
+          }
+        } else {
+          console.log(`🔍 [ChatView] sendPendingMessage - ⏸️ 不满足轮询条件（响应中有即时返回的新知识点或response为空），跳过轮询`)
         }
       } catch (error) {
         console.error('❌ [ChatView] 发送 pendingMessage 失败:', error)
@@ -382,10 +500,15 @@ export default function ChatView({
   
   // 🔧 发送消息
   const handleSendMessage = async () => {
-    if (inputText.trim() === '' || isProcessing) return
+    console.log(`🔍 [ChatView] handleSendMessage 被调用: inputText="${inputText}", isProcessing=${isProcessing}`)
+    if (inputText.trim() === '' || isProcessing) {
+      console.log(`🔍 [ChatView] handleSendMessage 被跳过: inputText为空或正在处理`)
+      return
+    }
     
     setIsProcessing(true)
     const questionText = inputText
+    console.log(`🔍 [ChatView] handleSendMessage 开始处理: questionText="${questionText}"`)
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
     
@@ -433,6 +556,9 @@ export default function ChatView({
       await apiService.session.updateContext(sessionUpdatePayload)
       
       const response = await apiService.sendChat({ user_question: questionText })
+      console.log(`🔍 [ChatView] sendChat 响应:`, response)
+      console.log(`🔍 [ChatView] response.grammar_to_add:`, response?.grammar_to_add)
+      console.log(`🔍 [ChatView] response.vocab_to_add:`, response?.vocab_to_add)
       
       // 🔧 添加 AI 回答
       if (response?.ai_response) {
@@ -503,11 +629,20 @@ export default function ChatView({
       }
       
       // 🔧 轮询新知识点（优化：降低频率，确保清理）
+      // 🔧 只在响应中没有即时返回的新知识点时才启动轮询
+      console.log(`🔍 [ChatView] 检查轮询条件: response存在=${!!response}, grammar_to_add长度=${response?.grammar_to_add?.length || 0}, vocab_to_add长度=${response?.vocab_to_add?.length || 0}`)
+      
       if (response && !response.grammar_to_add?.length && !response.vocab_to_add?.length) {
         const textId = currentSelectionContext?.sentence?.text_id || articleId
         const userId = parseInt(localStorage.getItem('user_id') || '2')
         
+        console.log(`🔍 [ChatView] ✅ 满足轮询条件，准备启动轮询`)
+        console.log(`🔍 [ChatView] 启动轮询: textId=${textId}, userId=${userId}`)
+        console.log(`🔍 [ChatView] currentSelectionContext:`, currentSelectionContext)
+        console.log(`🔍 [ChatView] articleId:`, articleId)
+        
         if (textId) {
+          console.log(`🔍 [ChatView] ✅ textId有效，开始设置轮询`)
           // 🔧 先清理之前的轮询（如果存在）
           if (pollPendingKnowledgeRef.current) {
             clearInterval(pollPendingKnowledgeRef.current)
@@ -522,24 +657,40 @@ export default function ChatView({
             pollCount++
             try {
               const { apiService } = await import('../../../services/api')
+              console.log(`🔍 [ChatView] [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
               const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
-              const data = resp?.data?.data || {}
+              console.log(`🔍 [ChatView] [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
               
-              const pendingGrammar = data.pending_grammar || []
-              const pendingVocab = data.pending_vocab || []
+              // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
+              // 需要访问 resp.data，而不是 resp.data.data
+              const data = resp?.data || {}
+              console.log(`🔍 [ChatView] [轮询${pollCount}] 提取的data:`, JSON.stringify(data, null, 2))
+              
+              // 🔧 修复：后端返回的字段名是 grammar_to_add 和 vocab_to_add
+              const pendingGrammar = data.grammar_to_add || []
+              const pendingVocab = data.vocab_to_add || []
+              
+              console.log(`🔍 [ChatView] [轮询${pollCount}] 解析后的数据: grammar=${pendingGrammar.length} (${JSON.stringify(pendingGrammar)}), vocab=${pendingVocab.length} (${JSON.stringify(pendingVocab)})`)
               
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
+                console.log(`🍞 [ChatView] [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                 const items = [
-                  ...pendingGrammar.map(g => `🆕 语法: ${g.title || g.rule || '新语法'}`),
+                  ...pendingGrammar.map(g => `🆕 语法: ${g.name || g.title || g.rule || '新语法'}`),
                   ...pendingVocab.map(v => `🆕 词汇: ${v.vocab || '新词汇'}`)
                 ]
+                
+                console.log(`🍞 [ChatView] [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
+                console.log(`🍞 [ChatView] [轮询${pollCount}] items:`, items)
+                console.log(`🍞 [ChatView] [轮询${pollCount}] 当前toasts数量:`, toasts.length)
                 
                 items.forEach((item, idx) => {
                   setTimeout(() => {
                     const id = Date.now() + Math.random()
                     const newToast = { id, message: `${item} 知识点已总结并加入列表`, slot: toasts.length + idx }
+                    console.log(`🍞 [ChatView] [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
                     setToasts(prev => {
                       const updated = [...prev, newToast]
+                      console.log(`🍞 [ChatView] [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
                       window.chatViewToastsRef = updated
                       return updated
                     })
@@ -550,26 +701,34 @@ export default function ChatView({
                 if (pollPendingKnowledgeRef.current) {
                   clearInterval(pollPendingKnowledgeRef.current)
                   pollPendingKnowledgeRef.current = null
+                  console.log(`🔍 [ChatView] [轮询${pollCount}] ✅ 已停止轮询`)
                 }
                 return
+              } else {
+                console.log(`🔍 [ChatView] [轮询${pollCount}] ⏸️ 暂无新知识点，继续轮询...`)
               }
             } catch (err) {
-              console.warn('⚠️ [ChatView] 轮询失败:', err)
+              console.error(`⚠️ [ChatView] [轮询${pollCount}] 轮询失败:`, err)
+              console.error(`⚠️ [ChatView] [轮询${pollCount}] 错误详情:`, err.message, err.stack)
               // 🔧 出错时也停止轮询，避免无限重试
               if (pollPendingKnowledgeRef.current) {
                 clearInterval(pollPendingKnowledgeRef.current)
                 pollPendingKnowledgeRef.current = null
+                console.log(`🔍 [ChatView] [轮询${pollCount}] ❌ 因错误停止轮询`)
               }
             }
             
             // 🔧 达到最大轮询次数后停止
             if (pollCount >= maxPolls) {
+              console.log(`🔍 [ChatView] [轮询${pollCount}] ⏸️ 达到最大轮询次数(${maxPolls})，停止轮询`)
               if (pollPendingKnowledgeRef.current) {
                 clearInterval(pollPendingKnowledgeRef.current)
                 pollPendingKnowledgeRef.current = null
               }
             }
           }, pollInterval)
+          
+          console.log(`🔍 [ChatView] ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
           
           // 🔧 设置超时清理（双重保险）
           setTimeout(() => {
@@ -578,7 +737,11 @@ export default function ChatView({
               pollPendingKnowledgeRef.current = null
             }
           }, maxPolls * pollInterval)
+        } else {
+          console.log(`🔍 [ChatView] ❌ textId无效(${textId})，无法启动轮询`)
         }
+      } else {
+        console.log(`🔍 [ChatView] ⏸️ 不满足轮询条件（响应中有即时返回的新知识点或response为空），跳过轮询`)
       }
     } catch (error) {
       console.error('❌ [ChatView] 发送消息失败:', error)
@@ -596,11 +759,16 @@ export default function ChatView({
   
   // 🔧 建议问题选择
   const handleSuggestedQuestionSelect = async (question) => {
-    if (isProcessing) return
+    console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被调用: question="${question}", isProcessing=${isProcessing}`)
+    if (isProcessing) {
+      console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被跳过: 正在处理中`)
+      return
+    }
     
     setIsProcessing(true)
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
+    console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 开始处理: question="${question}"`)
     
     // 🔧 立即添加用户消息
     const userMessage = {
@@ -645,6 +813,9 @@ export default function ChatView({
       await apiService.session.updateContext(sessionUpdatePayload)
       
       const response = await apiService.sendChat({ user_question: question })
+      console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - sendChat 响应:`, response)
+      console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - response.grammar_to_add:`, response?.grammar_to_add)
+      console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - response.vocab_to_add:`, response?.vocab_to_add)
       
       // 🔧 添加 AI 回答
       if (response?.ai_response) {
@@ -678,6 +849,121 @@ export default function ChatView({
       }
       if (response?.vocab_to_add?.length > 0 || response?.created_vocab_notations?.length > 0) {
         refreshVocab()
+      }
+      
+      // 🔧 轮询新知识点（与 handleSendMessage 相同的逻辑）
+      console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - 检查轮询条件: response存在=${!!response}, grammar_to_add长度=${response?.grammar_to_add?.length || 0}, vocab_to_add长度=${response?.vocab_to_add?.length || 0}`)
+      
+      if (response && !response.grammar_to_add?.length && !response.vocab_to_add?.length) {
+        const textId = currentSelectionContext?.sentence?.text_id || articleId
+        const userId = parseInt(localStorage.getItem('user_id') || '2')
+        
+        console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ✅ 满足轮询条件，准备启动轮询`)
+        console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - 启动轮询: textId=${textId}, userId=${userId}`)
+        console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - currentSelectionContext:`, currentSelectionContext)
+        console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - articleId:`, articleId)
+        
+        if (textId) {
+          console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ✅ textId有效，开始设置轮询`)
+          // 🔧 先清理之前的轮询（如果存在）
+          if (pollPendingKnowledgeRef.current) {
+            clearInterval(pollPendingKnowledgeRef.current)
+            pollPendingKnowledgeRef.current = null
+          }
+          
+          let pollCount = 0
+          const maxPolls = 10
+          const pollInterval = 3000  // 🔧 改为3秒一次（原来是1秒），减少请求频率
+          
+          pollPendingKnowledgeRef.current = setInterval(async () => {
+            pollCount++
+            try {
+              const { apiService } = await import('../../../services/api')
+              console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
+              const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
+              console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
+              
+              // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
+              // 需要访问 resp.data，而不是 resp.data.data
+              const data = resp?.data || {}
+              console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 提取的data:`, JSON.stringify(data, null, 2))
+              
+              // 🔧 修复：后端返回的字段名是 grammar_to_add 和 vocab_to_add
+              const pendingGrammar = data.grammar_to_add || []
+              const pendingVocab = data.vocab_to_add || []
+              
+              console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 解析后的数据: grammar=${pendingGrammar.length} (${JSON.stringify(pendingGrammar)}), vocab=${pendingVocab.length} (${JSON.stringify(pendingVocab)})`)
+              
+              if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
+                console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
+                const items = [
+                  ...pendingGrammar.map(g => `🆕 语法: ${g.name || g.title || g.rule || '新语法'}`),
+                  ...pendingVocab.map(v => `🆕 词汇: ${v.vocab || '新词汇'}`)
+                ]
+                
+                console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
+                console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] items:`, items)
+                console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 当前toasts数量:`, toasts.length)
+                
+                items.forEach((item, idx) => {
+                  setTimeout(() => {
+                    const id = Date.now() + Math.random()
+                    const newToast = { id, message: `${item} 知识点已总结并加入列表`, slot: toasts.length + idx }
+                    console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
+                    setToasts(prev => {
+                      const updated = [...prev, newToast]
+                      console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
+                      window.chatViewToastsRef = updated
+                      return updated
+                    })
+                  }, idx * 600)
+                })
+                
+                // 🔧 找到数据后立即停止轮询
+                if (pollPendingKnowledgeRef.current) {
+                  clearInterval(pollPendingKnowledgeRef.current)
+                  pollPendingKnowledgeRef.current = null
+                  console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ✅ 已停止轮询`)
+                }
+                return
+              } else {
+                console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ⏸️ 暂无新知识点，继续轮询...`)
+              }
+            } catch (err) {
+              console.error(`⚠️ [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 轮询失败:`, err)
+              console.error(`⚠️ [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 错误详情:`, err.message, err.stack)
+              // 🔧 出错时也停止轮询，避免无限重试
+              if (pollPendingKnowledgeRef.current) {
+                clearInterval(pollPendingKnowledgeRef.current)
+                pollPendingKnowledgeRef.current = null
+                console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ❌ 因错误停止轮询`)
+              }
+            }
+            
+            // 🔧 达到最大轮询次数后停止
+            if (pollCount >= maxPolls) {
+              console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ⏸️ 达到最大轮询次数(${maxPolls})，停止轮询`)
+              if (pollPendingKnowledgeRef.current) {
+                clearInterval(pollPendingKnowledgeRef.current)
+                pollPendingKnowledgeRef.current = null
+              }
+            }
+          }, pollInterval)
+          
+          console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+          
+          // 🔧 设置超时清理（双重保险）
+          setTimeout(() => {
+            if (pollPendingKnowledgeRef.current) {
+              clearInterval(pollPendingKnowledgeRef.current)
+              pollPendingKnowledgeRef.current = null
+            }
+          }, maxPolls * pollInterval)
+        } else {
+          console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ❌ textId无效(${textId})，无法启动轮询`)
+        }
+      } else {
+        console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ⏸️ 不满足轮询条件（响应中有即时返回的新知识点或response为空），跳过轮询`)
       }
     } catch (error) {
       console.error('❌ [ChatView] 发送消息失败:', error)
@@ -901,7 +1187,7 @@ export default function ChatView({
             <ToastNotice
               message={t.message}
               isVisible={true}
-              duration={5000}
+              duration={10000}
               onClose={() => {
                 setToasts(prev => {
                   const newToasts = prev.filter(x => x.id !== t.id)
