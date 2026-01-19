@@ -337,7 +337,7 @@ export default function ChatView({
               try {
                 const { apiService } = await import('../../../services/api')
                 console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
-                const resp = await apiService.getPendingKnowledge(userId, textId)
+                const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
                 console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
                 
                 // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
@@ -662,7 +662,7 @@ export default function ChatView({
             try {
               const { apiService } = await import('../../../services/api')
               console.log(`🔍 [ChatView] [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
-              const resp = await apiService.getPendingKnowledge(userId, textId)
+              const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
               console.log(`🔍 [ChatView] [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
               
               // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
@@ -887,7 +887,7 @@ export default function ChatView({
             try {
               const { apiService } = await import('../../../services/api')
               console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
-              const resp = await apiService.getPendingKnowledge(userId, textId)
+              const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
               console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
               
               // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
