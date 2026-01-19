@@ -231,7 +231,8 @@ export default function ChatView({
         text: questionText,
         isUser: true,
         timestamp: new Date(),
-        quote: currentQuotedText || null
+        quote: currentQuotedText || null,
+        articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
       }
       addMessage(userMessage)
       
@@ -279,7 +280,8 @@ export default function ChatView({
             id: generateMessageId(),
             text: parsedResponse || response.ai_response,
             isUser: false,
-            timestamp: new Date()
+            timestamp: new Date(),
+            articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
           }
           addMessage(aiMessage)
         }
@@ -426,7 +428,8 @@ export default function ChatView({
           id: generateMessageId(),
           text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
           isUser: false,
-          timestamp: new Date()
+          timestamp: new Date(),
+          articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
         }
         addMessage(errorMsg)
       } finally {
@@ -518,7 +521,8 @@ export default function ChatView({
       text: questionText,
       isUser: true,
       timestamp: new Date(),
-      quote: currentQuotedText || null
+      quote: currentQuotedText || null,
+      articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
     }
     addMessage(userMessage)
     setInputText('')
@@ -749,7 +753,8 @@ export default function ChatView({
         id: generateMessageId(),
         text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
       }
       addMessage(errorMsg)
     } finally {
@@ -776,7 +781,8 @@ export default function ChatView({
       text: question,
       isUser: true,
       timestamp: new Date(),
-      quote: currentQuotedText || null
+      quote: currentQuotedText || null,
+      articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
     }
     addMessage(userMessage)
     
@@ -824,7 +830,8 @@ export default function ChatView({
           id: generateMessageId(),
           text: parsedResponse || response.ai_response,
           isUser: false,
-          timestamp: new Date()
+          timestamp: new Date(),
+          articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
         }
         addMessage(aiMessage)
       }
@@ -971,7 +978,8 @@ export default function ChatView({
         id: generateMessageId(),
         text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
       }
       addMessage(errorMsg)
     } finally {

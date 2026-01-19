@@ -374,13 +374,15 @@ class MainAssistant:
         
         # 记录用户消息（包含selected_token信息）
         # 使用 session_state 中的 selected_token
+        # 🔧 获取 user_id 用于数据库保存（实现跨设备同步）
+        user_id = str(self.session_state.user_id) if hasattr(self.session_state, 'user_id') and self.session_state.user_id else None
         current_selected_token = self.session_state.current_selected_token
         if current_selected_token:
-            self.dialogue_record.add_user_message(quoted_sentence, user_question, current_selected_token)
+            self.dialogue_record.add_user_message(quoted_sentence, user_question, current_selected_token, user_id=user_id)
         else:
             # 兜底：如果 session_state 中没有，创建一个整句选择的 token
             fallback_token = SelectedToken.from_full_sentence(quoted_sentence)
-            self.dialogue_record.add_user_message(quoted_sentence, user_question, fallback_token)
+            self.dialogue_record.add_user_message(quoted_sentence, user_question, fallback_token, user_id=user_id)
         
         print("The question is relevant to language learning, proceeding with processing...")
         
@@ -388,7 +390,7 @@ class MainAssistant:
         ai_response = self.answer_question_function(quoted_sentence, user_question, effective_sentence_body)
         
         # 记录AI响应（包含selected_token信息）
-        self.dialogue_record.add_ai_response(quoted_sentence, ai_response)
+        self.dialogue_record.add_ai_response(quoted_sentence, ai_response, user_id=user_id)
         
         # 检查是否加入新语法和词汇
         self.handle_grammar_vocab_function(quoted_sentence, user_question, ai_response, effective_sentence_body)

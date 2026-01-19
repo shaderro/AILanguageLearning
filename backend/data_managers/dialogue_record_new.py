@@ -21,7 +21,7 @@ class DialogueRecordBySentenceNew:
         self.db_manager = ChatMessageManagerDB()
         print(f"✅ [DialogueRecordBySentenceNew] 数据库管理器已初始化: {self.db_manager.db_path}")
 
-    def add_user_message(self, sentence: SentenceType, user_input: str, selected_token: Optional[SelectedToken] = None):
+    def add_user_message(self, sentence: SentenceType, user_input: str, selected_token: Optional[SelectedToken] = None, user_id: Optional[str] = None):
         key = (sentence.text_id, sentence.sentence_id)
         if key not in self.records:
             self.records[key] = []
@@ -37,8 +37,10 @@ class DialogueRecordBySentenceNew:
 
         # 同步写入数据库（用户消息）
         try:
+            # 🔧 确保 user_id 是字符串类型（数据库要求）
+            user_id_str = str(user_id) if user_id is not None else None
             self.db_manager.add_message(
-                user_id=None,  # TODO: 日后接入真实用户 ID
+                user_id=user_id_str,
                 text_id=sentence.text_id,
                 sentence_id=sentence.sentence_id,
                 is_user=True,
@@ -47,13 +49,13 @@ class DialogueRecordBySentenceNew:
                 quote_text=sentence.sentence_body,
                 selected_token=selected_token.to_dict() if selected_token else None,
             )
-            print(f"✅ [DB] Chat message added: User=True, Text='{user_input[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
+            print(f"✅ [DB] Chat message added: User=True, user_id={user_id_str}, Text='{user_input[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
         except Exception as e:
             print(f"⚠️ [DialogueRecordBySentenceNew] Failed to persist user message to DB: {e}")
             import traceback
             traceback.print_exc()
 
-    def add_ai_response(self, sentence: SentenceType, ai_response: str):
+    def add_ai_response(self, sentence: SentenceType, ai_response: str, user_id: Optional[str] = None):
         key = (sentence.text_id, sentence.sentence_id)
         if key in self.records and self.records[key]:
             # 补充到最近一条没有 AI 回复的记录中
@@ -71,8 +73,10 @@ class DialogueRecordBySentenceNew:
 
         # 同步写入数据库（AI 消息）
         try:
+            # 🔧 确保 user_id 是字符串类型（数据库要求）
+            user_id_str = str(user_id) if user_id is not None else None
             self.db_manager.add_message(
-                user_id=None,
+                user_id=user_id_str,
                 text_id=sentence.text_id,
                 sentence_id=sentence.sentence_id,
                 is_user=False,
@@ -81,7 +85,7 @@ class DialogueRecordBySentenceNew:
                 quote_text=sentence.sentence_body,
                 selected_token=None,
             )
-            print(f"✅ [DB] Chat message added: User=False, Text='{ai_response[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
+            print(f"✅ [DB] Chat message added: User=False, user_id={user_id_str}, Text='{ai_response[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
         except Exception as e:
             print(f"⚠️ [DialogueRecordBySentenceNew] Failed to persist AI message to DB: {e}")
             import traceback
