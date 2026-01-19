@@ -25,16 +25,50 @@ const parseExplanation = (text) => {
           cleanText = parsed.explanation || parsed.definition || text
         } catch (e) {
           // 如果不是标准 JSON，尝试处理 Python 字典格式（单引号）
-          // 使用更智能的方法：只替换键和字符串分隔符的单引号
-          // 先尝试直接提取 explanation 字段的值（支持多行和转义字符）
-          const explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
-          if (explanationMatch) {
-            cleanText = explanationMatch[1]
-              .replace(/\\n/g, '\n')  // 处理转义的换行符
-              .replace(/\\'/g, "'")   // 处理转义的单引号
-              .replace(/\\"/g, '"')   // 处理转义的双引号
+          // 🔧 改进：使用更智能的方法提取 explanation 字段的值
+          // 先尝试找到 explanation 字段的开始位置
+          const explanationKeyMatch = jsonStr.match(/['"]explanation['"]\s*:\s*/)
+          if (explanationKeyMatch) {
+            const startPos = explanationKeyMatch.index + explanationKeyMatch[0].length
+            const remaining = jsonStr.substring(startPos)
+            
+            // 🔧 改进：正确处理引号和转义字符
+            // 检查第一个字符是单引号还是双引号
+            const firstChar = remaining[0]
+            if (firstChar === '"' || firstChar === "'") {
+              let value = ''
+              let i = 1
+              while (i < remaining.length) {
+                if (remaining[i] === '\\') {
+                  // 转义字符，跳过下一个字符
+                  value += remaining[i] + remaining[i + 1]
+                  i += 2
+                } else if (remaining[i] === firstChar) {
+                  // 找到匹配的结束引号
+                  break
+                } else {
+                  value += remaining[i]
+                  i++
+                }
+              }
+              cleanText = value
+                .replace(/\\n/g, '\n')  // 处理转义的换行符
+                .replace(/\\'/g, "'")   // 处理转义的单引号
+                .replace(/\\"/g, '"')   // 处理转义的双引号
+                .replace(/\\t/g, '\t')  // 处理转义的制表符
+            } else {
+              // 如果没有引号，尝试将单引号替换为双引号（简单处理）
+              const normalized = jsonStr.replace(/'/g, '"')
+              try {
+                const parsed = JSON.parse(normalized)
+                cleanText = parsed.explanation || parsed.definition || text
+              } catch (e2) {
+                // 如果还是失败，使用原始文本
+                cleanText = text
+              }
+            }
           } else {
-            // 如果正则匹配失败，尝试将单引号替换为双引号（简单处理）
+            // 如果找不到 explanation 字段，尝试将单引号替换为双引号
             const normalized = jsonStr.replace(/'/g, '"')
             try {
               const parsed = JSON.parse(normalized)
@@ -48,13 +82,14 @@ const parseExplanation = (text) => {
       }
     } catch (e) {
       // 解析失败，使用原始文本
+      console.warn('⚠️ [VocabNotationCard] Failed to parse explanation JSON:', e)
     }
   }
   
   // 2. 处理代码块格式（```json ... ```）
   if (cleanText.includes('```json') && cleanText.includes('```')) {
     try {
-      const jsonMatch = cleanText.match(/```json\n(.*?)\n```/s)
+      const jsonMatch = cleanText.match(/```json\n([\s\S]*?)\n```/)
       if (jsonMatch) {
         const jsonStr = jsonMatch[1]
         const parsed = JSON.parse(jsonStr)
@@ -62,6 +97,7 @@ const parseExplanation = (text) => {
       }
     } catch (e) {
       // 解析失败，继续使用 cleanText
+      console.warn('⚠️ [VocabNotationCard] Failed to parse explanation from code block:', e)
     }
   }
   
