@@ -214,11 +214,11 @@ function AppContent() {
               
               {isAuthenticated ? (
                 <>
-                  {/* Debug 按钮（仅开发环境） */}
-                  <UserDebugButton 
+                  {/* Debug 按钮（仅开发环境）- 已隐藏 */}
+                  {/* <UserDebugButton 
                     userId={currentUserId} 
                     password={currentUserPassword}
-                  />
+                  /> */}
                   
                   {/* 用户头像 */}
                   <UserAvatar 

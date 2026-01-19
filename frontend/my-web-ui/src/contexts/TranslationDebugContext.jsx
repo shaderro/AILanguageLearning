@@ -8,7 +8,7 @@ const TranslationDebugContext = createContext()
  */
 export const TranslationDebugProvider = ({ children }) => {
   const [logs, setLogs] = useState([])
-  const [isVisible, setIsVisible] = useState(true) // 🔧 默认显示，方便调试
+  const [isVisible, setIsVisible] = useState(false) // 🔧 默认隐藏调试面板
   const maxLogs = useRef(200) // 最多保留200条日志（增加以容纳更多调试信息）
 
   /**

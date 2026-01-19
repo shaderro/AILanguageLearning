@@ -747,10 +747,11 @@ export const apiService = {
   },
 
   // 获取后台任务创建的新知识点（用于显示 toast）
-  getPendingKnowledge: (userId, textId) => {
-    // 🔧 确保 textId 是整数类型
-    const textIdInt = parseInt(textId) || textId
-    return api.get(`/api/chat/pending-knowledge?user_id=${userId}&text_id=${textIdInt}`);
+  getPendingKnowledge: ({ user_id, text_id }) => {
+    // 🔧 确保 text_id 是整数类型
+    const textIdInt = parseInt(text_id) || text_id
+    const userIdInt = parseInt(user_id) || user_id
+    return api.get(`/api/chat/pending-knowledge?user_id=${userIdInt}&text_id=${textIdInt}`);
   },
 
   // 按位置查找词汇例句

@@ -44,16 +44,45 @@ class SubAssistant:
                     messages=messages,
                     max_tokens=self.max_tokens
                 )
-                content = response.choices[0].message.content.strip()
+                
+                # 🔧 详细记录原始响应
+                raw_content = response.choices[0].message.content
+                print(f"🔍 [SubAssistant] 原始响应内容（strip前）: {repr(raw_content)}")
+                print(f"🔍 [SubAssistant] 原始响应内容长度: {len(raw_content) if raw_content else 0}")
+                
+                content = raw_content.strip() if raw_content else ""
+                print(f"🔍 [SubAssistant] strip后的内容: {repr(content)}")
+                print(f"🔍 [SubAssistant] strip后的内容长度: {len(content)}")
+                
                 if verbose:
                     print("📬 Raw Response:\n", content)
+                
+                # 🔧 检查返回内容是否为空
+                if not content:
+                    print(f"⚠️ [SubAssistant] AI 返回内容为空（第{attempt}次尝试）")
+                    if attempt < self.max_retries:
+                        print(f"🔄 [SubAssistant] 将进行第 {attempt + 1} 次重试...")
+                        continue  # 继续重试循环
+                    else:
+                        print(f"❌ [SubAssistant] AI 返回空内容，已重试 {self.max_retries} 次，返回空字符串")
+                        return content  # 返回空字符串
+                
                 if self.parse_json:
+                    print(f"🔍 [SubAssistant] 准备解析 JSON，内容: {repr(content[:200]) if content else '(空)'}")
                     #print("📬 Parsing JSON from response...")
                     parsed = parse_json_from_text(content)
+                    print(f"🔍 [SubAssistant] JSON 解析结果: {type(parsed)}, 值: {parsed}")
                     if parsed is None:
                         # 🔧 JSON 解析失败，返回原始文本（而不是 None）
-                        print("⚠️ JSON 解析失败，返回原始文本")
+                        print(f"⚠️ [SubAssistant] JSON 解析失败，原始内容: {content[:100] if content else '(空)'}")
+                        if not content:
+                            # 如果是空内容且 JSON 解析失败，尝试重试
+                            if attempt < self.max_retries:
+                                print(f"🔄 [SubAssistant] 内容为空且JSON解析失败，将进行第 {attempt + 1} 次重试...")
+                                continue
+                        print(f"🔍 [SubAssistant] 返回原始内容: {repr(content)}")
                         return content
+                    print(f"🔍 [SubAssistant] JSON 解析成功，返回: {type(parsed)}, 值: {parsed}")
                     return parsed
                 return content
             except (APIConnectionError, APITimeoutError, httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout) as error:

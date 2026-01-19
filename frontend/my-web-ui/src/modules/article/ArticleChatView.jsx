@@ -620,8 +620,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
           </div>
         </div>
         
-        {/* 翻译调试面板 */}
-        <TranslationDebugPanel />
+        {/* 翻译调试面板 - 已隐藏 */}
+        {/* <TranslationDebugPanel /> */}
         
         {/* 长度超限对话框（在父组件中渲染，避免子组件卸载时丢失） */}
         {showLengthDialog && pendingContent && (() => {

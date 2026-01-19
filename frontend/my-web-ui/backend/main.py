@@ -1399,21 +1399,29 @@ async def chat_with_assistant(
                 
                 # 🔧 调用 add_new_to_data() 以创建新词汇和 notations
                 print("🧠 [Background] 执行 add_new_to_data()...")
+                # 🔧 关键修复：在调用 add_new_to_data() 之前，先保存 vocab_to_add 和 grammar_to_add
+                # 因为 add_new_to_data() 可能会清空这些列表
+                vocab_to_add_backup = list(local_state.vocab_to_add) if local_state.vocab_to_add else []
+                grammar_to_add_backup = list(local_state.grammar_to_add) if local_state.grammar_to_add else []
+                print(f"🔍 [Background] 备份 vocab_to_add: {len(vocab_to_add_backup)} 个, grammar_to_add: {len(grammar_to_add_backup)} 个")
+                
                 main_assistant.add_new_to_data()
                 print("✅ [Background] add_new_to_data() 完成")
                 
                 # 🔧 关键修复：在后台任务完成后，存储新创建的 vocab_to_add 和 grammar_to_add
                 # 供前端轮询获取并显示 toast
+                # 🔧 使用备份的数据，因为 add_new_to_data() 可能会清空这些列表
                 grammar_to_add_list = []
                 vocab_to_add_list = []
                 
-                if local_state.grammar_to_add:
-                    for g in local_state.grammar_to_add:
+                if grammar_to_add_backup:
+                    print(f"🔍 [Background] 从备份恢复 grammar_to_add: {len(grammar_to_add_backup)} 个")
+                    for g in grammar_to_add_backup:
                         grammar_to_add_list.append({'name': g.rule_name, 'explanation': g.rule_explanation})
                 
-                if local_state.vocab_to_add:
-                    print(f"🔍 [Background] 处理 session_state.vocab_to_add: {len(local_state.vocab_to_add)} 个词汇")
-                    for v in local_state.vocab_to_add:
+                if vocab_to_add_backup:
+                    print(f"🔍 [Background] 从备份恢复 vocab_to_add: {len(vocab_to_add_backup)} 个词汇")
+                    for v in vocab_to_add_backup:
                         vocab_body = getattr(v, 'vocab', None)
                         vocab_id = None
                         
@@ -1524,13 +1532,22 @@ async def get_pending_knowledge(
             }
         
         key = (user_id, text_id)
-        print(f"🔍 [PendingKnowledge] 查找 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
+        print(f"🔍 [PendingKnowledge] ========== 查询新知识点 ==========")
+        print(f"🔍 [PendingKnowledge] 查找 key: {key}")
+        print(f"🔍 [PendingKnowledge] key 类型: {type(key)}")
+        print(f"🔍 [PendingKnowledge] 当前所有 keys: {list(pending_knowledge_points.keys())}")
+        print(f"🔍 [PendingKnowledge] 当前所有 keys 的类型: {[type(k) for k in pending_knowledge_points.keys()]}")
+        print(f"🔍 [PendingKnowledge] pending_knowledge_points 总数量: {len(pending_knowledge_points)}")
         
         if key in pending_knowledge_points:
             data = pending_knowledge_points[key]
+            print(f"✅ [PendingKnowledge] 找到数据: grammar={len(data.get('grammar_to_add', []))}, vocab={len(data.get('vocab_to_add', []))}")
+            print(f"✅ [PendingKnowledge] grammar_to_add 详情: {data.get('grammar_to_add', [])}")
+            print(f"✅ [PendingKnowledge] vocab_to_add 详情: {data.get('vocab_to_add', [])}")
             # 返回后删除，避免重复获取
             del pending_knowledge_points[key]
             print(f"✅ [PendingKnowledge] 返回新知识点: user_id={user_id}, text_id={text_id}, grammar={len(data['grammar_to_add'])}, vocab={len(data['vocab_to_add'])}")
+            print(f"🔍 [PendingKnowledge] 删除后，剩余 keys: {list(pending_knowledge_points.keys())}")
             return {
                 'success': True,
                 'data': {
