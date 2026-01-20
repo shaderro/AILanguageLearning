@@ -149,7 +149,35 @@ export function UserProvider({ children }) {
       
       return { success: true, userId: result.user_id, token: result.access_token }
     } catch (error) {
-      console.error('❌ [UserContext] 登录失败:', error)
+      console.error('❌ [UserContext] 登录请求失败:', error)
+      
+      // 🔧 修复：如果超时但localStorage中已有token，说明登录实际上已经成功
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        console.log('⏱️ [UserContext] 登录请求超时，检查localStorage中是否有token...')
+        const savedAuth = authService.getAuth()
+        if (savedAuth.token && savedAuth.userId) {
+          console.log('✅ [UserContext] 检测到localStorage中已有token，登录实际上已成功')
+          console.log('🔍 [UserContext] 恢复登录状态:', { userId: savedAuth.userId })
+          
+          // 恢复登录状态
+          const previousGuestId = isGuest ? userId : null
+          setUserId(savedAuth.userId)
+          setToken(savedAuth.token)
+          setPassword(inputPassword)
+          setIsAuthenticated(true)
+          setIsGuest(false)
+          
+          // 如果从游客模式登录且有数据，显示迁移对话框
+          if (previousGuestId && guestDataManager.hasGuestData(previousGuestId)) {
+            console.log('📦 [UserContext] 检测到游客数据，准备迁移')
+            setPendingGuestId(previousGuestId)
+            setShowMigrationDialog(true)
+          }
+          
+          return { success: true, userId: savedAuth.userId, token: savedAuth.token }
+        }
+      }
+      
       return { 
         success: false, 
         error: error.response?.data?.detail || error.message || '登录失败'
