@@ -261,8 +261,9 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
         }
         
         // 上传成功后，处理响应
-        if (response && response.success) {
-          handleUploadSuccess(response.data)
+        // 🔧 修复：检查 response.status === 'success' 或 response.success
+        if (response && (response.success || response.status === 'success')) {
+          handleUploadSuccess(response.data || response)
         }
       } catch (error) {
         console.error('❌ [Frontend] 拖拽文件上传失败:', error)
@@ -358,8 +359,9 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
         }
         
         // 上传成功后，处理响应
-        if (response && response.success) {
-          handleUploadSuccess(response.data)
+        // 🔧 修复：检查 response.status === 'success' 或 response.success
+        if (response && (response.success || response.status === 'success')) {
+          handleUploadSuccess(response.data || response)
         }
         
         // 清空文件选择，允许再次选择同一文件
@@ -580,8 +582,9 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
         }
         
         // 上传成功后，处理响应
-        if (response && response.success) {
-          handleUploadSuccess(response.data)
+        // 🔧 修复：检查 response.status === 'success' 或 response.success
+        if (response && (response.success || response.status === 'success')) {
+          handleUploadSuccess(response.data || response)
         }
         
         // 清空文本输入

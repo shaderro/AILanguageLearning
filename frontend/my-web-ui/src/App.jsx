@@ -325,14 +325,16 @@ function AppContent() {
                   if (articleId) {
                     // 🔧 直接跳转到新文章，不返回列表
                     setIsUploadMode(false)
-                    // 先刷新文章列表（在后台）
+                    // 🔧 先刷新文章列表（在后台），然后立即跳转
+                    // 注意：invalidateQueries 只是标记查询为过期，不会阻塞跳转
                     queryClient.invalidateQueries({ 
                       predicate: (query) => {
                         const key = query.queryKey
                         return key && key[0] === 'articles'
                       }
                     })
-                    // 直接设置文章ID，跳转到新文章
+                    // 直接设置文章ID，跳转到新文章（ArticleChatView 会根据 articleId 加载文章）
+                    console.log('✅ [App] 跳转到新文章:', articleId)
                     setSelectedArticleId(articleId)
                   } else {
                     // 如果没有文章ID，返回文章列表
