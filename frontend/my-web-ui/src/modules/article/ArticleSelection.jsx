@@ -64,21 +64,30 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   // 使用API获取文章数据 - 传入 userId、isGuest 和 language（后端过滤或本地过滤）
   const { data, isLoading, isError, error, refetch } = useArticles(userId, selectedLanguage, isGuest)
   
-  // 🔧 移除查询失效监听器，避免无限循环
-  // React Query 已经会自动处理查询失效和重新获取
-  // 如果需要手动刷新，应该通过 invalidateQueries 触发，而不是监听查询失效事件
-  
-  // 🔧 移除组件挂载时的自动刷新，避免与 React Query 的自动机制冲突
-  // React Query 会在组件挂载时自动获取数据，不需要手动触发
-  
-  // 🔧 当 userId/selectedLanguage 变化时，自动刷新文章列表（但不包括组件挂载时，避免重复刷新）
+  // 🔧 调试日志：记录查询状态
   useEffect(() => {
-    // 只在 userId 或 selectedLanguage 变化时刷新，不在组件挂载时刷新（React Query 会自动初始加载）
-    if (userId !== null) {
+    console.log('📋 [ArticleSelection] 查询状态:', { 
+      isLoading, 
+      isError, 
+      hasData: !!data, 
+      dataType: typeof data,
+      userId,
+      isGuest,
+      selectedLanguage
+    })
+    if (isError) {
+      console.error('❌ [ArticleSelection] 查询错误:', error)
+    }
+  }, [isLoading, isError, error, data, userId, isGuest, selectedLanguage])
+  
+  // 🔧 当 userId/selectedLanguage 变化时，自动刷新文章列表
+  useEffect(() => {
+    // 只在 userId 不为 null 时才刷新（游客模式 userId 也是数字）
+    if (userId !== null && !isLoading) {
       console.log('🔄 [ArticleSelection] userId 或 selectedLanguage 变化，刷新文章列表')
       refetch()
     }
-  }, [userId, selectedLanguage, refetch])
+  }, [userId, selectedLanguage, refetch, isLoading])
   
   // 处理游客模式和登录模式的数据格式
   let summaries = []

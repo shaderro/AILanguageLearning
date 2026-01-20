@@ -175,8 +175,10 @@ export const useArticles = (userId = null, language = null, isGuest = false) => 
       console.log('👤 [useArticles] 游客模式，加载本地数据:', articles.length, '条', language ? `(语言: ${language})` : '')
       return { data: articles }
     } : () => apiService.getArticlesList(language),
-    enabled: userId !== null,  // 游客和登录用户都可以查询
+    enabled: userId !== null,  // 游客和登录用户都可以查询（userId 不为 null）
     staleTime: 5 * 60 * 1000, // 5分钟
+    retry: 2, // 失败时重试2次
+    retryDelay: 1000, // 重试延迟1秒
   });
 };
 
