@@ -4,7 +4,7 @@ from typing import Optional
 import json
 import requests
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # 首先设置路径
 import os
@@ -443,6 +443,14 @@ except ImportError as e:
     def get_current_user():
         raise HTTPException(status_code=500, detail="认证系统未加载")
     User = None
+
+# 注册邀请码 / Token API 路由
+try:
+    from backend.api.invite_routes import router as invite_router
+    app.include_router(invite_router)
+    print("[OK] 注册邀请码API路由: /api/invite")
+except ImportError as e:
+    print(f"Warning: Could not import invite_routes: {e}")
 
 # 注册文章API路由
 try:
@@ -1273,6 +1281,8 @@ async def chat_with_assistant(
     try:
         import time
         request_id = int(time.time() * 1000) % 10000
+        # 🔧 记录本轮请求的开始时间（用于后续汇总 token 使用）
+        request_start_time = datetime.utcnow()
         
         # 🔧 支持可选认证：如果有 token 则使用认证用户，否则使用默认用户
         user_id = 2  # 默认用户 ID
@@ -1347,23 +1357,58 @@ async def chat_with_assistant(
         local_state.user_id = user_id
         print("🧹 [Chat] 使用独立的 SessionState 副本处理本轮请求")
 
+        # 🔧 获取数据库 session（用于 token 记录和扣减以及检查token是否不足）
+        from database_system.database_manager import DatabaseManager
+        try:
+            from backend.config import ENV
+            environment = ENV
+        except ImportError:
+            import os
+            environment = os.getenv("ENV", "development")
+        db_manager = DatabaseManager(environment)
+        db_session = db_manager.get_session()
+        
+        # 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
+        # 如果main assistant流程已触发，在使用过程中积分不足，仍然完成当前的AI流程
+        try:
+            from database_system.business_logic.models import User
+            user = db_session.query(User).filter(User.user_id == user_id).first()
+            if user:
+                # 非admin用户且token不足1000（积分不足0.1）
+                if user.role != 'admin' and (user.token_balance is None or user.token_balance < 1000):
+                    db_session.close()
+                    return {
+                        'success': False,
+                        'error': '积分不足',
+                        'ai_response': None
+                    }
+        except Exception as e:
+            print(f"⚠️ [Chat #{request_id}] 检查token不足时出错: {e}")
+            # 如果检查失败，继续执行（避免影响正常流程）
+        
         # 创建 MainAssistant 实例（绑定本轮独立的 session_state）
         from backend.assistants.main_assistant import MainAssistant
         main_assistant = MainAssistant(
             data_controller_instance=global_dc,
             session_state_instance=local_state
         )
+        # 🔧 设置 user_id 和 session（用于 token 记录）
+        main_assistant.set_user_context(user_id=user_id, session=db_session)
         
         print(f"🚀 [Chat] 调用 MainAssistant...")
         
         # 🔧 先快速生成主回答，立即返回给前端
         effective_sentence_body = selected_text if selected_text else current_sentence.sentence_body
         print("🚀 [Chat] 生成主回答...")
-        ai_response = main_assistant.answer_question_function(
-            quoted_sentence=current_sentence,
-            user_question=current_input,
-            sentence_body=effective_sentence_body
-        )
+        try:
+            ai_response = main_assistant.answer_question_function(
+                quoted_sentence=current_sentence,
+                user_question=current_input,
+                sentence_body=effective_sentence_body
+            )
+        finally:
+            # 确保 session 被正确关闭
+            db_session.close()
         print("✅ [Chat] 主回答就绪，立即返回给前端")
         
         # 🔧 先立即返回主回答，然后在后台处理 grammar/vocab 和创建 notations
@@ -1387,9 +1432,21 @@ async def chat_with_assistant(
         def _run_grammar_vocab_background():
             from backend.assistants import main_assistant as _ma_mod
             prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+            # 🔧 为后台任务创建新的数据库 session（用于 token 记录）
+            from database_system.database_manager import DatabaseManager
+            try:
+                from backend.config import ENV
+                environment = ENV
+            except ImportError:
+                import os
+                environment = os.getenv("ENV", "development")
+            bg_db_manager = DatabaseManager(environment)
+            bg_db_session = bg_db_manager.get_session()
             try:
                 print("🧠 [Background] 执行 handle_grammar_vocab_function...")
                 _ma_mod.DISABLE_GRAMMAR_FEATURES = False
+                # 🔧 为后台任务设置 user_id 和 session（用于 token 记录）
+                main_assistant.set_user_context(user_id=user_id, session=bg_db_session)
                 main_assistant.handle_grammar_vocab_function(
                     quoted_sentence=current_sentence,
                     user_question=current_input,
@@ -1482,6 +1539,116 @@ async def chat_with_assistant(
                     dialogue_history_path=DIALOGUE_HISTORY_PATH
                 )
                 print("✅ [Background] 数据持久化完成")
+                
+                # 🔧 汇总并显示本轮全部 token 使用量（详细版本）
+                try:
+                    from database_system.business_logic.models import TokenLog
+                    from sqlalchemy import func
+                    # 查询从请求开始时间到现在的所有 token_logs
+                    # 使用一个时间窗口（请求开始时间往前推3秒，确保包含主回答的 token 记录）
+                    # 因为主回答的 token 记录可能在后台任务开始之前就已经写入
+                    time_window_start = request_start_time - timedelta(seconds=3)
+                    time_window_end = datetime.utcnow() + timedelta(seconds=1)  # 加1秒确保包含刚刚写入的记录
+                    
+                    # 1. 获取总体统计
+                    token_summary = (
+                        bg_db_session.query(
+                            func.count(TokenLog.id).label('call_count'),
+                            func.sum(TokenLog.total_tokens).label('total_tokens'),
+                            func.sum(TokenLog.prompt_tokens).label('total_prompt_tokens'),
+                            func.sum(TokenLog.completion_tokens).label('total_completion_tokens')
+                        )
+                        .filter(
+                            TokenLog.user_id == user_id,
+                            TokenLog.created_at >= time_window_start,
+                            TokenLog.created_at <= time_window_end
+                        )
+                        .first()
+                    )
+                    
+                    # 2. 获取按 assistant 分组的详细统计
+                    assistant_stats = (
+                        bg_db_session.query(
+                            TokenLog.assistant_name,
+                            func.count(TokenLog.id).label('call_count'),
+                            func.sum(TokenLog.total_tokens).label('total_tokens'),
+                            func.sum(TokenLog.prompt_tokens).label('total_prompt_tokens'),
+                            func.sum(TokenLog.completion_tokens).label('total_completion_tokens')
+                        )
+                        .filter(
+                            TokenLog.user_id == user_id,
+                            TokenLog.created_at >= time_window_start,
+                            TokenLog.created_at <= time_window_end
+                        )
+                        .group_by(TokenLog.assistant_name)
+                        .order_by(TokenLog.assistant_name)
+                        .all()
+                    )
+                    
+                    # 3. 获取所有调用的详细列表（按时间排序）
+                    all_calls = (
+                        bg_db_session.query(TokenLog)
+                        .filter(
+                            TokenLog.user_id == user_id,
+                            TokenLog.created_at >= time_window_start,
+                            TokenLog.created_at <= time_window_end
+                        )
+                        .order_by(TokenLog.created_at)
+                        .all()
+                    )
+                    
+                    if token_summary and token_summary.total_tokens:
+                        call_count = token_summary.call_count or 0
+                        total_tokens = int(token_summary.total_tokens) if token_summary.total_tokens else 0
+                        total_prompt = int(token_summary.total_prompt_tokens) if token_summary.total_prompt_tokens else 0
+                        total_completion = int(token_summary.total_completion_tokens) if token_summary.total_completion_tokens else 0
+                        
+                        # 获取最终余额
+                        from database_system.business_logic.models import User
+                        final_user = bg_db_session.query(User).filter(User.user_id == user_id).first()
+                        final_balance = final_user.token_balance if final_user else 0
+                        
+                        print("\n" + "="*80)
+                        print(f"📊 [Token Summary] 本轮 Chat API 调用 Token 使用汇总")
+                        print("="*80)
+                        print(f"  👤 用户 ID: {user_id}")
+                        print(f"  🔢 总 API 调用次数: {call_count}")
+                        print(f"  📝 总 Prompt Tokens: {total_prompt:,}")
+                        print(f"  ✍️  总 Completion Tokens: {total_completion:,}")
+                        print(f"  💰 总 Token 使用量: {total_tokens:,}")
+                        print(f"  💵 最终余额: {final_balance:,}")
+                        print("="*80)
+                        
+                        # 按 Assistant 分组统计
+                        if assistant_stats:
+                            print(f"\n📋 按 SubAssistant 分组统计:")
+                            print("-" * 80)
+                            for assistant_name, a_call_count, a_total, a_prompt, a_completion in assistant_stats:
+                                a_total_int = int(a_total) if a_total else 0
+                                a_prompt_int = int(a_prompt) if a_prompt else 0
+                                a_completion_int = int(a_completion) if a_completion else 0
+                                assistant_display = assistant_name or "Unknown"
+                                print(f"  • {assistant_display}:")
+                                print(f"     调用次数: {a_call_count}")
+                                print(f"     Prompt: {a_prompt_int:,} | Completion: {a_completion_int:,} | 总计: {a_total_int:,}")
+                        
+                        # 详细调用列表
+                        if all_calls:
+                            print(f"\n📝 详细调用记录（按时间顺序）:")
+                            print("-" * 80)
+                            for idx, call in enumerate(all_calls, 1):
+                                assistant_display = call.assistant_name or "Unknown"
+                                call_time = call.created_at.strftime("%H:%M:%S.%f")[:-3] if call.created_at else "N/A"
+                                print(f"  {idx}. [{call_time}] {assistant_display}")
+                                print(f"     Prompt: {call.prompt_tokens:,} | Completion: {call.completion_tokens:,} | 总计: {call.total_tokens:,}")
+                        
+                        print("="*80 + "\n")
+                    else:
+                        print("⚠️ [Token Summary] 未找到本轮 token 使用记录")
+                except Exception as summary_error:
+                    print(f"⚠️ [Token Summary] 汇总 token 使用量时出错: {summary_error}")
+                    import traceback
+                    traceback.print_exc()
             except Exception as bg_e:
                 print(f"❌ [Background] 后台流程失败: {bg_e}")
                 traceback.print_exc()
@@ -1490,6 +1657,11 @@ async def chat_with_assistant(
                     _ma_mod.DISABLE_GRAMMAR_FEATURES = prev_disable_grammar
                 except Exception:
                     pass
+                # 🔧 确保后台任务的 session 被正确关闭
+                try:
+                    bg_db_session.close()
+                except Exception as e:
+                    print(f"⚠️ [Background] 关闭 session 时出错: {e}")
         
         # 启动后台任务
         background_tasks.add_task(_run_grammar_vocab_background)
@@ -1814,6 +1986,74 @@ async def get_grammar_list(current_user: User = Depends(get_current_user)):
         )
     except Exception as e:
         return create_error_response(f"获取语法规则列表失败: {str(e)}")
+
+@app.get("/api/grammar/{rule_id}", response_model=ApiResponse)
+async def get_grammar_detail(rule_id: int, current_user: User = Depends(get_current_user)):
+    """获取单个语法规则详情（兼容端点：重定向到 v2 API）"""
+    try:
+        from database_system.business_logic.models import GrammarRule, Sentence
+        from database_system.database_manager import DatabaseManager
+        db_manager = DatabaseManager(ENV)
+        session = db_manager.get_session()
+        try:
+            # 查询语法规则（确保属于当前用户）
+            grammar_rule = session.query(GrammarRule).filter(
+                GrammarRule.rule_id == rule_id,
+                GrammarRule.user_id == current_user.user_id
+            ).first()
+            
+            if not grammar_rule:
+                raise HTTPException(status_code=404, detail=f"语法规则 ID {rule_id} 不存在或不属于当前用户")
+            
+            # 获取例句数据
+            examples_data = []
+            if grammar_rule.examples:
+                for ex in grammar_rule.examples:
+                    original_sentence = None
+                    try:
+                        if ex.text_id is not None and ex.sentence_id is not None:
+                            sentence_obj = session.query(Sentence).filter(
+                                Sentence.text_id == ex.text_id,
+                                Sentence.sentence_id == ex.sentence_id
+                            ).first()
+                            if sentence_obj:
+                                original_sentence = sentence_obj.sentence_body
+                    except Exception as se:
+                        print(f"⚠️ [GrammarAPI] 获取例句原句失败: text_id={ex.text_id}, sentence_id={ex.sentence_id}, error={se}")
+                    
+                    examples_data.append({
+                        "rule_id": ex.rule_id,
+                        "text_id": ex.text_id,
+                        "sentence_id": ex.sentence_id,
+                        "original_sentence": original_sentence,
+                        "explanation_context": ex.explanation_context,
+                    })
+            
+            data = {
+                "rule_id": grammar_rule.rule_id,
+                "rule_name": grammar_rule.rule_name,
+                "rule_summary": grammar_rule.rule_summary,
+                "name": grammar_rule.rule_name,  # 保留兼容性
+                "explanation": grammar_rule.rule_summary,  # 保留兼容性
+                "language": grammar_rule.language,
+                "source": grammar_rule.source.value if hasattr(grammar_rule.source, 'value') else str(grammar_rule.source),
+                "is_starred": grammar_rule.is_starred,
+                "learn_status": grammar_rule.learn_status.value if hasattr(grammar_rule.learn_status, 'value') else (str(grammar_rule.learn_status) if grammar_rule.learn_status else "not_mastered"),
+                "created_at": grammar_rule.created_at.isoformat() if grammar_rule.created_at else None,
+                "updated_at": grammar_rule.updated_at.isoformat() if grammar_rule.updated_at else None,
+                "examples": examples_data
+            }
+            
+            return create_success_response(
+                data=data,
+                message=f"成功获取语法规则详情（rule_id={rule_id}）"
+            )
+        finally:
+            session.close()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return create_error_response(f"获取语法规则详情失败: {str(e)}")
 
 @app.get("/api/stats", response_model=ApiResponse)
 async def get_stats():

@@ -1,7 +1,7 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import compare_grammar_rule_sys_prompt, compare_grammar_rule_template
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import compare_grammar_rule_sys_prompt, compare_grammar_rule_template
 from typing import Optional
-from assistants.utility import parse_json_from_text
+from backend.assistants.utility import parse_json_from_text
 
 class CompareGrammarRuleAssistant(SubAssistant):
     def __init__(self):
@@ -26,9 +26,10 @@ class CompareGrammarRuleAssistant(SubAssistant):
         self,
         grammar_rule_1: str,
         grammar_rule_2: str,
-        verbose: bool = False
+        verbose: bool = False,
+        **kwargs
     ) -> list[dict] | str:
-        return super().run(grammar_rule_1, grammar_rule_2, verbose=verbose)
+        return super().run(grammar_rule_1, grammar_rule_2, verbose=verbose, **kwargs)
     
 #test_compare_grammar_rule = CompareGrammarRuleAssistant()
 #rule1 = "被动语态"

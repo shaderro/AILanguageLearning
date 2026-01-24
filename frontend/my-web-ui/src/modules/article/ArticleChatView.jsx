@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
@@ -12,6 +12,9 @@ import { TranslationDebugProvider } from '../../contexts/TranslationDebugContext
 import TranslationDebugPanel from '../../components/TranslationDebugPanel'
 import { useChatEvent } from './contexts/ChatEventContext'
 import { useTranslationDebug } from '../../contexts/TranslationDebugContext'
+import { useUser } from '../../contexts/UserContext'
+import { isTokenInsufficient } from '../../utils/tokenUtils'
+import authService from '../auth/services/authService'
 
 function ArticleCanvas({ children }) {
   const { clearSelection } = useSelection()
@@ -450,6 +453,31 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   // 🔧 新增：处理 AI 详细解释请求（内部组件，可以使用 useChatEvent）
   const ArticleChatViewInner = () => {
     const { sendMessageToChat } = useChatEvent()
+    const { token: userToken } = useUser()
+    const [userInfo, setUserInfo] = useState(null)
+    
+    // 🔧 获取用户信息
+    useEffect(() => {
+      const fetchUserInfo = async () => {
+        if (!userToken) {
+          setUserInfo(null)
+          return
+        }
+        
+        try {
+          const info = await authService.getCurrentUser(userToken)
+          setUserInfo(info)
+        } catch (err) {
+          console.error('获取用户信息失败:', err)
+          setUserInfo(null)
+        }
+      }
+      
+      fetchUserInfo()
+      // 定期刷新用户信息（每30秒）
+      const interval = setInterval(fetchUserInfo, 30000)
+      return () => clearInterval(interval)
+    }, [userToken])
     
     const handleAskAI = useCallback(async (token, sentenceIndex) => {
       if (!token || sentenceIndex == null) {
@@ -458,6 +486,28 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       
       if (isProcessing) {
         return
+      }
+      
+      // 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
+      if (userInfo) {
+        const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
+        if (insufficient) {
+          console.log(`⚠️ [ArticleChatView] Token不足，无法使用AI详细解释功能`)
+          return
+        }
+      } else if (userToken) {
+        // 如果userInfo还未加载，尝试获取
+        try {
+          const info = await authService.getCurrentUser(userToken)
+          setUserInfo(info)
+          const insufficient = isTokenInsufficient(info?.token_balance, info?.role)
+          if (insufficient) {
+            console.log(`⚠️ [ArticleChatView] Token不足，无法使用AI详细解释功能`)
+            return
+          }
+        } catch (err) {
+          console.error('获取用户信息失败:', err)
+        }
       }
       
       try {
@@ -523,7 +573,25 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       } catch (error) {
         // 静默处理错误
       }
-    }, [articleId, isProcessing, handleTokenSelect, setCurrentContext, sendMessageToChat])
+    }, [articleId, isProcessing, handleTokenSelect, setCurrentContext, sendMessageToChat, userInfo, userToken])
+    
+    // 🔧 包装handleAskAI，传递token不足状态给TokenSpan
+    const wrappedHandleAskAI = useCallback(async (token, sentenceIndex) => {
+      // 检查token是否不足
+      if (userInfo) {
+        const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
+        if (insufficient) {
+          return
+        }
+      }
+      return handleAskAI(token, sentenceIndex)
+    }, [handleAskAI, userInfo])
+    
+    // 🔧 计算token是否不足（用于禁用AI详细解释按钮）
+    const isTokenInsufficientForAI = useMemo(() => {
+      if (!userInfo) return false
+      return isTokenInsufficient(userInfo.token_balance, userInfo.role)
+    }, [userInfo])
     
     return (
       <>

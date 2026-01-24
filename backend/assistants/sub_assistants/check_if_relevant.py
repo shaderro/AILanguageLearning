@@ -1,5 +1,5 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import check_if_relevant_template,check_if_relevant_sys_prompt
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import check_if_relevant_template,check_if_relevant_sys_prompt
 from typing import Optional
 
 class CheckIfRelevant(SubAssistant):

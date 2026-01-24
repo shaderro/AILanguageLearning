@@ -191,6 +191,16 @@ export const authService = {
     })
     return response.data
   },
+
+  /**
+   * 兑换邀请码
+   * @param {string} code - 邀请码
+   * @returns {Promise<{success: boolean, data: {code: string, granted_tokens: number, token_balance: number, redeemed_at: string}, message: string}>}
+   */
+  redeemInviteCode: async (code) => {
+    const response = await authApi.post('/api/invite/redeem', { code })
+    return response.data
+  },
 }
 
 export default authService

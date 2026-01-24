@@ -1,10 +1,10 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import (
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import (
     vocab_example_explanation_sys_prompt,
     vocab_example_explanation_template,
 )
-from data_managers.data_classes import Sentence
-from data_managers.data_classes_new import Sentence as NewSentence
+from backend.data_managers.data_classes import Sentence
+from backend.data_managers.data_classes_new import Sentence as NewSentence
 from typing import Union
 
 

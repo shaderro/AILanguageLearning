@@ -1,5 +1,5 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import check_if_grammar_relevant_sys_prompt, check_if_grammar_relevant_template
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import check_if_grammar_relevant_sys_prompt, check_if_grammar_relevant_template
 
 class CheckIfGrammarRelevantAssistant(SubAssistant):
     def __init__(self):
@@ -9,8 +9,8 @@ class CheckIfGrammarRelevantAssistant(SubAssistant):
             parse_json=True
         )
     
-    def run(self, quoted_sentence: str, user_question: str, ai_response: str, verbose=False) -> dict | str:
-        return super().run(quoted_sentence, user_question, ai_response, verbose=verbose)
+    def run(self, quoted_sentence: str, user_question: str, ai_response: str, verbose=False, **kwargs) -> dict | str:
+        return super().run(quoted_sentence, user_question, ai_response, verbose=verbose, **kwargs)
 
     
     def build_prompt(self, quoted_sentence: str, user_question: str, ai_response: str) -> str:

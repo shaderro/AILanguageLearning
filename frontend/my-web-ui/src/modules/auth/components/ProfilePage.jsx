@@ -41,7 +41,16 @@ const profileTexts = {
     loading: '加载中...',
     notLoggedIn: '未登录',
     fetchError: '获取用户信息失败',
-    changePasswordAlert: '修改密码功能待实现'
+    changePasswordAlert: '修改密码功能待实现',
+    tokensManagement: 'Token 管理',
+    currentPoints: '当前积分',
+    inviteCode: '邀请码',
+    enterInviteCode: '请输入邀请码',
+    redeem: '兑换',
+    redeeming: '兑换中...',
+    redeemSuccess: '兑换成功',
+    redeemError: '兑换失败',
+    invalidCode: '邀请码无效、已使用或已过期'
   },
   en: {
     title: 'Profile & Settings',
@@ -75,9 +84,20 @@ const profileTexts = {
     loading: 'Loading...',
     notLoggedIn: 'Not signed in',
     fetchError: 'Failed to load profile',
-    changePasswordAlert: 'Password change feature is under construction'
+    changePasswordAlert: 'Password change feature is under construction',
+    tokensManagement: 'Tokens Management',
+    currentPoints: 'Current Points',
+    inviteCode: 'Invite Code',
+    enterInviteCode: 'Enter invite code',
+    redeem: 'Redeem',
+    redeeming: 'Redeeming...',
+    redeemSuccess: 'Redeem successful',
+    redeemError: 'Redeem failed',
+    invalidCode: 'Invalid, used, or expired invite code'
   }
 }
+
+import { convertTokensToPoints } from '../../../utils/tokenUtils'
 
 const ProfilePage = ({ onClose, onLogout }) => {
   const { userId, token } = useUser()
@@ -86,6 +106,9 @@ const ProfilePage = ({ onClose, onLogout }) => {
   const [userInfo, setUserInfo] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [isRedeeming, setIsRedeeming] = useState(false)
+  const [redeemMessage, setRedeemMessage] = useState('')
   const t = profileTexts[uiLanguage] || profileTexts.zh
 
   // 获取用户信息
@@ -114,6 +137,35 @@ const ProfilePage = ({ onClose, onLogout }) => {
   const handleChangePassword = () => {
     // TODO: 打开修改密码对话框或跳转到修改密码页面
     alert(t.changePasswordAlert)
+  }
+
+  const handleRedeemInviteCode = async () => {
+    if (!inviteCode.trim()) {
+      setRedeemMessage(t.invalidCode)
+      return
+    }
+
+    setIsRedeeming(true)
+    setRedeemMessage('')
+
+    try {
+      const result = await authService.redeemInviteCode(inviteCode.trim())
+      if (result.success) {
+        setRedeemMessage(t.redeemSuccess + `: ${result.message || ''}`)
+        setInviteCode('')
+        // 刷新用户信息以更新 token 余额
+        const updatedInfo = await authService.getCurrentUser(token)
+        setUserInfo(updatedInfo)
+      } else {
+        setRedeemMessage(t.redeemError + ': ' + (result.message || t.invalidCode))
+      }
+    } catch (err) {
+      console.error('兑换邀请码失败:', err)
+      const errorMsg = err.response?.data?.detail || err.message || t.invalidCode
+      setRedeemMessage(t.redeemError + ': ' + errorMsg)
+    } finally {
+      setIsRedeeming(false)
+    }
   }
 
   if (isLoading) {
@@ -270,6 +322,55 @@ const ProfilePage = ({ onClose, onLogout }) => {
                   </svg>
                 </div>
               </button>
+            </div>
+          </div>
+
+          {/* Token 管理 */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.tokensManagement}</h2>
+            <div className="space-y-4">
+              {/* 当前积分 */}
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">{t.currentPoints}</label>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {convertTokensToPoints(userInfo?.token_balance)}
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400">{t.displayOnly}</span>
+              </div>
+
+              {/* 邀请码兑换 */}
+              <div className="pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.inviteCode}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={inviteCode}
+                    onChange={(e) => {
+                      setInviteCode(e.target.value)
+                      setRedeemMessage('')
+                    }}
+                    placeholder={t.enterInviteCode}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isRedeeming}
+                  />
+                  <button
+                    onClick={handleRedeemInviteCode}
+                    disabled={isRedeeming || !inviteCode.trim()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  >
+                    {isRedeeming ? t.redeeming : t.redeem}
+                  </button>
+                </div>
+                {redeemMessage && (
+                  <p className={`mt-2 text-sm ${redeemMessage.includes(t.redeemSuccess) ? 'text-green-600' : 'text-red-600'}`}>
+                    {redeemMessage}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

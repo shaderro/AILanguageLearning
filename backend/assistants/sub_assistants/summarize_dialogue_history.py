@@ -1,8 +1,8 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import summarize_dialogue_history_sys_prompt, summarize_dialogue_history_template
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import summarize_dialogue_history_sys_prompt, summarize_dialogue_history_template
 from typing import Optional, Union
-from data_managers.data_classes import Sentence
-from data_managers.data_classes_new import Sentence as NewSentence
+from backend.data_managers.data_classes import Sentence
+from backend.data_managers.data_classes_new import Sentence as NewSentence
 
 class SummarizeDialogueHistoryAssistant(SubAssistant):
     def __init__(self):

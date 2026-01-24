@@ -1,4 +1,4 @@
-﻿import { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
+import { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
@@ -29,7 +29,8 @@ export default function ArticleViewer({
   onSentenceSelect,
   targetSentenceId = null,  // 🔧 目标句子ID（用于自动滚动和高亮）
   onTargetSentenceScrolled = null,  // 🔧 滚动完成后的回调
-  onAskAI = null  // 🔧 AI详细解释回调
+  onAskAI = null,  // 🔧 AI详细解释回调
+  isTokenInsufficient = false  // 🔧 Token是否不足（用于禁用AI详细解释按钮）
 }) {
   // Debug logging removed to improve performance
   const { userId } = useUser()
@@ -1198,6 +1199,7 @@ export default function ArticleViewer({
               isSentenceInteracting={isSentenceInteracting}
               currentReadingToken={currentReadingToken}
               onAskAI={onAskAI}
+              isTokenInsufficient={isTokenInsufficient}
             />
           )
         })}

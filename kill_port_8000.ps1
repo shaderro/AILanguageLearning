@@ -1,42 +1,53 @@
-# 清理占用8000端口的进程
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "   清理端口 8000 占用" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
+# 查找并终止占用端口 8000 的进程
 
-$port = 8000
+Write-Host "🔍 查找占用端口 8000 的进程..." -ForegroundColor Yellow
 
-# 检查端口是否被占用
-Write-Host "检查端口 $port..." -ForegroundColor Yellow
-$connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+# 使用 netstat 查找占用端口的进程
+$connections = netstat -ano | Select-String ":8000"
 
-if ($connection) {
-    $pids = $connection.OwningProcess | Select-Object -Unique
-    foreach ($pid in $pids) {
-        $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($process) {
-            Write-Host "  发现进程: $($process.ProcessName) (PID: $pid)" -ForegroundColor Red
-            Write-Host "  正在关闭..." -ForegroundColor Yellow
-            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-            Write-Host "  [OK] 进程已关闭" -ForegroundColor Green
+if ($connections) {
+    Write-Host "`n找到以下连接:" -ForegroundColor Cyan
+    $connections | ForEach-Object { Write-Host $_.Line }
+    
+    # 提取 PID
+    $pids = $connections | ForEach-Object {
+        if ($_ -match '\s+(\d+)$') {
+            $matches[1]
         }
-    }
+    } | Select-Object -Unique
     
-    # 等待端口释放
-    Write-Host "  等待端口释放..." -ForegroundColor Yellow
-    Start-Sleep -Seconds 2
-    
-    # 再次检查
-    $connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
-    if ($connection) {
-        Write-Host "  [WARNING] 端口可能仍在占用中" -ForegroundColor Yellow
+    if ($pids) {
+        Write-Host "`n找到进程 ID (PID): $($pids -join ', ')" -ForegroundColor Yellow
+        
+        foreach ($pid in $pids) {
+            try {
+                $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+                if ($process) {
+                    Write-Host "`n进程信息:" -ForegroundColor Cyan
+                    Write-Host "  PID: $($process.Id)"
+                    Write-Host "  名称: $($process.ProcessName)"
+                    Write-Host "  路径: $($process.Path)"
+                    
+                    # 询问是否终止
+                    $confirm = Read-Host "`n是否终止此进程? (Y/N)"
+                    if ($confirm -eq 'Y' -or $confirm -eq 'y') {
+                        Stop-Process -Id $pid -Force
+                        Write-Host "✅ 已终止进程 PID: $pid" -ForegroundColor Green
+                    } else {
+                        Write-Host "⏭️  跳过进程 PID: $pid" -ForegroundColor Yellow
+                    }
+                } else {
+                    Write-Host "⚠️  进程 PID $pid 不存在或已终止" -ForegroundColor Yellow
+                }
+            } catch {
+                Write-Host "❌ 终止进程 PID $pid 时出错: $_" -ForegroundColor Red
+            }
+        }
     } else {
-        Write-Host "  [OK] 端口 $port 已释放" -ForegroundColor Green
+        Write-Host "⚠️  无法提取进程 ID" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "  [OK] 端口 $port 未被占用" -ForegroundColor Green
+    Write-Host "✅ 端口 8000 未被占用" -ForegroundColor Green
 }
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-
+Write-Host "`n完成！" -ForegroundColor Cyan

@@ -2,8 +2,10 @@ import time
 from openai import OpenAI
 from openai import APIConnectionError, APITimeoutError
 import httpx
+from typing import Optional
+from sqlalchemy.orm import Session
 #, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
-from assistants.utility import parse_json_from_text
+from backend.assistants.utility import parse_json_from_text
 
 class SubAssistant:
     def __init__(self, sys_prompt, max_tokens, parse_json):
@@ -26,7 +28,14 @@ class SubAssistant:
         self.max_retries = 3
         self.retry_backoff_seconds = 2
 
-    def run(self, *args, verbose=False, **kwargs) -> dict |list[dict] | str:
+    def run(
+        self, 
+        *args, 
+        verbose=False, 
+        user_id: Optional[int] = None,
+        session: Optional[Session] = None,
+        **kwargs
+    ) -> dict |list[dict] | str:
         user_prompt = self.build_prompt(*args, **kwargs)
         if verbose:
             print("🧾 Prompt:\n", user_prompt)
@@ -44,6 +53,48 @@ class SubAssistant:
                     messages=messages,
                     max_tokens=self.max_tokens
                 )
+                
+                # ⚠️ 重要：在 API 调用成功后，立即记录 token 使用并扣减
+                # 必须在处理响应内容之前完成，确保即使后续处理失败，token 也已正确扣减
+                if user_id is not None and session is not None:
+                    try:
+                        # 从 response.usage 中读取真实 token 使用量
+                        usage = response.usage
+                        if usage:
+                            total_tokens = usage.total_tokens
+                            prompt_tokens = usage.prompt_tokens
+                            completion_tokens = usage.completion_tokens
+                            
+                            # 调用 token 服务记录使用并扣减
+                            from backend.services.token_service import record_token_usage
+                            # 🔧 获取当前 SubAssistant 的类名（用于详细统计）
+                            assistant_name = self.__class__.__name__
+                            token_result = record_token_usage(
+                                session=session,
+                                user_id=user_id,
+                                total_tokens=total_tokens,
+                                prompt_tokens=prompt_tokens,
+                                completion_tokens=completion_tokens,
+                                model_name=self.model,
+                                assistant_name=assistant_name
+                            )
+                            
+                            # 提交事务（确保 token 扣减和日志记录已保存）
+                            session.commit()
+                            
+                            # 📊 后端日志输出（用于调试和排查成本异常）
+                            print(f"💰 [Token Usage] user_id={user_id} | model={self.model} | "
+                                  f"prompt_tokens={prompt_tokens} | completion_tokens={completion_tokens} | "
+                                  f"total_tokens={total_tokens} | balance_after={token_result['token_balance_after']}")
+                        else:
+                            print(f"⚠️ [Token Usage] API 响应中未包含 usage 信息，跳过 token 扣减")
+                    except Exception as token_error:
+                        # Token 记录失败不应该影响 API 响应，但需要记录错误
+                        print(f"❌ [Token Usage] 记录 token 使用失败: {token_error}")
+                        import traceback
+                        traceback.print_exc()
+                        # 回滚 token 相关的事务
+                        session.rollback()
                 
                 # 🔧 详细记录原始响应
                 raw_content = response.choices[0].message.content

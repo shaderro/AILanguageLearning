@@ -1,10 +1,10 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import (
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import (
     vocab_explanation_sys_prompt,
     vocab_explanation_template,
 )
-from data_managers.data_classes import Sentence
-from data_managers.data_classes_new import Sentence as NewSentence
+from backend.data_managers.data_classes import Sentence
+from backend.data_managers.data_classes_new import Sentence as NewSentence
 from typing import Optional, Union
 
 
@@ -32,4 +32,5 @@ class VocabExplanationAssistant(SubAssistant):
         sentence: Union[Sentence, NewSentence],
         **kwargs,
     ) -> dict | list[dict] | str:
+        # vocab_explanation 使用关键字参数传递，确保 user_id 和 session 能正确传递
         return super().run(vocab=vocab, sentence=sentence, **kwargs) 

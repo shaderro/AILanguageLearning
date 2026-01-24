@@ -38,7 +38,9 @@ export default function SentenceContainer({
   // 🔧 新增：AI详细解释回调
   onAskAI = null,
   // 🔧 新增：高亮范围
-  highlightedRange = null
+  highlightedRange = null,
+  // 🔧 新增：Token是否不足（用于禁用AI详细解释按钮）
+  isTokenInsufficient = false
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -422,6 +424,7 @@ export default function SentenceContainer({
               getExplanation={getExplanation}
               hoveredTokenId={hoveredTokenId}
               setHoveredTokenId={setHoveredTokenId}
+              isTokenInsufficient={isTokenInsufficient}
               handleGetExplanation={handleGetExplanation}
               onTokenMouseLeave={handleTokenHoverLeave}
               addSingle={addSingle}

@@ -16,7 +16,8 @@ export default function QuickTranslationTooltip({
   onSpeak = null, // 朗读回调函数（可选）
   onMouseEnter = null, // tooltip hover 进入回调
   onMouseLeave = null, // tooltip hover 离开回调
-  onAskAI = null // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
+  onAskAI = null, // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
+  isTokenInsufficient = false // 🔧 Token是否不足（用于禁用AI详细解释按钮）
 }) {
   const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999 })
   const [isPositioned, setIsPositioned] = useState(false)
@@ -206,6 +207,11 @@ export default function QuickTranslationTooltip({
             onClick={(e) => {
               e.stopPropagation()
               e.preventDefault()
+              // 🔧 如果token不足，不执行任何操作
+              if (isTokenInsufficient) {
+                console.log('⚠️ [QuickTranslationTooltip] Token不足，无法使用AI详细解释功能')
+                return
+              }
               console.log('🔘 [QuickTranslationTooltip] AI详细解释按钮被点击', { 
                 word, 
                 translation,
@@ -251,8 +257,13 @@ export default function QuickTranslationTooltip({
               e.stopPropagation()
               console.log('🔘 [QuickTranslationTooltip] AI详细解释按钮 onMouseDown', { word })
             }}
-            className="mt-2 w-full px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-transparent hover:border-gray-300 rounded transition-colors"
-            title="AI详细解释"
+            disabled={isTokenInsufficient}
+            className={`mt-2 w-full px-2 py-1 text-xs rounded transition-colors border ${
+              isTokenInsufficient 
+                ? 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent hover:border-gray-300'
+            }`}
+            title={isTokenInsufficient ? "积分不足" : "AI详细解释"}
           >
             AI详细解释
           </button>

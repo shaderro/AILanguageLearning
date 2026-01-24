@@ -1,0 +1,155 @@
+[
+  {
+    "user_id": 3,
+    "text_id": 1768399898,
+    "sentence_id": 1,
+    "sentence_token_id": 21,
+    "type": "token",
+    "vocab_id": 173,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": 1768399898,
+    "sentence_id": 2,
+    "sentence_token_id": 36,
+    "type": "token",
+    "vocab_id": 174,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": 1768399898,
+    "sentence_id": 3,
+    "sentence_token_id": 9,
+    "type": "token",
+    "vocab_id": 175,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 3,
+    "sentence_token_id": 28,
+    "type": "token",
+    "vocab_id": 176,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 3,
+    "sentence_token_id": 32,
+    "type": "token",
+    "vocab_id": 177,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 3,
+    "sentence_token_id": 40,
+    "type": "token",
+    "vocab_id": 178,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 3,
+    "sentence_token_id": 48,
+    "type": "token",
+    "vocab_id": 179,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 4,
+    "sentence_token_id": 38,
+    "type": "token",
+    "vocab_id": 180,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 5,
+    "sentence_token_id": 7,
+    "type": "token",
+    "vocab_id": 181,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1768399898",
+    "sentence_id": 4,
+    "sentence_token_id": 75,
+    "type": "token",
+    "vocab_id": 182,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": 1768399898,
+    "sentence_id": 5,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 24
+  },
+  {
+    "user_id": 3,
+    "text_id": 1768399898,
+    "sentence_id": 6,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 25
+  },
+  {
+    "user_id": 3,
+    "text_id": 1768399898,
+    "sentence_id": 7,
+    "sentence_token_id": 3,
+    "type": "token",
+    "vocab_id": 183,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": 1769182925,
+    "sentence_id": 1,
+    "sentence_token_id": 13,
+    "type": "token",
+    "vocab_id": 184,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1769182925",
+    "sentence_id": 4,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 25
+  },
+  {
+    "user_id": 3,
+    "text_id": 1769223852,
+    "sentence_id": 1,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 26
+  },
+  {
+    "user_id": 3,
+    "text_id": 1769223852,
+    "sentence_id": 2,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 25
+  }
+]

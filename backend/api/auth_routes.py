@@ -178,6 +178,9 @@ class UserResponse(BaseModel):
     user_id: int
     email: Optional[str] = None
     created_at: Optional[str] = None
+    token_balance: Optional[int] = None
+    total_tokens_used: Optional[int] = None  # 累计使用的 token 数量
+    role: Optional[str] = None  # 用户角色（'admin' | 'user'）
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -343,21 +346,43 @@ async def login(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_db_session)
+):
     """
     获取当前登录用户信息
     
     需要在请求头中携带 Authorization: Bearer <token>
+    
+    返回字段：
+    - token_balance: 当前剩余 token
+    - total_tokens_used: 累计已使用 token（从 TokenLog 表统计）
     """
     import time
+    from sqlalchemy import func
+    from database_system.business_logic.models import TokenLog
+    
     start_time = time.time()
     print(f"🔍 [Auth] /api/auth/me 请求开始，user_id: {current_user.user_id}")
     
     try:
+        # 统计累计使用的 token 数量（从 TokenLog 表查询）
+        # 不需要额外字段冗余存储，运行时统计即可
+        total_tokens_used_result = (
+            session.query(func.sum(TokenLog.total_tokens))
+            .filter(TokenLog.user_id == current_user.user_id)
+            .scalar()
+        )
+        total_tokens_used = int(total_tokens_used_result) if total_tokens_used_result else 0
+        
         result = UserResponse(
             user_id=current_user.user_id,
             email=current_user.email,
-            created_at=current_user.created_at.isoformat() if current_user.created_at else None
+            created_at=current_user.created_at.isoformat() if current_user.created_at else None,
+            token_balance=current_user.token_balance or 0,
+            total_tokens_used=total_tokens_used,
+            role=current_user.role or 'user'
         )
         elapsed = (time.time() - start_time) * 1000
         print(f"✅ [Auth] /api/auth/me 请求完成，耗时: {elapsed:.2f}ms")

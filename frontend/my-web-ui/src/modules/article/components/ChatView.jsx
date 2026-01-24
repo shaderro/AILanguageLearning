@@ -6,6 +6,9 @@ import { useChatEvent } from '../contexts/ChatEventContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { useRefreshData } from '../../../hooks/useApi'
 import { colors } from '../../../design-tokens'
+import { useUser } from '../../../contexts/UserContext'
+import { isTokenInsufficient } from '../../../utils/tokenUtils'
+import authService from '../../auth/services/authService'
 
 // 🔧 本地持久化
 const LS_KEY_CHAT_MESSAGES_ALL = 'chat_messages_all'
@@ -65,6 +68,11 @@ export default function ChatView({
   const { pendingMessage, clearPendingMessage, pendingContext, clearPendingContext, pendingToast, clearPendingToast } = useChatEvent()
   const { refreshGrammar, refreshVocab } = useRefreshData()
   const { addLog } = useTranslationDebug()
+  const { token } = useUser()
+  
+  // 🔧 Token不足检查相关状态
+  const [userInfo, setUserInfo] = useState(null)
+  const [tokenInsufficient, setTokenInsufficient] = useState(false)
   
   const scrollContainerRef = useRef(null)
   const messageIdCounterRef = useRef(0)
@@ -99,6 +107,44 @@ export default function ChatView({
   const [messages, setMessages] = useState(getInitialMessages)
   const [inputText, setInputText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  
+  // 🔧 获取用户信息并检查token是否不足
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      if (!token) {
+        setUserInfo(null)
+        setTokenInsufficient(false)
+        return
+      }
+      
+      try {
+        const info = await authService.getCurrentUser(token)
+        setUserInfo(info)
+        // 检查token是否不足（只在没有main assistant流程时判断）
+        if (!isProcessing) {
+          const insufficient = isTokenInsufficient(info?.token_balance, info?.role)
+          setTokenInsufficient(insufficient)
+        }
+      } catch (err) {
+        console.error('获取用户信息失败:', err)
+        setUserInfo(null)
+        setTokenInsufficient(false)
+      }
+    }
+    
+    fetchUserInfo()
+    // 定期刷新用户信息（每30秒）
+    const interval = setInterval(fetchUserInfo, 30000)
+    return () => clearInterval(interval)
+  }, [token, isProcessing])
+  
+  // 🔧 当isProcessing状态变化时，重新检查token是否不足
+  useEffect(() => {
+    if (!isProcessing && userInfo) {
+      const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
+      setTokenInsufficient(insufficient)
+    }
+  }, [isProcessing, userInfo])
   
   // 🔧 Toast 管理
   if (!window.chatViewToastsRef) {
@@ -509,6 +555,20 @@ export default function ChatView({
       return
     }
     
+    // 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
+    if (!isProcessing && userInfo) {
+      const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
+      if (insufficient) {
+        console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+        // 提示信息已在UI中显示（输入框上方的黄色提示框）
+        return
+      }
+    } else if (!isProcessing && tokenInsufficient) {
+      // 如果userInfo还未加载，但之前检查过token不足，也阻止
+      console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+      return
+    }
+    
     setIsProcessing(true)
     const questionText = inputText
     console.log(`🔍 [ChatView] handleSendMessage 开始处理: questionText="${questionText}"`)
@@ -767,6 +827,19 @@ export default function ChatView({
     console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被调用: question="${question}", isProcessing=${isProcessing}`)
     if (isProcessing) {
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被跳过: 正在处理中`)
+      return
+    }
+    
+    // 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
+    if (!isProcessing && userInfo) {
+      const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
+      if (insufficient) {
+        console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+        return
+      }
+    } else if (!isProcessing && tokenInsufficient) {
+      // 如果userInfo还未加载，但之前检查过token不足，也阻止
+      console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
       return
     }
     
@@ -1139,6 +1212,12 @@ export default function ChatView({
 
       {/* Input Area */}
       <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
+        {/* 🔧 Token不足提示 */}
+        {tokenInsufficient && !isProcessing && (
+          <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+            积分不足
+          </div>
+        )}
         <div className="flex space-x-2">
           <input
             type="text"
@@ -1148,6 +1227,7 @@ export default function ChatView({
             placeholder={
               disabled ? "聊天暂时不可用" : 
               isProcessing ? "AI 正在处理中，请稍候..." :
+              tokenInsufficient ? "积分不足，无法使用AI聊天功能" :
               (!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" :
               (quotedText ? `回复引用："${quotedText}"` : "输入消息...")
             }
@@ -1159,17 +1239,20 @@ export default function ChatView({
             onBlur={(e) => {
               e.currentTarget.style.boxShadow = ''
             }}
-            disabled={disabled || isProcessing || (!hasSelectedToken && !hasSelectedSentence)}
+            disabled={disabled || isProcessing || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
           />
           <button
             onClick={handleSendMessage}
-            disabled={inputText.trim() === '' || disabled || isProcessing || (!hasSelectedToken && !hasSelectedSentence)}
+            disabled={inputText.trim() === '' || disabled || isProcessing || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
             className="px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:brightness-95 active:brightness-90"
             style={{
               backgroundColor: colors.primary[600],
               '--tw-ring-color': colors.primary[300],
             }}
-            title={(!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" : "发送消息"}
+            title={
+              tokenInsufficient ? "积分不足" :
+              (!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" : "发送消息"
+            }
           >
             发送
           </button>

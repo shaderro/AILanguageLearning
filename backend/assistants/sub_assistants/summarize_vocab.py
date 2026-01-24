@@ -1,11 +1,11 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import (
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import (
     summarize_vocab_template, 
     summarize_vocab_sys_prompt,
     summarize_non_space_vocab_sys_prompt
 )
 from typing import Optional
-from assistants.utility import parse_json_from_text
+from backend.assistants.utility import parse_json_from_text
 
 class SummarizeVocabAssistant(SubAssistant):
     def __init__(self):
@@ -44,7 +44,8 @@ class SummarizeVocabAssistant(SubAssistant):
         ai_response: str,
         dialogue_context: Optional[str] = None,
         is_non_whitespace: bool = False,
-        verbose: bool = False
+        verbose: bool = False,
+        **kwargs
     ) -> list[dict] | str:
         # 根据语言类型动态设置 sys_prompt
         if is_non_whitespace:
@@ -55,7 +56,7 @@ class SummarizeVocabAssistant(SubAssistant):
             print("🌐 [SummarizeVocab] 使用空格语言 prompt（英文/德文等）")
         
         # 调用父类的 run 方法，不传递 is_non_whitespace（因为 build_prompt 不需要它）
-        return super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose)
+        return super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose, **kwargs)
 
 """" 
 test_summarize_vocab = SummarizeVocabAssistant()

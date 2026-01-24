@@ -1,7 +1,7 @@
 from typing import Optional
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.utility import parse_json_from_text
-from assistants.sub_assistants.prompt import summarize_grammar_rule_template, summarize_grammar_rule_sys_prompt
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.utility import parse_json_from_text
+from backend.assistants.sub_assistants.prompt import summarize_grammar_rule_template, summarize_grammar_rule_sys_prompt
 
 class SummarizeGrammarRuleAssistant(SubAssistant):
 
@@ -37,9 +37,10 @@ class SummarizeGrammarRuleAssistant(SubAssistant):
         user_question: str,
         ai_response: str,
         dialogue_context: Optional[str] = None,
-        verbose: bool = False
+        verbose: bool = False,
+        **kwargs
     ) -> list[dict] | str:
-        return super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose)
+        return super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose, **kwargs)
 
 """"
 summarize_grammar_rule = SummarizeGrammarRuleAssistant()

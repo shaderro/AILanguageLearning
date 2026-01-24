@@ -1,0 +1,642 @@
+[
+  {
+    "text_id": 1769182925,
+    "sentence_id": 1,
+    "sentence_body": "Soul bezeichnet eine Hauptströmung der afroamerikanischen Unterhaltungsmusik.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Soul",
+        "token_type": "text",
+        "global_token_id": 0,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 1,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "bezeichnet",
+        "token_type": "text",
+        "global_token_id": 2,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 3,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "eine",
+        "token_type": "text",
+        "global_token_id": 4,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 5,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "Hauptströmung",
+        "token_type": "text",
+        "global_token_id": 6,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 7,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "der",
+        "token_type": "text",
+        "global_token_id": 8,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 9,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "afroamerikanischen",
+        "token_type": "text",
+        "global_token_id": 10,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 11,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "Unterhaltungsmusik",
+        "token_type": "text",
+        "global_token_id": 12,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 13,
+        "sentence_token_id": 14
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1769182925,
+    "sentence_id": 2,
+    "sentence_body": "Sie entwickelte sich Ende der 1950er Jahre aus Rhythm and Blues und Gospel.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Sie",
+        "token_type": "text",
+        "global_token_id": 14,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 15,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "entwickelte",
+        "token_type": "text",
+        "global_token_id": 16,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 17,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "sich",
+        "token_type": "text",
+        "global_token_id": 18,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 19,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "Ende",
+        "token_type": "text",
+        "global_token_id": 20,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 21,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "der",
+        "token_type": "text",
+        "global_token_id": 22,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 23,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "1950er",
+        "token_type": "text",
+        "global_token_id": 24,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 25,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "Jahre",
+        "token_type": "text",
+        "global_token_id": 26,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 27,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "aus",
+        "token_type": "text",
+        "global_token_id": 28,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 29,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "Rhythm",
+        "token_type": "text",
+        "global_token_id": 30,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 31,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 32,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 33,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": "Blues",
+        "token_type": "text",
+        "global_token_id": 34,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 35,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": "und",
+        "token_type": "text",
+        "global_token_id": 36,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 37,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": "Gospel",
+        "token_type": "text",
+        "global_token_id": 38,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 39,
+        "sentence_token_id": 26
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1769182925,
+    "sentence_id": 3,
+    "sentence_body": "In den 1960er Jahren war Soul fast das Synonym für schwarze Popmusik.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "In",
+        "token_type": "text",
+        "global_token_id": 40,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 41,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "den",
+        "token_type": "text",
+        "global_token_id": 42,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 43,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "1960er",
+        "token_type": "text",
+        "global_token_id": 44,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 45,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "Jahren",
+        "token_type": "text",
+        "global_token_id": 46,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 47,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "war",
+        "token_type": "text",
+        "global_token_id": 48,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 49,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "Soul",
+        "token_type": "text",
+        "global_token_id": 50,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 51,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "fast",
+        "token_type": "text",
+        "global_token_id": 52,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 53,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "das",
+        "token_type": "text",
+        "global_token_id": 54,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 55,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "Synonym",
+        "token_type": "text",
+        "global_token_id": 56,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 57,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "für",
+        "token_type": "text",
+        "global_token_id": 58,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 59,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": "schwarze",
+        "token_type": "text",
+        "global_token_id": 60,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 61,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": "Popmusik",
+        "token_type": "text",
+        "global_token_id": 62,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 63,
+        "sentence_token_id": 24
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1769182925,
+    "sentence_id": 4,
+    "sentence_body": "Eng verknüpft ist die Geschichte dieser Stilrichtung mit dem Kampf der US-amerikanischen Bürgerrechtsbewegung gegen Rassentrennung und für Gleichberechtigung.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Eng",
+        "token_type": "text",
+        "global_token_id": 64,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 65,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "verknüpft",
+        "token_type": "text",
+        "global_token_id": 66,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 67,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "ist",
+        "token_type": "text",
+        "global_token_id": 68,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 69,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "die",
+        "token_type": "text",
+        "global_token_id": 70,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 71,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "Geschichte",
+        "token_type": "text",
+        "global_token_id": 72,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 73,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "dieser",
+        "token_type": "text",
+        "global_token_id": 74,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 75,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "Stilrichtung",
+        "token_type": "text",
+        "global_token_id": 76,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 77,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "mit",
+        "token_type": "text",
+        "global_token_id": 78,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 79,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "dem",
+        "token_type": "text",
+        "global_token_id": 80,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 81,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "Kampf",
+        "token_type": "text",
+        "global_token_id": 82,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 83,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": "der",
+        "token_type": "text",
+        "global_token_id": 84,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 85,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": "US-amerikanischen",
+        "token_type": "text",
+        "global_token_id": 86,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 87,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": "Bürgerrechtsbewegung",
+        "token_type": "text",
+        "global_token_id": 88,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 89,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": "gegen",
+        "token_type": "text",
+        "global_token_id": 90,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 91,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": "Rassentrennung",
+        "token_type": "text",
+        "global_token_id": 92,
+        "sentence_token_id": 29
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 93,
+        "sentence_token_id": 30
+      },
+      {
+        "token_body": "und",
+        "token_type": "text",
+        "global_token_id": 94,
+        "sentence_token_id": 31
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 95,
+        "sentence_token_id": 32
+      },
+      {
+        "token_body": "für",
+        "token_type": "text",
+        "global_token_id": 96,
+        "sentence_token_id": 33
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 97,
+        "sentence_token_id": 34
+      },
+      {
+        "token_body": "Gleichberechtigung",
+        "token_type": "text",
+        "global_token_id": 98,
+        "sentence_token_id": 35
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 99,
+        "sentence_token_id": 36
+      }
+    ],
+    "word_tokens": []
+  }
+]

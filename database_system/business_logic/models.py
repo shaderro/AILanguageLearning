@@ -1,6 +1,19 @@
 from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, Boolean, DateTime,
-    ForeignKey, JSON, Enum, ForeignKeyConstraint, UniqueConstraint, TypeDecorator
+    create_engine,
+    Column,
+    Integer,
+    String,
+    Text,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    JSON,
+    Enum,
+    ForeignKeyConstraint,
+    UniqueConstraint,
+    TypeDecorator,
+    BigInteger,
+    Index,
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime
@@ -335,11 +348,114 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)  # 存储哈希后的密码
     email = Column(String(255), nullable=True, unique=True, index=True)  # 邮箱（唯一性约束）
     created_at = Column(DateTime, default=datetime.now, nullable=False)
+    # 角色：'admin' | 'user'，用于区分管理员和普通用户
+    role = Column(String(32), nullable=False, default='user')
+    # 当前可用 token 余额（使用 BigInteger 以避免后续累计溢出）
+    token_balance = Column(BigInteger, nullable=False, default=0)
+    # 最近一次 token 变动时间（用于排查和前端展示，可为空）
+    token_updated_at = Column(DateTime, nullable=True)
     
     # 关联关系
     asked_tokens = relationship('AskedToken', backref='user', cascade='all, delete-orphan')
     vocab_notations = relationship('VocabNotation', backref='user', cascade='all, delete-orphan')
     grammar_notations = relationship('GrammarNotation', backref='user', cascade='all, delete-orphan')
+
+    __table_args__ = (
+        # 方便按角色筛选用户（例如统计 admin / user）
+        Index('idx_users_role', 'role'),
+    )
+
+
+class InviteCode(Base):
+    """
+    一次性邀请码表：
+    - 每条记录代表一个邀请码
+    - 固定发放 token_grant（当前设计为 1,000,000）
+    - 只能被兑换一次（单用户生效）
+    """
+    __tablename__ = 'invite_codes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    # 邀请码文本（建议在业务层统一转为大写再存储，以实现大小写不敏感）
+    code = Column(String(64), nullable=False, unique=True)
+    # 本次邀请码可发放的 token 数量（默认 1,000,000）
+    token_grant = Column(BigInteger, nullable=False, default=1000000)
+    # 状态：active | disabled | redeemed | expired
+    status = Column(String(16), nullable=False, default='active')
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    # 过期时间（可选）
+    expires_at = Column(DateTime, nullable=True)
+    # 被哪个用户兑换（单用户生效的关键字段）
+    redeemed_by_user_id = Column(Integer, ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True, index=True)
+    redeemed_at = Column(DateTime, nullable=True)
+    # 备注：批次、渠道等
+    note = Column(String(255), nullable=True)
+
+    redeemed_by_user = relationship('User', backref='redeemed_invite_codes', foreign_keys=[redeemed_by_user_id])
+
+    __table_args__ = (
+        # 便于按状态筛选未使用/已使用邀请码
+        Index('idx_invite_codes_status', 'status'),
+    )
+
+
+class TokenLedger(Base):
+    """
+    Token 账本表：
+    - 记录所有 token 变动（正数发放，负数消耗）
+    - 可用于审计与余额回算
+    """
+    __tablename__ = 'token_ledger'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    # 本次变动值：+1000000（邀请码发放）、-1（一次 AI 调用）等
+    delta = Column(BigInteger, nullable=False)
+    # 变动原因：invite_grant / ai_usage / admin_adjust / refund 等
+    reason = Column(String(32), nullable=False)
+    # 参考类型与 ID（如 invite_code / request）
+    ref_type = Column(String(32), nullable=True)
+    ref_id = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    # 幂等键：防止网络重试导致重复扣费/发放（可选）
+    idempotency_key = Column(String(128), unique=True, nullable=True)
+
+    user = relationship('User', backref='token_ledger_entries')
+
+    __table_args__ = (
+        Index('idx_token_ledger_user_time', 'user_id', 'created_at'),
+    )
+
+
+class TokenLog(Base):
+    """
+    Token 使用日志表：
+    - 记录每次 DeepSeek API 调用的真实 token 使用量
+    - 用于统计用户累计使用量和调试成本异常
+    """
+    __tablename__ = 'token_logs'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    # 本次 API 调用使用的 token 数量（从 response.usage.total_tokens 获取）
+    total_tokens = Column(Integer, nullable=False)
+    # Prompt tokens（用于详细记录）
+    prompt_tokens = Column(Integer, nullable=False)
+    # Completion tokens（用于详细记录）
+    completion_tokens = Column(Integer, nullable=False)
+    # 使用的模型名称（如 "deepseek-chat"）
+    model_name = Column(String(64), nullable=False)
+    # 调用的 SubAssistant 名称（如 "AnswerQuestionAssistant", "CheckIfGrammarRelevantAssistant" 等）
+    assistant_name = Column(String(128), nullable=True)
+    # 记录创建时间
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    user = relationship('User', backref='token_logs')
+
+    __table_args__ = (
+        # 方便按用户和时间查询
+        Index('idx_token_logs_user_time', 'user_id', 'created_at'),
+    )
 
 
 def create_database_engine(database_url: str):

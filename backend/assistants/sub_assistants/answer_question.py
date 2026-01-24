@@ -1,5 +1,5 @@
-from assistants.sub_assistants.sub_assistant import SubAssistant
-from assistants.sub_assistants.prompt import answer_question_sys_prompt, answer_question_template
+from backend.assistants.sub_assistants.sub_assistant import SubAssistant
+from backend.assistants.sub_assistants.prompt import answer_question_sys_prompt, answer_question_template
 from typing import Optional
 
 class AnswerQuestionAssistant(SubAssistant):

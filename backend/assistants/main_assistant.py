@@ -74,6 +74,21 @@ class MainAssistant:
         self.processed_articles_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "data", "current", "articles")
         )
+        
+        # 🔧 Token 记录相关：user_id 和 session（用于在 API 调用后记录 token 使用）
+        self._user_id: Optional[int] = None
+        self._db_session = None
+    
+    def set_user_context(self, user_id: Optional[int] = None, session=None):
+        """
+        设置用户上下文（用于 token 记录和扣减）
+        
+        Args:
+            user_id: 用户 ID
+            session: 数据库会话
+        """
+        self._user_id = user_id
+        self._db_session = session
 
     def _detect_sentence_language(self, sentence: SentenceType) -> Tuple[Optional[str], Optional[str], bool]:
         """
@@ -466,14 +481,18 @@ class MainAssistant:
             ai_response = self.answer_question_assistant.run(
                 full_sentence=full_sentence,
                 user_question=user_question,
-                quoted_part=quoted_part
+                quoted_part=quoted_part,
+                user_id=self._user_id,
+                session=self._db_session
             )
         else:
             # 用户选择了整句话
             print(f"📖 [AnswerQuestion] 用户选择了整句话: '{full_sentence}'")
             ai_response = self.answer_question_assistant.run(
                 full_sentence=full_sentence,
-                user_question=user_question
+                user_question=user_question,
+                user_id=self._user_id,
+                session=self._db_session
             )
         
         print("AI Response:", ai_response)
@@ -563,8 +582,14 @@ class MainAssistant:
             print("⏸️ [MainAssistant] Grammar features are DISABLED (skip relevance/summarize/compare/generation)")
             grammar_relevant_response = {"is_grammar_relevant": False}
         else:
-            grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(effective_sentence_body, user_question, ai_response)
-        vocab_relevant_response = self.check_if_vocab_relevant_assistant.run(effective_sentence_body, user_question, ai_response)
+            grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(
+                effective_sentence_body, user_question, ai_response,
+                user_id=self._user_id, session=self._db_session
+            )
+        vocab_relevant_response = self.check_if_vocab_relevant_assistant.run(
+            effective_sentence_body, user_question, ai_response,
+            user_id=self._user_id, session=self._db_session
+        )
         
         # 确保响应是字典类型
         if isinstance(grammar_relevant_response, str):
@@ -587,7 +612,8 @@ class MainAssistant:
             grammar_summary = self.summarize_grammar_rule_assistant.run(
                 sentence_body,
                 user_input,
-                ai_response_str
+                ai_response_str,
+                user_id=self._user_id, session=self._db_session
             )
             if isinstance(grammar_summary, dict):
                 self.session_state.add_grammar_summary(
@@ -613,7 +639,8 @@ class MainAssistant:
                 sentence_body,
                 user_input,
                 ai_response_str,
-                is_non_whitespace=self.current_is_non_whitespace
+                is_non_whitespace=self.current_is_non_whitespace,
+                user_id=self._user_id, session=self._db_session
             )
 
             # 🔧 修复：避免跨多轮累积过多 vocab，总是只针对当前轮的词汇进行处理
@@ -789,7 +816,8 @@ class MainAssistant:
                     compare_result = self.compare_grammar_rule_assistant.run(
                         existing_rule,
                         result.grammar_rule_name,
-                        verbose=False
+                        verbose=False,
+                        user_id=self._user_id, session=self._db_session
                     )
                     print(f"🔍 [DEBUG] 相似度比较结果: {compare_result}")
                     
@@ -831,7 +859,8 @@ class MainAssistant:
                             print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{existing_rule}'")
                             example_explanation = self.grammar_example_explanation_assistant.run(
                                 sentence=current_sentence,
-                                grammar=existing_rule
+                                grammar=existing_rule,
+                                user_id=self._user_id, session=self._db_session
                             )
                             print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
                             
@@ -1055,7 +1084,8 @@ class MainAssistant:
                         print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab}')")
                         example_explanation = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
-                            vocab=vocab_for_context
+                            vocab=vocab_for_context,
+                            user_id=self._user_id, session=self._db_session
                         )
                         print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
                         
@@ -1344,7 +1374,8 @@ class MainAssistant:
                     print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{grammar.rule_name}'")
                     example_explanation = self.grammar_example_explanation_assistant.run(
                         sentence=current_sentence,
-                        grammar=grammar.rule_name
+                        grammar=grammar.rule_name,
+                        user_id=self._user_id, session=self._db_session
                     )
                     print(f"🔍 [DEBUG] grammar_example_explanation结果: {example_explanation}")
                     
@@ -1497,7 +1528,8 @@ class MainAssistant:
                     print(f"🔍 [DEBUG] 调用vocab_explanation_assistant for '{vocab.vocab}'")
                     vocab_explanation = self.vocab_explanation_assistant.run(
                         sentence=current_sentence,
-                        vocab=vocab.vocab
+                        vocab=vocab.vocab,
+                        user_id=self._user_id, session=self._db_session
                     )
                     print(f"🔍 [DEBUG] vocab_explanation结果: {vocab_explanation}")
                     # 解析JSON响应
