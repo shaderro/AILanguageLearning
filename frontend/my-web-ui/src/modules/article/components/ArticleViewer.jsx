@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
+import { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
@@ -19,7 +19,7 @@ import { useTokenHighlight } from '../hooks/useTokenHighlight'
  * 注意：Grammar 和 Vocab notation 相关的功能现在通过 NotationContext 提供，
  * 不再需要通过 props 传递
  */
-export default function ArticleViewer({ 
+function ArticleViewer({ 
   articleId, 
   onTokenSelect, 
   isTokenAsked, 
@@ -30,13 +30,43 @@ export default function ArticleViewer({
   targetSentenceId = null,  // 🔧 目标句子ID（用于自动滚动和高亮）
   onTargetSentenceScrolled = null,  // 🔧 滚动完成后的回调
   onAskAI = null,  // 🔧 AI详细解释回调
-  isTokenInsufficient = false  // 🔧 Token是否不足（用于禁用AI详细解释按钮）
+  isTokenInsufficient = false,  // 🔧 Token是否不足（用于禁用AI详细解释按钮）
+  autoTranslationEnabled = false  // 🔧 自动翻译开关状态
 }) {
   // Debug logging removed to improve performance
   const { userId } = useUser()
   const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
   const { addLog: addDebugLog } = useTranslationDebug() // 🔧 仅用于 useTokenDrag 的日志
-  const { data, isLoading, isError, error } = useArticle(articleId, userId)
+  
+  // 🔧 调试：检查 userId 和 articleId 的稳定性
+  const userIdRef = useRef(userId)
+  const articleIdRef = useRef(articleId)
+  useEffect(() => {
+    if (userIdRef.current !== userId) {
+      console.log('🔄 [ArticleViewer] userId 变化:', { old: userIdRef.current, new: userId })
+      userIdRef.current = userId
+    }
+    if (articleIdRef.current !== articleId) {
+      console.log('🔄 [ArticleViewer] articleId 变化:', { old: articleIdRef.current, new: articleId })
+      articleIdRef.current = articleId
+    }
+  }, [userId, articleId])
+  
+  // 🔧 使用稳定的 userId（避免因 userId 变化导致查询循环）
+  const stableUserId = useMemo(() => userId, [userId])
+  const { data, isLoading, isError, error } = useArticle(articleId, stableUserId)
+  
+  // 🔧 调试：检查 useArticle 的状态
+  useEffect(() => {
+    console.log('🔍 [ArticleViewer] useArticle 状态:', {
+      isLoading,
+      isError,
+      hasData: !!data,
+      error: error?.message || error,
+      articleId,
+      userId: stableUserId
+    })
+  }, [isLoading, isError, data, error, articleId, stableUserId])
 
   const normalizeLanguageCode = (language) => {
     if (!language) return null
@@ -57,22 +87,50 @@ export default function ArticleViewer({
     : undefined
 
   const sentences = useMemo(() => {
-    // 🔧 移除频繁的调试日志，减少控制台输出
-    // console.log('🔍 [ArticleViewer] Processing data:', data)
-    // console.log('🔍 [ArticleViewer] data.data:', data?.data)
-    // console.log('🔍 [ArticleViewer] sentences:', rawSentences, 'isArray:', Array.isArray(rawSentences))
+    // 🔧 调试：检查数据格式
+    console.log('🔍 [ArticleViewer] Processing data:', {
+      hasData: !!data,
+      dataKeys: data ? Object.keys(data) : [],
+      hasDataData: !!data?.data,
+      dataDataKeys: data?.data ? Object.keys(data.data) : [],
+      rawSentences,
+      isArray: Array.isArray(rawSentences),
+      sentencesLength: Array.isArray(rawSentences) ? rawSentences.length : 'N/A',
+      articleLanguage
+    })
     if (!Array.isArray(rawSentences)) {
+      console.warn('⚠️ [ArticleViewer] rawSentences 不是数组:', {
+        rawSentences,
+        type: typeof rawSentences,
+        data: data?.data
+      })
       return []
     }
     try {
-      return rawSentences.map((sentence) => ({
+      const processed = rawSentences.map((sentence) => ({
         ...sentence,
         language: sentence.language ?? articleLanguage,
         language_code: sentence.language_code ?? articleLanguageCode,
         is_non_whitespace: sentence.is_non_whitespace ?? articleIsNonWhitespace,
       }))
+      console.log('✅ [ArticleViewer] 成功处理句子数据:', {
+        inputLength: rawSentences.length,
+        outputLength: processed.length,
+        firstSentence: processed[0] ? {
+          sentence_id: processed[0].sentence_id,
+          hasTokens: !!processed[0].tokens,
+          tokensLength: Array.isArray(processed[0].tokens) ? processed[0].tokens.length : 'N/A'
+        } : null
+      })
+      return processed
     } catch (err) {
       console.error('❌ [ArticleViewer] 处理句子数据时出错:', err)
+      console.error('❌ [ArticleViewer] 错误详情:', {
+        rawSentencesType: typeof rawSentences,
+        rawSentencesIsArray: Array.isArray(rawSentences),
+        rawSentencesLength: Array.isArray(rawSentences) ? rawSentences.length : 'N/A',
+        firstSentence: rawSentences?.[0]
+      })
       return []
     }
   }, [data, rawSentences, articleLanguage, articleLanguageCode, articleIsNonWhitespace])
@@ -233,8 +291,15 @@ export default function ArticleViewer({
   const [currentReadingToken, setCurrentReadingToken] = useState(null) // 跟踪当前正在朗读的 token {sentenceIndex, tokenIndex}
   const [currentReadingSentenceIndex, setCurrentReadingSentenceIndex] = useState(null) // 跟踪当前正在朗读的句子索引
   
+  // 🔧 使用 ref 存储最新的 sentences，避免在 useCallback 依赖中导致频繁重新创建
+  const sentencesRef = useRef(sentences)
+  useEffect(() => {
+    sentencesRef.current = sentences
+  }, [sentences])
+  
   // 🔧 朗读按钮容器 state - 必须在早期返回之前调用
   const [readAloudButtonContainer, setReadAloudButtonContainer] = useState(null)
+  const containerRef = useRef(null) // 使用 ref 来保持容器引用，避免重新查找
   
   // 🔧 清理朗读状态 - 必须在早期返回之前调用
   useEffect(() => {
@@ -255,37 +320,73 @@ export default function ArticleViewer({
   // react-speech-kit 的 speaking 状态可能与原生 API 不同步
   // 我们完全依赖 utterance.onend 事件来处理句子完成
 
-  // 🔧 查找朗读按钮容器 - 必须在早期返回之前调用
+  // 🔧 查找朗读按钮容器 - 使用 ref 来避免重复查找
   useEffect(() => {
-    // 等待 DOM 渲染完成后查找容器
-    const findContainer = () => {
-      const container = document.getElementById('read-aloud-button-container')
-      if (container) {
-        setReadAloudButtonContainer(container)
-      } else {
-        // 如果容器还不存在，稍后重试
-        setTimeout(findContainer, 100)
+    // 如果 ref 中已经有容器且容器还在 DOM 中，直接使用，不需要重新查找
+    if (containerRef.current && document.body.contains(containerRef.current)) {
+      if (containerRef.current !== readAloudButtonContainer) {
+        setReadAloudButtonContainer(containerRef.current)
       }
+      return
     }
     
-    findContainer()
-  }, [])
-
-  // 🔧 查找朗读按钮容器 - 必须在早期返回之前调用
-  useEffect(() => {
-    // 等待 DOM 渲染完成后查找容器
     const findContainer = () => {
+      // 如果 ref 中已经有容器且容器还在 DOM 中，直接使用
+      if (containerRef.current && document.body.contains(containerRef.current)) {
+        if (containerRef.current !== readAloudButtonContainer) {
+          setReadAloudButtonContainer(containerRef.current)
+        }
+        return true
+      }
+      
+      // 否则查找容器
       const container = document.getElementById('read-aloud-button-container')
       if (container) {
+        containerRef.current = container
         setReadAloudButtonContainer(container)
-      } else {
-        // 如果容器还不存在，稍后重试
-        setTimeout(findContainer, 100)
+        return true
       }
+      return false
     }
     
-    findContainer()
-  }, [])
+    // 立即尝试查找
+    if (!findContainer()) {
+      // 如果容器还不存在，定期重试
+      const intervalId = setInterval(() => {
+        if (findContainer()) {
+          clearInterval(intervalId)
+        }
+      }, 100)
+      
+      // 最多尝试 50 次（5秒）
+      const maxAttempts = 50
+      let attempts = 0
+      const checkAttempts = setInterval(() => {
+        attempts++
+        if (attempts >= maxAttempts) {
+          clearInterval(intervalId)
+          clearInterval(checkAttempts)
+        }
+      }, 100)
+      
+      return () => {
+        clearInterval(intervalId)
+        clearInterval(checkAttempts)
+      }
+    }
+  }, []) // 只在组件挂载时执行一次
+  
+  // 🔧 监听容器变化，确保在容器重新创建时能重新找到（仅在容器丢失时检查）
+  useEffect(() => {
+    // 只在容器确实丢失时才重新查找
+    if (!readAloudButtonContainer || (readAloudButtonContainer && !document.body.contains(readAloudButtonContainer))) {
+      const container = document.getElementById('read-aloud-button-container')
+      if (container && container !== readAloudButtonContainer) {
+        containerRef.current = container
+        setReadAloudButtonContainer(container)
+      }
+    }
+  }, [readAloudButtonContainer])
   
   // 🔧 自动滚动到目标句子并添加闪烁效果
   useEffect(() => {
@@ -388,31 +489,10 @@ export default function ArticleViewer({
     }
   }, [selectedSentenceIndex, sentences, onSentenceSelect])
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-gray-500">Loading article...</div>
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-red-500">Failed to load: {String(error?.message || error)}</div>
-      </div>
-    )
-  }
-
-  // 🔧 如果没有数据且不在加载中，返回空状态（避免渲染错误）
-  if (!data && !isLoading) {
-    return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-gray-500">No article data available</div>
-      </div>
-    )
-  }
-
+  // ============================================================================
+  // 🔧 Helper 函数（放在 hooks 之后、early return 之前）
+  // ============================================================================
+  
   // 🔧 获取句子的文本内容
   const getSentenceText = (sentence) => {
     if (!sentence) return ''
@@ -444,8 +524,10 @@ export default function ArticleViewer({
   }
 
   // 🔧 检测当前窗口内可见的第一行句子索引
+  // 注意：这个函数在 handleReadAloud 内部被调用，所以需要使用 sentencesRef.current
   const getFirstVisibleSentenceIndex = () => {
-    if (!scrollContainerRef.current || sentences.length === 0) return 0
+    const currentSentences = sentencesRef.current
+    if (!scrollContainerRef.current || currentSentences.length === 0) return 0
     
     const container = scrollContainerRef.current
     const containerRect = container.getBoundingClientRect()
@@ -467,7 +549,7 @@ export default function ArticleViewer({
     }
     
     // 如果第一个句子不在可见区域内，查找第一个可见的句子
-    for (let i = 0; i < sentences.length; i++) {
+    for (let i = 0; i < currentSentences.length; i++) {
       const sentenceElement = container.querySelector(`[data-sentence-index="${i}"]`)
       if (sentenceElement) {
         const sentenceRect = sentenceElement.getBoundingClientRect()
@@ -610,12 +692,20 @@ export default function ArticleViewer({
     return voice || null
   }
 
+  // ============================================================================
+  // 🔧 所有 Hooks（必须在 early return 之前）
+  // ============================================================================
+  
   // 🔧 朗读当前可见区域的所有句子
-  const handleReadAloud = async () => {
+  // ⚠️ 注意：这个函数使用了多个状态和 ref，需要用 useCallback 包装以避免频繁重新创建
+  const handleReadAloud = useCallback(async () => {
+    console.log('🔍 [ArticleViewer] handleReadAloud useCallback 执行')
+    // 🔧 使用 ref 获取最新的 sentences，避免闭包问题
+    const currentSentences = sentencesRef.current
     console.log('🔊 [ArticleViewer] handleReadAloud 被调用', {
       isReading,
       supported,
-      sentencesCount: sentences.length,
+      sentencesCount: currentSentences.length,
       voicesCount: voices?.length || 0
     })
 
@@ -652,7 +742,7 @@ export default function ArticleViewer({
       return
     }
 
-    if (sentences.length === 0) {
+    if (currentSentences.length === 0) {
       console.warn('⚠️ [ArticleViewer] 没有可朗读的内容')
       alert('没有可朗读的内容')
       return
@@ -673,7 +763,7 @@ export default function ArticleViewer({
       // 从选中的句子开始
       startIndex = selectedSentenceIndex
       console.log('🔊 [ArticleViewer] 从选中的句子开始朗读，起始索引:', startIndex)
-    } else if (currentReadingIndexRef.current > 0 && currentReadingIndexRef.current < sentences.length) {
+    } else if (currentReadingIndexRef.current > 0 && currentReadingIndexRef.current < currentSentences.length) {
       // 从上次朗读位置继续
       startIndex = currentReadingIndexRef.current
       console.log('🔊 [ArticleViewer] 从上次朗读位置继续，起始索引:', startIndex)
@@ -689,9 +779,11 @@ export default function ArticleViewer({
 
     // 开始朗读
     const readNextSentence = async () => {
+      // 🔧 使用 ref 获取最新的 sentences
+      const latestSentences = sentencesRef.current
       console.log('🔊 [ArticleViewer] readNextSentence 被调用', {
         currentIndex: currentReadingIndexRef.current,
-        totalSentences: sentences.length,
+        totalSentences: latestSentences.length,
         isReadingState: isReading
       })
 
@@ -701,7 +793,7 @@ export default function ArticleViewer({
         return
       }
 
-      if (currentReadingIndexRef.current >= sentences.length) {
+      if (currentReadingIndexRef.current >= latestSentences.length) {
         // 朗读完成
         console.log('🔊 [ArticleViewer] 朗读完成')
         setIsReading(false)
@@ -717,7 +809,7 @@ export default function ArticleViewer({
         return
       }
 
-      const sentence = sentences[currentReadingIndexRef.current]
+      const sentence = latestSentences[currentReadingIndexRef.current]
       const sentenceText = getSentenceText(sentence)
       
       console.log('🔊 [ArticleViewer] 准备朗读句子', {
@@ -1076,49 +1168,137 @@ export default function ArticleViewer({
     setTimeout(() => {
       readNextSentence()
     }, 100)
+  }, [
+    supported,
+    voices?.length || 0,
+    selectedLanguage,
+    selectedSentenceIndex,
+    setIsReading,
+    setCurrentReadingToken,
+    setCurrentReadingSentenceIndex
+  ])
+  // 注意：ref 不需要放在依赖数组中，因为它们不会变化
+  // 注意：sentences 通过 sentencesRef 访问，不需要放在依赖数组中
+  
+  // 🔧 使用 useCallback 包装 handleReadAloud，避免在 useMemo 中频繁变化
+  const handleReadAloudClick = useCallback((e) => {
+    e.stopPropagation() // 阻止事件冒泡，避免触发背景点击
+    console.log('🔊 [ArticleViewer] 朗读按钮被点击')
+    handleReadAloud()
+  }, [handleReadAloud])
+  
+  // 🔧 构建朗读按钮 - 使用 useMemo 缓存，避免不必要的重新创建
+  const readAloudButton = useMemo(() => {
+    console.log('🔍 [ArticleViewer] readAloudButton useMemo 执行')
+    if (!readAloudButtonContainer) return null
+    
+    return (
+      <button
+        onClick={handleReadAloudClick}
+        className="flex items-center gap-2 px-4 py-2 text-white rounded-lg shadow-md transition-colors"
+        style={{ 
+          backgroundColor: isReading ? '#14b8a6' : '#2dd4bf', // teal-500 when reading, teal-400 otherwise
+        }}
+        onMouseEnter={(e) => {
+          if (!isReading) {
+            e.currentTarget.style.backgroundColor = '#14b8a6' // teal-500 on hover
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = isReading ? '#14b8a6' : '#2dd4bf'
+        }}
+        title={isReading ? '停止朗读' : '朗读'}
+      >
+        {/* 播放/停止图标 - 白色轮廓 */}
+        {isReading ? (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <rect x="9" y="9" width="6" height="6" rx="1" />
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        )}
+        <span className="text-sm font-medium">朗读</span>
+      </button>
+    )
+  }, [readAloudButtonContainer, isReading, handleReadAloudClick])
+
+  // 🔧 使用 useMemo 缓存 Portal，避免不必要的重新创建
+  const readAloudButtonPortal = useMemo(() => {
+    console.log('🔍 [ArticleViewer] readAloudButtonPortal useMemo 执行:', {
+      hasReadAloudButtonContainer: !!readAloudButtonContainer,
+      hasReadAloudButton: !!readAloudButton
+    })
+    if (!readAloudButtonContainer || !readAloudButton) return null
+    try {
+      const portal = createPortal(readAloudButton, readAloudButtonContainer)
+      console.log('✅ [ArticleViewer] Portal 创建成功')
+      return portal
+    } catch (err) {
+      console.error('❌ [ArticleViewer] Portal 创建失败:', err)
+      return null
+    }
+  }, [readAloudButtonContainer, readAloudButton])
+
+  // ============================================================================
+  // 🔧 Early Return（必须在所有 hooks 之后）
+  // ============================================================================
+  
+  // 🔧 调试：检查所有可能的提前返回条件
+  console.log('🔍 [ArticleViewer] 检查渲染条件:', {
+    isLoading,
+    isError,
+    hasData: !!data,
+    error: error?.message || error,
+    sentencesLength: sentences.length
+  })
+
+  if (isLoading) {
+    console.log('⏸️ [ArticleViewer] 提前返回：isLoading = true')
+    return (
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
+        <div className="text-gray-500">Loading article...</div>
+      </div>
+    )
   }
 
-  // 🔧 构建朗读按钮
-  const readAloudButton = readAloudButtonContainer ? (
-    <button
-      onClick={(e) => {
-        e.stopPropagation() // 阻止事件冒泡，避免触发背景点击
-        console.log('🔊 [ArticleViewer] 朗读按钮被点击')
-        handleReadAloud()
-      }}
-      className="flex items-center gap-2 px-4 py-2 text-white rounded-lg shadow-md transition-colors"
-      style={{ 
-        backgroundColor: isReading ? '#14b8a6' : '#2dd4bf', // teal-500 when reading, teal-400 otherwise
-      }}
-      onMouseEnter={(e) => {
-        if (!isReading) {
-          e.currentTarget.style.backgroundColor = '#14b8a6' // teal-500 on hover
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = isReading ? '#14b8a6' : '#2dd4bf'
-      }}
-      title={isReading ? '停止朗读' : '朗读'}
-    >
-      {/* 播放/停止图标 - 白色轮廓 */}
-      {isReading ? (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-          <rect x="9" y="9" width="6" height="6" rx="1" />
-          <circle cx="12" cy="12" r="10" />
-        </svg>
-      ) : (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      )}
-      <span className="text-sm font-medium">朗读</span>
-    </button>
-  ) : null
+  if (isError) {
+    console.log('❌ [ArticleViewer] 提前返回：isError = true', error)
+    return (
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
+        <div className="text-red-500">Failed to load: {String(error?.message || error)}</div>
+      </div>
+    )
+  }
 
-  return (
+  // 🔧 如果没有数据且不在加载中，返回空状态（避免渲染错误）
+  if (!data && !isLoading) {
+    console.log('⚠️ [ArticleViewer] 提前返回：没有数据')
+    return (
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
+        <div className="text-gray-500">No article data available</div>
+      </div>
+    )
+  }
+
+  // 🔧 调试：在返回前检查状态
+  console.log('🔍 [ArticleViewer] 准备渲染，当前状态:', {
+    isLoading,
+    isError,
+    hasData: !!data,
+    sentencesLength: sentences.length,
+    sentencesIsArray: Array.isArray(sentences),
+    willRenderSentences: sentences.length > 0
+  })
+  
+  // 🔧 错误边界：捕获渲染错误
+  try {
+    return (
     <div className="flex-1 bg-white rounded-lg border border-gray-200 relative min-h-0 overflow-visible">
       {/* 🔧 使用 Portal 将朗读按钮渲染到父组件的容器中 */}
-      {readAloudButtonContainer && readAloudButton && createPortal(readAloudButton, readAloudButtonContainer)}
+      {readAloudButtonPortal}
       
       {/* 🔧 滚动容器 */}
       <div
@@ -1136,6 +1316,45 @@ export default function ArticleViewer({
         }
       `}</style>
       <div className="space-y-[0.66rem] leading-[1.33] text-gray-900">
+        {(() => {
+          console.log('🔍 [ArticleViewer] 渲染时检查 sentences:', {
+            sentencesLength: sentences.length,
+            sentencesIsArray: Array.isArray(sentences),
+            firstSentence: sentences[0] ? {
+              sentence_id: sentences[0].sentence_id,
+              hasTokens: !!sentences[0].tokens,
+              tokensType: typeof sentences[0].tokens,
+              tokensIsArray: Array.isArray(sentences[0].tokens)
+            } : null
+          })
+          return null
+        })()}
+        {sentences.length === 0 && (
+          <div className="text-gray-500 p-4">
+            ⚠️ 没有句子数据。调试信息：
+            <pre className="text-xs mt-2 bg-gray-100 p-2 rounded">
+              {JSON.stringify({
+                hasData: !!data,
+                dataKeys: data ? Object.keys(data) : [],
+                hasDataData: !!data?.data,
+                dataDataKeys: data?.data ? Object.keys(data.data) : [],
+                rawSentencesType: typeof rawSentences,
+                rawSentencesIsArray: Array.isArray(rawSentences),
+                rawSentencesLength: Array.isArray(rawSentences) ? rawSentences.length : 'N/A',
+                sentencesLength: sentences.length,
+                sentencesIsArray: Array.isArray(sentences),
+                isLoading,
+                isError,
+                error: error?.message || error
+              }, null, 2)}
+            </pre>
+          </div>
+        )}
+        {sentences.length > 0 && (
+          <div className="text-xs text-gray-400 mb-2">
+            ✅ 已加载 {sentences.length} 个句子
+          </div>
+        )}
         {sentences.map((sentence, sIdx) => {
           const sentenceId = sentence.sentence_id || (typeof sentence === 'object' && sentence.id)
           const isFlashing = flashingSentenceId === sentenceId
@@ -1200,11 +1419,65 @@ export default function ArticleViewer({
               currentReadingToken={currentReadingToken}
               onAskAI={onAskAI}
               isTokenInsufficient={isTokenInsufficient}
+              autoTranslationEnabled={autoTranslationEnabled}
             />
           )
         })}
       </div>
       </div>
     </div>
-  )
+    )
+  } catch (err) {
+    console.error('❌ [ArticleViewer] 渲染错误:', err)
+    console.error('❌ [ArticleViewer] 错误堆栈:', err.stack)
+    return (
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
+        <div className="text-red-500">
+          <div className="font-semibold mb-2">渲染出错</div>
+          <div className="text-sm">{String(err.message || err)}</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            刷新页面
+          </button>
+        </div>
+      </div>
+    )
+  }
 }
+
+// 🔧 临时移除 React.memo，调试渲染问题
+// TODO: 修复后重新启用 memo 优化
+export default ArticleViewer
+// export default memo(ArticleViewer, (prevProps, nextProps) => {
+//   // 自定义比较函数：只在相关 props 变化时重新渲染
+//   // 🔧 如果 articleId 变化，必须重新渲染
+//   if (prevProps.articleId !== nextProps.articleId) {
+//     console.log('🔄 [ArticleViewer] memo: articleId 变化，需要重新渲染', { prev: prevProps.articleId, next: nextProps.articleId })
+//     return false
+//   }
+//   
+//   // 🔧 其他 props 比较
+//   const propsEqual = (
+//     prevProps.autoTranslationEnabled === nextProps.autoTranslationEnabled &&
+//     prevProps.isTokenInsufficient === nextProps.isTokenInsufficient &&
+//     prevProps.targetSentenceId === nextProps.targetSentenceId &&
+//     prevProps.onTokenSelect === nextProps.onTokenSelect &&
+//     prevProps.isTokenAsked === nextProps.isTokenAsked &&
+//     prevProps.markAsAsked === nextProps.markAsAsked &&
+//     prevProps.getNotationContent === nextProps.getNotationContent &&
+//     prevProps.setNotationContent === nextProps.setNotationContent &&
+//     prevProps.onSentenceSelect === nextProps.onSentenceSelect &&
+//     prevProps.onTargetSentenceScrolled === nextProps.onTargetSentenceScrolled &&
+//     prevProps.onAskAI === nextProps.onAskAI
+//   )
+//   
+//   if (!propsEqual) {
+//     console.log('🔄 [ArticleViewer] memo: props 变化，需要重新渲染')
+//     return false
+//   }
+//   
+//   // 🔧 props 相同，不重新渲染（但内部状态变化仍会触发重新渲染）
+//   return true
+// })

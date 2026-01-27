@@ -17,9 +17,10 @@ export default function QuickTranslationTooltip({
   onMouseEnter = null, // tooltip hover 进入回调
   onMouseLeave = null, // tooltip hover 离开回调
   onAskAI = null, // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
-  isTokenInsufficient = false // 🔧 Token是否不足（用于禁用AI详细解释按钮）
+  isTokenInsufficient = false, // 🔧 Token是否不足（用于禁用AI详细解释按钮）
+  fullWidth = false // 🔧 是否使用全宽模式（与 anchor 宽度一致）
 }) {
-  const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999 })
+  const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999, width: null })
   const [isPositioned, setIsPositioned] = useState(false)
   const tooltipRef = useRef(null)
 
@@ -42,15 +43,29 @@ export default function QuickTranslationTooltip({
 
       let top = 0
       let left = 0
+      let width = null
+
+      // 🔧 如果使用全宽模式，设置宽度为 anchor 的宽度
+      if (fullWidth) {
+        width = anchorRect.width
+      }
 
       switch (position) {
         case 'top':
           top = anchorRect.top + scrollY - tooltipRect.height - 8
-          left = anchorRect.left + scrollX + (anchorRect.width / 2) - (tooltipRect.width / 2)
+          if (fullWidth) {
+            left = anchorRect.left + scrollX
+          } else {
+            left = anchorRect.left + scrollX + (anchorRect.width / 2) - (tooltipRect.width / 2)
+          }
           break
         case 'bottom':
           top = anchorRect.bottom + scrollY + 8
-          left = anchorRect.left + scrollX + (anchorRect.width / 2) - (tooltipRect.width / 2)
+          if (fullWidth) {
+            left = anchorRect.left + scrollX
+          } else {
+            left = anchorRect.left + scrollX + (anchorRect.width / 2) - (tooltipRect.width / 2)
+          }
           break
         case 'left':
           top = anchorRect.top + scrollY + (anchorRect.height / 2) - (tooltipRect.height / 2)
@@ -62,17 +77,31 @@ export default function QuickTranslationTooltip({
           break
         default:
           top = anchorRect.top + scrollY - tooltipRect.height - 8
-          left = anchorRect.left + scrollX + (anchorRect.width / 2) - (tooltipRect.width / 2)
+          if (fullWidth) {
+            left = anchorRect.left + scrollX
+          } else {
+            left = anchorRect.left + scrollX + (anchorRect.width / 2) - (tooltipRect.width / 2)
+          }
       }
 
       // 确保tooltip不会超出视口
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
 
-      if (left < 8) {
-        left = 8
-      } else if (left + tooltipRect.width > viewportWidth - 8) {
-        left = viewportWidth - tooltipRect.width - 8
+      if (fullWidth) {
+        // 全宽模式：确保不超出视口，但保持左对齐
+        if (left < 8) {
+          left = 8
+        } else if (left + width > viewportWidth - 8) {
+          width = viewportWidth - left - 8
+        }
+      } else {
+        // 非全宽模式：保持原有逻辑
+        if (left < 8) {
+          left = 8
+        } else if (left + tooltipRect.width > viewportWidth - 8) {
+          left = viewportWidth - tooltipRect.width - 8
+        }
       }
 
       if (top < scrollY + 8) {
@@ -81,7 +110,7 @@ export default function QuickTranslationTooltip({
         top = scrollY + viewportHeight - tooltipRect.height - 8
       }
 
-      setTooltipPosition({ top, left })
+      setTooltipPosition({ top, left, width })
       setIsPositioned(true)
     }
 
@@ -89,13 +118,13 @@ export default function QuickTranslationTooltip({
     requestAnimationFrame(() => {
       requestAnimationFrame(updatePosition)
     })
-  }, [isVisible, anchorRef, position, word, translation, isLoading])
+  }, [isVisible, anchorRef, position, word, translation, isLoading, fullWidth])
   
   // 当 tooltip 隐藏时重置位置状态
   useEffect(() => {
     if (!isVisible) {
       setIsPositioned(false)
-      setTooltipPosition({ top: -9999, left: -9999 })
+      setTooltipPosition({ top: -9999, left: -9999, width: null })
     }
   }, [isVisible])
 
@@ -125,10 +154,13 @@ export default function QuickTranslationTooltip({
   return (
     <div
       ref={tooltipRef}
-      className="fixed z-[9999] bg-white border border-gray-300 rounded-lg shadow-lg max-w-xs p-3"
+      className={`fixed z-[9999] bg-white border border-gray-300 rounded-lg shadow-lg p-3 ${
+        fullWidth ? '' : 'max-w-xs'
+      }`}
       style={{
         top: `${tooltipPosition.top}px`,
         left: `${tooltipPosition.left}px`,
+        width: tooltipPosition.width ? `${tooltipPosition.width}px` : undefined,
         transform: 'translate(0, 0)', // 确保使用计算后的位置
         visibility: isPositioned ? 'visible' : 'hidden',
         opacity: isPositioned ? 1 : 0,
@@ -273,17 +305,37 @@ export default function QuickTranslationTooltip({
       {position === 'bottom' && (
         <>
           {/* 灰色边框箭头 */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-4 border-transparent border-b-gray-300" style={{ marginBottom: '-1px' }} />
+          <div 
+            className={`absolute bottom-full w-0 h-0 border-4 border-transparent border-b-gray-300 ${
+              fullWidth ? 'left-4' : 'left-1/2 -translate-x-1/2'
+            }`}
+            style={{ marginBottom: '-1px' }}
+          />
           {/* 白色填充箭头 */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-4 border-transparent border-b-white" style={{ marginBottom: '3px' }} />
+          <div 
+            className={`absolute bottom-full w-0 h-0 border-4 border-transparent border-b-white ${
+              fullWidth ? 'left-4' : 'left-1/2 -translate-x-1/2'
+            }`}
+            style={{ marginBottom: '3px' }}
+          />
         </>
       )}
       {position === 'top' && (
         <>
           {/* 灰色边框箭头 */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-4 border-transparent border-t-gray-300" style={{ marginTop: '-1px' }} />
+          <div 
+            className={`absolute top-full w-0 h-0 border-4 border-transparent border-t-gray-300 ${
+              fullWidth ? 'left-4' : 'left-1/2 -translate-x-1/2'
+            }`}
+            style={{ marginTop: '-1px' }}
+          />
           {/* 白色填充箭头 */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-4 border-transparent border-t-white" style={{ marginTop: '3px' }} />
+          <div 
+            className={`absolute top-full w-0 h-0 border-4 border-transparent border-t-white ${
+              fullWidth ? 'left-4' : 'left-1/2 -translate-x-1/2'
+            }`}
+            style={{ marginTop: '3px' }}
+          />
         </>
       )}
       {position === 'left' && (

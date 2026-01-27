@@ -615,17 +615,37 @@ class MainAssistant:
                 ai_response_str,
                 user_id=self._user_id, session=self._db_session
             )
+            print(f"🔍 [DEBUG] grammar_summary 类型: {type(grammar_summary)}, 值: {grammar_summary}")
             if isinstance(grammar_summary, dict):
-                self.session_state.add_grammar_summary(
-                    grammar_summary.get("grammar_rule_name", "Unknown"),
-                    grammar_summary.get("grammar_rule_summary", "No explanation provided")
-                )
+                grammar_name = grammar_summary.get("grammar_rule_name", "Unknown")
+                grammar_explanation = grammar_summary.get("grammar_rule_summary", "No explanation provided")
+                if grammar_name and grammar_name != "Unknown" and grammar_explanation and grammar_explanation != "No explanation provided":
+                    self.session_state.add_grammar_summary(
+                        grammar_name,
+                        grammar_explanation
+                    )
+                    print(f"✅ [DEBUG] 添加语法总结: {grammar_name}")
+                else:
+                    print(f"⚠️ [DEBUG] 语法总结为空或无效: name={grammar_name}, explanation={grammar_explanation}")
             elif isinstance(grammar_summary, list) and len(grammar_summary) > 0:
                 for grammar in grammar_summary:
-                    self.session_state.add_grammar_summary(
-                        name=grammar.get("grammar_rule_name", "Unknown"),
-                        summary=grammar.get("grammar_rule_summary", "No explanation provided")
-                    )
+                    grammar_name = grammar.get("grammar_rule_name", "Unknown")
+                    grammar_explanation = grammar.get("grammar_rule_summary", "No explanation provided")
+                    if grammar_name and grammar_name != "Unknown" and grammar_explanation and grammar_explanation != "No explanation provided":
+                        self.session_state.add_grammar_summary(
+                            name=grammar_name,
+                            summary=grammar_explanation
+                        )
+                        print(f"✅ [DEBUG] 添加语法总结: {grammar_name}")
+                    else:
+                        print(f"⚠️ [DEBUG] 语法总结为空或无效: name={grammar_name}, explanation={grammar_explanation}")
+            elif isinstance(grammar_summary, str):
+                if grammar_summary.strip() == "":
+                    print(f"⚠️ [DEBUG] AI 返回空字符串，表示没有新的语法规则")
+                else:
+                    print(f"⚠️ [DEBUG] AI 返回字符串（非空）: {grammar_summary}")
+            else:
+                print(f"⚠️ [DEBUG] grammar_summary 类型未知: {type(grammar_summary)}, 值: {grammar_summary}")
 
         # 检查是否与词汇相关
         if self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.vocab:
@@ -785,9 +805,17 @@ class MainAssistant:
             print(f"📚 现有语法规则列表: {[r['name'] for r in current_grammar_rules]}")
             new_grammar_summaries = []
         
+        # 🧪 测试阶段：语法相关则直接新增语法（跳过相似度判断）
+        print("🧪 测试阶段：语法相关则直接新增语法（跳过相似度判断）")
         for result in self.session_state.summarized_results:
             if isinstance(result, GrammarSummary):
                 print(f"🔍 检查语法规则: {result.grammar_rule_name} (文章language: {article_language})")
+                # 🧪 测试阶段：直接添加，跳过相似度判断
+                print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将直接添加为新规则 (继承文章language: {article_language})")
+                new_grammar_summaries.append(result)
+                continue
+                
+                # 以下代码在测试阶段被跳过
                 has_similar = False
                 
                 # 🔧 仅对比相同语言的语法规则

@@ -15,6 +15,11 @@ import { useTranslationDebug } from '../../contexts/TranslationDebugContext'
 import { useUser } from '../../contexts/UserContext'
 import { isTokenInsufficient } from '../../utils/tokenUtils'
 import authService from '../auth/services/authService'
+import { useAskedTokens } from './hooks/useAskedTokens'
+import { useTokenNotations } from './hooks/useTokenNotations'
+import { useNotationCache } from './hooks/useNotationCache'
+import { apiService } from '../../services/api'
+import { useUIText } from '../../i18n/useUIText'
 
 function ArticleCanvas({ children }) {
   const { clearSelection } = useSelection()
@@ -38,11 +43,6 @@ function ArticleCanvas({ children }) {
     </div>
   )
 }
-import { useAskedTokens } from './hooks/useAskedTokens'
-import { useTokenNotations } from './hooks/useTokenNotations'
-import { useNotationCache } from './hooks/useNotationCache'
-import { apiService } from '../../services/api'
-import { useUIText } from '../../i18n/useUIText'
 
 export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
   const t = useUIText()
@@ -72,6 +72,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [currentContext, setCurrentContext] = useState(null)  // 新增：保存完整的选择上下文
   const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
   const [hasSelectedSentence, setHasSelectedSentence] = useState(false)  // 新增：是否有选中的句子
+  const [autoTranslationEnabled, setAutoTranslationEnabled] = useState(false)  // 🔧 自动翻译开关状态
 
   // 🔧 修复：移除在这里设置全局 window.chatViewMessagesRef 的逻辑
   // ChatView 组件会在 articleId 改变时自动从后端加载对应文章的历史记录
@@ -193,7 +194,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }, [articleId, hasSelectedToken, isProcessing, hasSelectedSentence, selectedSentence])
   
-  const handleClearQuote = () => {
+  const handleClearQuote = useCallback(() => {
     console.log('🧹 [ArticleChatView] Clearing all selections and quotes')
     setQuotedText('')
     setSelectedTokens([])
@@ -209,7 +210,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     } catch (error) {
       console.error('❌ [ArticleChatView] Failed to clear backend token on clearQuote:', error)
     }
-  }
+  }, []) // 没有依赖项，因为只是清除状态
 
   const handleSentenceSelect = useCallback(async (sentenceIndex, sentenceText, sentenceData) => {
     console.log('📝 [ArticleChatView] Sentence selection triggered:')
@@ -640,8 +641,50 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                     </svg>
                     <span>Back to Articles</span>
                   </button>
-                  {/* Read Aloud Button - will be rendered by ArticleViewer */}
-                  <div id="read-aloud-button-container"></div>
+                  {/* Right side buttons container */}
+                  <div className="flex items-center gap-3">
+                    {/* Auto Translation Toggle Switch */}
+                    <label 
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                      }}
+                    >
+                      <span className="text-sm font-medium text-gray-700">自动翻译</span>
+                      <div className="relative inline-flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={autoTranslationEnabled}
+                          onChange={(e) => {
+                            e.stopPropagation()
+                            setAutoTranslationEnabled(e.target.checked)
+                          }}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                            autoTranslationEnabled ? 'bg-blue-500' : 'bg-gray-300'
+                          }`}
+                        >
+                          <div
+                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                              autoTranslationEnabled ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </label>
+                    {/* Read Aloud Button - will be rendered by ArticleViewer */}
+                    <div 
+                      id="read-aloud-button-container" 
+                      key="read-aloud-button-container"
+                      className="flex items-center"
+                      style={{ minWidth: '120px', minHeight: '40px' }}
+                    ></div>
+                  </div>
                 </div>
                 {/* Article View */}
                 <ArticleCanvas>
@@ -657,6 +700,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                     targetSentenceId={targetSentenceId}
                     onTargetSentenceScrolled={handleTargetSentenceScrolled}
                     onAskAI={handleAskAI}
+                    autoTranslationEnabled={autoTranslationEnabled}
                   />
                 </ArticleCanvas>
               </div>

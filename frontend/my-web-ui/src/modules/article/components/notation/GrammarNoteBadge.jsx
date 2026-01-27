@@ -16,7 +16,7 @@ export default function GrammarNoteBadge({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={(e) => { e.stopPropagation(); onClick && onClick(e) }}
-      title={label}
+      // 🔧 移除 title 属性，避免浏览器显示默认 tooltip（已有自定义的 grammar notation card）
     >
       <span className="leading-none">{label}</span>
       <span className="leading-none">▾</span>

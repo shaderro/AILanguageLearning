@@ -522,45 +522,15 @@ export default function TokenSpan({
             setShowNotation(true)
           }
 
-          // 🔧 新增：hover翻译功能（延迟触发，避免频繁查询）
-          // 只在没有vocab notation的情况下显示快速翻译（避免重复显示）
-          if (isTextToken && !hasVocabVisual && hoverAllowed && displayText.trim().length > 0) {
-            const hoverData = {
-              isTextToken,
-              hasVocabVisual,
-              hoverAllowed,
-              word: displayText,
-              wordLength: displayText.trim().length,
-              sourceLang,
-              targetLang
-            }
-            // 🔧 关闭翻译调试日志
-            // console.log('🔍 [TokenSpan] Hover翻译触发条件检查:', hoverData)
-            // addDebugLog('info', `Hover触发: "${displayText}"`, hoverData)
-            clearTranslationTimer()
-            // 延迟250ms触发翻译查询（避免鼠标快速移动时频繁查询）
-            hoverTranslationTimerRef.current = setTimeout(() => {
-              // 🔧 关闭翻译调试日志
-              // console.log('🔍 [TokenSpan] 开始查询翻译:', displayText)
-              // addDebugLog('info', `延迟250ms后开始查询: "${displayText}"`, { word: displayText })
-              queryQuickTranslation(displayText)
-            }, 250)
-          } else {
-            const reason = !isTextToken ? 'not text token' :
-                          hasVocabVisual ? 'has vocab notation' :
-                          !hoverAllowed ? 'hover not allowed' :
-                          displayText.trim().length === 0 ? 'empty word' : 'unknown'
-            const skipData = {
-              isTextToken,
-              hasVocabVisual,
-              hoverAllowed,
-              word: displayText,
-              reason
-            }
-            // 🔧 关闭翻译调试日志
-            // console.log('⚠️ [TokenSpan] Hover翻译未触发:', skipData)
-            // addDebugLog('warning', `Hover未触发: "${displayText}"`, skipData)
-          }
+          // 🔧 已禁用：hover token 时自动翻译单词的功能
+          // 用户要求：去掉 hover token 出现自动翻译单词的功能，保留 hover 句子翻译整句的功能
+          // 以下代码已注释，不再触发单词翻译
+          // if (isTextToken && !hasVocabVisual && hoverAllowed && displayText.trim().length > 0) {
+          //   clearTranslationTimer()
+          //   hoverTranslationTimerRef.current = setTimeout(() => {
+          //     queryQuickTranslation(displayText)
+          //   }, 250)
+          // }
         }}
         onMouseLeave={() => {
           // 只有可选择的token才清除hover效果
@@ -574,30 +544,23 @@ export default function TokenSpan({
           if (hasVocabVisual) {
             scheduleHideNotation()
           }
-          // 🔧 新增：延迟清除hover翻译（给用户时间移动到 tooltip）
-          if (isTextToken && displayText.trim().length > 0) {
-            // 🔧 关闭翻译调试日志
-            // addDebugLog('info', `Hover离开: "${displayText}"`, { word: displayText })
-            // 🔧 修复：如果翻译查询还在进行中，等待查询完成后再决定是否隐藏
-            // 延迟清除，如果鼠标移动到 tooltip 上，tooltip 的 onMouseEnter 会取消这个清除
-            clearTranslationTimer()
-            hoverTranslationTimerRef.current = setTimeout(() => {
-              // 🔧 检查是否还有正在进行的查询
-              // 如果有，延长延迟时间，让查询完成后再清除
-              if (translationQueryRef.current) {
-                // 🔧 关闭翻译调试日志
-                // console.log('⏳ [TokenSpan] 翻译查询还在进行中，延长延迟清除时间')
-                // 延长延迟时间到 500ms，给查询更多时间完成
-                hoverTranslationTimerRef.current = setTimeout(() => {
-                  clearTranslation()
-                }, 500)
-              } else {
-                clearTranslation()
-              }
-            }, 200)
-          } else {
-            clearTranslation()
-          }
+          // 🔧 已禁用：hover token 时自动翻译单词的功能
+          // 用户要求：去掉 hover token 出现自动翻译单词的功能
+          // 以下代码已注释，不再清除单词翻译状态
+          // if (isTextToken && displayText.trim().length > 0) {
+          //   clearTranslationTimer()
+          //   hoverTranslationTimerRef.current = setTimeout(() => {
+          //     if (translationQueryRef.current) {
+          //       hoverTranslationTimerRef.current = setTimeout(() => {
+          //         clearTranslation()
+          //       }, 500)
+          //     } else {
+          //       clearTranslation()
+          //     }
+          //   }, 200)
+          // } else {
+          //   clearTranslation()
+          // }
           // 🔧 调用 token hover 离开回调（用于整句翻译）
           if (onTokenMouseLeave) {
             onTokenMouseLeave()
@@ -687,8 +650,10 @@ export default function TokenSpan({
         />
       )}
 
-      {/* 🔧 新增：快速翻译tooltip（只在没有vocab notation时显示） */}
-      {isTextToken && !hasVocabVisual && (
+      {/* 🔧 已禁用：快速翻译tooltip（单词翻译功能） */}
+      {/* 用户要求：去掉 hover token 出现自动翻译单词的功能，保留 hover 句子翻译整句的功能 */}
+      {/* 以下代码已注释，不再显示单词翻译 tooltip */}
+      {/* {isTextToken && !hasVocabVisual && (
         <QuickTranslationTooltip
           word={displayText}
           translation={quickTranslation}
@@ -712,9 +677,7 @@ export default function TokenSpan({
               isTokenInsufficient
             })
             try {
-              // 🔧 调用 onAskAI，它可能是异步函数
               const result = onAskAI(token, sentenceIdx)
-              // 🔧 如果是 Promise，等待完成
               if (result && typeof result.then === 'function') {
                 await result
               }
@@ -730,7 +693,7 @@ export default function TokenSpan({
           } : null}
           isTokenInsufficient={isTokenInsufficient}
         />
-      )}
+      )} */}
       
       {/* 暂时注释掉 VocabExplanationButton - 以后可能会用到 */}
       {/* {isTextToken && selected && selectedTokenIds.size === 1 && (

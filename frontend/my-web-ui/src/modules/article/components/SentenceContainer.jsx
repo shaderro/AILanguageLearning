@@ -40,7 +40,9 @@ export default function SentenceContainer({
   // 🔧 新增：高亮范围
   highlightedRange = null,
   // 🔧 新增：Token是否不足（用于禁用AI详细解释按钮）
-  isTokenInsufficient = false
+  isTokenInsufficient = false,
+  // 🔧 新增：自动翻译开关状态
+  autoTranslationEnabled = false
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -66,17 +68,11 @@ export default function SentenceContainer({
     // 不在句子离开时自动隐藏，改由徽标/卡片的 mouseleave 控制
   }
   
-  // Handle card mouse enter - cancel hiding
-  const handleCardMouseEnter = () => {
-    if (hideCardTimerRef.current) {
-      clearTimeout(hideCardTimerRef.current)
-      hideCardTimerRef.current = null
-    }
-  }
-  
   // Handle card mouse leave - hide card
   const handleCardMouseLeave = () => {
     setShowGrammarCard(false)
+    // 🔧 当 grammar card 隐藏后，如果还在句子内，可以显示整句翻译
+    // 注意：这里不立即显示，而是等待句子 hover 状态自然触发
   }
 
   const handleSentenceClick = async (e) => {
@@ -303,12 +299,12 @@ export default function SentenceContainer({
     setIsHoveringToken(false)
     isHoveringTokenRef.current = false
     
-    // 🔧 延迟显示整句翻译
-    if (sentenceText.trim().length > 0) {
+    // 🔧 延迟显示整句翻译（如果 grammar card 没有显示且自动翻译已开启）
+    if (sentenceText.trim().length > 0 && !showGrammarCard && autoTranslationEnabled) {
       clearSentenceTranslationTimer()
       sentenceTranslationTimerRef.current = setTimeout(() => {
-        // 再次检查，确保没有新的 token hover
-        if (!isHoveringTokenRef.current) {
+        // 再次检查，确保没有新的 token hover 且 grammar card 没有显示且自动翻译已开启
+        if (!isHoveringTokenRef.current && !showGrammarCard && autoTranslationEnabled) {
           querySentenceTranslation(sentenceText)
         }
       }, 250)
@@ -339,16 +335,33 @@ export default function SentenceContainer({
   const handleTokenHoverLeave = useCallback(() => {
     setIsHoveringToken(false)
     isHoveringTokenRef.current = false
-    // 如果还在句子内，延迟显示整句翻译
-    if (isHovered && sentenceText.trim().length > 0) {
+    // 如果还在句子内且 grammar card 没有显示且自动翻译已开启，延迟显示整句翻译
+    if (isHovered && sentenceText.trim().length > 0 && !showGrammarCard && autoTranslationEnabled) {
       clearSentenceTranslationTimer()
       sentenceTranslationTimerRef.current = setTimeout(() => {
-        if (!isHoveringTokenRef.current) {
+        if (!isHoveringTokenRef.current && !showGrammarCard && autoTranslationEnabled) {
           querySentenceTranslation(sentenceText)
         }
       }, 250)
     }
-  }, [isHovered, sentenceText, clearSentenceTranslationTimer, querySentenceTranslation])
+  }, [isHovered, sentenceText, clearSentenceTranslationTimer, querySentenceTranslation, showGrammarCard, autoTranslationEnabled])
+  
+  // 🔧 重新定义 handleCardMouseEnter，确保可以访问 clearSentenceTranslation
+  const handleCardMouseEnterWithTranslation = useCallback(() => {
+    if (hideCardTimerRef.current) {
+      clearTimeout(hideCardTimerRef.current)
+      hideCardTimerRef.current = null
+    }
+    // 🔧 当 grammar card 显示时，确保整句翻译被隐藏
+    clearSentenceTranslation()
+  }, [clearSentenceTranslation])
+  
+  // 🔧 当自动翻译关闭时，清除整句翻译
+  useEffect(() => {
+    if (!autoTranslationEnabled) {
+      clearSentenceTranslation()
+    }
+  }, [autoTranslationEnabled, clearSentenceTranslation])
   
   // 组件卸载时清理
   useEffect(() => {
@@ -449,8 +462,8 @@ export default function SentenceContainer({
         )
       })}
       
-      {/* 🔧 整句翻译 tooltip - 只在没有 hover token 时显示 */}
-      {showSentenceTranslation && !isHoveringToken && (
+      {/* 🔧 整句翻译 tooltip - 只在自动翻译开启、没有 hover token 且没有显示 grammar notation 时显示 */}
+      {autoTranslationEnabled && showSentenceTranslation && !isHoveringToken && !showGrammarCard && (
         <QuickTranslationTooltip
           word={sentenceText}
           translation={sentenceTranslation}
@@ -459,6 +472,7 @@ export default function SentenceContainer({
           position="bottom"
           showWord={false}
           isLoading={isLoadingSentenceTranslation}
+          fullWidth={true}
         />
       )}
       
@@ -477,6 +491,8 @@ export default function SentenceContainer({
                   setGrammarCardPosition({ top: rect.bottom + 8, left: rect.left, right: 'auto' })
                 }
                 setShowGrammarCard(true)
+                // 🔧 当显示 grammar notation 时，隐藏整句翻译
+                clearSentenceTranslation()
               }}
               onMouseLeave={() => {
                 hideCardTimerRef.current = setTimeout(() => setShowGrammarCard(false), 120)
@@ -491,7 +507,7 @@ export default function SentenceContainer({
             sentenceId={sentenceId}
             position={grammarCardPosition}
             onClose={() => setShowGrammarCard(false)}
-            onMouseEnter={handleCardMouseEnter}
+            onMouseEnter={handleCardMouseEnterWithTranslation}
             onMouseLeave={handleCardMouseLeave}
             cachedGrammarRules={grammarNotations}
             getGrammarRuleById={getGrammarRuleById}

@@ -1508,11 +1508,17 @@ async def chat_with_assistant(
                             vocab_to_add_list.append({'vocab': vocab_body, 'vocab_id': None})
                 
                 # 存储到临时存储中，供前端轮询获取
+                print(f"🔍 [Background] 检查是否需要存储知识点: grammar={len(grammar_to_add_list)}, vocab={len(vocab_to_add_list)}")
                 if grammar_to_add_list or vocab_to_add_list:
+                    print(f"🔍 [Background] 有知识点需要存储，检查 current_sentence...")
+                    print(f"🔍 [Background] current_sentence 类型: {type(current_sentence)}")
+                    print(f"🔍 [Background] current_sentence 是否有 text_id 属性: {hasattr(current_sentence, 'text_id')}")
                     text_id = current_sentence.text_id if hasattr(current_sentence, 'text_id') else None
+                    print(f"🔍 [Background] 提取的 text_id: {text_id} (type={type(text_id) if text_id else 'None'})")
                     if text_id:
                         # 🔧 确保 text_id 是整数类型（与前端一致）
                         text_id = int(text_id) if text_id else None
+                        print(f"🔍 [Background] 转换后的 text_id: {text_id} (type={type(text_id) if text_id else 'None'})")
                         if text_id:
                             key = (user_id, text_id)
                             pending_knowledge_points[key] = {
@@ -1522,8 +1528,13 @@ async def chat_with_assistant(
                             }
                             print(f"✅ [Background] 存储新知识点到临时存储: user_id={user_id}, text_id={text_id} (type={type(text_id).__name__}), grammar={len(grammar_to_add_list)}, vocab={len(vocab_to_add_list)}")
                             print(f"🔍 [Background] 临时存储的 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
+                        else:
+                            print(f"⚠️ [Background] text_id 转换失败，无法存储新知识点")
                     else:
                         print(f"⚠️ [Background] text_id 不存在，无法存储新知识点")
+                        print(f"🔍 [Background] current_sentence 详细信息: {current_sentence}")
+                else:
+                    print(f"⚠️ [Background] 没有知识点需要存储（grammar_to_add_list 和 vocab_to_add_list 都为空）")
                 
                 # 同步到数据库
                 print("💾 [Background] 同步数据到数据库...")

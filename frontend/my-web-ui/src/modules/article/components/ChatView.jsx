@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { flushSync } from 'react-dom'
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
@@ -44,7 +44,7 @@ if (!window.chatViewMessagesRef) {
   window.chatViewMessagesRef = {}
 }
 
-export default function ChatView({ 
+function ChatView({ 
   quotedText, 
   onClearQuote, 
   disabled = false, 
@@ -422,6 +422,12 @@ export default function ChatView({
                     }, idx * 600)
                   })
                   
+                  // 🔧 刷新 notation 缓存，使 article view 自动更新
+                  if (refreshGrammarNotations) {
+                    console.log('🔄 [ChatView] sendPendingMessage - 检测到新知识点，刷新 notation 缓存...')
+                    refreshGrammarNotations()
+                  }
+                  
                   // 🔧 找到数据后立即停止轮询
                   if (pollPendingKnowledgeRef.current) {
                     clearInterval(pollPendingKnowledgeRef.current)
@@ -761,6 +767,12 @@ export default function ChatView({
                   }, idx * 600)
                 })
                 
+                // 🔧 刷新 notation 缓存，使 article view 自动更新
+                if (refreshGrammarNotations) {
+                  console.log('🔄 [ChatView] 检测到新知识点，刷新 notation 缓存...')
+                  refreshGrammarNotations()
+                }
+                
                 // 🔧 找到数据后立即停止轮询
                 if (pollPendingKnowledgeRef.current) {
                   clearInterval(pollPendingKnowledgeRef.current)
@@ -998,6 +1010,12 @@ export default function ChatView({
                     })
                   }, idx * 600)
                 })
+                
+                // 🔧 刷新 notation 缓存，使 article view 自动更新
+                if (refreshGrammarNotations) {
+                  console.log('🔄 [ChatView] handleSuggestedQuestionSelect - 检测到新知识点，刷新 notation 缓存...')
+                  refreshGrammarNotations()
+                }
                 
                 // 🔧 找到数据后立即停止轮询
                 if (pollPendingKnowledgeRef.current) {
@@ -1297,3 +1315,29 @@ export default function ChatView({
     </div>
   )
 }
+
+// 🔧 使用 React.memo 包装，避免在 autoTranslationEnabled 变化时不必要的重新渲染
+export default memo(ChatView, (prevProps, nextProps) => {
+  // 自定义比较函数：只在相关 props 变化时重新渲染
+  return (
+    prevProps.quotedText === nextProps.quotedText &&
+    prevProps.onClearQuote === nextProps.onClearQuote &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.hasSelectedToken === nextProps.hasSelectedToken &&
+    prevProps.selectedTokenCount === nextProps.selectedTokenCount &&
+    prevProps.selectionContext === nextProps.selectionContext &&
+    prevProps.markAsAsked === nextProps.markAsAsked &&
+    prevProps.createVocabNotation === nextProps.createVocabNotation &&
+    prevProps.refreshAskedTokens === nextProps.refreshAskedTokens &&
+    prevProps.refreshGrammarNotations === nextProps.refreshGrammarNotations &&
+    prevProps.articleId === nextProps.articleId &&
+    prevProps.hasSelectedSentence === nextProps.hasSelectedSentence &&
+    prevProps.selectedSentence === nextProps.selectedSentence &&
+    prevProps.addGrammarNotationToCache === nextProps.addGrammarNotationToCache &&
+    prevProps.addVocabNotationToCache === nextProps.addVocabNotationToCache &&
+    prevProps.addGrammarRuleToCache === nextProps.addGrammarRuleToCache &&
+    prevProps.addVocabExampleToCache === nextProps.addVocabExampleToCache &&
+    prevProps.isProcessing === nextProps.isProcessing &&
+    prevProps.onProcessingChange === nextProps.onProcessingChange
+  )
+})
