@@ -1,5 +1,27 @@
+/**
+ * ⚠️ IMPORTANT: Language Logic Safety Boundaries
+ * 
+ * UI language ≠ System language
+ * 
+ * This component uses useTranslate() for presentation-only purposes:
+ * - Displaying suggested questions in the appropriate language
+ * - Showing UI labels and placeholders
+ * 
+ * 🚫 STRICTLY FORBIDDEN:
+ * - ❌ Do NOT affect data fetching logic (React Query, useArticle, useApi)
+ * - ❌ Do NOT affect hooks lifecycle (enabled, queryKey, useEffect dependencies)
+ * - ❌ Do NOT affect conditional rendering related to loading / error states
+ * 
+ * Language is presentation-only and MUST NOT affect:
+ * - React Query queryKeys
+ * - useArticle / useApi enabled states
+ * - isLoading / early return logic
+ * - Data fetching dependencies
+ */
+
 import { useState, useEffect } from 'react'
 import { colors } from '../../../design-tokens'
+import { useTranslate } from '../../../i18n/useTranslate'
 
 const SuggestedQuestions = ({ 
   quotedText, 
@@ -12,23 +34,27 @@ const SuggestedQuestions = ({
   disabled = false  // 🔧 新增：是否禁用（main assistant 正在处理时）
 }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null)
+  const t = useTranslate()
+  
+  // ⚠️ Language detection: Presentation-only, does NOT affect data fetching or component lifecycle
+  // Using useTranslate() hook which uses UI language context (same as header)
 
   // 单个token的建议问题
   const singleTokenQuestions = [
-    "这个词是什么意思？",
-    "这个词有什么词根词缀吗？"
+    t("这个词是什么意思？"),
+    t("这个词有什么词根词缀吗？")
   ]
 
   // 多个token（短语）的建议问题
   const multipleTokensQuestions = [
-    "这些词是什么意思？",
-    "这部分的语法结构是什么？"
+    t("这些词是什么意思？"),
+    t("这部分的语法结构是什么？")
   ]
 
   // 整句话的建议问题
   const sentenceQuestions = [
-    "这句话是什么意思？",
-    "这句话的语法结构是什么？"
+    t("这句话是什么意思？"),
+    t("这句话的语法结构是什么？")
   ]
 
   // 根据选择类型和token数量选择对应的问题列表
@@ -91,7 +117,7 @@ const SuggestedQuestions = ({
       onClick={handleContainerClick}
     >
       <div className="text-sm text-gray-600 mb-2">
-        你可能想问...
+        {t("你可能想问...")}
       </div>
       <div className="flex flex-wrap gap-2">
         {suggestedQuestions.map((question, index) => (

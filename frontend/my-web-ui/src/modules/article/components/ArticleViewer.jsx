@@ -6,6 +6,7 @@ import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
 import { useSentenceInteraction } from '../hooks/useSentenceInteraction'
 import { useUser } from '../../../contexts/UserContext'
+import { useUIText } from '../../../i18n/useUIText'
 import { useSelection } from '../selection/hooks/useSelection'
 import { useSpeechSynthesis } from 'react-speech-kit'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
@@ -35,6 +36,7 @@ function ArticleViewer({
 }) {
   // Debug logging removed to improve performance
   const { userId } = useUser()
+  const t = useUIText()
   const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
   const { addLog: addDebugLog } = useTranslationDebug() // 🔧 仅用于 useTokenDrag 的日志
   
@@ -744,7 +746,7 @@ function ArticleViewer({
 
     if (currentSentences.length === 0) {
       console.warn('⚠️ [ArticleViewer] 没有可朗读的内容')
-      alert('没有可朗读的内容')
+      alert(t('没有可朗读的内容'))
       return
     }
 
@@ -1207,7 +1209,7 @@ function ArticleViewer({
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = isReading ? '#14b8a6' : '#2dd4bf'
         }}
-        title={isReading ? '停止朗读' : '朗读'}
+        title={isReading ? t('停止朗读') : t('朗读')}
       >
         {/* 播放/停止图标 - 白色轮廓 */}
         {isReading ? (
@@ -1220,10 +1222,10 @@ function ArticleViewer({
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
-        <span className="text-sm font-medium">朗读</span>
+        <span className="text-sm font-medium">{isReading ? t('停止朗读') : t('朗读')}</span>
       </button>
     )
-  }, [readAloudButtonContainer, isReading, handleReadAloudClick])
+  }, [readAloudButtonContainer, isReading, handleReadAloudClick, t])
 
   // 🔧 使用 useMemo 缓存 Portal，避免不必要的重新创建
   const readAloudButtonPortal = useMemo(() => {

@@ -1299,10 +1299,13 @@ async def chat_with_assistant(
         else:
             print(f"ℹ️ [Chat #{request_id}] 未提供认证 token，使用默认用户: {user_id}")
         
+        # 🔧 从 payload 获取 UI 语言（用于控制 AI 输出语言）
+        ui_language = payload.get('ui_language', '中文')  # 默认为中文
         print("\n" + "="*80)
         print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")
         print(f"📥 [Chat #{request_id}] Payload: {payload}")
         print(f"👤 [Chat #{request_id}] User ID: {user_id}")
+        print(f"🌐 [Chat #{request_id}] UI Language: {ui_language}")
         print("="*80)
         
         # 从 session_state 获取上下文信息
@@ -1430,6 +1433,7 @@ async def chat_with_assistant(
         
         # 🔧 后台执行 grammar/vocab 处理和创建 notations
         def _run_grammar_vocab_background():
+            import traceback
             from backend.assistants import main_assistant as _ma_mod
             prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
             # 🔧 为后台任务创建新的数据库 session（用于 token 记录）
@@ -1447,6 +1451,9 @@ async def chat_with_assistant(
                 _ma_mod.DISABLE_GRAMMAR_FEATURES = False
                 # 🔧 为后台任务设置 user_id 和 session（用于 token 记录）
                 main_assistant.set_user_context(user_id=user_id, session=bg_db_session)
+                # 🔧 同步 UI 语言到 main_assistant（用于控制所有子助手输出语言）
+                main_assistant.ui_language = ui_language
+                print(f"🌐 [Background] 设置 UI 语言到 main_assistant: {ui_language}")
                 main_assistant.handle_grammar_vocab_function(
                     quoted_sentence=current_sentence,
                     user_question=current_input,
@@ -1461,7 +1468,7 @@ async def chat_with_assistant(
                 vocab_to_add_backup = list(local_state.vocab_to_add) if local_state.vocab_to_add else []
                 grammar_to_add_backup = list(local_state.grammar_to_add) if local_state.grammar_to_add else []
                 print(f"🔍 [Background] 备份 vocab_to_add: {len(vocab_to_add_backup)} 个, grammar_to_add: {len(grammar_to_add_backup)} 个")
-                
+
                 main_assistant.add_new_to_data()
                 print("✅ [Background] add_new_to_data() 完成")
                 

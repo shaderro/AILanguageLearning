@@ -135,6 +135,7 @@
   "用户调试信息": "User debug info",
   "登录": "Login",
   "知识点总结": "Key point summary",
+  "知识点已总结并加入列表": "Knowledge point summarized and added to list",
   "确定要删除文章": "Delete this article?",
   "确定要退出登录吗？": "Sign out now?",
   "确认删除": "Confirm delete",
@@ -323,5 +324,9 @@
   "URL处理失败: {error}": "URL processing failed: {error}",
   "更新失败: {error}": "Update failed: {error}",
   "删除失败: {error}": "Delete failed: {error}",
-  "不支持的文件格式: {ext}。请上传 .txt 或 .md 文件。": "Unsupported file format: {ext}. Please upload .txt or .md files."
+  "不支持的文件格式: {ext}。请上传 .txt 或 .md 文件。": "Unsupported file format: {ext}. Please upload .txt or .md files.",
+  "自动翻译": "Auto Translate",
+  "朗读": "Read Aloud",
+  "停止朗读": "Stop Reading",
+  "没有可朗读的内容": "No readable content"
 }

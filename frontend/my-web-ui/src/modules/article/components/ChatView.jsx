@@ -1,3 +1,25 @@
+/**
+ * ⚠️ IMPORTANT: Language Logic Safety Boundaries
+ * 
+ * UI language ≠ System language
+ * 
+ * This component uses useTranslate() for presentation-only purposes:
+ * - Displaying UI labels, placeholders, and messages in the appropriate language
+ * - Showing error messages and user-facing text
+ * 
+ * 🚫 STRICTLY FORBIDDEN:
+ * - ❌ Do NOT affect data fetching logic (React Query, useArticle, useApi)
+ * - ❌ Do NOT affect hooks lifecycle (enabled, queryKey, useEffect dependencies)
+ * - ❌ Do NOT affect conditional rendering related to loading / error states
+ * 
+ * Language is presentation-only and MUST NOT affect:
+ * - React Query queryKeys
+ * - useArticle / useApi enabled states
+ * - isLoading / early return logic
+ * - Data fetching dependencies
+ * - Component lifecycle hooks
+ */
+
 import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { flushSync } from 'react-dom'
 import ToastNotice from './ToastNotice'
@@ -5,10 +27,13 @@ import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { useRefreshData } from '../../../hooks/useApi'
+import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { colors } from '../../../design-tokens'
 import { useUser } from '../../../contexts/UserContext'
 import { isTokenInsufficient } from '../../../utils/tokenUtils'
 import authService from '../../auth/services/authService'
+import { useTranslate } from '../../../i18n/useTranslate'
+import { useUIText } from '../../../i18n/useUIText'
 
 // 🔧 本地持久化
 const LS_KEY_CHAT_MESSAGES_ALL = 'chat_messages_all'
@@ -84,6 +109,18 @@ function ChatView({
   
   const normalizedArticleId = articleId ? String(articleId) : 'default'
   
+  // Helper function to get translated text without hook (for initialization)
+  const getTranslatedText = (key) => {
+    try {
+      const { translateText } = require('../../../i18n/useUIText')
+      const savedLang = localStorage.getItem('ui_language') || 'zh'
+      return translateText(key, savedLang)
+    } catch (e) {
+      // Fallback to Chinese if translation fails
+      return key
+    }
+  }
+
   // 🔧 初始化消息：优先从全局 ref，否则从 localStorage
   const getInitialMessages = () => {
     const globalMessages = window.chatViewMessagesRef[normalizedArticleId] || []
@@ -99,11 +136,19 @@ function ChatView({
       : allFromLS.filter(m => !m.articleId)
           .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
     
+    // ⚠️ Language detection: Presentation-only, does NOT affect data fetching
+    // Called at initialization time, NOT in render or hooks
+    // Using translateText helper function (not hook) for initialization
+    const defaultMessage = getTranslatedText("你好！我是聊天助手，有什么可以帮助你的吗？")
+    
     return fromLS.length > 0 ? fromLS : [
-      { id: 1, text: "你好！我是聊天助手，有什么可以帮助你的吗？", isUser: false, timestamp: new Date() }
+      { id: 1, text: defaultMessage, isUser: false, timestamp: new Date() }
     ]
   }
   
+  const t = useTranslate()
+  const tUI = useUIText()
+  const { uiLanguage } = useUiLanguage()
   const [messages, setMessages] = useState(getInitialMessages)
   const [inputText, setInputText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -314,7 +359,12 @@ function ChatView({
         // 🔧 一次性更新所有上下文，而不是分两次调用
         await apiService.session.updateContext(sessionUpdatePayload)
         
-        const response = await apiService.sendChat({ user_question: questionText })
+        // 🔧 传递 UI 语言参数，用于控制 AI 输出的语言
+        const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
+        const response = await apiService.sendChat({ 
+          user_question: questionText,
+          ui_language: uiLanguageForBackend
+        })
         console.log(`🔍 [ChatView] sendPendingMessage - sendChat 响应:`, response)
         console.log(`🔍 [ChatView] sendPendingMessage - response.grammar_to_add:`, response?.grammar_to_add)
         console.log(`🔍 [ChatView] sendPendingMessage - response.vocab_to_add:`, response?.vocab_to_add)
@@ -411,7 +461,8 @@ function ChatView({
                   items.forEach((item, idx) => {
                     setTimeout(() => {
                       const id = Date.now() + Math.random()
-                      const newToast = { id, message: `${item} 知识点已总结并加入列表`, slot: toasts.length + idx }
+                      const toastMessage = `${item} ${tUI('知识点已总结并加入列表')}`
+                      const newToast = { id, message: toastMessage, slot: toasts.length + idx }
                       console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
                       setToasts(prev => {
                         const updated = [...prev, newToast]
@@ -476,9 +527,10 @@ function ChatView({
         }
       } catch (error) {
         console.error('❌ [ChatView] 发送 pendingMessage 失败:', error)
+        // ⚠️ Language detection in error handler: Presentation-only, does NOT affect error handling logic
         const errorMsg = {
           id: generateMessageId(),
-          text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
+          text: `${t("抱歉，处理您的问题时出现错误: ")}${error.message || t("未知错误")}`,
           isUser: false,
           timestamp: new Date(),
           articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
@@ -625,7 +677,12 @@ function ChatView({
       // 🔧 一次性更新所有上下文，而不是分两次调用
       await apiService.session.updateContext(sessionUpdatePayload)
       
-      const response = await apiService.sendChat({ user_question: questionText })
+      // 🔧 传递 UI 语言参数，用于控制 AI 输出的语言
+      const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
+      const response = await apiService.sendChat({ 
+        user_question: questionText,
+        ui_language: uiLanguageForBackend
+      })
       console.log(`🔍 [ChatView] sendChat 响应:`, response)
       console.log(`🔍 [ChatView] response.grammar_to_add:`, response?.grammar_to_add)
       console.log(`🔍 [ChatView] response.vocab_to_add:`, response?.vocab_to_add)
@@ -821,9 +878,10 @@ function ChatView({
       }
     } catch (error) {
       console.error('❌ [ChatView] 发送消息失败:', error)
+      // ⚠️ Language detection in error handler: Presentation-only, does NOT affect error handling logic
       const errorMsg = {
         id: generateMessageId(),
-        text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
+        text: `${t("抱歉，处理您的问题时出现错误: ")}${error.message || t("未知错误")}`,
         isUser: false,
         timestamp: new Date(),
         articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
@@ -903,7 +961,12 @@ function ChatView({
       // 🔧 一次性更新所有上下文，而不是分两次调用
       await apiService.session.updateContext(sessionUpdatePayload)
       
-      const response = await apiService.sendChat({ user_question: question })
+      // 🔧 传递 UI 语言参数，用于控制 AI 输出的语言
+      const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
+      const response = await apiService.sendChat({ 
+        user_question: question,
+        ui_language: uiLanguageForBackend
+      })
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - sendChat 响应:`, response)
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - response.grammar_to_add:`, response?.grammar_to_add)
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - response.vocab_to_add:`, response?.vocab_to_add)
@@ -1065,9 +1128,10 @@ function ChatView({
       }
     } catch (error) {
       console.error('❌ [ChatView] 发送消息失败:', error)
+      // ⚠️ Language detection in error handler: Presentation-only, does NOT affect error handling logic
       const errorMsg = {
         id: generateMessageId(),
-        text: `抱歉，处理您的问题时出现错误: ${error.message || '未知错误'}`,
+        text: `${t("抱歉，处理您的问题时出现错误: ")}${error.message || t("未知错误")}`,
         isUser: false,
         timestamp: new Date(),
         articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
@@ -1092,15 +1156,18 @@ function ChatView({
     return dateObj.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   }
   
+  // ⚠️ Language detection: Presentation-only, does NOT affect data fetching
+  // Using useTranslate() hook which uses UI language context (same as header)
+  
   return (
     <div className={`w-80 flex flex-col bg-white rounded-lg shadow-md flex-shrink-0 relative ${disabled ? 'opacity-50' : ''}`}>
       {/* Chat Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-shrink-0">
         <h2 className="text-lg font-semibold text-gray-800">
-          {disabled ? '聊天助手 (暂时不可用)' : '聊天助手'}
+          {disabled ? t('聊天助手 (暂时不可用)') : t('聊天助手')}
         </h2>
         <p className="text-sm text-gray-600">
-          {disabled ? '请先上传文章内容' : '随时为您提供帮助'}
+          {disabled ? t('请先上传文章内容') : t('随时为您提供帮助')}
         </p>
       </div>
 
@@ -1112,7 +1179,7 @@ function ChatView({
         >
           {messages.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
-              <p>暂无消息</p>
+              <p>{t('暂无消息')}</p>
             </div>
           ) : (
             messages.map((message) => (
@@ -1139,12 +1206,16 @@ function ChatView({
                         color: colors.semantic.text.primary
                       } : {}}
                     >
-                      <div className="font-medium mb-1">引用</div>
+                      <div className="font-medium mb-1">{t('引用')}</div>
                       <div className="italic">"{message.quote}"</div>
                     </div>
                   )}
                   
-                  <p className="text-sm">{message.text}</p>
+                  <p className="text-sm">
+                    {(!message.isUser && message.text === '你好！我是聊天助手，有什么可以帮助你的吗？')
+                      ? t('你好！我是聊天助手，有什么可以帮助你的吗？')
+                      : message.text}
+                  </p>
                   <p className="text-xs mt-1 text-gray-500">
                     {formatTime(message.timestamp)}
                   </p>
@@ -1170,7 +1241,7 @@ function ChatView({
                 className={`text-xs font-medium mb-1 ${hasSelectedSentence ? 'text-green-600' : ''}`}
                 style={!hasSelectedSentence ? { color: colors.primary[600] } : {}}
               >
-                {hasSelectedSentence ? '引用整句（继续提问将保持此引用）' : '引用（继续提问将保持此引用）'}
+                {hasSelectedSentence ? t('引用整句（继续提问将保持此引用）') : t('引用（继续提问将保持此引用）')}
               </div>
               <div 
                 className={`text-sm italic ${hasSelectedSentence ? 'text-green-800' : ''}`}
@@ -1200,7 +1271,7 @@ function ChatView({
                   e.currentTarget.style.backgroundColor = 'transparent'
                 }
               }}
-              title="清空引用"
+              title={t("清空引用")}
             >
               <svg 
                 className={`w-4 h-4 ${hasSelectedSentence ? 'text-green-600' : ''}`} 
@@ -1233,7 +1304,7 @@ function ChatView({
         {/* 🔧 Token不足提示 */}
         {tokenInsufficient && !isProcessing && (
           <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-            积分不足
+            {t('积分不足')}
           </div>
         )}
         <div className="flex space-x-2">
@@ -1243,11 +1314,18 @@ function ChatView({
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={
-              disabled ? "聊天暂时不可用" : 
-              isProcessing ? "AI 正在处理中，请稍候..." :
-              tokenInsufficient ? "积分不足，无法使用AI聊天功能" :
-              (!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" :
-              (quotedText ? `回复引用："${quotedText}"` : "输入消息...")
+              disabled 
+                ? t("聊天暂时不可用")
+                : isProcessing 
+                  ? t("AI 正在处理中，请稍候...")
+                  : tokenInsufficient 
+                    ? t("积分不足，无法使用AI聊天功能")
+                    : (!hasSelectedToken && !hasSelectedSentence) 
+                      ? t("请先选择文章中的词汇或句子")
+                      : (quotedText 
+                          ? `${t("回复引用：")}"${quotedText}"`
+                          : t("输入消息...")
+                        )
             }
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
             style={{ '--tw-ring-color': colors.primary[500] }}
@@ -1268,11 +1346,14 @@ function ChatView({
               '--tw-ring-color': colors.primary[300],
             }}
             title={
-              tokenInsufficient ? "积分不足" :
-              (!hasSelectedToken && !hasSelectedSentence) ? "请先选择文章中的词汇或句子" : "发送消息"
+              tokenInsufficient 
+                ? t("积分不足")
+                : (!hasSelectedToken && !hasSelectedSentence) 
+                  ? t("请先选择文章中的词汇或句子")
+                  : t("发送消息")
             }
           >
-            发送
+            {t("发送")}
           </button>
         </div>
       </div>

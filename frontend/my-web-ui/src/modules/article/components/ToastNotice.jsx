@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useUIText } from '../../../i18n/useUIText'
 
 const ToastNotice = ({ 
   message = "知识点已总结加入列表", 
@@ -6,6 +7,7 @@ const ToastNotice = ({
   onClose,
   isVisible = false 
 }) => {
+  const t = useUIText()
   // 🔧 修复：如果 isVisible 为 true，初始状态就应该是 showing
   const [isShowing, setIsShowing] = useState(isVisible)
   const [isFading, setIsFading] = useState(false)
@@ -45,18 +47,28 @@ const ToastNotice = ({
 
   // 解析消息，将知识点名称部分加粗
   const renderMessage = () => {
-    const suffix = ' 知识点已总结并加入列表'
-    if (message.endsWith(suffix)) {
-      const knowledgePart = message.slice(0, -suffix.length)
-      return (
-        <>
-          <span className="font-bold">{knowledgePart}</span>
-          <span>{suffix}</span>
-        </>
-      )
+    const suffixZh = ' 知识点已总结并加入列表'
+    const suffixEn = t('知识点已总结并加入列表')
+    // 尝试匹配中文或英文后缀
+    let suffix = suffixZh
+    let knowledgePart = message
+    if (message.endsWith(suffixZh)) {
+      knowledgePart = message.slice(0, -suffixZh.length)
+      suffix = suffixZh
+    } else if (message.endsWith(suffixEn)) {
+      knowledgePart = message.slice(0, -suffixEn.length)
+      suffix = suffixEn
+    } else {
+      // 如果没有匹配到标准格式，直接显示原消息
+      return message
     }
-    // 如果没有匹配到标准格式，直接显示原消息
-    return message
+    
+    return (
+      <>
+        <span className="font-bold">{knowledgePart}</span>
+        <span>{suffix}</span>
+      </>
+    )
   }
 
   return (
@@ -82,7 +94,7 @@ const ToastNotice = ({
           />
         </svg>
         <div className="flex-1">
-          <div className="font-medium leading-5 mb-0.5">知识点总结</div>
+          <div className="font-medium leading-5 mb-0.5">{t('知识点总结')}</div>
           <p className="text-sm leading-snug break-words">{renderMessage()}</p>
         </div>
       </div>

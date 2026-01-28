@@ -15,7 +15,8 @@ class GrammarExampleExplanationAssistant(SubAssistant):
     def build_prompt(
         self,
         grammar: str,
-        sentence: Union[Sentence, NewSentence]
+        sentence: Union[Sentence, NewSentence],
+        language: Optional[str] = None
     ) -> str:
         return grammar_example_explanation_template.format(
             quoted_sentence=sentence.sentence_body,
@@ -26,12 +27,25 @@ class GrammarExampleExplanationAssistant(SubAssistant):
         self,
         grammar: str,
         sentence: Union[Sentence, NewSentence],
+        language: Optional[str] = None,
         **kwargs
     ) -> str:
         """
-        执行对话历史总结。
+        执行语法例句解释。
         
-        :param dialogue_history: 对话历史字符串
+        :param grammar: 语法规则名称
+        :param sentence: 句子对象
+        :param language: 输出语言（如"中文"、"英文"等）
         """
-        return super().run(grammar, sentence, **kwargs)
+        # 格式化 system prompt，添加语言信息
+        original_sys_prompt = self.sys_prompt
+        self.sys_prompt = grammar_example_explanation_sys_prompt.format(
+            language=language or "中文"
+        )
+        try:
+            result = super().run(grammar, sentence, language=language, **kwargs)
+        finally:
+            # 恢复原始 sys_prompt，避免影响后续调用
+            self.sys_prompt = original_sys_prompt
+        return result
     

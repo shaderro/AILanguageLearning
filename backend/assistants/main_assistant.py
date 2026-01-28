@@ -71,6 +71,9 @@ class MainAssistant:
         self.current_language: Optional[str] = None
         self.current_language_code: Optional[str] = None
         self.current_is_non_whitespace: bool = False
+        
+        # 🔧 UI 语言（用于控制 AI 输出语言，如"中文"、"英文"）
+        self.ui_language: Optional[str] = None
         self.processed_articles_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "data", "current", "articles")
         )
@@ -609,10 +612,14 @@ class MainAssistant:
             user_input = self.session_state.current_input if self.session_state.current_input else user_question
             ai_response_str = self.session_state.current_response if self.session_state.current_response else ai_response
             
+            # 🔧 使用 UI 语言而不是文章语言
+            output_language = self.ui_language or self.session_state.current_language or "中文"
+            print(f"🔍 [DEBUG] 调用summarize_grammar_rule_assistant，输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
             grammar_summary = self.summarize_grammar_rule_assistant.run(
                 sentence_body,
                 user_input,
                 ai_response_str,
+                language=output_language,
                 user_id=self._user_id, session=self._db_session
             )
             print(f"🔍 [DEBUG] grammar_summary 类型: {type(grammar_summary)}, 值: {grammar_summary}")
@@ -885,9 +892,13 @@ class MainAssistant:
                             # 验证句子完整性
                             self._ensure_sentence_integrity(current_sentence, "现有语法 Example 调用")
                             print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{existing_rule}'")
+                            # 🔧 使用 UI 语言而不是文章语言
+                            output_language = self.ui_language or self.session_state.current_language or "中文"
+                            print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                             example_explanation = self.grammar_example_explanation_assistant.run(
                                 sentence=current_sentence,
                                 grammar=existing_rule,
+                                language=output_language,
                                 user_id=self._user_id, session=self._db_session
                             )
                             print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
@@ -1110,9 +1121,13 @@ class MainAssistant:
                         selected_token = self.session_state.current_selected_token
                         vocab_for_context = getattr(selected_token, 'token_text', None) or vocab
                         print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab}')")
+                        # 🔧 使用 UI 语言而不是文章语言
+                        output_language = self.ui_language or self.session_state.current_language or "中文"
+                        print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                         example_explanation = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
                             vocab=vocab_for_context,
+                            language=output_language,
                             user_id=self._user_id, session=self._db_session
                         )
                         print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
@@ -1400,9 +1415,13 @@ class MainAssistant:
                     # 验证句子完整性
                     self._ensure_sentence_integrity(current_sentence, "新语法 Explanation 调用")
                     print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{grammar.rule_name}'")
+                    # 🔧 使用 UI 语言而不是文章语言
+                    output_language = self.ui_language or self.session_state.current_language or "中文"
+                    print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                     example_explanation = self.grammar_example_explanation_assistant.run(
                         sentence=current_sentence,
                         grammar=grammar.rule_name,
+                        language=output_language,
                         user_id=self._user_id, session=self._db_session
                     )
                     print(f"🔍 [DEBUG] grammar_example_explanation结果: {example_explanation}")
@@ -1554,9 +1573,13 @@ class MainAssistant:
                     # 验证句子完整性
                     self._ensure_sentence_integrity(current_sentence, "新词汇 Explanation 调用")
                     print(f"🔍 [DEBUG] 调用vocab_explanation_assistant for '{vocab.vocab}'")
+                    # 🔧 使用 UI 语言而不是文章语言
+                    output_language = self.ui_language or self.session_state.current_language or "中文"
+                    print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                     vocab_explanation = self.vocab_explanation_assistant.run(
                         sentence=current_sentence,
                         vocab=vocab.vocab,
+                        language=output_language,
                         user_id=self._user_id, session=self._db_session
                     )
                     print(f"🔍 [DEBUG] vocab_explanation结果: {vocab_explanation}")
@@ -1629,9 +1652,13 @@ class MainAssistant:
                     selected_token = self.session_state.current_selected_token
                     vocab_for_context = getattr(selected_token, 'token_text', None) or vocab.vocab
                     print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab.vocab}')")
+                    # 🔧 使用 UI 语言而不是文章语言
+                    output_language = self.ui_language or self.session_state.current_language or "中文"
+                    print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                     example_explanation = self.vocab_example_explanation_assistant.run(
                         sentence=current_sentence,
-                        vocab=vocab_for_context
+                        vocab=vocab_for_context,
+                        language=output_language
                     )
                     print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
                     

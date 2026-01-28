@@ -37,10 +37,29 @@ class SummarizeGrammarRuleAssistant(SubAssistant):
         user_question: str,
         ai_response: str,
         dialogue_context: Optional[str] = None,
+        language: Optional[str] = None,
         verbose: bool = False,
         **kwargs
     ) -> list[dict] | str:
-        return super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose, **kwargs)
+        # 格式化 system prompt，添加语言信息
+        original_sys_prompt = self.sys_prompt
+        formatted_language = language or "中文"
+        self.sys_prompt = summarize_grammar_rule_sys_prompt.format(
+            language=formatted_language
+        )
+        
+        # 🔍 打印完整的 system prompt 用于调试
+        print(f"🔍 [SummarizeGrammarRule] ========== System Prompt ==========")
+        print(f"🔍 [SummarizeGrammarRule] Language: {formatted_language}")
+        print(f"🔍 [SummarizeGrammarRule] System Prompt:\n{self.sys_prompt}")
+        print(f"🔍 [SummarizeGrammarRule] ====================================")
+        
+        try:
+            result = super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose, **kwargs)
+        finally:
+            # 恢复原始 sys_prompt，避免影响后续调用
+            self.sys_prompt = original_sys_prompt
+        return result
 
 """"
 summarize_grammar_rule = SummarizeGrammarRuleAssistant()

@@ -36,11 +36,19 @@ const internalLog = (level, message, data = null) => {
  */
 export const getSystemLanguage = () => {
   if (typeof navigator === 'undefined') {
+    console.log('🔍 [getSystemLanguage] 服务端渲染环境，返回默认值: en')
     return 'en' // 服务端渲染时默认返回英文
   }
 
   const systemLang = navigator.language || navigator.userLanguage || 'en'
   const langCode = systemLang.toLowerCase().split('-')[0] // 提取主语言代码，如 'zh-CN' -> 'zh'
+
+  console.log('🔍 [getSystemLanguage] 原始语言信息:', {
+    navigatorLanguage: navigator.language,
+    navigatorUserLanguage: navigator.userLanguage,
+    systemLang,
+    langCode
+  })
 
   // Normalize 成支持的语言代码
   const normalizedMap = {
@@ -53,8 +61,16 @@ export const getSystemLanguage = () => {
   // 暂时只支持 en 和 zh，其他 fallback 到 en
   const supportedLanguages = ['en', 'zh']
   const normalized = normalizedMap[langCode] || 'en'
+  const result = supportedLanguages.includes(normalized) ? normalized : 'en'
   
-  return supportedLanguages.includes(normalized) ? normalized : 'en'
+  console.log('🔍 [getSystemLanguage] 语言检测结果:', {
+    langCode,
+    normalized,
+    result,
+    isEnglish: result === 'en'
+  })
+  
+  return result
 }
 
 // ==================== 缓存管理 ====================

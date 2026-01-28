@@ -639,7 +639,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    <span>Back to Articles</span>
+                    <span>{t('Back to Articles')}</span>
                   </button>
                   {/* Right side buttons container */}
                   <div className="flex items-center gap-3">
@@ -653,7 +653,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                         e.stopPropagation()
                       }}
                     >
-                      <span className="text-sm font-medium text-gray-700">自动翻译</span>
+                      <span className="text-sm font-medium text-gray-700">{t('自动翻译')}</span>
                       <div className="relative inline-flex items-center">
                         <input
                           type="checkbox"

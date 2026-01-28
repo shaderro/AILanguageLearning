@@ -20,6 +20,7 @@ class VocabExplanationAssistant(SubAssistant):
         self,
         vocab: str,
         sentence: Union[Sentence, NewSentence],
+        language: Optional[str] = None
     ) -> str:
         return vocab_explanation_template.format(
             quoted_sentence=sentence.sentence_body,
@@ -30,7 +31,27 @@ class VocabExplanationAssistant(SubAssistant):
         self,
         vocab: str,
         sentence: Union[Sentence, NewSentence],
+        language: Optional[str] = None,
         **kwargs,
     ) -> dict | list[dict] | str:
-        # vocab_explanation 使用关键字参数传递，确保 user_id 和 session 能正确传递
-        return super().run(vocab=vocab, sentence=sentence, **kwargs) 
+        # 格式化 system prompt，添加语言信息
+        original_sys_prompt = self.sys_prompt
+        formatted_language = language or "中文"
+        self.sys_prompt = vocab_explanation_sys_prompt.format(
+            language=formatted_language
+        )
+        
+        # 🔍 打印完整的 system prompt 用于调试
+        print(f"🔍 [VocabExplanation] ========== System Prompt ==========")
+        print(f"🔍 [VocabExplanation] Language: {formatted_language}")
+        print(f"🔍 [VocabExplanation] Vocab: {vocab}")
+        print(f"🔍 [VocabExplanation] System Prompt:\n{self.sys_prompt}")
+        print(f"🔍 [VocabExplanation] ====================================")
+        
+        try:
+            # vocab_explanation 使用关键字参数传递，确保 user_id 和 session 能正确传递
+            result = super().run(vocab=vocab, sentence=sentence, language=language, **kwargs)
+        finally:
+            # 恢复原始 sys_prompt，避免影响后续调用
+            self.sys_prompt = original_sys_prompt
+        return result 

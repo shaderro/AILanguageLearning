@@ -172,7 +172,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406905",
+          "timestamp": "2026-01-27T16:19:03.848228",
           "data_type": "new"
         },
         {
@@ -409,7 +409,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406916",
+          "timestamp": "2026-01-27T16:19:03.848281",
           "data_type": "new"
         }
       ],
@@ -785,7 +785,1636 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406926",
+          "timestamp": "2026-01-27T16:19:03.848322",
+          "data_type": "new"
+        },
+        {
+          "user": "What is the grammatical structure of this sentence?",
+          "ai": "The sentence has a main clause followed by a comparative clause. The main clause is 'dies ist weniger' (this is less). The comparative clause is introduced by 'als' (than) and contains an example: 'zum Beispiel die Wasserführung der Ruhr oder der Ems' (for example the water flow of the Ruhr or the Ems). The structure is: Subject ('dies') + Verb ('ist') + Comparative Adjective ('weniger') + Comparative Conjunction ('als') + Example Phrase.",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": 1763895389,
+            "sentence_id": 4,
+            "sentence_body": "Der mittlere Abfluss in Kingston upon Thames beträgt 66 m3/s, dies ist weniger als zum Beispiel die Wasserführung der Ruhr oder der Ems.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "mittlere",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Abfluss",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "in",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Kingston",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "upon",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Thames",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "beträgt",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "66",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "m3",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "/",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "s",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 23,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "dies",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 24,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 25,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ist",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 26,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 27,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "weniger",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 28,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 29,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "als",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 30,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 31,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zum",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 32,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 33,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Beispiel",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 34,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 35,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 36,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 37,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Wasserführung",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 38,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 39,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 40,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 41,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Ruhr",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 42,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 43,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "oder",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 44,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 45,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 46,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 47,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Ems",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 48,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 49,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.848388",
+          "data_type": "new"
+        },
+        {
+          "user": "What is the grammatical structure of this sentence?",
+          "ai": "The grammatical structure is a subordinate clause introduced by the subordinating conjunction 'Nachdem' (after). The clause follows the pattern: Conjunction (Nachdem) + Subject (sie) + Possessive Pronoun (ihr) + Object (Quellgebiet Gloucestershire) + Verb (verlassen hat). The verb 'hat' is placed at the end, which is typical for German subordinate clauses. The main clause ('bildet sie...') follows after the comma.",
+          "sentence_id": 9,
+          "quote": {
+            "text_id": 1763895389,
+            "sentence_id": 9,
+            "sentence_body": "Nachdem sie ihr Quellgebiet Gloucestershire verlassen hat, bildet sie traditionell die Grenze zwischen den Grafschaften, zunächst zwischen Gloucestershire und Wiltshire, zwischen Berkshire am südlichen Ufer und Oxfordshire im Norden, dann zwischen Berkshire und Buckinghamshire, Buckinghamshire und Surrey, Surrey und Middlesex und zwischen Essex und Kent.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Nachdem",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "sie",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ihr",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Quellgebiet",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gloucestershire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "verlassen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "hat",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "bildet",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "sie",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "traditionell",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 23,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Grenze",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 24,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 25,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zwischen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 26,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 27,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "den",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 28,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 29,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Grafschaften",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 30,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 31,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 32,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zunächst",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 33,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 34,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zwischen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 35,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 36,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gloucestershire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 37,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 38,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 39,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 40,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Wiltshire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 41,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 42,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 43,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zwischen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 44,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 45,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Berkshire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 46,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 47,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "am",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 48,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 49,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "südlichen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 50,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 51,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Ufer",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 52,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 53,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 54,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 55,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Oxfordshire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 56,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 57,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "im",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 58,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 59,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Norden",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 60,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 61,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 62,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "dann",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 63,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 64,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zwischen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 65,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 66,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Berkshire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 67,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 68,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 69,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 70,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Buckinghamshire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 71,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 72,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 73,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Buckinghamshire",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 74,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 75,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 76,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 77,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Surrey",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 78,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 79,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 80,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Surrey",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 81,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 82,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 83,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 84,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Middlesex",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 85,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 86,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 87,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 88,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zwischen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 89,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 90,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Essex",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 91,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 92,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 93,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 94,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Kent",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 95,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 96,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.850827",
           "data_type": "new"
         }
       ],
@@ -1150,7 +2779,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406936",
+          "timestamp": "2026-01-27T16:19:03.848424",
           "data_type": "new"
         },
         {
@@ -1464,7 +3093,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406944",
+          "timestamp": "2026-01-27T16:19:03.848452",
           "data_type": "new"
         },
         {
@@ -1822,7 +3451,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406952",
+          "timestamp": "2026-01-27T16:19:03.848485",
           "data_type": "new"
         },
         {
@@ -2488,7 +4117,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406968",
+          "timestamp": "2026-01-27T16:19:03.848543",
           "data_type": "new"
         },
         {
@@ -3154,7 +4783,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406982",
+          "timestamp": "2026-01-27T16:19:03.848599",
           "data_type": "new"
         },
         {
@@ -3820,7 +5449,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.406996",
+          "timestamp": "2026-01-27T16:19:03.848667",
           "data_type": "new"
         },
         {
@@ -4486,7 +6115,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407011",
+          "timestamp": "2026-01-27T16:19:03.848722",
           "data_type": "new"
         },
         {
@@ -5152,7 +6781,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407025",
+          "timestamp": "2026-01-27T16:19:03.848778",
           "data_type": "new"
         },
         {
@@ -6104,7 +7733,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407045",
+          "timestamp": "2026-01-27T16:19:03.848860",
           "data_type": "new"
         },
         {
@@ -7056,7 +8685,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407065",
+          "timestamp": "2026-01-27T16:19:03.848934",
           "data_type": "new"
         },
         {
@@ -8008,7 +9637,1902 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407085",
+          "timestamp": "2026-01-27T16:19:03.848984",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "“zudem”是一个德语副词，意思是“此外”、“另外”。它由“zu”和“dem”组合而成，可以看作是“zu dem”的合并形式。从词源上看，“zu”表示“向、到”，“dem”是定冠词“der/das”的第三格。不过在现代德语中，“zudem”已经固定为一个整体，作为连接副词使用，没有常见的可拆分词根词缀结构。你可以直接把它当作一个表示补充信息的连接词来记忆。",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": "1763901274",
+            "sentence_id": 3,
+            "sentence_body": "Der Begriff „Europa“ bezieht sich zudem auf historische, kulturelle, politische, wirtschaftliche, rechtliche oder ideelle Aspekte.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Begriff",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "„",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Europa",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "“",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "bezieht",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "sich",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "zudem",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "auf",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "historische",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "kulturelle",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "politische",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 23,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 24,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 25,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wirtschaftliche",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 26,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 27,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 28,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "rechtliche",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 29,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 30,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "oder",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 31,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 32,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ideelle",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 33,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 34,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Aspekte",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 35,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 36,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.849007",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "eigenständiger 的词根是 eigen（自己的）和 Stand（状态、立场），后缀 -ig 构成形容词，-er 是形容词比较级或变格词尾。所以这个词的基本意思是“独立的”。",
+          "sentence_id": 4,
+          "quote": {
+            "text_id": "1763901274",
+            "sentence_id": 4,
+            "sentence_body": "Deshalb wird der Erdteil als eigenständiger Kontinent betrachtet.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Deshalb",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wird",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Erdteil",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "als",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "eigenständiger",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Kontinent",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "betrachtet",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.849020",
+          "data_type": "new"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "这句话的语法结构是：主语（Die Eurozone）+ 谓语动词（besteht）+ 地点状语（als größtes Währungsgebiet auf dem Kontinent）。意思是：欧元区作为（欧洲）大陆上最大的货币区而存在。动词'bestehen'在这里是'存在、持续存在'的意思，后面用'als'引出其存在的身份或方式。",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": "1763901274",
+            "sentence_id": 8,
+            "sentence_body": "Die Eurozone besteht als größtes Währungsgebiet auf dem Kontinent.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Eurozone",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "besteht",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "als",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "größtes",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Währungsgebiet",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "auf",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "dem",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Kontinent",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.849034",
+          "data_type": "new"
+        },
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "Währungsgebiet 由两部分组成：Währung（货币）和 Gebiet（区域、领域）。这是一个复合词，德语中常见这种构词方式，意思是“货币区”。",
+          "sentence_id": 8,
+          "quote": {
+            "text_id": "1763901274",
+            "sentence_id": 8,
+            "sentence_body": "Die Eurozone besteht als größtes Währungsgebiet auf dem Kontinent.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Eurozone",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "besteht",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "als",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "größtes",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Währungsgebiet",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "auf",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "dem",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Kontinent",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.849053",
+          "data_type": "new"
+        },
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "这是一个主系表结构的句子，语法结构是：Zu den kulturellen und wissenschaftlichen Institutionen Europas（状语） gehören（谓语动词） die UEFA, die ESA, das CERN, ...（主语）。直译是：属于欧洲的文化和科学机构的有欧足联、欧空局、欧洲核子研究中心……。德语中，为了强调，常将状语前置，导致动词gehören在第二位，主语（列举的机构）则放在句末。",
+          "sentence_id": 9,
+          "quote": {
+            "text_id": "1763901274",
+            "sentence_id": 9,
+            "sentence_body": "Zu den kulturellen und wissenschaftlichen Institutionen Europas gehören die UEFA, die ESA, das CERN, die Europäische Rundfunkunion, Erasmus+ und die Europäische Filmakademie.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Zu",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "den",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "kulturellen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wissenschaftlichen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Institutionen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Europas",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "gehören",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "UEFA",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 23,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ESA",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 24,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 25,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 26,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "das",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 27,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 28,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "CERN",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 29,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 30,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 31,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 32,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 33,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Europäische",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 34,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 35,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Rundfunkunion",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 36,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ",",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 37,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 38,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Erasmus",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 39,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "+",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 40,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 41,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 42,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 43,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 44,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 45,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Europäische",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 46,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 47,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Filmakademie",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 48,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 49,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.849091",
+          "data_type": "new"
+        },
+        {
+          "user": "What do these words mean?",
+          "ai": "\"Auffassung\" means 'view' or 'conception'. \"Sprachwissenschaften\" is the plural of 'Sprachwissenschaft', which means 'linguistics'. So, \"Nach Auffassung der Sprachwissenschaften\" translates to 'According to the view of linguistics' or 'In the view of linguists'.",
+          "sentence_id": 13,
+          "quote": {
+            "text_id": 1763901274,
+            "sentence_id": 13,
+            "sentence_body": "Nach Auffassung der Sprachwissenschaften stammt der Name aus dem Semitischen und wurde gräzisiert.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Nach",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Auffassung",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Sprachwissenschaften",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "stammt",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Name",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "aus",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "dem",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Semitischen",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "und",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wurde",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 23,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 24,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "gräzisiert",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 25,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 26,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.849111",
           "data_type": "new"
         }
       ],
@@ -8384,7 +11908,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407095",
+          "timestamp": "2026-01-27T16:19:03.849139",
           "data_type": "new"
         },
         {
@@ -8830,7 +12354,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407105",
+          "timestamp": "2026-01-27T16:19:03.849169",
           "data_type": "new"
         },
         {
@@ -9386,7 +12910,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407121",
+          "timestamp": "2026-01-27T16:19:03.849203",
           "data_type": "new"
         },
         {
@@ -9942,7 +13466,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407134",
+          "timestamp": "2026-01-27T16:19:03.849239",
           "data_type": "new"
         },
         {
@@ -10498,7 +14022,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407148",
+          "timestamp": "2026-01-27T16:19:03.849275",
           "data_type": "new"
         },
         {
@@ -11054,7 +14578,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407161",
+          "timestamp": "2026-01-27T16:19:03.849310",
           "data_type": "new"
         },
         {
@@ -11610,7 +15134,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407174",
+          "timestamp": "2026-01-27T16:19:03.849346",
           "data_type": "new"
         },
         {
@@ -12639,7 +16163,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407198",
+          "timestamp": "2026-01-27T16:19:03.849407",
           "data_type": "new"
         },
         {
@@ -13250,7 +16774,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407212",
+          "timestamp": "2026-01-27T16:19:03.849449",
           "data_type": "new"
         },
         {
@@ -14279,7 +17803,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407234",
+          "timestamp": "2026-01-27T16:19:03.849519",
           "data_type": "new"
         },
         {
@@ -14813,7 +18337,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407247",
+          "timestamp": "2026-01-27T16:19:03.849579",
           "data_type": "new"
         },
         {
@@ -15424,7 +18948,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407262",
+          "timestamp": "2026-01-27T16:19:03.849637",
           "data_type": "new"
         },
         {
@@ -16035,7 +19559,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407278",
+          "timestamp": "2026-01-27T16:19:03.849703",
           "data_type": "new"
         },
         {
@@ -16646,7 +20170,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407294",
+          "timestamp": "2026-01-27T16:19:03.849767",
           "data_type": "new"
         },
         {
@@ -17169,7 +20693,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407307",
+          "timestamp": "2026-01-27T16:19:03.849822",
           "data_type": "new"
         },
         {
@@ -17703,7 +21227,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407319",
+          "timestamp": "2026-01-27T16:19:03.849871",
           "data_type": "new"
         }
       ],
@@ -17881,7 +21405,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407325",
+          "timestamp": "2026-01-27T16:19:03.849893",
           "data_type": "new"
         },
         {
@@ -18294,7 +21818,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407335",
+          "timestamp": "2026-01-27T16:19:03.849933",
           "data_type": "new"
         }
       ],
@@ -19583,7 +23107,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407365",
+          "timestamp": "2026-01-27T16:19:03.850149",
           "data_type": "new"
         },
         {
@@ -20865,7 +24389,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407395",
+          "timestamp": "2026-01-27T16:19:03.850278",
           "data_type": "new"
         },
         {
@@ -21388,7 +24912,7 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407406",
+          "timestamp": "2026-01-27T16:19:03.850340",
           "data_type": "new"
         },
         {
@@ -22802,7 +26326,942 @@
               }
             ]
           },
-          "timestamp": "2026-01-24T14:23:40.407516",
+          "timestamp": "2026-01-27T16:19:03.850502",
+          "data_type": "new"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1763884325": {
+      "text_title": "Text 1763884325",
+      "current_summary": "用户主要询问了德语词汇的含义、用法、语法结构以及句子翻译。AI的解答涵盖了以下知识点：\n\n1.  **词汇含义与用法**：解释了多个德语词汇，如 `gilt`（被视为）、`beträgt`（总计为）、`Grenze`（边界）、`wenn auch`（即使）、`Ausläufer`（延伸部分）、`an`（在...旁边）、`entwickelte`（发展）、`gerechnet`",
+      "messages": [
+        {
+          "user": "这个词有什么词根词缀吗？",
+          "ai": "Stadtbezirken 是德语词，由词根 Stadt（城市）和 Bezirk（区、区域）组成，加上复数后缀 -en 构成。Bezirk 本身可以拆分为 be-（前缀，表示“围绕”或加强语气）和 Zirk（来自拉丁语 circus，意为“圆圈、范围”）。所以 Stadtbezirken 字面意思是“城市区域”，通常译为“市区”或“行政区”。",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1763884325,
+            "sentence_id": 3,
+            "sentence_body": "Das heutige Verwaltungsgebiet mit 33 Stadtbezirken entstand 1965 durch die Gründung von Greater London.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Das",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "heutige",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Verwaltungsgebiet",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "mit",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "33",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Stadtbezirken",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "entstand",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "1965",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "durch",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "die",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gründung",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "von",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 23,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 24,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Greater",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 25,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 26,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "London",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 27,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 28,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.850544",
+          "data_type": "new"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1762952885": {
+      "text_title": "Text 1762952885",
+      "current_summary": "用户主要询问了德语词汇的含义、用法、语法结构以及句子翻译。AI的解答涵盖了以下知识点：\n\n1.  **词汇含义与用法**：解释了多个德语词汇，如 `gilt`（被视为）、`beträgt`（总计为）、`Grenze`（边界）、`wenn auch`（即使）、`Ausläufer`（延伸部分）、`an`（在...旁边）、`entwickelte`（发展）、`gerechnet`",
+      "messages": [
+        {
+          "user": "Does this word have any roots or affixes?",
+          "ai": "The word 'Gestüt' is a German noun meaning 'stud farm' (a place where horses are bred). It is a compound word, likely derived from 'Gestüt' (archaic for 'herd' or 'stable') and the suffix '-t' (often found in place names or nouns denoting a location). It functions as a single lexical unit, so it's best to learn it as a whole word.",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": "1762952885",
+            "sentence_id": 7,
+            "sentence_body": "Im Wirtschaftshof wird ein Gestüt betrieben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Im",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Wirtschaftshof",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wird",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ein",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gestüt",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "betrieben",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.850564",
+          "data_type": "new"
+        },
+        {
+          "user": "Does this word have any roots or affixes?",
+          "ai": "Yes, 'betrieben' is the past participle of the verb 'betreiben'. Its root is 'trieb' (related to 'drive' or 'operate'), and it has the inseparable prefix 'be-'. The '-en' ending is the standard infinitive/past participle suffix for many German verbs.",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": "1762952885",
+            "sentence_id": 7,
+            "sentence_body": "Im Wirtschaftshof wird ein Gestüt betrieben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Im",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Wirtschaftshof",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wird",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ein",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gestüt",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "betrieben",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.850582",
+          "data_type": "new"
+        },
+        {
+          "user": "What does this word mean?",
+          "ai": "The word 'Wirtschaftshof' is a German compound noun. It combines 'Wirtschaft' (economy, business, or farm) and 'Hof' (yard, court, or farm). In this context, it likely refers to a 'farmstead' or 'manor farm'—a specific area or building complex on an estate used for agricultural or business operations. In the sentence, it means: 'A stud farm is operated on the farmstead.'",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": "1762952885",
+            "sentence_id": 7,
+            "sentence_body": "Im Wirtschaftshof wird ein Gestüt betrieben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Im",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Wirtschaftshof",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wird",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ein",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gestüt",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "betrieben",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.850601",
+          "data_type": "new"
+        },
+        {
+          "user": "What is the grammatical structure of this part?",
+          "ai": "The grammatical structure is a prepositional phrase: 'Im' is a contraction of 'in dem' (in the), and 'Wirtschaftshof' is a compound noun meaning 'farmyard' or 'estate courtyard'. Together, 'Im Wirtschaftshof' means 'in the farmyard' and functions as an adverbial phrase of place.",
+          "sentence_id": 7,
+          "quote": {
+            "text_id": 1762952885,
+            "sentence_id": 7,
+            "sentence_body": "Im Wirtschaftshof wird ein Gestüt betrieben.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Im",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Wirtschaftshof",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "wird",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ein",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Gestüt",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "betrieben",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-01-27T16:19:03.850620",
           "data_type": "new"
         }
       ],
