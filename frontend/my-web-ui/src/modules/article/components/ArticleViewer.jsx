@@ -1305,7 +1305,7 @@ function ArticleViewer({
       {/* 🔧 滚动容器 */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 p-4 overflow-auto min-h-0 h-full"
+        className="flex-1 p-4 overflow-auto min-h-0 h-full article-scrollbar"
         onClick={handleBackgroundClick}
       >
       <style>{`
@@ -1315,6 +1315,19 @@ function ArticleViewer({
         }
         .sentence-flashing {
           animation: sentenceFlash 1s ease-in-out infinite;
+        }
+        .article-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .article-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .article-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 4px;
+        }
+        .article-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
         }
       `}</style>
       <div className="space-y-[0.66rem] leading-[1.33] text-gray-900">

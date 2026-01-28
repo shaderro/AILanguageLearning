@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { apiService } from '../../../../services/api'
 import { colors } from '../../../../design-tokens'
+import { useUIText } from '../../../../i18n/useUIText'
 
 // 解析和格式化解释文本
 const parseExplanation = (text) => {
@@ -111,6 +112,7 @@ export default function GrammarNotationCard({
   cachedGrammarRules = null,
   getGrammarRuleById = null
 }) {
+  const t = useUIText()
   const [grammarRules, setGrammarRules] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -300,7 +302,7 @@ export default function GrammarNotationCard({
                   {rule.rule_name || rule.name}
                 </div>
                 <div style={{ fontSize: '14px', color: '#374151', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: '500' }}>规则解释:</span>
+                  <span style={{ fontWeight: '500' }}>{t('规则解释:')}</span>
                   <div style={{ 
                     marginTop: '4px', 
                     paddingLeft: '8px', 
@@ -313,7 +315,7 @@ export default function GrammarNotationCard({
                 </div>
                 {rule.context_explanation && (
                   <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                    <span style={{ fontWeight: '500' }}>上下文解释:</span>
+                    <span style={{ fontWeight: '500' }}>{t('上下文解释:')}</span>
                     <div style={{ 
                       marginTop: '4px', 
                       paddingLeft: '8px', 

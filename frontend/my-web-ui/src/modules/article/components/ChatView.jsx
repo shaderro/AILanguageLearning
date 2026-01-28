@@ -99,6 +99,67 @@ function ChatView({
   const [userInfo, setUserInfo] = useState(null)
   const [tokenInsufficient, setTokenInsufficient] = useState(false)
   
+  // 🔧 可调整宽度功能
+  const CHAT_WIDTH_STORAGE_KEY = 'chat_view_width'
+  const MIN_CHAT_WIDTH = 280
+  const MAX_CHAT_WIDTH = 600
+  const DEFAULT_CHAT_WIDTH = 320 // w-80 = 320px
+  
+  const [chatWidth, setChatWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CHAT_WIDTH_STORAGE_KEY)
+      if (saved) {
+        const width = parseInt(saved, 10)
+        if (width >= MIN_CHAT_WIDTH && width <= MAX_CHAT_WIDTH) {
+          return width
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ [ChatView] 读取保存的宽度失败', e)
+    }
+    return DEFAULT_CHAT_WIDTH
+  })
+  
+  const [isResizing, setIsResizing] = useState(false)
+  const chatContainerRef = useRef(null)
+  
+  // 保存宽度到 localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_WIDTH_STORAGE_KEY, String(chatWidth))
+    } catch (e) {
+      console.warn('⚠️ [ChatView] 保存宽度失败', e)
+    }
+  }, [chatWidth])
+  
+  // 处理拖拽调整宽度
+  useEffect(() => {
+    if (!isResizing) return
+    
+    const handleMouseMove = (e) => {
+      if (!chatContainerRef.current) return
+      
+      const containerRect = chatContainerRef.current.getBoundingClientRect()
+      const newWidth = containerRect.right - e.clientX
+      
+      if (newWidth >= MIN_CHAT_WIDTH && newWidth <= MAX_CHAT_WIDTH) {
+        setChatWidth(newWidth)
+      }
+    }
+    
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
+  
   const scrollContainerRef = useRef(null)
   const messageIdCounterRef = useRef(0)
   const pollPendingKnowledgeRef = useRef(null)  // 🔧 存储轮询定时器引用，用于清理
@@ -450,8 +511,8 @@ function ChatView({
                 if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
                   console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                   const items = [
-                    ...pendingGrammar.map(g => `🆕 语法: ${g.name || g.title || g.rule || '新语法'}`),
-                    ...pendingVocab.map(v => `🆕 词汇: ${v.vocab || '新词汇'}`)
+                    ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.name || g.title || g.rule || tUI('语法')}`),
+                    ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
                   ]
                   
                   console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
@@ -802,8 +863,8 @@ function ChatView({
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
                 console.log(`🍞 [ChatView] [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                 const items = [
-                  ...pendingGrammar.map(g => `🆕 语法: ${g.name || g.title || g.rule || '新语法'}`),
-                  ...pendingVocab.map(v => `🆕 词汇: ${v.vocab || '新词汇'}`)
+                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.name || g.title || g.rule || tUI('语法')}`),
+                  ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
                 ]
                 
                 console.log(`🍞 [ChatView] [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
@@ -813,7 +874,7 @@ function ChatView({
                 items.forEach((item, idx) => {
                   setTimeout(() => {
                     const id = Date.now() + Math.random()
-                    const newToast = { id, message: `${item} 知识点已总结并加入列表`, slot: toasts.length + idx }
+                    const newToast = { id, message: `${item} ${tUI('知识点已总结并加入列表')}`, slot: toasts.length + idx }
                     console.log(`🍞 [ChatView] [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
                     setToasts(prev => {
                       const updated = [...prev, newToast]
@@ -1052,8 +1113,8 @@ function ChatView({
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
                 console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                 const items = [
-                  ...pendingGrammar.map(g => `🆕 语法: ${g.name || g.title || g.rule || '新语法'}`),
-                  ...pendingVocab.map(v => `🆕 词汇: ${v.vocab || '新词汇'}`)
+                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.name || g.title || g.rule || tUI('语法')}`),
+                  ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
                 ]
                 
                 console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
@@ -1063,7 +1124,7 @@ function ChatView({
                 items.forEach((item, idx) => {
                   setTimeout(() => {
                     const id = Date.now() + Math.random()
-                    const newToast = { id, message: `${item} 知识点已总结并加入列表`, slot: toasts.length + idx }
+                    const newToast = { id, message: `${item} ${tUI('知识点已总结并加入列表')}`, slot: toasts.length + idx }
                     console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
                     setToasts(prev => {
                       const updated = [...prev, newToast]
@@ -1160,7 +1221,44 @@ function ChatView({
   // Using useTranslate() hook which uses UI language context (same as header)
   
   return (
-    <div className={`w-80 flex flex-col bg-white rounded-lg shadow-md flex-shrink-0 relative ${disabled ? 'opacity-50' : ''}`}>
+    <>
+      <style>{`
+        .chat-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .chat-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .chat-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 4px;
+        }
+        .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+      `}</style>
+      <div 
+        ref={chatContainerRef}
+        className={`flex flex-col bg-white rounded-lg shadow-md flex-shrink-0 relative ${disabled ? 'opacity-50' : ''}`}
+        style={{ width: `${chatWidth}px` }}
+      >
+      {/* Resize Handle - 左侧拖拽条 */}
+      <div
+        className="absolute top-0 bottom-0 cursor-col-resize z-10 group"
+        style={{ 
+          left: '-4px',
+          width: '8px'
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setIsResizing(true)
+        }}
+        title="拖拽调整宽度"
+      >
+        <div className="absolute inset-0 bg-transparent group-hover:bg-gray-400 active:bg-gray-500 transition-colors" />
+      </div>
+      
       {/* Chat Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-shrink-0">
         <h2 className="text-lg font-semibold text-gray-800">
@@ -1175,7 +1273,7 @@ function ChatView({
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         <div
           ref={scrollContainerRef}
-          className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3"
+          className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 chat-scrollbar"
         >
           {messages.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
@@ -1188,11 +1286,14 @@ function ChatView({
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs px-3 py-2 rounded-lg ${
+                  className={`px-3 py-2 rounded-lg ${
                     message.isUser
                       ? 'bg-white text-gray-900 border border-gray-300 rounded-br-none'
                       : 'bg-gray-100 text-gray-800 rounded-bl-none'
                   }`}
+                  style={{ 
+                    maxWidth: `${chatWidth - 64}px` // chatWidth - 左右padding(32px) - 消息间距(32px)
+                  }}
                 >
                   {message.quote && (
                     <div 
@@ -1257,32 +1358,6 @@ function ChatView({
                 "{quotedText}"
               </div>
             </div>
-            <button
-              onClick={onClearQuote}
-              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${hasSelectedSentence ? 'hover:bg-green-100' : ''}`}
-              style={!hasSelectedSentence ? { '--hover-bg': colors.primary[100] } : {}}
-              onMouseEnter={(e) => {
-                if (!hasSelectedSentence) {
-                  e.currentTarget.style.backgroundColor = colors.primary[100]
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!hasSelectedSentence) {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }
-              }}
-              title={t("清空引用")}
-            >
-              <svg 
-                className={`w-4 h-4 ${hasSelectedSentence ? 'text-green-600' : ''}`} 
-                style={!hasSelectedSentence ? { color: colors.primary[600] } : {}}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
         </div>
       )}
@@ -1357,6 +1432,7 @@ function ChatView({
           </button>
         </div>
       </div>
+      </div>
 
       {/* Toast Stack */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none">
@@ -1393,7 +1469,7 @@ function ChatView({
           </div>
         ))}
       </div>
-    </div>
+    </>
   )
 }
 

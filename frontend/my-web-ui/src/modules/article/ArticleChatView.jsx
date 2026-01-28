@@ -20,8 +20,9 @@ import { useTokenNotations } from './hooks/useTokenNotations'
 import { useNotationCache } from './hooks/useNotationCache'
 import { apiService } from '../../services/api'
 import { useUIText } from '../../i18n/useUIText'
+import { colors } from '../../design-tokens'
 
-function ArticleCanvas({ children }) {
+function ArticleCanvas({ children, onClearQuote }) {
   const { clearSelection } = useSelection()
   return (
     <div className="flex-1 min-h-0 flex flex-col" onClick={(e) => {
@@ -36,8 +37,20 @@ function ArticleCanvas({ children }) {
         console.log('⏭️ [ArticleCanvas] 点击的是 token，跳过清除选择')
         return
       }
-      console.log('🧹 [ArticleCanvas] 清除选择')
+      // 🔧 如果点击的是句子容器，不清除选择（让 SentenceContainer 的 onClick 处理）
+      // 检查 data-sentence-id 或 data-sentence-index 属性
+      if (e.target?.closest('[data-sentence-id]') !== null || 
+          e.target?.closest('[data-sentence-index]') !== null ||
+          e.target?.closest('[data-sentence]') !== null) {
+        console.log('⏭️ [ArticleCanvas] 点击的是句子，跳过清除选择')
+        return
+      }
+      console.log('🧹 [ArticleCanvas] 清除选择和引用')
       clearSelection()
+      // 🔧 当点击空白区域时，也清除引用
+      if (onClearQuote && typeof onClearQuote === 'function') {
+        onClearQuote()
+      }
     }}>
       {children}
     </div>
@@ -666,8 +679,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                         />
                         <div
                           className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
-                            autoTranslationEnabled ? 'bg-blue-500' : 'bg-gray-300'
+                            autoTranslationEnabled ? '' : 'bg-gray-300'
                           }`}
+                          style={autoTranslationEnabled ? {
+                            backgroundColor: colors.primary[500]
+                          } : {}}
                         >
                           <div
                             className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
@@ -687,7 +703,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                   </div>
                 </div>
                 {/* Article View */}
-                <ArticleCanvas>
+                <ArticleCanvas onClearQuote={handleClearQuote}>
                   <ArticleViewer 
                     key={`article-viewer-${articleId}`}
                     articleId={articleId} 

@@ -721,7 +721,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
             />
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={!language}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('从网址上传')}
             </button>
@@ -748,7 +749,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
             />
             <button
               onClick={triggerFileInput}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+              disabled={!language}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('选择文件')}
             </button>
@@ -774,14 +776,17 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
           <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">{t('拖拽文件')}</h3>
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              dragActive 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 hover:border-gray-400'
+              !language
+                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                : dragActive 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 hover:border-gray-400'
             }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
+            onDragEnter={!language ? undefined : handleDrag}
+            onDragLeave={!language ? undefined : handleDrag}
+            onDragOver={!language ? undefined : handleDrag}
+            onDrop={!language ? undefined : handleDrop}
+            title={!language ? t('请先选择语言') : ''}
           >
             <div className="space-y-2">
               <svg 

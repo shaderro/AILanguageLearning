@@ -610,7 +610,7 @@ const VocabDetailCard = ({
               {definitions.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    释义
+                    {t('释义')}
                   </h2>
                   {definitions.map((def, index) => (
                     <div key={index} className="flex items-start gap-3">
@@ -631,7 +631,7 @@ const VocabDetailCard = ({
               {grammarPoints.length > 0 && (
                 <div className="space-y-2">
                   <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    语法说明
+                    {t('语法说明')}
                   </h2>
                   <ul className="space-y-2">
                     {grammarPoints.map((point, index) => (
@@ -656,7 +656,7 @@ const VocabDetailCard = ({
         {examples.length > 0 && (
           <section>
             <h2 className="text-lg font-semibold mb-3" style={{ color: colors.semantic.text.secondary }}>
-              例句
+              {t('例句')}
             </h2>
             <div className="space-y-4">
               {examples.map((example, index) => (
@@ -711,7 +711,7 @@ const VocabDetailCard = ({
                         }}
                         disabled={!example.text_id}
                       >
-                        <span>来源: {example.source || t('原文')}</span>
+                        <span>{t('来源:')} {example.source || t('原文')}</span>
                         <svg
                           className="w-3 h-3"
                           fill="none"

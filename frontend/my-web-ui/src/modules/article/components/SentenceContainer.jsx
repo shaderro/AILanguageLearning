@@ -7,6 +7,7 @@ import { useSentenceSelectable } from '../selection/hooks/useSentenceSelectable'
 import QuickTranslationTooltip from '../../../components/QuickTranslationTooltip'
 import { getQuickTranslation, getSystemLanguage } from '../../../services/translationService'
 import { useLanguage, languageNameToCode } from '../../../contexts/LanguageContext'
+import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 
 /**
@@ -118,6 +119,7 @@ export default function SentenceContainer({
   
   // 🔧 整句翻译相关状态
   const { selectedLanguage } = useLanguage()
+  const { uiLanguage } = useUiLanguage() // 🔧 获取 UI 语言设置
   // 清除调试日志
   const [sentenceTranslation, setSentenceTranslation] = useState(null)
   const [showSentenceTranslation, setShowSentenceTranslation] = useState(false)
@@ -133,6 +135,14 @@ export default function SentenceContainer({
   }, [sentence])
   
   const targetLang = useMemo(() => {
+    // 🔧 优先使用 UI 语言设置（用户设置的界面语言）
+    // 如果 UI 语言为英语，自动翻译的目标语言也应该是英语
+    if (uiLanguage === 'en') {
+      // 如果源语言也是英语，则翻译成中文
+      return sourceLang === 'en' ? 'zh' : 'en'
+    }
+    
+    // 如果 UI 语言为中文，使用原来的逻辑（基于学习语言或系统语言）
     const globalLang = languageNameToCode(selectedLanguage)
     const preferredLang = globalLang || getSystemLanguage()
     
@@ -145,7 +155,7 @@ export default function SentenceContainer({
       }
     }
     return preferredLang
-  }, [selectedLanguage, sourceLang])
+  }, [uiLanguage, selectedLanguage, sourceLang])
   
   // 获取句子完整文本
   const sentenceText = useMemo(() => {

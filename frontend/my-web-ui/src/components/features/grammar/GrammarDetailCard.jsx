@@ -416,7 +416,7 @@ const GrammarDetailCard = ({
               >
                 <div className="space-y-2">
                   <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    规则说明
+                    {t('规则说明')}
                   </h2>
                   <ul className="space-y-2">
                     {rulePoints.map((point, index) => (
@@ -440,7 +440,7 @@ const GrammarDetailCard = ({
           {examples.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold mb-3" style={{ color: colors.semantic.text.secondary }}>
-                例句
+                {t('例句')}
               </h2>
               <div className="space-y-4">
                 {examples.map((example, index) => (
@@ -495,7 +495,7 @@ const GrammarDetailCard = ({
                           }}
                           disabled={!example.text_id}
                         >
-                          <span>来源: {example.source || t('原文')}</span>
+                          <span>{t('来源:')} {example.source || t('原文')}</span>
                           <svg
                             className="w-3 h-3"
                             fill="none"

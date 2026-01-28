@@ -151,5 +151,32 @@
     "type": "sentence",
     "vocab_id": null,
     "grammar_id": 25
+  },
+  {
+    "user_id": 3,
+    "text_id": 1769223852,
+    "sentence_id": 3,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 27
+  },
+  {
+    "user_id": 3,
+    "text_id": 1769223852,
+    "sentence_id": 2,
+    "sentence_token_id": 3,
+    "type": "token",
+    "vocab_id": 185,
+    "grammar_id": null
+  },
+  {
+    "user_id": 3,
+    "text_id": "1769223852",
+    "sentence_id": 2,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 28
   }
 ]

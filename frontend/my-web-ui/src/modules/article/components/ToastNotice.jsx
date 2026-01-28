@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { useUIText } from '../../../i18n/useUIText'
 
 const ToastNotice = ({ 
-  message = "知识点已总结加入列表", 
+  message, 
   duration = 120000, // 调试阶段：2分钟
   onClose,
   isVisible = false 
 }) => {
   const t = useUIText()
+  // 🔧 如果没有传入 message，使用国际化默认值
+  const defaultMessage = t('知识点已总结并加入列表')
+  const displayMessage = message || defaultMessage
   // 🔧 修复：如果 isVisible 为 true，初始状态就应该是 showing
   const [isShowing, setIsShowing] = useState(isVisible)
   const [isFading, setIsFading] = useState(false)
@@ -38,7 +41,7 @@ const ToastNotice = ({
     }
   }, [isVisible, duration, onClose])
 
-  console.log('🍞 [ToastNotice] 渲染，isVisible:', isVisible, 'isShowing:', isShowing, 'message:', message)
+  console.log('🍞 [ToastNotice] 渲染，isVisible:', isVisible, 'isShowing:', isShowing, 'message:', displayMessage)
 
   if (!isShowing) {
     console.log('🍞 [ToastNotice] isShowing 为 false，不渲染')
@@ -47,20 +50,16 @@ const ToastNotice = ({
 
   // 解析消息，将知识点名称部分加粗
   const renderMessage = () => {
-    const suffixZh = ' 知识点已总结并加入列表'
-    const suffixEn = t('知识点已总结并加入列表')
-    // 尝试匹配中文或英文后缀
-    let suffix = suffixZh
-    let knowledgePart = message
-    if (message.endsWith(suffixZh)) {
-      knowledgePart = message.slice(0, -suffixZh.length)
-      suffix = suffixZh
-    } else if (message.endsWith(suffixEn)) {
-      knowledgePart = message.slice(0, -suffixEn.length)
-      suffix = suffixEn
+    const suffixText = ` ${t('知识点已总结并加入列表')}`
+    // 尝试匹配后缀（支持当前语言的后缀）
+    let suffix = suffixText
+    let knowledgePart = displayMessage
+    if (displayMessage.endsWith(suffixText)) {
+      knowledgePart = displayMessage.slice(0, -suffixText.length)
+      suffix = suffixText
     } else {
       // 如果没有匹配到标准格式，直接显示原消息
-      return message
+      return displayMessage
     }
     
     return (

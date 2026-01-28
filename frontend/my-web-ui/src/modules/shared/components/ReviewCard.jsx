@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { apiService } from '../../../services/api'
+import { useUIText } from '../../../i18n/useUIText'
 
 const ReviewCard = ({
   type = 'vocab', // 'vocab' | 'grammar'
@@ -14,6 +15,7 @@ const ReviewCard = ({
   onNextCard,      // 手动下一题
   showDefinition = true,
 }) => {
+  const t = useUIText()
   const [showExplanation, setShowExplanation] = useState(false)
   const [itemWithExamples, setItemWithExamples] = useState(item)
 
@@ -164,7 +166,7 @@ const ReviewCard = ({
       <div className="space-y-4">
         {shouldShowExplanation && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">规则解释</h3>
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">{t('规则解释')}</h3>
             <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
               {parseExplanation(currentItem?.rule_summary || currentItem?.explanation || '暂无解释')}
             </div>
