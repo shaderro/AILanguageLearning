@@ -21,6 +21,7 @@ import { useNotationCache } from './hooks/useNotationCache'
 import { apiService } from '../../services/api'
 import { useUIText } from '../../i18n/useUIText'
 import { colors } from '../../design-tokens'
+import VocabNotationDebugPanel from './components/VocabNotationDebugPanel'
 
 function ArticleCanvas({ children, onClearQuote }) {
   const { clearSelection } = useSelection()
@@ -423,6 +424,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }
 
+  // 🔧 全局 tooltip 状态管理：当前激活的 vocab notation tooltip
+  // 格式：{ articleId, sentenceId, tokenId } 或 null
+  // 目的：即使 TokenSpan 重挂载，tooltip 状态也不会丢失
+  const [activeVocabNotation, setActiveVocabNotation] = useState(null)
+
   // 构建 NotationContext 的值
   // 🔧 添加 vocabNotations 和 grammarNotations 到依赖，确保缓存更新时 Context 值也更新
   const notationContextValue = useMemo(() => {
@@ -445,6 +451,10 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       getVocabExampleForToken,
       hasVocabNotation,
       
+      // 🔧 全局 tooltip 状态管理
+      activeVocabNotation,
+      setActiveVocabNotation,
+      
       // 兼容层（暂时保留用于向后兼容）
       isTokenAsked,
       getNotationContent,
@@ -461,6 +471,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     getVocabNotationsForSentence,
     getVocabExampleForToken,
     hasVocabNotation,
+    activeVocabNotation,  // 🔧 添加 activeVocabNotation 到依赖
     isTokenAsked,
     getNotationContent,
     setNotationContent,
@@ -613,6 +624,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     
     return (
       <>
+        {/* 临时 Debug：vocab notation hover / tooltip / example 加载链路（可复制） */}
+        <VocabNotationDebugPanel />
         <div className="h-full flex flex-col">
           {/* Main Content - allow overlays to extend beyond article view */}
           <div className={`flex gap-8 flex-1 p-4 overflow-hidden min-h-0 ${isUploadMode ? 'justify-center' : ''}`}>

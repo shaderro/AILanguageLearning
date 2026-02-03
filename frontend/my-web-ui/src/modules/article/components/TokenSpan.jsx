@@ -10,6 +10,11 @@ import QuickTranslationTooltip from '../../../components/QuickTranslationTooltip
 import { getQuickTranslation, getSystemLanguage } from '../../../services/translationService'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
+import { logVocabNotationDebug } from '../utils/vocabNotationDebug'
+
+// 🔧 已移除：notationVisibilityStore 不再需要
+// tooltip 状态现在由 NotationContext 中的 activeVocabNotation 全局管理，
+// 即使 TokenSpan 重挂载，状态也不会丢失
 
 /**
  * TokenSpan - Renders individual token with selection and vocab explanation features
@@ -51,7 +56,9 @@ export default function TokenSpan({
     getGrammarNotationsForSentence,
     getVocabNotationsForSentence,
     getVocabExampleForToken,
-    isTokenAsked: isTokenAskedFromContext
+    isTokenAsked: isTokenAskedFromContext,
+    activeVocabNotation,  // 🔧 全局 tooltip 状态
+    setActiveVocabNotation  // 🔧 全局 tooltip setter
   } = notationContext || {}
   
   const displayText = typeof token === 'string' ? token : (token?.token_body ?? token?.token ?? '')
@@ -455,25 +462,105 @@ export default function TokenSpan({
   const tokenHasExplanation = isTextToken && hasExplanation(token)
   const tokenExplanation = isTextToken ? getExplanation(token) : null
   const isHovered = hoveredTokenId === uid
+
+  // 为当前 token 构造一个稳定的可序列化 key，用于全局可见性缓存
+  // 当前实现中仅用于调试追踪，不再从缓存恢复可见性，避免跨 hover 会话的“幽灵状态”
+  const notationKey = useMemo(
+    () => `${articleId}:${tokenSentenceId}:${tokenSentenceTokenId}`,
+    [articleId, tokenSentenceId, tokenSentenceTokenId]
+  )
   
-  // 管理TokenNotation的显示状态（针对已提问的token）
-  const [showNotation, setShowNotation] = useState(false)
+  // 🔧 从全局状态计算当前 token 是否应该显示 tooltip
+  // activeVocabNotation 格式：{ articleId, sentenceId, tokenId } 或 null
+  const showNotation = useMemo(() => {
+    if (!activeVocabNotation) return false
+    return (
+      activeVocabNotation.articleId === articleId &&
+      activeVocabNotation.sentenceId === tokenSentenceId &&
+      activeVocabNotation.tokenId === tokenSentenceTokenId
+    )
+  }, [activeVocabNotation, articleId, tokenSentenceId, tokenSentenceTokenId])
+
+  // 🔧 记录鼠标是否正在悬停当前 token（用于“hover 期间数据到达后自动展示”）
+  const [isMouseOverToken, setIsMouseOverToken] = useState(false)
+  // 🔧 会话级 hover 标记：只要鼠标在 token 或卡片上，就是 true
+  const isHoveringRef = useRef(false)
   const hideNotationTimerRef = useRef(null)
+
+  // 🔧 封装带日志的全局状态更新函数
+  const setShowNotationWithTrace = useCallback(
+    (nextValue, reason) => {
+      const prevValue = showNotation
+      const nextNotation = nextValue
+        ? { articleId, sentenceId: tokenSentenceId, tokenId: tokenSentenceTokenId }
+        : null
+      
+      logVocabNotationDebug('[isVisible trace]', {
+        source: 'TokenSpan',
+        prevValue,
+        nextValue,
+        reason,
+        articleId,
+        sentenceId: tokenSentenceId,
+        tokenId: tokenSentenceTokenId,
+        displayText,
+        isMouseOverToken,
+        isHoveringSession: isHoveringRef.current,
+      })
+      
+      if (setActiveVocabNotation) {
+        setActiveVocabNotation(nextNotation)
+      }
+    },
+    [articleId, tokenSentenceId, tokenSentenceTokenId, displayText, isMouseOverToken, showNotation, setActiveVocabNotation]
+  )
   
   // 获取该token的notation内容
   const notationContent = isAsked && getNotationContent 
     ? getNotationContent(articleId, tokenSentenceId, tokenSentenceTokenId)
     : null
   
-  // 延迟隐藏 notation
+  // 延迟隐藏 notation：仅当延时结束时仍不在 token 或卡片上，才真正隐藏
   const scheduleHideNotation = () => {
     // 清除之前的延迟隐藏
     if (hideNotationTimerRef.current) {
       clearTimeout(hideNotationTimerRef.current)
     }
-    // 设置新的延迟隐藏（200ms后隐藏）
+    logVocabNotationDebug('[hover-session] scheduleHideNotation', {
+      articleId,
+      sentenceId: tokenSentenceId,
+      tokenId: tokenSentenceTokenId,
+      displayText,
+      hasVocabVisual,
+      isMouseOverToken,
+      isHoveringSession: isHoveringRef.current,
+    })
+    // 设置新的延迟隐藏（200ms后检查是否仍然未 hover）
     hideNotationTimerRef.current = setTimeout(() => {
-      setShowNotation(false)
+      const currentShowNotation = showNotation  // 捕获当前值
+      logVocabNotationDebug('[hover-session] hideTimeoutFired', {
+        articleId,
+        sentenceId: tokenSentenceId,
+        tokenId: tokenSentenceTokenId,
+        displayText,
+        hasVocabVisual,
+        isMouseOverToken,
+        isHoveringSession: isHoveringRef.current,
+        showNotationBefore: currentShowNotation,
+      })
+      if (!isHoveringRef.current) {
+        setShowNotationWithTrace(false, 'mouseLeaveTimeout')
+      } else {
+        logVocabNotationDebug('[isVisible trace]', {
+          source: 'TokenSpan',
+          value: currentShowNotation,
+          reason: 'mouseLeaveTimeoutCancelledByHover',
+          articleId,
+          sentenceId: tokenSentenceId,
+          tokenId: tokenSentenceTokenId,
+          displayText,
+        })
+      }
     }, 200)
   }
   
@@ -482,23 +569,89 @@ export default function TokenSpan({
     if (hideNotationTimerRef.current) {
       clearTimeout(hideNotationTimerRef.current)
       hideNotationTimerRef.current = null
+      const currentShowNotation = showNotation  // 捕获当前值
+      logVocabNotationDebug('[hover-session] cancelHideNotation', {
+        articleId,
+        sentenceId: tokenSentenceId,
+        tokenId: tokenSentenceTokenId,
+        displayText,
+        hasVocabVisual,
+        isMouseOverToken,
+        isHoveringSession: isHoveringRef.current,
+        showNotation: currentShowNotation,
+      })
     }
   }
   
   // 处理 notation 的 mouse enter（鼠标进入卡片）
   const handleNotationMouseEnter = () => {
+    isHoveringRef.current = true
     cancelHideNotation()  // 取消隐藏
-    setShowNotation(true)  // 确保显示
+    setShowNotationWithTrace(true, 'cardMouseEnter')  // 确保显示
   }
   
   // 处理 notation 的 mouse leave（鼠标离开卡片）
   const handleNotationMouseLeave = () => {
+    isHoveringRef.current = false
     scheduleHideNotation()  // 延迟隐藏
   }
 
+  // 🔧 记录 showNotation 的变化，方便对比 TokenSpan 与 VocabNotationCard 的状态
+  useEffect(() => {
+    if (!isTextToken) return
+    logVocabNotationDebug('🔁 [TokenSpan] showNotation state changed', {
+      articleId,
+      sentenceId: tokenSentenceId,
+      tokenId: tokenSentenceTokenId,
+      displayText,
+      showNotation,
+      hasVocabNotationForToken,
+      hasVocabVisual,
+      isAsked,
+    })
+  }, [
+    showNotation,
+    articleId,
+    tokenSentenceId,
+    tokenSentenceTokenId,
+    displayText,
+    hasVocabNotationForToken,
+    hasVocabVisual,
+    isAsked,
+    isTextToken,
+  ])
+
+  // 🔧 修复：如果 vocab notations 在“正在 hover”期间才加载完成，自动展示 tooltip（避免必须第二次 hover）
+  useEffect(() => {
+    if (!isMouseOverToken) return
+    if (!hasVocabVisual) return
+    if (showNotation) return
+
+    logVocabNotationDebug('🟢 [TokenSpan] notations arrived while hovering -> show tooltip', {
+      articleId,
+      sentenceId: tokenSentenceId,
+      tokenId: tokenSentenceTokenId,
+      displayText,
+      hasVocabVisual,
+      hasVocabNotationForToken,
+      isAsked,
+    })
+    cancelHideNotation()
+    setShowNotationWithTrace(true, 'hoverNotationsArrived')
+  }, [
+    isMouseOverToken,
+    hasVocabVisual,
+    showNotation,
+    articleId,
+    tokenSentenceId,
+    tokenSentenceTokenId,
+    displayText,
+    hasVocabNotationForToken,
+    isAsked,
+  ])
+
   return (
     <span
-      key={getTokenKey(sentenceIdx, token, tokenIdx)}
       className="relative inline-block"
       ref={anchorRef}
     >
@@ -509,6 +662,8 @@ export default function TokenSpan({
           // tokenRefsRef 已移除（不再需要拖拽功能）
         }}
         onMouseEnter={(e) => {
+          setIsMouseOverToken(true)
+          isHoveringRef.current = true
           // 只有可选择的token才触发hover效果
           if (selectable) {
             selOnEnter()
@@ -516,10 +671,33 @@ export default function TokenSpan({
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(uid)
           }
+          if (isTextToken) {
+            const currentShowNotation = showNotation  // 捕获当前值
+        logVocabNotationDebug('👆 [TokenSpan] mouse enter', {
+              articleId,
+              sentenceId: tokenSentenceId,
+              tokenId: tokenSentenceTokenId,
+              displayText,
+              selectable,
+              hasVocabNotationForToken,
+              hasVocabVisual,
+              isAsked,
+              showNotationBefore: currentShowNotation,
+            })
+          }
           // 如果有vocab notation（来自vocab_notations或asked tokens），显示notation卡片
           if (hasVocabVisual) {
             cancelHideNotation()  // 取消任何待处理的隐藏
-            setShowNotation(true)
+            setShowNotationWithTrace(true, 'mouseEnter')
+            if (isTextToken) {
+              logVocabNotationDebug('🟢 [TokenSpan] showNotation=true (triggered by mouse enter)', {
+                articleId,
+                sentenceId: tokenSentenceId,
+                tokenId: tokenSentenceTokenId,
+                displayText,
+                tokenIndexForExample: matchedNotation?.token_id ?? tokenSentenceTokenId,
+              })
+            }
           }
 
           // 🔧 已禁用：hover token 时自动翻译单词的功能
@@ -533,12 +711,27 @@ export default function TokenSpan({
           // }
         }}
         onMouseLeave={() => {
+          setIsMouseOverToken(false)
+          isHoveringRef.current = false
           // 只有可选择的token才清除hover效果
           if (selectable) {
             selOnLeave()
           }
           if (isTextToken && tokenHasExplanation) {
             setHoveredTokenId(null)
+          }
+          if (isTextToken) {
+            const currentShowNotation = showNotation  // 捕获当前值
+            logVocabNotationDebug('👋 [TokenSpan] mouse leave', {
+              articleId,
+              sentenceId: tokenSentenceId,
+              tokenId: tokenSentenceTokenId,
+              displayText,
+              hasVocabNotationForToken,
+              hasVocabVisual,
+              isAsked,
+              showNotationBefore: currentShowNotation,
+            })
           }
           // 延迟隐藏notation（而不是立即隐藏）
           if (hasVocabVisual) {
@@ -707,7 +900,8 @@ export default function TokenSpan({
       )} */}
       
       {/* VocabNotationCard - 对有 vocab 标注（来自vocab_notations或asked tokens）的 token 显示 */}
-      {hasVocabVisual && showNotation && (
+      {/* 🔧 始终挂载卡片组件（只在 hasVocabVisual 为 true 时），通过 isVisible 控制显示，避免第一次 hover 时因为状态抖动被卸载 */}
+      {hasVocabVisual && (
         <VocabNotationCard 
           isVisible={showNotation}
           note={notationContent || "This is a test note"}
