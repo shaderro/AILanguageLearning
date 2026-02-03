@@ -307,42 +307,82 @@ async def login(
     2. email + password（新方式）
     3. user_id + email + password（同时提供，优先使用user_id）
     """
-    user = None
+    import time
+    start_time = time.time()
     
-    # 优先使用 user_id 查询（如果提供）
-    if request.user_id:
-        user = session.query(User).filter(User.user_id == request.user_id).first()
-    # 如果 user_id 未提供或未找到，且提供了 email，则使用 email 查询
-    elif request.email:
-        user = session.query(User).filter(User.email == request.email).first()
-    else:
-        # 既没有 user_id 也没有 email
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="请提供用户ID或邮箱"
+    try:
+        # 记录请求开始
+        login_method = f"user_id={request.user_id}" if request.user_id else f"email={request.email}"
+        print(f"🔐 [Login API] 登录请求开始: {login_method}")
+        
+        user = None
+        query_start = time.time()
+        
+        # 优先使用 user_id 查询（如果提供）
+        if request.user_id:
+            print(f"🔍 [Login API] 使用 user_id 查询: {request.user_id}")
+            user = session.query(User).filter(User.user_id == request.user_id).first()
+        # 如果 user_id 未提供或未找到，且提供了 email，则使用 email 查询
+        elif request.email:
+            print(f"🔍 [Login API] 使用 email 查询: {request.email}")
+            user = session.query(User).filter(User.email == request.email).first()
+        else:
+            # 既没有 user_id 也没有 email
+            print("❌ [Login API] 既没有 user_id 也没有 email")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="请提供用户ID或邮箱"
+            )
+        
+        query_time = time.time() - query_start
+        print(f"⏱️ [Login API] 数据库查询耗时: {query_time:.3f}秒")
+        
+        if not user:
+            print(f"❌ [Login API] 用户未找到: {login_method}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户ID/邮箱或密码错误"
+            )
+        
+        print(f"✅ [Login API] 用户找到: user_id={user.user_id}, email={user.email}")
+        
+        # 验证密码
+        verify_start = time.time()
+        if not verify_password(request.password, user.password_hash):
+            print(f"❌ [Login API] 密码验证失败: user_id={user.user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户ID/邮箱或密码错误"
+            )
+        verify_time = time.time() - verify_start
+        print(f"⏱️ [Login API] 密码验证耗时: {verify_time:.3f}秒")
+        
+        # 生成 JWT token（sub 必须是字符串）
+        token_start = time.time()
+        access_token = create_access_token(data={"sub": str(user.user_id)})
+        token_time = time.time() - token_start
+        print(f"⏱️ [Login API] Token 生成耗时: {token_time:.3f}秒")
+        
+        total_time = time.time() - start_time
+        print(f"✅ [Login API] 登录成功: user_id={user.user_id}, 总耗时: {total_time:.3f}秒")
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user_id=user.user_id
         )
-    
-    if not user:
+    except HTTPException:
+        # 重新抛出 HTTP 异常
+        raise
+    except Exception as e:
+        total_time = time.time() - start_time
+        print(f"❌ [Login API] 登录异常: {str(e)}, 总耗时: {total_time:.3f}秒")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="用户ID/邮箱或密码错误"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"登录失败: {str(e)}"
         )
-    
-    # 验证密码
-    if not verify_password(request.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="用户ID/邮箱或密码错误"
-        )
-    
-    # 生成 JWT token（sub 必须是字符串）
-    access_token = create_access_token(data={"sub": str(user.user_id)})
-    
-    return TokenResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user_id=user.user_id
-    )
 
 
 @router.get("/me", response_model=UserResponse)

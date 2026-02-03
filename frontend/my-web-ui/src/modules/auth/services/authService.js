@@ -26,10 +26,55 @@ authApi.interceptors.request.use(
     } else {
       console.log('⚠️ [authApi] No access token found in localStorage')
     }
+    
+    // 记录请求开始时间（用于性能监控）
+    config.metadata = { startTime: new Date() }
+    console.log(`📤 [authApi] 请求开始: ${config.method?.toUpperCase()} ${config.url}`)
+    
     return config
   },
   (error) => {
     console.error('❌ [authApi] Request Error:', error)
+    return Promise.reject(error)
+  }
+)
+
+// 🔧 添加响应拦截器：记录请求耗时和错误详情
+authApi.interceptors.response.use(
+  (response) => {
+    const endTime = new Date()
+    const startTime = response.config.metadata?.startTime
+    if (startTime) {
+      const duration = endTime - startTime
+      console.log(`📥 [authApi] 请求完成: ${response.config.method?.toUpperCase()} ${response.config.url}, 耗时: ${duration}ms`)
+      
+      // 如果请求耗时超过 5 秒，记录警告
+      if (duration > 5000) {
+        console.warn(`⚠️ [authApi] 请求耗时较长: ${duration}ms`)
+      }
+    }
+    return response
+  },
+  (error) => {
+    const endTime = new Date()
+    const startTime = error.config?.metadata?.startTime
+    if (startTime) {
+      const duration = endTime - startTime
+      console.error(`❌ [authApi] 请求失败: ${error.config?.method?.toUpperCase()} ${error.config?.url}, 耗时: ${duration}ms`)
+      
+      // 详细记录超时错误
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        console.error(`⏱️ [authApi] 请求超时详情:`, {
+          url: error.config?.url,
+          method: error.config?.method,
+          timeout: error.config?.timeout,
+          duration: duration,
+          message: error.message
+        })
+      }
+    } else {
+      console.error(`❌ [authApi] 请求失败:`, error)
+    }
     return Promise.reject(error)
   }
 )

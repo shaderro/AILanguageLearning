@@ -33,9 +33,13 @@ class DatabaseManager:
                     pool_recycle=3600,  # 1小时后回收连接
                     connect_args={
                         "connect_timeout": 10,  # 连接超时 10 秒
+                        "options": "-c statement_timeout=25000ms"  # 查询超时 25 秒（略小于前端 30 秒超时）
+                    },
+                    execution_options={
+                        "timeout": 25  # SQLAlchemy 查询超时 25 秒
                     }
                 )
-                print(f"[OK] 创建 PostgreSQL 数据库引擎（环境: {self.environment}）")
+                print(f"[OK] 创建 PostgreSQL 数据库引擎（环境: {self.environment}，查询超时: 25秒）")
             else:
                 # SQLite 配置（本地开发）
                 db_path = DB_FILES.get(
