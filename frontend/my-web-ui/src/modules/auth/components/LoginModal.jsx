@@ -72,6 +72,8 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassw
       title={t('登录')}
       subtitle={t('欢迎回来！请登录您的账号')}
       size="sm"
+      closeOnOverlay={false}
+      closeOnEscape={false}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <BaseInput

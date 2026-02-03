@@ -132,6 +132,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
         title={t('注册成功！')}
         subtitle={t('您的账号已创建')}
         size="sm"
+        closeOnOverlay={false}
+        closeOnEscape={false}
       >
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-4 text-center">
@@ -150,21 +152,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
             <BaseButton onClick={handleCloseSuccess} fullWidth>
               {t('开始使用')}
             </BaseButton>
-            <BaseButton
-              variant="secondary"
-              fullWidth
-              onClick={() => {
-                handleCloseSuccess()
-                onSwitchToLogin()
-              }}
-            >
-              {t('前往登录')}
-            </BaseButton>
           </div>
-
-          <p className="text-center text-xs text-gray-500">
-            {t('💡 提示：已自动登录，点击"开始使用"即可体验')}
-          </p>
         </div>
       </BaseModal>
     )
@@ -177,6 +165,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       title={t('注册')}
       subtitle={t('创建新账号开始学习')}
       size="sm"
+      closeOnOverlay={false}
+      closeOnEscape={false}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <BaseInput

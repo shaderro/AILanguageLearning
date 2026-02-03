@@ -12,7 +12,7 @@ class VocabExplanationAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
             sys_prompt=vocab_explanation_sys_prompt,
-            max_tokens=2000,  # 🔧 增加到 2000，避免解释被截断
+            max_tokens=4000,  # 🔧 增加到 4000，避免解释被截断（中文解释可能较长）
             parse_json=True  # 词汇解释需要 JSON 解析
         )
 

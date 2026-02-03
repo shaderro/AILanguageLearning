@@ -128,7 +128,9 @@ function AppContent() {
   const handleLogout = () => {
     logout()
     console.log('👋 [App] 已登出，数据将自动清空')
-    // 不需要刷新页面，组件会自动响应 isAuthenticated 变化
+    // 🔧 退出后直接回到未登录 Landing 页面
+    setShowProfilePage(false)
+    navigateToLanding()
   }
 
   const navButton = (id, label) => {

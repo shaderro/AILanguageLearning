@@ -19,6 +19,7 @@ export function BaseModal({
   footer,
   size = 'md',
   closeOnOverlay = true,
+  closeOnEscape = true,
   className,
   style,
 }) {
@@ -31,7 +32,7 @@ export function BaseModal({
     }
 
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && closeOnEscape) {
         onClose?.();
       }
     };
@@ -44,7 +45,7 @@ export function BaseModal({
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = overflow;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, closeOnEscape]);
 
   if (!isOpen || typeof document === 'undefined') {
     return null;
