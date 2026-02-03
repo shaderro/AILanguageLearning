@@ -197,15 +197,22 @@ function AppContent() {
               {/* 语言切换下拉选项 - 全局显示 */}
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <label htmlFor="language-select" className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
-                  {t('语言:')}
+                  {t('正在学习')}
                 </label>
                 <select
                   id="language-select"
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  value={!isAuthenticated || !selectedLanguage ? '' : selectedLanguage}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setSelectedLanguage(e.target.value)
+                    }
+                  }}
                   className="px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white text-gray-900"
                   style={{ '--tw-ring-color': colors.primary[300] }}
                 >
+                  {(!isAuthenticated || !selectedLanguage) && (
+                    <option value="" disabled hidden>{t('请选择')}</option>
+                  )}
                   <option value="中文">{t('中文')}</option>
                   <option value="英文">{t('英文')}</option>
                   <option value="德文">{t('德文')}</option>
@@ -292,6 +299,7 @@ function AppContent() {
                 onNavigateToArticles={handleLandingViewAll}
                 onStartVocabReview={handleStartVocabReview}
                 onStartGrammarReview={handleStartGrammarReview}
+                onRegister={() => setShowRegisterModal(true)}
               />
             </div>
           )}
@@ -318,11 +326,16 @@ function AppContent() {
                     }
                   })
                 }}
-                onUploadComplete={(articleId) => {
+                onUploadComplete={(articleId, uploadLanguage) => {
                   // 🔧 上传完成后，直接跳转到新文章（不再先返回列表）
-                  console.log('🔄 [App] 上传完成，准备跳转到新文章，articleId:', articleId)
+                  console.log('🔄 [App] 上传完成，准备跳转到新文章，articleId:', articleId, 'uploadLanguage:', uploadLanguage)
                   
                   if (articleId) {
+                    // 🔧 若上传语言与上边栏语言不同，自动覆盖上边栏语言（用户体验：上传什么语言就看什么语言）
+                    if (uploadLanguage && uploadLanguage !== selectedLanguage) {
+                      console.log('🌐 [App] 覆盖上边栏语言:', selectedLanguage, '->', uploadLanguage)
+                      setSelectedLanguage(uploadLanguage)
+                    }
                     // 🔧 直接跳转到新文章，不返回列表
                     setIsUploadMode(false)
                     // 🔧 先刷新文章列表（在后台），然后立即跳转

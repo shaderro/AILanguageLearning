@@ -8,7 +8,7 @@ import { useUIText } from '../../../i18n/useUIText'
 // 文章长度限制（字符数）
 const MAX_ARTICLE_LENGTH = 5000
 
-const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) => {
+const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, onBack }) => {
   const { userId, isGuest } = useUser()
   const [dragActive, setDragActive] = useState(false)
   const [uploadMethod, setUploadMethod] = useState(null) // 'url', 'file', 'drop', 'text'
@@ -17,6 +17,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
   const [textTitle, setTextTitle] = useState('')
   const [language, setLanguage] = useState('') // 语言：中文、英文、德文
   const [customTitle, setCustomTitle] = useState('') // 自定义文章名（用于URL和文件上传）
+  const [selectedFile, setSelectedFile] = useState(null) // 选中的文件（来自选择或拖拽）
+  const [selectedFileSource, setSelectedFileSource] = useState(null) // 'file' | 'drop'
   const fileInputRef = useRef(null)
   
   // 长度超限对话框状态
@@ -81,7 +83,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
     // 🔧 调用完成回调，传递文章ID
     if (onUploadComplete) {
       console.log('📞 [Upload] 调用 onUploadComplete，articleId:', articleId)
-      onUploadComplete(articleId)
+      // 同时传递本次上传选择的语言，供父组件同步上边栏语言并跳转
+      onUploadComplete(articleId, language)
     } else {
       console.warn('⚠️ [Upload] onUploadComplete 回调未提供')
     }
@@ -120,11 +123,20 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
       
       let response
       if (type === 'file' || type === 'drop') {
-        // 对于文件，需要创建一个新的 Blob
-        const blob = new Blob([truncatedContent], { type: 'text/plain' })
-        const truncatedFile = new File([blob], file.name, { type: file.type })
-        const articleTitle = customTitle.trim() || title || file.name.replace(/\.[^/.]+$/, "")
-        response = await apiService.uploadFile(truncatedFile, articleTitle, language)
+        const fileName = file?.name || ''
+        const fileExtension = '.' + fileName.split('.').pop().toLowerCase()
+        const isPdf = fileExtension === '.pdf' || file?.type === 'application/pdf'
+        const articleTitle = customTitle.trim() || title || fileName.replace(/\.[^/.]+$/, "")
+
+        if (isPdf) {
+          // PDF 超长时，与 URL 一致：直接上传截取后的纯文本（跳过长度检查）
+          response = await apiService.uploadText(truncatedContent, articleTitle, language, true)
+        } else {
+          // 对于纯文本文件，仍然走文件上传
+          const blob = new Blob([truncatedContent], { type: 'text/plain' })
+          const truncatedFile = new File([blob], fileName, { type: 'text/plain' })
+          response = await apiService.uploadFile(truncatedFile, articleTitle, language)
+        }
       } else if (type === 'text') {
         response = await apiService.uploadText(truncatedContent, title || 'Text Article', language)
       } else if (type === 'url') {
@@ -182,6 +194,151 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
     }
   }
 
+  // 统一的文件上传入口：从 selectedFile 启动真正的上传流程
+  const startFileUpload = async (file, sourceType = 'file') => {
+    if (!file) {
+      alert(t('请先选择或拖入文件'))
+      return
+    }
+
+    console.log('📁 [Upload] Starting file upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      sourceType,
+    })
+
+    // 基本验证
+    const validExtensions = ['.txt', '.md', '.pdf']
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
+    if (!validExtensions.includes(fileExtension)) {
+      alert(
+        t('不支持的文件格式: {ext}。请上传 .txt、.md 或 .pdf 文件。').replace('{ext}', fileExtension)
+      )
+      return
+    }
+
+    try {
+      // 检查语言是否已选择
+      if (!language) {
+        alert(t('请选择文章语言'))
+        return
+      }
+
+      const baseTitle = file.name.replace(/\.[^/.]+$/, '')
+
+      // 仅对纯文本文件在前端预检查长度；PDF 让后端提取后再检查
+      if (fileExtension === '.txt' || fileExtension === '.md') {
+        const fileContent = await file.text()
+        const canProceed = await checkAndHandleLength(
+          fileContent,
+          sourceType,
+          file,
+          baseTitle
+        )
+        if (!canProceed) {
+          return // 等待用户在长度对话框中选择
+        }
+      }
+
+      console.log('🚀 [Frontend] 发送文件上传请求...', {
+        name: file.name,
+        sourceType,
+      })
+      setShowProgress(true)
+      onUploadStart && onUploadStart()
+      setUploadMethod(sourceType)
+
+      // 使用统一的apiService（自动添加认证头）
+      const articleTitle = customTitle.trim() || baseTitle
+      const response = await apiService.uploadFile(file, articleTitle, language)
+
+      console.log('📥 [Frontend] 文件上传响应:', response)
+
+      // 检查响应状态（响应拦截器已经返回了response.data，所以response就是{status, data, error}格式）
+      if (response && response.status === 'error') {
+        // 检查是否是长度超限错误
+        const errorData = response.data
+        if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
+          console.log('⚠️ [Frontend] 检测到长度超限错误，显示对话框')
+          setShowProgress(false)
+          // 优先通知父组件显示对话框（避免 UploadInterface 在上传过程中卸载导致对话框丢失）
+          if (onLengthExceeded) {
+            onUploadStart && onUploadStart(false)
+            onLengthExceeded({
+              type: sourceType,
+              file,
+              content: errorData.original_content,
+              title: articleTitle,
+              language,
+            })
+            return
+          }
+
+          // fallback：本组件内对话框
+          setPendingContent({
+            type: sourceType,
+            file,
+            content: errorData.original_content,
+            title: articleTitle,
+          })
+          setShowLengthDialog(true)
+          return
+        }
+
+        // 其他错误
+        setShowProgress(false)
+        const errorMessage = response.error || '未知错误'
+        alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
+        return
+      }
+
+      // 上传成功后，处理响应
+      if (response && (response.success || response.status === 'success')) {
+        handleUploadSuccess(response.data || response)
+        // 清空已选择文件
+        setSelectedFile(null)
+        setSelectedFileSource(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+    } catch (error) {
+      console.error('❌ [Frontend] 文件上传失败:', error)
+      setShowProgress(false)
+
+      // 检查是否是长度超限错误（网络错误等情况）
+      const errorData = error.response?.data?.data
+      if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
+        if (onLengthExceeded) {
+          onUploadStart && onUploadStart(false)
+          onLengthExceeded({
+            type: sourceType,
+            file,
+            content: errorData.original_content,
+            title: customTitle.trim() || file.name.replace(/\.[^/.]+$/, ''),
+            language,
+          })
+          return
+        }
+
+        // fallback：本组件内对话框
+        setPendingContent({
+          type: sourceType,
+          file,
+          content: errorData.original_content,
+          title: file.name.replace(/\.[^/.]+$/, ''),
+        })
+        setShowLengthDialog(true)
+        return
+      }
+
+      const errorMessage =
+        error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+      alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
+    }
+  }
+
   const handleDrag = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -200,92 +357,20 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0]
       console.log('📁 [Upload] File dropped:', file.name, 'size:', file.size, 'type:', file.type)
-      setUploadMethod('drop')
-      
-      // 验证文件类型
-      const validExtensions = ['.txt', '.md']
+
+      // 验证文件类型（仅用于预先过滤明显错误）
+      const validExtensions = ['.txt', '.md', '.pdf']
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
       if (!validExtensions.includes(fileExtension)) {
-        alert(t('不支持的文件格式: {ext}。请上传 .txt 或 .md 文件。').replace('{ext}', fileExtension))
+        alert(
+          t('不支持的文件格式: {ext}。请上传 .txt、.md 或 .pdf 文件。').replace('{ext}', fileExtension)
+        )
         return
       }
-      
-      try {
-        // 检查语言是否已选择
-        if (!language) {
-          alert(t('请选择文章语言'))
-          return
-        }
-        
-        // 读取文件内容检查长度
-        const fileContent = await file.text()
-        const canProceed = await checkAndHandleLength(fileContent, 'drop', file, file.name.replace(/\.[^/.]+$/, ""))
-        
-        if (!canProceed) {
-          return // 等待用户选择
-        }
-        
-        console.log('🚀 [Frontend] 发送拖拽文件上传请求...')
-        setShowProgress(true)
-        onUploadStart && onUploadStart()
-        
-        // 使用统一的apiService（自动添加认证头）
-        const articleTitle = customTitle.trim() || file.name.replace(/\.[^/.]+$/, "")
-        const response = await apiService.uploadFile(file, articleTitle, language)
-        
-        console.log('📥 [Frontend] 拖拽文件上传响应:', response)
-        
-        // 检查响应状态（响应拦截器已经返回了response.data，所以response就是{status, data, error}格式）
-        if (response && response.status === 'error') {
-          // 检查是否是长度超限错误
-          const errorData = response.data
-          if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-            console.log('⚠️ [Frontend] 检测到长度超限错误，显示对话框')
-            setShowProgress(false)
-            // 显示长度超限对话框
-            setPendingContent({
-              type: 'drop',
-              file: file,
-              content: errorData.original_content,
-              title: file.name.replace(/\.[^/.]+$/, "")
-            })
-            setShowLengthDialog(true)
-            return
-          }
-          
-          // 其他错误
-          setShowProgress(false)
-          const errorMessage = response.error || '未知错误'
-          alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
-          return
-        }
-        
-        // 上传成功后，处理响应
-        // 🔧 修复：检查 response.status === 'success' 或 response.success
-        if (response && (response.success || response.status === 'success')) {
-          handleUploadSuccess(response.data || response)
-        }
-      } catch (error) {
-        console.error('❌ [Frontend] 拖拽文件上传失败:', error)
-        setShowProgress(false)
-        
-        // 检查是否是长度超限错误（网络错误等情况）
-        const errorData = error.response?.data?.data
-        if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-          // 显示长度超限对话框
-          setPendingContent({
-            type: 'drop',
-            file: file,
-            content: errorData.original_content,
-            title: file.name.replace(/\.[^/.]+$/, "")
-          })
-          setShowLengthDialog(true)
-          return
-        }
-        
-        const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
-        alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
-      }
+
+      // 仅记录已选择文件，真正上传由"从文件上传"按钮触发
+      setSelectedFile(file)
+      setSelectedFileSource('drop')
     }
   }
 
@@ -293,103 +378,35 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       console.log('📁 [Upload] File selected:', file.name, 'size:', file.size, 'type:', file.type)
-      setUploadMethod('file')
-      
-      // 验证文件类型
-      const validExtensions = ['.txt', '.md']
+      // 验证文件类型（仅用于预先过滤明显错误）
+      const validExtensions = ['.txt', '.md', '.pdf']
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
       if (!validExtensions.includes(fileExtension)) {
-        alert(t('不支持的文件格式: {ext}。请上传 .txt 或 .md 文件。').replace('{ext}', fileExtension))
+        alert(
+          t('不支持的文件格式: {ext}。请上传 .txt、.md 或 .pdf 文件。').replace('{ext}', fileExtension)
+        )
         // 清空文件选择
         e.target.value = ''
         return
       }
-      
-      try {
-        // 检查语言是否已选择
-        if (!language) {
-          alert(t('请选择文章语言'))
-          e.target.value = ''
-          return
-        }
-        
-        // 读取文件内容检查长度
-        const fileContent = await file.text()
-        const canProceed = await checkAndHandleLength(fileContent, 'file', file, file.name.replace(/\.[^/.]+$/, ""))
-        
-        if (!canProceed) {
-          // 等待用户选择，不清空文件选择
-          return
-        }
-        
-        console.log('🚀 [Frontend] 发送文件上传请求...')
-        setShowProgress(true)
-        onUploadStart && onUploadStart()
-        
-        // 使用统一的apiService（自动添加认证头）
-        const articleTitle = customTitle.trim() || file.name.replace(/\.[^/.]+$/, "")
-        const response = await apiService.uploadFile(file, articleTitle, language)
-        
-        console.log('📥 [Frontend] 文件上传响应:', response)
-        
-        // 检查响应状态（响应拦截器已经返回了response.data，所以response就是{status, data, error}格式）
-        if (response && response.status === 'error') {
-          // 检查是否是长度超限错误
-          const errorData = response.data
-          if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-            console.log('⚠️ [Frontend] 检测到长度超限错误，显示对话框')
-            setShowProgress(false)
-            // 显示长度超限对话框
-            setPendingContent({
-              type: 'file',
-              file: file,
-              content: errorData.original_content,
-              title: file.name.replace(/\.[^/.]+$/, "")
-            })
-            setShowLengthDialog(true)
-            return
-          }
-          
-          // 其他错误
-          setShowProgress(false)
-          const errorMessage = response.error || '未知错误'
-          alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
-          e.target.value = ''
-          return
-        }
-        
-        // 上传成功后，处理响应
-        // 🔧 修复：检查 response.status === 'success' 或 response.success
-        if (response && (response.success || response.status === 'success')) {
-          handleUploadSuccess(response.data || response)
-        }
-        
-        // 清空文件选择，允许再次选择同一文件
-        e.target.value = ''
-      } catch (error) {
-        console.error('❌ [Frontend] 文件上传失败:', error)
-        setShowProgress(false)
-        
-        // 检查是否是长度超限错误（网络错误等情况）
-        const errorData = error.response?.data?.data
-        if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-          // 显示长度超限对话框
-          setPendingContent({
-            type: 'file',
-            file: file,
-            content: errorData.original_content,
-            title: file.name.replace(/\.[^/.]+$/, "")
-          })
-          setShowLengthDialog(true)
-          return
-        }
-        
-        const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
-        alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
-        // 清空文件选择
-        e.target.value = ''
-      }
+
+      // 仅记录已选择文件，真正上传由"从文件上传"按钮触发
+      setSelectedFile(file)
+      setSelectedFileSource('file')
     }
+  }
+
+  // 统一的文件上传按钮点击处理
+  const handleFileUploadClick = async () => {
+    if (!selectedFile) {
+      alert(t('请先选择文件或拖拽上传文件'))
+      return
+    }
+    if (!language) {
+      alert(t('请先选择上传文章的语言'))
+      return
+    }
+    await startFileUpload(selectedFile, selectedFileSource || 'file')
   }
 
   const handleUrlSubmit = async (e) => {
@@ -679,7 +696,18 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
     <>
       {lengthDialog}
       <div className="flex-1 min-w-0 flex flex-col gap-4 bg-white p-6 rounded-lg shadow-md overflow-y-auto h-full">
-        <h2 className="text-xl font-semibold text-gray-800">{t('上传新文章')}</h2>
+        {/* 标题行：返回按钮左对齐，标题居中 */}
+        <div className="relative flex items-center">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-2 py-1 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-50"
+            >
+              <span className="text-lg font-semibold">&lt;</span>
+            </button>
+          )}
+          <h2 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-semibold text-gray-800">{t('上传新文章')}</h2>
+        </div>
       
       {/* Language Selection - 在所有上传方式上方 */}
       <div className="w-full max-w-md mx-auto mb-4">
@@ -722,7 +750,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
             <button
               type="submit"
               disabled={!language}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              title={!language ? t('请先选择上传文章的语言') : ''}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('从网址上传')}
             </button>
@@ -736,7 +765,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
           <div className="flex-1 border-t border-gray-300"></div>
         </div>
 
-        {/* Upload File */}
+        {/* Upload File - 合并选择和拖拽 */}
         <div className="w-full max-w-md">
           <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">{t('上传文件')}</h3>
           <div className="space-y-3">
@@ -747,69 +776,74 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
               placeholder={t('自定义文章名（选填）')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
-            <button
+            {/* 合并的拖拽和选择区域 */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                dragActive 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
               onClick={triggerFileInput}
-              disabled={!language}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {t('选择文件')}
-            </button>
+              <div className="space-y-2">
+                <svg 
+                  className="mx-auto h-10 w-10 text-gray-400" 
+                  stroke="currentColor" 
+                  fill="none" 
+                  viewBox="0 0 48 48"
+                >
+                  <path 
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" 
+                    strokeWidth={2} 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                  />
+                </svg>
+                {selectedFile ? (
+                  <div className="text-gray-700">
+                    <p className="font-medium">{t('已选择文件')}:</p>
+                    <p className="text-sm break-all">{selectedFile.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {(selectedFile.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-gray-600">
+                    <span className="font-medium">{t('将文件拖到此处')}</span>
+                    <p className="text-sm">{t('或点击选择')}</p>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  {t('支持：TXT、MD、PDF、DOC、DOCX')}
+                </p>
+              </div>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.md,.pdf,.doc,.docx"
+              accept=".txt,.md,.pdf"
               onChange={handleFileSelect}
               className="hidden"
             />
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center w-full max-w-md">
-          <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-gray-500 text-sm">{t('或')}</span>
-          <div className="flex-1 border-t border-gray-300"></div>
-        </div>
-
-        {/* Drop File */}
-        <div className="w-full max-w-md">
-          <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">{t('拖拽文件')}</h3>
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              !language
-                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
-                : dragActive 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onDragEnter={!language ? undefined : handleDrag}
-            onDragLeave={!language ? undefined : handleDrag}
-            onDragOver={!language ? undefined : handleDrag}
-            onDrop={!language ? undefined : handleDrop}
-            title={!language ? t('请先选择语言') : ''}
-          >
-            <div className="space-y-2">
-              <svg 
-                className="mx-auto h-12 w-12 text-gray-400" 
-                stroke="currentColor" 
-                fill="none" 
-                viewBox="0 0 48 48"
-              >
-                <path 
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" 
-                  strokeWidth={2} 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                />
-              </svg>
-              <div className="text-gray-600">
-                <span className="font-medium">{t('将文件拖到此处')}</span>
-                <p className="text-sm">{t('或点击选择')}</p>
-              </div>
-              <p className="text-xs text-gray-500">
-                {t('支持：TXT、MD、PDF、DOC、DOCX')}
-              </p>
-            </div>
+            {/* 统一的文件上传按钮 */}
+            <button
+              onClick={handleFileUploadClick}
+              disabled={!selectedFile || !language}
+              title={
+                !language 
+                  ? t('请先选择上传文章的语言') 
+                  : !selectedFile 
+                    ? t('请先选择文件或拖拽上传文件') 
+                    : ''
+              }
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {t('从文件上传')}
+            </button>
           </div>
         </div>
 
@@ -842,7 +876,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete }) 
             <button
               type="submit"
               disabled={!textContent.trim() || !language}
-              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              title={!language ? t('请先选择上传文章的语言') : (!textContent.trim() ? t('请输入文章内容') : '')}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('处理文本')}
             </button>

@@ -1,9 +1,11 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useUser } from '../contexts/UserContext'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useUiLanguage } from '../contexts/UiLanguageContext'
 import { useArticles, useVocabList, useGrammarList } from '../hooks/useApi'
 import { useUIText } from '../i18n/useUIText'
 import { apiService } from '../services/api'
+import { colors } from '../design-tokens'
 import ArticlePreviewCardLanding from '../components/features/article/ArticlePreviewCardLanding'
 import QuickReviewCard from '../components/features/review/QuickReviewCard'
 
@@ -97,9 +99,11 @@ const LandingPage = ({
   onNavigateToArticles,
   onStartVocabReview,
   onStartGrammarReview,
+  onRegister,
 }) => {
   const { userId, isGuest, isAuthenticated } = useUser()
   const { selectedLanguage } = useLanguage()
+  const { uiLanguage, setUiLanguage } = useUiLanguage()
   const t = useUIText()
 
   const effectiveUserId = isAuthenticated ? userId : null
@@ -220,7 +224,42 @@ const LandingPage = ({
   }, [grammarResponse, isAuthenticated])
 
   if (!isAuthenticated) {
-    return <div className="min-h-[calc(100vh-64px)] bg-white" />
+    return (
+      <div className="py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-10">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('准备好开始学习了吗？')}</h1>
+            <p className="text-gray-600">{t('开启你的语言学习之旅')}</p>
+          </div>
+          
+          {onRegister && (
+            <div className="flex flex-col items-center">
+              <button
+                onClick={onRegister}
+                className="px-8 py-3 text-lg font-semibold text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                style={{
+                  backgroundColor: colors.primary[500],
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = colors.primary[600]
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = colors.primary[500]
+                }}
+              >
+                {t('立即注册')}
+              </button>
+              <button
+                onClick={() => setUiLanguage(uiLanguage === 'zh' ? 'en' : 'zh')}
+                className="mt-4 text-sm text-gray-500 hover:text-gray-700 transition-colors underline bg-transparent border-none cursor-pointer"
+              >
+                中文 / Eng
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   const hasArticles = articles.length > 0

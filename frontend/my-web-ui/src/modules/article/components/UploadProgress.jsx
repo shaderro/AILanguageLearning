@@ -42,24 +42,15 @@ const UploadProgress = ({ onComplete, articleId = null }) => {
       return () => clearInterval(fastInterval)
     }
 
-    // 模拟进度动画（当没有 articleId 时，说明还在上传中）
+    // 🔧 当没有 articleId 时：只模拟推进到最后一步，然后“停住等待”
+    // 不要在 articleId 为空时触发 onComplete(null)，否则会导致上传未完成就返回列表。
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => {
         if (prev < steps.length - 1) {
           return prev + 1
         } else {
           clearInterval(stepInterval)
-          // 完成所有步骤后显示成功动效
-          setTimeout(() => {
-            setIsComplete(true)
-            setTimeout(() => {
-              setShowSuccess(true)
-              // 成功动效结束后调用完成回调
-              setTimeout(() => {
-                onComplete && onComplete(articleId)
-              }, 1500)
-            }, 500)
-          }, 800)
+          // 到达最后一步后停住，等待 articleId 变为非空（由父组件传入）
           return prev
         }
       })

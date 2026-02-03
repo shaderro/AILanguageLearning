@@ -10,6 +10,14 @@ from datetime import datetime, timedelta
 import os
 import sys
 
+# Windows 控制台默认可能是 GBK，遇到 emoji 等字符会触发 UnicodeEncodeError。
+# 这里尽量把 stdout/stderr 统一为 UTF-8，避免服务启动/运行时崩溃。
+try:
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+except Exception:
+    pass
+
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..', '..', '..'))
 BACKEND_DIR = os.path.join(REPO_ROOT, 'backend')
@@ -34,12 +42,14 @@ from utils import create_success_response, create_error_response
 try:
     from backend.preprocessing.article_processor import process_article, save_structured_data
     from backend.preprocessing.html_extractor import extract_main_text_from_url
+    from backend.preprocessing.pdf_extractor import extract_text_from_pdf_bytes
     print("[OK] 使用简单文章处理器 (无AI依赖)")
 except ImportError as e:
     print(f"Warning: Could not import article_processor: {e}")
     process_article = None
     save_structured_data = None
     extract_main_text_from_url = None
+    extract_text_from_pdf_bytes = None
 
 # 导入 asked tokens manager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
@@ -2320,7 +2330,7 @@ async def upload_file(
     """
     上传文件并进行预处理（需要认证）
     
-    - **file**: 上传的文件（支持 .txt, .md 格式）
+    - **file**: 上传的文件（支持 .txt, .md, .pdf 格式）
     - **title**: 文章标题（可选）
     - **language**: 语言（中文、英文、德文），必填
     
@@ -2336,13 +2346,19 @@ async def upload_file(
         
         # 读取文件内容
         content = await file.read()
-        
+        filename = (file.filename or "").lower()
+
         # 根据文件类型处理内容
-        if file.filename.endswith('.txt') or file.filename.endswith('.md'):
-            text_content = content.decode('utf-8')
-        elif file.filename.endswith('.pdf'):
-            # TODO: 添加PDF处理
-            return create_error_response("PDF处理功能暂未实现")
+        if filename.endswith(".txt") or filename.endswith(".md"):
+            # 尽量不因编码问题失败
+            text_content = content.decode("utf-8", errors="replace")
+        elif filename.endswith(".pdf"):
+            if not extract_text_from_pdf_bytes:
+                return create_error_response("PDF 提取器未初始化（extract_text_from_pdf_bytes 不可用）")
+            print("🔍 [Upload] 使用 PDF 提取器从文件提取正文...")
+            text_content = extract_text_from_pdf_bytes(content) or ""
+            if not text_content.strip():
+                return create_error_response("无法从 PDF 提取正文内容（可能是扫描版/图片PDF）")
         else:
             return create_error_response(f"不支持的文件格式: {file.filename}")
         

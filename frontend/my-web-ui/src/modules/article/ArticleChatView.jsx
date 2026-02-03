@@ -78,6 +78,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [showUploadProgress, setShowUploadProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [uploadedArticleId, setUploadedArticleId] = useState(null) // 🔧 保存上传完成的文章ID
+  const [uploadedArticleLanguage, setUploadedArticleLanguage] = useState(null) // 🔧 保存上传完成的文章语言（用于覆盖上边栏语言）
   // 长度超限对话框状态（提升到父组件，避免子组件卸载时丢失）
   const [showLengthDialog, setShowLengthDialog] = useState(false)
   const [pendingContent, setPendingContent] = useState(null)
@@ -377,7 +378,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         console.log('✅ [Frontend] 截取后上传成功，文章ID:', articleId)
         
         // 调用完成回调，传递文章ID
-        handleUploadComplete(articleId)
+        handleUploadComplete(articleId, pendingContent?.language)
       } else {
         console.error('❌ [Frontend] 上传响应格式错误:', response)
         setShowUploadProgress(false)
@@ -391,11 +392,14 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     }
   }
 
-  const handleUploadComplete = (articleId = null) => {
-    console.log('✅ [ArticleChatView] handleUploadComplete 被调用，articleId:', articleId)
+  const handleUploadComplete = (articleId = null, uploadLanguage = null) => {
+    console.log('✅ [ArticleChatView] handleUploadComplete 被调用，articleId:', articleId, 'uploadLanguage:', uploadLanguage)
     if (articleId) {
       // 🔧 如果有 articleId，保存它并让进度条完成动画后再跳转
       setUploadedArticleId(articleId)
+      setUploadedArticleLanguage(uploadLanguage || null)
+      // 🔧 确保进度条可见，否则不会触发跳转回调（某些路径下 onUploadStart 可能未开启进度条）
+      setShowUploadProgress(true)
       // 不立即调用 onUploadComplete，让进度条完成动画
       // 进度条会在动画完成后调用 onComplete 回调
     } else {
@@ -403,7 +407,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       setUploadComplete(true)
       setShowUploadProgress(false)
       if (onUploadComplete) {
-        onUploadComplete(articleId)
+        onUploadComplete(articleId, uploadLanguage)
       }
     }
   }
@@ -415,7 +419,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     setShowUploadProgress(false)
     // 调用父组件的完成回调，传递文章ID
     if (onUploadComplete) {
-      onUploadComplete(articleId || uploadedArticleId)
+      onUploadComplete(articleId || uploadedArticleId, uploadedArticleLanguage)
     }
   }
 
@@ -611,35 +615,38 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       <>
         <div className="h-full flex flex-col">
           {/* Main Content - allow overlays to extend beyond article view */}
-          <div className="flex gap-8 flex-1 p-4 overflow-hidden min-h-0">
+          <div className={`flex gap-8 flex-1 p-4 overflow-hidden min-h-0 ${isUploadMode ? 'justify-center' : ''}`}>
             {isUploadMode ? (
-              showUploadProgress ? (
-                <UploadProgress onComplete={handleProgressComplete} articleId={uploadedArticleId} />
-              ) : (
-                <UploadInterface 
-                  onUploadStart={handleUploadStart}
-                  onLengthExceeded={(content) => {
-                    console.log('📞 [ArticleChatView] onLengthExceeded 被调用，content:', {
-                      type: content.type,
-                      url: content.url,
-                      title: content.title,
-                      language: content.language,
-                      contentLength: content.content?.length
-                    })
-                    try {
-                      // 🔧 直接更新状态，不使用 setTimeout（避免时序问题）
-                      setPendingContent(content)
-                      setShowLengthDialog(true)
-                      setShowUploadProgress(false)
-                      console.log('✅ [ArticleChatView] 状态已更新，showLengthDialog: true, pendingContent:', !!content)
-                    } catch (err) {
-                      console.error('❌ [ArticleChatView] onLengthExceeded 执行失败:', err)
-                      console.error('❌ [ArticleChatView] 错误堆栈:', err.stack)
-                    }
-                  }}
-                  onUploadComplete={handleUploadComplete}
-                />
-              )
+              <div className="w-1/2 flex justify-center">
+                {showUploadProgress ? (
+                  <UploadProgress onComplete={handleProgressComplete} articleId={uploadedArticleId} />
+                ) : (
+                  <UploadInterface 
+                    onUploadStart={handleUploadStart}
+                    onLengthExceeded={(content) => {
+                      console.log('📞 [ArticleChatView] onLengthExceeded 被调用，content:', {
+                        type: content.type,
+                        url: content.url,
+                        title: content.title,
+                        language: content.language,
+                        contentLength: content.content?.length
+                      })
+                      try {
+                        // 🔧 直接更新状态，不使用 setTimeout（避免时序问题）
+                        setPendingContent(content)
+                        setShowLengthDialog(true)
+                        setShowUploadProgress(false)
+                        console.log('✅ [ArticleChatView] 状态已更新，showLengthDialog: true, pendingContent:', !!content)
+                      } catch (err) {
+                        console.error('❌ [ArticleChatView] onLengthExceeded 执行失败:', err)
+                        console.error('❌ [ArticleChatView] 错误堆栈:', err.stack)
+                      }
+                    }}
+                    onUploadComplete={handleUploadComplete}
+                    onBack={onBack}
+                  />
+                )}
+              </div>
             ) : (
               <div className="flex-1 flex flex-col min-h-0 relative">
                 {/* Buttons above article view */}
@@ -721,30 +728,33 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                 </ArticleCanvas>
               </div>
             )}
-            <ChatView 
-              key={`chatview-${articleId}`}  // 🔧 添加稳定的 key，防止不必要的重新挂载
-              quotedText={quotedText}
-              onClearQuote={handleClearQuote}
-              disabled={isUploadMode && !uploadComplete}
-              hasSelectedToken={hasSelectedToken}
-              selectedTokenCount={selectedTokens.length || 1}
-              selectionContext={currentContext}
-              markAsAsked={markAsAsked}  // 保留作为备用（向后兼容）
-              createVocabNotation={createVocabNotation}  // 新API（优先使用）
-              hasSelectedSentence={hasSelectedSentence}
-              selectedSentence={selectedSentence}
-              refreshAskedTokens={refreshAskedTokens}
-              refreshGrammarNotations={refreshNotationCache}
-              articleId={articleId}
-              // 实时缓存更新函数
-              addGrammarNotationToCache={addGrammarNotationToCache}
-              addVocabNotationToCache={addVocabNotationToCache}
-              addGrammarRuleToCache={addGrammarRuleToCache}
-              addVocabExampleToCache={addVocabExampleToCache}
-              // 🔧 传递 isProcessing 状态和更新函数
-              isProcessing={isProcessing}
-              onProcessingChange={setIsProcessing}
-            />
+            {/* 上传模式下不显示 ChatView */}
+            {!isUploadMode && (
+              <ChatView 
+                key={`chatview-${articleId}`}  // 🔧 添加稳定的 key，防止不必要的重新挂载
+                quotedText={quotedText}
+                onClearQuote={handleClearQuote}
+                disabled={isUploadMode && !uploadComplete}
+                hasSelectedToken={hasSelectedToken}
+                selectedTokenCount={selectedTokens.length || 1}
+                selectionContext={currentContext}
+                markAsAsked={markAsAsked}  // 保留作为备用（向后兼容）
+                createVocabNotation={createVocabNotation}  // 新API（优先使用）
+                hasSelectedSentence={hasSelectedSentence}
+                selectedSentence={selectedSentence}
+                refreshAskedTokens={refreshAskedTokens}
+                refreshGrammarNotations={refreshNotationCache}
+                articleId={articleId}
+                // 实时缓存更新函数
+                addGrammarNotationToCache={addGrammarNotationToCache}
+                addVocabNotationToCache={addVocabNotationToCache}
+                addGrammarRuleToCache={addGrammarRuleToCache}
+                addVocabExampleToCache={addVocabExampleToCache}
+                // 🔧 传递 isProcessing 状态和更新函数
+                isProcessing={isProcessing}
+                onProcessingChange={setIsProcessing}
+              />
+            )}
           </div>
         </div>
         

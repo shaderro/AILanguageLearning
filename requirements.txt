@@ -42,3 +42,6 @@ trafilatura>=1.6.0  # 推荐：最好的 HTML 正文提取库
 readability-lxml>=0.8.1  # Fallback 1：基于 readability 的提取
 beautifulsoup4>=4.12.0  # Fallback 2：手动 HTML 解析
 lxml>=4.9.0  # BeautifulSoup 的 XML/HTML 解析器
+
+# PDF 提取依赖（纯 Python，部署友好）
+pypdf>=4.0.0
