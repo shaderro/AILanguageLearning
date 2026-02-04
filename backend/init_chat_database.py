@@ -23,43 +23,39 @@ def init_chat_database():
         # 创建 ChatMessageManagerDB 实例，会自动创建表
         manager = ChatMessageManagerDB()
         
-        # 获取数据库路径
-        db_path = manager.db_path
-        print(f"✅ 数据库路径: {db_path}")
+        # 显示数据库信息
+        db_type = 'PostgreSQL' if manager._is_postgres else 'SQLite'
+        print(f"✅ 数据库类型: {db_type}")
+        print(f"✅ 环境: {manager.environment}")
         
-        # 验证表是否存在
-        import sqlite3
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT name FROM sqlite_master 
-            WHERE type='table' AND name='chat_messages'
-        """)
-        table_exists = cursor.fetchone()
+        # 验证表是否存在（使用 SQLAlchemy）
+        from sqlalchemy import inspect
+        inspector = inspect(manager.engine)
+        table_exists = 'chat_messages' in inspector.get_table_names()
         
         if table_exists:
             print("✅ 表 chat_messages 已存在")
             
             # 检查表结构
-            cursor.execute("PRAGMA table_info(chat_messages)")
-            columns = cursor.fetchall()
+            columns = inspector.get_columns('chat_messages')
             print(f"\n📋 表结构 ({len(columns)} 个字段):")
             for col in columns:
-                col_id, name, col_type, not_null, default_val, pk = col
-                pk_str = " (主键)" if pk else ""
-                not_null_str = " NOT NULL" if not_null else ""
-                print(f"   - {name}: {col_type}{not_null_str}{pk_str}")
+                name = col['name']
+                col_type = str(col['type'])
+                nullable = "NULL" if col['nullable'] else "NOT NULL"
+                pk_str = " (主键)" if col.get('primary_key') else ""
+                print(f"   - {name}: {col_type} {nullable}{pk_str}")
             
             # 检查记录数
-            cursor.execute("SELECT COUNT(*) FROM chat_messages")
-            count = cursor.fetchone()[0]
-            print(f"\n📊 当前记录数: {count}")
+            from sqlalchemy import text
+            with manager.engine.connect() as conn:
+                result = conn.execute(text("SELECT COUNT(*) FROM chat_messages"))
+                count = result.scalar()
+                print(f"\n📊 当前记录数: {count}")
         else:
             print("❌ 表创建失败！")
             return False
         
-        conn.close()
         print("\n✅ 数据库初始化完成！")
         print("💡 现在可以发送聊天消息，系统会自动保存到数据库")
         return True

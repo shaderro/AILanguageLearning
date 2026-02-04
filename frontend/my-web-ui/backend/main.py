@@ -416,17 +416,32 @@ async def startup_event():
 @app.middleware("http")
 async def log_requests(request, call_next):
     print(f"📥 [Request] {request.method} {request.url.path}")
-    # 如果是 POST 请求，记录请求体大小
-    if request.method == "POST":
-        body = await request.body()
-        print(f"📦 [Request] Body size: {len(body)} bytes")
-        # 将 body 放回，以便后续处理
-        async def receive():
-            return {"type": "http.request", "body": body}
-        request._receive = receive
-    response = await call_next(request)
-    print(f"📤 [Response] {request.method} {request.url.path} -> {response.status_code}")
-    return response
+    # 🔧 修复：只在需要时读取请求体，并且正确处理异常
+    try:
+        # 如果是 POST 请求，尝试记录请求体大小（但不影响后续处理）
+        if request.method == "POST":
+            # 使用 stream 方式读取，避免消耗请求体
+            body_bytes = b""
+            async for chunk in request.stream():
+                body_bytes += chunk
+            if body_bytes:
+                print(f"📦 [Request] Body size: {len(body_bytes)} bytes")
+                # 🔧 修复：将 body 放回，使用正确的 ASGI receive 格式
+                async def receive():
+                    return {"type": "http.request", "body": body_bytes, "more_body": False}
+                request._receive = receive
+    except Exception as e:
+        # 🔧 如果读取请求体失败，记录但不影响后续处理
+        print(f"⚠️ [Request] 读取请求体失败: {e}")
+    
+    try:
+        response = await call_next(request)
+        print(f"📤 [Response] {request.method} {request.url.path} -> {response.status_code}")
+        return response
+    except Exception as e:
+        # 🔧 捕获并记录异常，然后重新抛出
+        print(f"❌ [Request] 处理请求时发生异常: {e}")
+        raise
 
 # 注册新的标注API路由
 if notation_router:
@@ -736,11 +751,17 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
                     print(f"⚠️ [Import] 句子 {article_id}:{sentence_id} 已存在，跳过")
                     continue
                 
+                # 获取段落信息
+                paragraph_id = sentence_data.get('paragraph_id')
+                is_new_paragraph = sentence_data.get('is_new_paragraph', False)
+                
                 # 创建句子
                 sentence = text_manager.add_sentence_to_text(
                     text_id=article_id,
                     sentence_text=sentence_body,
-                    difficulty_level=None
+                    difficulty_level=None,
+                    paragraph_id=paragraph_id,
+                    is_new_paragraph=is_new_paragraph
                 )
                 total_sentences += 1
                 

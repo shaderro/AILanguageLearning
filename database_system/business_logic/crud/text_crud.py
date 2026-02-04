@@ -3,7 +3,15 @@
 """
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-from ..models import OriginalText, Sentence
+from ..models import (
+    OriginalText,
+    Sentence,
+    VocabExpressionExample,
+    GrammarExample,
+    VocabNotation,
+    GrammarNotation,
+    UserArticleAccess,
+)
 
 
 class TextCRUD:
@@ -47,13 +55,17 @@ class TextCRUD:
         return query.all()
     
     def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
-                       difficulty_level: Optional[str] = None) -> Sentence:
+                       difficulty_level: Optional[str] = None,
+                       paragraph_id: Optional[int] = None,
+                       is_new_paragraph: Optional[bool] = None) -> Sentence:
         """创建句子"""
         sentence = Sentence(
             text_id=text_id,
             sentence_id=sentence_id,
             sentence_body=sentence_body,
-            sentence_difficulty_level=difficulty_level
+            sentence_difficulty_level=difficulty_level,
+            paragraph_id=paragraph_id,
+            is_new_paragraph=is_new_paragraph
         )
         self.session.add(sentence)
         self.session.commit()
@@ -98,11 +110,52 @@ class TextCRUD:
         return text
     
     def delete_text(self, text_id: int) -> bool:
-        """删除文章（级联删除相关句子、tokens等）"""
+        """删除文章（级联删除相关句子、tokens，以及关联的 vocab/grammar 例句）"""
         text = self.get_text_by_id(text_id)
         if not text:
             return False
-        
+
+        # 先删除与该文章关联的 vocab / grammar 例句和标注
+        # 使用防御式写法：如果删除过程中出错，只记录日志，不阻止文章本身被删除
+        try:
+            self.session.query(VocabExpressionExample).filter(
+                VocabExpressionExample.text_id == text_id
+            ).delete(synchronize_session=False)
+        except Exception as e:
+            print(f"[WARN] 删除 text_id={text_id} 的 VocabExpressionExample 失败: {e}")
+
+        try:
+            self.session.query(GrammarExample).filter(
+                GrammarExample.text_id == text_id
+            ).delete(synchronize_session=False)
+        except Exception as e:
+            print(f"[WARN] 删除 text_id={text_id} 的 GrammarExample 失败: {e}")
+
+        # 删除 vocab 标注
+        try:
+            self.session.query(VocabNotation).filter(
+                VocabNotation.text_id == text_id
+            ).delete(synchronize_session=False)
+        except Exception as e:
+            print(f"[WARN] 删除 text_id={text_id} 的 VocabNotation 失败: {e}")
+
+        # 删除 grammar 标注
+        try:
+            self.session.query(GrammarNotation).filter(
+                GrammarNotation.text_id == text_id
+            ).delete(synchronize_session=False)
+        except Exception as e:
+            print(f"[WARN] 删除 text_id={text_id} 的 GrammarNotation 失败: {e}")
+
+        # 删除用户文章访问记录（UserArticleAccess）
+        try:
+            self.session.query(UserArticleAccess).filter(
+                UserArticleAccess.text_id == text_id
+            ).delete(synchronize_session=False)
+        except Exception as e:
+            print(f"[WARN] 删除 text_id={text_id} 的 UserArticleAccess 失败: {e}")
+
+        # 最后删除文章本身（通过 ORM 关系级联删除 sentences/tokens 等）
         self.session.delete(text)
         self.session.commit()
         return True

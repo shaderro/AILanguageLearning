@@ -96,6 +96,8 @@ class SentenceResponse(BaseModel):
     sentence_difficulty_level: Optional[str] = None
     grammar_annotations: List[int] = []
     vocab_annotations: List[int] = []
+    paragraph_id: Optional[int] = None
+    is_new_paragraph: Optional[bool] = None
 
     class Config:
         from_attributes = True
@@ -377,6 +379,8 @@ async def get_text(
                         "difficulty_level": s.sentence_difficulty_level,
                         "grammar_annotations": list(s.grammar_annotations) if s.grammar_annotations else [],
                         "vocab_annotations": list(s.vocab_annotations) if s.vocab_annotations else [],
+                        "paragraph_id": getattr(s, 'paragraph_id', None),
+                        "is_new_paragraph": getattr(s, 'is_new_paragraph', None),
                         # tokens：优先使用 DTO 自带的 tokens；如果为空，则按空格简单切分 sentence_body 生成 fallback tokens
                         "tokens": (
                             [

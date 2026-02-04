@@ -18,7 +18,9 @@ class DialogueRecordBySentence:
         self.max_turns: int = 100  # 默认保留最近100条消息
         # 新增：数据库持久化 Manager（跨设备聊天记录）
         self.db_manager = ChatMessageManagerDB()
-        print(f"✅ [DialogueRecordBySentence] 数据库管理器已初始化: {self.db_manager.db_path}")
+        # 显示数据库信息（环境 + 数据库类型）
+        db_info = f"环境: {self.db_manager.environment}, 数据库: {'PostgreSQL' if self.db_manager._is_postgres else 'SQLite'}"
+        print(f"✅ [DialogueRecordBySentence] 数据库管理器已初始化: {db_info}")
 
     def add_user_message(self, sentence: SentenceType, user_input: str, selected_token: Optional[SelectedToken] = None, user_id: Optional[str] = None):
         key = (sentence.text_id, sentence.sentence_id)

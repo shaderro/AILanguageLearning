@@ -895,13 +895,33 @@ class MainAssistant:
                             # 🔧 使用 UI 语言而不是文章语言
                             output_language = self.ui_language or self.session_state.current_language or "中文"
                             print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
-                            example_explanation = self.grammar_example_explanation_assistant.run(
+                            example_explanation_raw = self.grammar_example_explanation_assistant.run(
                                 sentence=current_sentence,
                                 grammar=existing_rule,
                                 language=output_language,
                                 user_id=self._user_id, session=self._db_session
                             )
-                            print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
+                            print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
+                            
+                            # 🔧 解析 JSON 字符串，提取 explanation 字段
+                            example_explanation = None
+                            if isinstance(example_explanation_raw, str):
+                                try:
+                                    from backend.assistants.utility import parse_json_from_text
+                                    parsed = parse_json_from_text(example_explanation_raw)
+                                    if isinstance(parsed, dict) and "explanation" in parsed:
+                                        example_explanation = parsed["explanation"]
+                                    else:
+                                        example_explanation = example_explanation_raw
+                                except Exception as e:
+                                    print(f"⚠️ [DEBUG] 解析 grammar example_explanation JSON 失败: {e}，使用原始字符串")
+                                    example_explanation = example_explanation_raw
+                            elif isinstance(example_explanation_raw, dict) and "explanation" in example_explanation_raw:
+                                example_explanation = example_explanation_raw["explanation"]
+                            else:
+                                example_explanation = str(example_explanation_raw) if example_explanation_raw else None
+                            
+                            print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
                             
                             try:
                                 print(f"🔍 [DEBUG] 尝试添加现有语法的grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={existing_rule_id}")
@@ -1124,13 +1144,33 @@ class MainAssistant:
                         # 🔧 使用 UI 语言而不是文章语言
                         output_language = self.ui_language or self.session_state.current_language or "中文"
                         print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
-                        example_explanation = self.vocab_example_explanation_assistant.run(
+                        example_explanation_raw = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
                             vocab=vocab_for_context,
                             language=output_language,
                             user_id=self._user_id, session=self._db_session
                         )
-                        print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
+                        print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
+                        
+                        # 🔧 解析 JSON 字符串，提取 explanation 字段
+                        example_explanation = None
+                        if isinstance(example_explanation_raw, str):
+                            try:
+                                from backend.assistants.utility import parse_json_from_text
+                                parsed = parse_json_from_text(example_explanation_raw)
+                                if isinstance(parsed, dict) and "explanation" in parsed:
+                                    example_explanation = parsed["explanation"]
+                                else:
+                                    example_explanation = example_explanation_raw
+                            except Exception as e:
+                                print(f"⚠️ [DEBUG] 解析 example_explanation JSON 失败: {e}，使用原始字符串")
+                                example_explanation = example_explanation_raw
+                        elif isinstance(example_explanation_raw, dict) and "explanation" in example_explanation_raw:
+                            example_explanation = example_explanation_raw["explanation"]
+                        else:
+                            example_explanation = str(example_explanation_raw) if example_explanation_raw else None
+                        
+                        print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
                         
                         # 检查text_id是否存在，如果不存在则跳过添加example
                         try:
@@ -1418,13 +1458,33 @@ class MainAssistant:
                     # 🔧 使用 UI 语言而不是文章语言
                     output_language = self.ui_language or self.session_state.current_language or "中文"
                     print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
-                    example_explanation = self.grammar_example_explanation_assistant.run(
+                    example_explanation_raw = self.grammar_example_explanation_assistant.run(
                         sentence=current_sentence,
                         grammar=grammar.rule_name,
                         language=output_language,
                         user_id=self._user_id, session=self._db_session
                     )
-                    print(f"🔍 [DEBUG] grammar_example_explanation结果: {example_explanation}")
+                    print(f"🔍 [DEBUG] grammar_example_explanation原始结果: {example_explanation_raw}")
+                    
+                    # 🔧 解析 JSON 字符串，提取 explanation 字段
+                    example_explanation = None
+                    if isinstance(example_explanation_raw, str):
+                        try:
+                            from backend.assistants.utility import parse_json_from_text
+                            parsed = parse_json_from_text(example_explanation_raw)
+                            if isinstance(parsed, dict) and "explanation" in parsed:
+                                example_explanation = parsed["explanation"]
+                            else:
+                                example_explanation = example_explanation_raw
+                        except Exception as e:
+                            print(f"⚠️ [DEBUG] 解析 grammar example_explanation JSON 失败: {e}，使用原始字符串")
+                            example_explanation = example_explanation_raw
+                    elif isinstance(example_explanation_raw, dict) and "explanation" in example_explanation_raw:
+                        example_explanation = example_explanation_raw["explanation"]
+                    else:
+                        example_explanation = str(example_explanation_raw) if example_explanation_raw else None
+                    
+                    print(f"🔍 [DEBUG] grammar_example_explanation解析后: {example_explanation}")
                     
                     # 添加语法例句
                     try:
@@ -1655,12 +1715,32 @@ class MainAssistant:
                     # 🔧 使用 UI 语言而不是文章语言
                     output_language = self.ui_language or self.session_state.current_language or "中文"
                     print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
-                    example_explanation = self.vocab_example_explanation_assistant.run(
+                    example_explanation_raw = self.vocab_example_explanation_assistant.run(
                         sentence=current_sentence,
                         vocab=vocab_for_context,
                         language=output_language
                     )
-                    print(f"🔍 [DEBUG] example_explanation结果: {example_explanation}")
+                    print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
+                    
+                    # 🔧 解析 JSON 字符串，提取 explanation 字段
+                    example_explanation = None
+                    if isinstance(example_explanation_raw, str):
+                        try:
+                            from backend.assistants.utility import parse_json_from_text
+                            parsed = parse_json_from_text(example_explanation_raw)
+                            if isinstance(parsed, dict) and "explanation" in parsed:
+                                example_explanation = parsed["explanation"]
+                            else:
+                                example_explanation = example_explanation_raw
+                        except Exception as e:
+                            print(f"⚠️ [DEBUG] 解析 example_explanation JSON 失败: {e}，使用原始字符串")
+                            example_explanation = example_explanation_raw
+                    elif isinstance(example_explanation_raw, dict) and "explanation" in example_explanation_raw:
+                        example_explanation = example_explanation_raw["explanation"]
+                    else:
+                        example_explanation = str(example_explanation_raw) if example_explanation_raw else None
+                    
+                    print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
                     
                     # 检查text_id是否存在，如果不存在则跳过添加example
                     try:

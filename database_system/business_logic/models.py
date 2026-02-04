@@ -146,6 +146,8 @@ class Sentence(Base):
     sentence_difficulty_level = Column(EnumType(DifficultyLevel, length=50))
     grammar_annotations = Column(JSON)
     vocab_annotations = Column(JSON)
+    paragraph_id = Column(Integer, nullable=True)  # 段落ID，用于分段显示
+    is_new_paragraph = Column(Boolean, default=False, nullable=True)  # 是否是新段落的开始
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     __table_args__ = (

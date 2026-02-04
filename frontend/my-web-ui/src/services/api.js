@@ -271,16 +271,22 @@ api.interceptors.response.use(
         }
         
         // 单个 Text 详情 - 包含 text_id, text_title, sentences
-        if (innerData.text_id && innerData.sentences) {
-          console.log("🔍 [DEBUG] Found single text with sentences");
+        // 🔧 修复：即使 sentences 为空数组或 undefined，只要有 text_id 就应该返回完整结构
+        if (innerData.text_id !== undefined) {
+          console.log("🔍 [DEBUG] Found single text (text_id present)");
+          console.log("🔍 [DEBUG] Text data keys:", Object.keys(innerData));
+          console.log("🔍 [DEBUG] Has sentences:", !!innerData.sentences);
+          console.log("🔍 [DEBUG] Sentences type:", Array.isArray(innerData.sentences) ? 'array' : typeof innerData.sentences);
+          console.log("🔍 [DEBUG] Sentences length:", Array.isArray(innerData.sentences) ? innerData.sentences.length : 'N/A');
           // 返回包装格式，让前端可以用 response.data 访问
           return {
             data: innerData
           };
         }
         
-        if (innerData.sentences) {
-          console.log("🔍 [DEBUG] Returning sentences array");
+        // 🔧 如果只有 sentences 数组但没有 text_id，可能是单独的句子列表 API
+        if (innerData.sentences && !innerData.text_id) {
+          console.log("🔍 [DEBUG] Returning sentences array (no text_id)");
           return innerData.sentences;
         }
         
@@ -305,7 +311,51 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    console.error("❌ API Response Error:", error?.response?.status, error?.message);
+    // 🔧 改进错误日志，提供更详细的信息
+    if (error.code === 'ECONNABORTED') {
+      console.error("❌ API Response Error: Request timeout", {
+        url: error.config?.url,
+        method: error.config?.method,
+        timeout: error.config?.timeout,
+        baseURL: error.config?.baseURL
+      });
+    } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      // 🔧 减少日志噪音：只在第一次网络错误时详细记录，后续只记录简要信息
+      const errorKey = `network_error_${error.config?.url}`
+      const errorCount = (window.__networkErrorCount || {})[errorKey] || 0
+      window.__networkErrorCount = window.__networkErrorCount || {}
+      window.__networkErrorCount[errorKey] = errorCount + 1
+      
+      if (errorCount === 0) {
+        // 第一次错误，详细记录
+        console.error("❌ API Response Error: Network Error", {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL,
+          message: error.message,
+          code: error.code,
+          hint: '请检查后端服务是否运行在 ' + (error.config?.baseURL || BASE_URL)
+        });
+      } else if (errorCount < 3) {
+        // 前3次错误，简要记录
+        console.warn(`⚠️ [API] Network Error (${errorCount + 1}x): ${error.config?.method} ${error.config?.url}`)
+      }
+      // 超过3次后，不再记录日志，避免控制台被刷屏
+    } else if (error.response) {
+      // 服务器返回了错误响应
+      console.error("❌ API Response Error:", error.response.status, error.response.statusText, {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.response.data
+      });
+    } else {
+      // 其他错误
+      console.error("❌ API Response Error:", error?.response?.status, error?.message, {
+        url: error.config?.url,
+        method: error.config?.method,
+        code: error.code
+      });
+    }
     return Promise.reject(error);
   }
 );

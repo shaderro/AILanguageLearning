@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect, memo } from 'react'
+import React, { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useArticle } from '../../../hooks/useApi'
 import { useTokenSelection } from '../hooks/useTokenSelection'
@@ -1374,11 +1374,24 @@ function ArticleViewer({
           const sentenceId = sentence.sentence_id || (typeof sentence === 'object' && sentence.id)
           const isFlashing = flashingSentenceId === sentenceId
           
+          // 检查是否是新段落的开始（需要在前面添加空行）
+          // 优先使用 is_new_paragraph 字段，如果没有则通过 paragraph_id 比较判断
+          const isNewParagraph = sentence.is_new_paragraph === true || 
+            (sIdx > 0 && 
+             sentence.paragraph_id != null && 
+             sentences[sIdx - 1]?.paragraph_id != null && 
+             sentence.paragraph_id !== sentences[sIdx - 1].paragraph_id)
+          
           return (
-            <SentenceContainer
-              key={`s-${sIdx}`}
-              sentence={sentence}
-              sentenceIndex={sIdx}
+            <React.Fragment key={`s-${sIdx}`}>
+              {/* 如果是新段落，在前面添加空行 */}
+              {isNewParagraph && sIdx > 0 && (
+                <div className="h-4" aria-hidden="true" />
+              )}
+              <SentenceContainer
+                key={`s-${sIdx}`}
+                sentence={sentence}
+                sentenceIndex={sIdx}
               articleId={articleId}
               selectedTokenIds={selectedTokenIds}
               activeSentenceIndex={activeSentenceIndex}
@@ -1436,6 +1449,7 @@ function ArticleViewer({
               isTokenInsufficient={isTokenInsufficient}
               autoTranslationEnabled={autoTranslationEnabled}
             />
+            </React.Fragment>
           )
         })}
       </div>
