@@ -5,52 +5,129 @@ import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
 
-// 解析和格式化解释文本
+// 解析和格式化解释文本（与 VocabNotationCard 保持一致）
 const parseExplanation = (text) => {
   if (!text) return ''
   
-  let cleanText = text
+  let cleanText = String(text).trim()
   
-  // 1. 处理字典格式的字符串（如 "{'explanation': '...'}" 或 '{"explanation": "..."}'）
-  if (text.includes("'explanation'") || text.includes('"explanation"')) {
+  // 🔧 首先检查是否是 JSON 格式（包含大括号和 explanation 键）
+  if (cleanText.startsWith('{') && cleanText.includes('explanation')) {
+    // 方法1：尝试直接解析为 JSON（最标准的方式）
     try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[0]
-        try {
-          const parsed = JSON.parse(jsonStr)
-          cleanText = parsed.explanation || parsed.definition || text
-        } catch (e) {
-          const explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
-          if (explanationMatch) {
-            cleanText = explanationMatch[1]
-              .replace(/\\n/g, '\n')
-              .replace(/\\'/g, "'")
-              .replace(/\\"/g, '"')
-          } else {
-            const normalized = jsonStr.replace(/'/g, '"')
-            try {
-              const parsed = JSON.parse(normalized)
-              cleanText = parsed.explanation || parsed.definition || text
-            } catch (e2) {
-              cleanText = text
-            }
-          }
+      const parsed = JSON.parse(cleanText)
+      if (typeof parsed === 'object' && parsed !== null) {
+        const extracted = parsed.explanation || parsed.definition || parsed.context_explanation
+        if (extracted && extracted !== cleanText) {
+          return String(extracted).trim()
         }
       }
     } catch (e) {
-      // 解析失败，使用原始文本
+      // JSON.parse 失败，继续其他方法
+    }
+    
+    // 方法2：使用正则表达式提取 explanation 字段的值（支持多行和实际换行符）
+    // 🔧 改进：使用更智能的正则，能够处理被截断的 JSON 字符串
+    // 首先尝试匹配完整的 JSON（有闭合引号和括号）
+    let explanationMatch = cleanText.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
+    
+    // 如果失败，尝试匹配到字符串末尾（处理被截断的 JSON，比如没有闭合引号）
+    if (!explanationMatch) {
+      // 匹配 "explanation": "..." 到字符串末尾或遇到闭合引号
+      explanationMatch = cleanText.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)(?:['"]\s*[,}]|$)/s)
+    }
+    
+    // 如果还是失败，尝试更宽松的匹配：从 "explanation": " 开始到字符串末尾
+    if (!explanationMatch) {
+      const keyPattern = /['"]explanation['"]\s*:\s*['"]/
+      const keyMatch = cleanText.match(keyPattern)
+      if (keyMatch) {
+        const startPos = keyMatch.index + keyMatch[0].length
+        const value = cleanText.substring(startPos)
+        // 如果找到了值，直接使用（可能是被截断的）
+        if (value.length > 0) {
+          cleanText = value
+            .replace(/\\n/g, '\n')
+            .replace(/\\'/g, "'")
+            .replace(/\\"/g, '"')
+            .replace(/\\t/g, '\t')
+            .replace(/\\r/g, '\r')
+          // 移除末尾可能存在的引号、逗号、大括号等
+          cleanText = cleanText.replace(/['"]\s*[,}]\s*$/, '').trim()
+          return cleanText.trim()
+        }
+      }
+    }
+    
+    if (explanationMatch && explanationMatch[1]) {
+      // 直接提取 explanation 的值
+      cleanText = explanationMatch[1]
+        .replace(/\\n/g, '\n')  // 先处理已转义的换行符
+        .replace(/\\'/g, "'")   // 处理转义的单引号
+        .replace(/\\"/g, '"')   // 处理转义的双引号
+        .replace(/\\t/g, '\t')  // 处理转义的制表符
+        .replace(/\\r/g, '\r')  // 处理转义的回车符
+      return cleanText.trim()
+    }
+    
+    // 方法3：手动解析（处理包含实际换行符或特殊字符的情况，包括被截断的 JSON）
+    try {
+      // 🔧 改进：不要求完整的 JSON 对象，直接在整个字符串中查找
+      const keyPattern = /['"]explanation['"]\s*:\s*/
+      const keyMatch = cleanText.match(keyPattern)
+      if (keyMatch) {
+        const startPos = keyMatch.index + keyMatch[0].length
+        const remaining = cleanText.substring(startPos).trim()
+        // 检查是否是字符串值（以引号开始）
+        if (remaining[0] === '"' || remaining[0] === "'") {
+          const quote = remaining[0]
+          let value = ''
+          let i = 1
+          let escaped = false
+          // 🔧 改进：如果字符串被截断了（没有闭合引号），也提取所有内容
+          while (i < remaining.length) {
+            if (escaped) {
+              value += remaining[i]
+              escaped = false
+              i++
+            } else if (remaining[i] === '\\') {
+              escaped = true
+              i++
+            } else if (remaining[i] === quote) {
+              // 找到匹配的结束引号
+              break
+            } else {
+              value += remaining[i]
+              i++
+            }
+          }
+          // 🔧 如果找到了值（即使没有闭合引号），处理转义字符
+          if (value.length > 0) {
+            cleanText = value
+              .replace(/\\n/g, '\n')
+              .replace(/\\'/g, "'")
+              .replace(/\\"/g, '"')
+              .replace(/\\t/g, '\t')
+              .replace(/\\r/g, '\r')
+            // 移除末尾可能存在的引号、逗号、大括号等
+            cleanText = cleanText.replace(/['"]\s*[,}]\s*$/, '').trim()
+            return cleanText.trim()
+          }
+        }
+      }
+    } catch (e2) {
+      // 手动解析也失败，继续其他方法
     }
   }
   
   // 2. 处理代码块格式（```json ... ```）
   if (cleanText.includes('```json') && cleanText.includes('```')) {
     try {
-      const jsonMatch = cleanText.match(/```json\n(.*?)\n```/s)
+      const jsonMatch = cleanText.match(/```json\n?([\s\S]*?)\n?```/)
       if (jsonMatch) {
-        const jsonStr = jsonMatch[1]
+        const jsonStr = jsonMatch[1].trim()
         const parsed = JSON.parse(jsonStr)
-        cleanText = parsed.explanation || parsed.definition || cleanText
+        cleanText = parsed.explanation || parsed.definition || parsed.context_explanation || cleanText
       }
     } catch (e) {
       // 解析失败，继续使用 cleanText
@@ -58,9 +135,33 @@ const parseExplanation = (text) => {
   }
   
   // 3. 清理多余的转义字符和格式化
+  // 将 \n 转换为实际的换行
   cleanText = cleanText.replace(/\\n/g, '\n')
+  // 移除多余的空白行（连续两个以上的换行符）
   cleanText = cleanText.replace(/\n{3,}/g, '\n\n')
+  // 去除首尾空白
   cleanText = cleanText.trim()
+  
+  // 🔧 如果清理后的文本仍然包含明显的 JSON 结构，尝试最后一次解析
+  if (cleanText.startsWith('{') && cleanText.includes('explanation')) {
+    try {
+      const parsed = JSON.parse(cleanText)
+      if (typeof parsed === 'object' && parsed !== null) {
+        cleanText = parsed.explanation || parsed.definition || parsed.context_explanation || cleanText
+      }
+    } catch (e) {
+      // 最后尝试：将单引号替换为双引号
+      try {
+        const normalized = cleanText.replace(/'/g, '"')
+        const parsed = JSON.parse(normalized)
+        if (typeof parsed === 'object' && parsed !== null) {
+          cleanText = parsed.explanation || parsed.definition || parsed.context_explanation || cleanText
+        }
+      } catch (e2) {
+        // 解析失败，使用当前文本
+      }
+    }
+  }
   
   return cleanText
 }

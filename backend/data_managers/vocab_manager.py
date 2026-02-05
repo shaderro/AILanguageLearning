@@ -12,7 +12,7 @@ try:
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False
-    print("⚠️ 新数据结构类不可用，将使用旧结构")
+    print("[WARN] 新数据结构类不可用，将使用旧结构")
 
 class VocabManager:
     def __init__(self, use_new_structure: bool = False):
@@ -20,9 +20,9 @@ class VocabManager:
         self.use_new_structure = use_new_structure and NEW_STRUCTURE_AVAILABLE
         
         if self.use_new_structure:
-            print("✅ VocabManager: 已启用新数据结构模式")
+            print("[OK] VocabManager: 已启用新数据结构模式")
         else:
-            print("✅ VocabManager: 使用旧数据结构模式")
+            print("[OK] VocabManager: 使用旧数据结构模式")
 
     def get_new_vocab_id(self) -> int:
         if not self.vocab_bundles:
@@ -188,7 +188,7 @@ class VocabManager:
         保存数据为新结构格式（数组格式，包含 source、is_starred、token_indices 等新字段）
         """
         if not self.use_new_structure:
-            print("⚠️ 当前未使用新结构，无法保存为新格式")
+            print("[WARN] 当前未使用新结构，无法保存为新格式")
             return
             
         export_data = []
@@ -215,7 +215,7 @@ class VocabManager:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(export_data, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ 已保存 {len(export_data)} 个词汇表达到文件（数组格式）: {path}")
+        print(f"[OK] 已保存 {len(export_data)} 个词汇表达到文件（数组格式）: {path}")
     
     def load_from_file(self, path: str):
         """
@@ -313,7 +313,7 @@ class VocabManager:
                                 ))
                     self.vocab_bundles[int(vocab_id)] = VocabExpressionBundle(vocab=vocab, example=examples)
             
-            print(f"✅ 成功加载 {len(self.vocab_bundles)} 个词汇表达")
+            print(f"[OK] 成功加载 {len(self.vocab_bundles)} 个词汇表达")
             if self.use_new_structure:
                 print("📝 使用新数据结构，包含examples列表、source=qa、is_starred=False")
             else:
@@ -331,20 +331,20 @@ class VocabManager:
             bool: 切换是否成功
         """
         if not NEW_STRUCTURE_AVAILABLE:
-            print("❌ 新数据结构类不可用，无法切换")
+            print("[ERROR] 新数据结构类不可用，无法切换")
             return False
             
         if self.use_new_structure:
-            print("✅ 已经在使用新结构模式")
+            print("[OK] 已经在使用新结构模式")
             return True
             
         try:
             # 重新加载所有数据到新结构
             self.use_new_structure = True
-            print("✅ 已切换到新结构模式")
+            print("[OK] 已切换到新结构模式")
             return True
         except Exception as e:
-            print(f"❌ 切换到新结构失败: {e}")
+            print(f"[ERROR] 切换到新结构失败: {e}")
             self.use_new_structure = False
             return False
     
@@ -356,16 +356,16 @@ class VocabManager:
             bool: 切换是否成功
         """
         if not self.use_new_structure:
-            print("✅ 已经在使用旧结构模式")
+            print("[OK] 已经在使用旧结构模式")
             return True
             
         try:
             # 重新加载所有数据到旧结构
             self.use_new_structure = False
-            print("✅ 已切换回旧结构模式")
+            print("[OK] 已切换回旧结构模式")
             return True
         except Exception as e:
-            print(f"❌ 切换回旧结构失败: {e}")
+            print(f"[ERROR] 切换回旧结构失败: {e}")
             return False
     
     def get_structure_mode(self) -> str:
@@ -423,7 +423,7 @@ class VocabManager:
         if len(matching_examples) == 1:
             return matching_examples[0]
         elif len(matching_examples) > 1:
-            print(f"⚠️ [VocabManager] 找到多个匹配的例句: {len(matching_examples)} 个")
+            print(f"[WARN] [VocabManager] 找到多个匹配的例句: {len(matching_examples)} 个")
             return matching_examples[0]  # 返回第一个
         else:
             print(f"🔍 [VocabManager] 未找到匹配的例句: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")

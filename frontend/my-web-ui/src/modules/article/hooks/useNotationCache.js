@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { apiService } from '../../../services/api'
+import { logVocabNotationDebug } from '../utils/vocabNotationDebug'
 
 /**
  * 统一的Notation缓存管理器
@@ -37,6 +38,7 @@ export function useNotationCache(articleId) {
     setError(null)
 
     try {
+      logVocabNotationDebug('📥 [useNotationCache] loadAllNotations start', { textId: validTextId })
       // 并行加载grammar notations和vocab notations
       const [grammarResponse, vocabResponse] = await Promise.all([
         apiService.getGrammarNotations(validTextId),
@@ -131,6 +133,10 @@ export function useNotationCache(articleId) {
         }
         
         console.log('✅ [useNotationCache] 加载了', formattedVocabNotations.length, '个 vocab notations')
+        logVocabNotationDebug('📦 [useNotationCache] vocab notations loaded', {
+          textId: validTextId,
+          count: formattedVocabNotations.length,
+        })
         setVocabNotations(formattedVocabNotations)
         // 不再预加载所有 examples：改为按需懒加载 + 新建后单次写缓存
       } else if (vocabResponse && vocabResponse.data) {
@@ -147,10 +153,15 @@ export function useNotationCache(articleId) {
           word_token_token_ids: notation.word_token_token_ids || null, // 🔧 新增：word_token的所有token_ids（用于显示完整下划线）
           created_at: notation.created_at
         }))
+        logVocabNotationDebug('📦 [useNotationCache] vocab notations loaded (legacy format)', {
+          textId: validTextId,
+          count: formattedVocabNotations.length,
+        })
         setVocabNotations(formattedVocabNotations)
         // 不再预加载所有 examples：改为按需懒加载 + 新建后单次写缓存
       } else {
         console.warn('⚠️ [useNotationCache] No vocab notations found or invalid response format')
+        logVocabNotationDebug('📦 [useNotationCache] vocab notations empty/invalid', { textId: validTextId })
         setVocabNotations([])
       }
 
@@ -159,6 +170,10 @@ export function useNotationCache(articleId) {
 
     } catch (err) {
       console.error('❌ [useNotationCache] Error loading notations:', err)
+      logVocabNotationDebug('❌ [useNotationCache] loadAllNotations error', {
+        textId: validTextId,
+        message: err?.message || String(err),
+      })
       setError(err.message || 'Failed to load notations')
       // 🔧 即使出错也要设置 isInitialized，避免无限重试
       setIsInitialized(true)
@@ -167,6 +182,7 @@ export function useNotationCache(articleId) {
       setVocabNotations([])
     } finally {
       setIsLoading(false)
+      logVocabNotationDebug('✅ [useNotationCache] loadAllNotations finished', { textId: validTextId })
     }
   }, [])
 
@@ -218,6 +234,7 @@ export function useNotationCache(articleId) {
     
     // 1. 先查本地缓存
     if (vocabExamplesCache.has(key)) {
+      logVocabNotationDebug('⚡ [getVocabExampleForToken] cache hit', { key })
       return vocabExamplesCache.get(key)
     }
 
@@ -231,6 +248,14 @@ export function useNotationCache(articleId) {
       let matchedNotation = vocabNotationsRef.current.find(n => {
         return Number(n.sentence_id) === sid && Number(n.token_id) === tid
       })
+      if (matchedNotation) {
+        logVocabNotationDebug('🧩 [getVocabExampleForToken] matched notation by token_id', {
+          key,
+          vocab_id: matchedNotation.vocab_id,
+          token_id: matchedNotation.token_id,
+          word_token_id: matchedNotation.word_token_id,
+        })
+      }
       
       // 🔧 如果没有精确匹配，尝试通过 word_token_token_ids 匹配
       if (!matchedNotation) {
@@ -243,10 +268,27 @@ export function useNotationCache(articleId) {
           }
           return false
         })
+        if (matchedNotation) {
+          logVocabNotationDebug('🧩 [getVocabExampleForToken] matched notation by word_token_token_ids', {
+            key,
+            vocab_id: matchedNotation.vocab_id,
+            token_id: matchedNotation.token_id,
+            word_token_id: matchedNotation.word_token_id,
+          })
+        } else {
+          logVocabNotationDebug('⚠️ [getVocabExampleForToken] no matched notation in cache', {
+            key,
+            vocabNotationsCount: Array.isArray(vocabNotationsRef.current) ? vocabNotationsRef.current.length : null,
+          })
+        }
       }
 
       if (matchedNotation && matchedNotation.vocab_id) {
         const { apiService } = await import('../../../services/api')
+        logVocabNotationDebug('🌐 [getVocabExampleForToken] fetching vocab by id', {
+          key,
+          vocab_id: matchedNotation.vocab_id,
+        })
         // 通过 vocab_id 获取词汇详情（包含所有 examples）
         const vocabResp = await apiService.getVocabById(matchedNotation.vocab_id)
         const vocabData = vocabResp?.data || vocabResp
@@ -271,17 +313,27 @@ export function useNotationCache(articleId) {
             newCache.set(key, normalized)
             return newCache
           })
+          logVocabNotationDebug('✅ [getVocabExampleForToken] example resolved via vocab_id', {
+            key,
+            vocab_id: normalized.vocab_id,
+            hasExplanation: Boolean(normalized.context_explanation),
+          })
           return normalized
         }
       }
     } catch (error) {
       console.error('❌ [getVocabExampleForToken] Failed to fetch by vocab_id:', error)
+      logVocabNotationDebug('❌ [getVocabExampleForToken] fetch by vocab_id failed', {
+        key,
+        message: error?.message || String(error),
+      })
       // 不中断，继续走 tokenIndex 回退逻辑
     }
 
     // 3. 回退：使用按位置查询的老接口（可能存在 tokenIndex 不完全匹配的问题）
     try {
       const { apiService } = await import('../../../services/api')
+      logVocabNotationDebug('🌐 [getVocabExampleForToken] fallback getVocabExampleByLocation', { key })
       const axiosResp = await apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
       // axiosResp -> { data: { success, data } } in mock
       const payload = axiosResp?.data?.data ?? axiosResp?.data ?? axiosResp
@@ -301,12 +353,22 @@ export function useNotationCache(articleId) {
           newCache.set(key, normalized)
           return newCache
         })
+        logVocabNotationDebug('✅ [getVocabExampleForToken] example resolved via location', {
+          key,
+          vocab_id: normalized.vocab_id,
+          hasExplanation: Boolean(normalized.context_explanation),
+        })
         return normalized
       } else {
+        logVocabNotationDebug('⚠️ [getVocabExampleForToken] no payload from location', { key })
         return null
       }
     } catch (error) {
       console.error('❌ [getVocabExampleForToken] API error (by location):', error)
+      logVocabNotationDebug('❌ [getVocabExampleForToken] fallback location error', {
+        key,
+        message: error?.message || String(error),
+      })
       return null
     }
   }, [vocabExamplesCache]) // 🔧 移除 vocabNotations 依赖，使用 ref 访问

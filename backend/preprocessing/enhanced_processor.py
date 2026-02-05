@@ -318,8 +318,8 @@ class EnhancedArticleProcessor:
         
         # 步骤1: 分割句子
         print("\n步骤1: 分割句子...")
-        sentences_text = split_sentences(raw_text, language_code=language_code)
-        print(f"分割得到 {len(sentences_text)} 个句子")
+        sentences_list = split_sentences(raw_text, language_code=language_code)
+        print(f"分割得到 {len(sentences_list)} 个句子")
         
         # 步骤2: 为每个句子分割tokens并创建结构化数据
         print("\n步骤2: 分割tokens并创建结构化数据...")
@@ -327,8 +327,8 @@ class EnhancedArticleProcessor:
         global_token_id = 0
         global_word_token_id = 1
         
-        for sentence_id, sentence_text in enumerate(sentences_text, 1):
-            print(f"  处理句子 {sentence_id}/{len(sentences_text)}: {sentence_text[:50]}...")
+        for sentence_id, sentence_text in enumerate(sentences_list, 1):
+            print(f"  处理句子 {sentence_id}/{len(sentences_list)}: {sentence_text[:50]}...")
             
             # 分割tokens（根据语言类型选择分词方式）
             token_dicts = split_tokens(sentence_text, is_non_whitespace=is_non_whitespace)

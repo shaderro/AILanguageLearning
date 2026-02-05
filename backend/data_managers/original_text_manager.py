@@ -76,8 +76,6 @@ class OriginalTextManager:
         text_id: int,
         sentence_text: str,
         difficulty_level: Optional[str] = None,
-        paragraph_id: Optional[int] = None,
-        is_new_paragraph: Optional[bool] = None,
         **kwargs,
     ):
         if text_id not in self.original_texts:

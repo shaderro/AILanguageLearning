@@ -12,7 +12,7 @@ try:
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False
-    print("⚠️ 新数据结构类不可用，将使用旧结构")
+    print("[WARN] 新数据结构类不可用，将使用旧结构")
 
 class GrammarRuleManager:
     def __init__(self, use_new_structure: bool = False):
@@ -20,9 +20,9 @@ class GrammarRuleManager:
         self.use_new_structure = use_new_structure and NEW_STRUCTURE_AVAILABLE
         
         if self.use_new_structure:
-            print("✅ GrammarRuleManager: 已启用新数据结构模式")
+            print("[OK] GrammarRuleManager: 已启用新数据结构模式")
         else:
-            print("✅ GrammarRuleManager: 使用旧数据结构模式")
+            print("[OK] GrammarRuleManager: 使用旧数据结构模式")
 
     def get_new_rule_id(self) -> int:
         """获取新的规则ID，使用连续分配策略"""
@@ -38,8 +38,8 @@ class GrammarRuleManager:
     
     def add_new_rule(self, rule_name: str, rule_explanation: str) -> int:
         new_rule_id = self.get_new_rule_id()
-        print(f"🆕 Adding new grammar rule: '{rule_name}' with ID: {new_rule_id}")
-        print(f"📊 Current rule IDs: {sorted(self.grammar_bundles.keys())}")
+        print(f"[NEW] Adding new grammar rule: '{rule_name}' with ID: {new_rule_id}")
+        print(f"[INFO] Current rule IDs: {sorted(self.grammar_bundles.keys())}")
         
         if self.use_new_structure:
             # 使用新结构创建规则
@@ -58,7 +58,7 @@ class GrammarRuleManager:
             new_rule = GrammarRule(rule_id=new_rule_id, name=rule_name, explanation=rule_explanation)
             self.grammar_bundles[new_rule_id] = GrammarBundle(rule=new_rule, examples=[])
         
-        print(f"✅ Grammar rule added successfully. Total rules: {len(self.grammar_bundles)}")
+        print(f"[OK] Grammar rule added successfully. Total rules: {len(self.grammar_bundles)}")
         return new_rule_id
     
     def add_grammar_example(self, text_manager: OriginalTextManager, rule_id: int, text_id: int, sentence_id: int, explanation_context: str):
@@ -164,7 +164,7 @@ class GrammarRuleManager:
         print("📚 Grammar Rules (ordered by ID):")
         for rule_id, rule_name in rules_with_id:
             print(f"   ID {rule_id}: {rule_name}")
-        print(f"📊 Total rules: {len(rules_with_id)}")
+        print(f"[INFO] Total rules: {len(rules_with_id)}")
         
         # 检查ID连续性
         if rules_with_id:
@@ -174,11 +174,11 @@ class GrammarRuleManager:
             actual_count = len(rules_with_id)
             
             if actual_count < expected_count:
-                print(f"⚠️  ID不连续！最小ID: {min_id}, 最大ID: {max_id}")
+                print(f"[WARN] ID不连续！最小ID: {min_id}, 最大ID: {max_id}")
                 print(f"   期望规则数: {expected_count}, 实际规则数: {actual_count}")
                 print(f"   缺失的ID: {set(range(min_id, max_id + 1)) - set(rule_id for rule_id, _ in rules_with_id)}")
             else:
-                print(f"✅ ID连续，从 {min_id} 到 {max_id}")
+                print(f"[OK] ID连续，从 {min_id} 到 {max_id}")
     
     def save_to_file(self, path: str):
         """
@@ -218,7 +218,7 @@ class GrammarRuleManager:
         保存数据为新结构格式（数组格式，包含 source、is_starred 等新字段）
         """
         if not self.use_new_structure:
-            print("⚠️ 当前未使用新结构，无法保存为新格式")
+            print("[WARN] 当前未使用新结构，无法保存为新格式")
             return
             
         export_data = []
@@ -244,7 +244,7 @@ class GrammarRuleManager:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(export_data, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ 已保存 {len(export_data)} 个语法规则到文件（数组格式）: {path}")
+        print(f"[OK] 已保存 {len(export_data)} 个语法规则到文件（数组格式）: {path}")
     
     def load_from_file(self, path: str):
         """
@@ -339,7 +339,7 @@ class GrammarRuleManager:
                         ]
                     self.grammar_bundles[int(rule_id)] = GrammarBundle(rule=rule, examples=examples)
             
-            print(f"✅ 成功加载 {len(self.grammar_bundles)} 个语法规则")
+            print(f"[OK] 成功加载 {len(self.grammar_bundles)} 个语法规则")
             if self.use_new_structure:
                 print("📝 使用新数据结构，包含examples列表、source=qa、is_starred=False")
             else:
@@ -357,20 +357,20 @@ class GrammarRuleManager:
             bool: 切换是否成功
         """
         if not NEW_STRUCTURE_AVAILABLE:
-            print("❌ 新数据结构类不可用，无法切换")
+            print("[ERROR] 新数据结构类不可用，无法切换")
             return False
             
         if self.use_new_structure:
-            print("✅ 已经在使用新结构模式")
+            print("[OK] 已经在使用新结构模式")
             return True
             
         try:
             # 重新加载所有数据到新结构
             self.use_new_structure = True
-            print("✅ 已切换到新结构模式")
+            print("[OK] 已切换到新结构模式")
             return True
         except Exception as e:
-            print(f"❌ 切换到新结构失败: {e}")
+            print(f"[ERROR] 切换到新结构失败: {e}")
             self.use_new_structure = False
             return False
     
@@ -382,16 +382,16 @@ class GrammarRuleManager:
             bool: 切换是否成功
         """
         if not self.use_new_structure:
-            print("✅ 已经在使用旧结构模式")
+            print("[OK] 已经在使用旧结构模式")
             return True
             
         try:
             # 重新加载所有数据到旧结构
             self.use_new_structure = False
-            print("✅ 已切换回旧结构模式")
+            print("[OK] 已切换回旧结构模式")
             return True
         except Exception as e:
-            print(f"❌ 切换回旧结构失败: {e}")
+            print(f"[ERROR] 切换回旧结构失败: {e}")
             return False
     
     def get_structure_mode(self) -> str:
@@ -445,7 +445,7 @@ class GrammarRuleManager:
         if len(matching_examples) == 1:
             return matching_examples[0]
         elif len(matching_examples) > 1:
-            print(f"⚠️ [GrammarRuleManager] 找到多个匹配的例句: {len(matching_examples)} 个")
+            print(f"[WARN] [GrammarRuleManager] 找到多个匹配的例句: {len(matching_examples)} 个")
             return matching_examples[0]  # 返回第一个
         else:
             print(f"🔍 [GrammarRuleManager] 未找到匹配的例句: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")

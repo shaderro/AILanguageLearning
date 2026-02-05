@@ -777,17 +777,11 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
                     print(f"⚠️ [Import] 句子 {article_id}:{sentence_id} 已存在，跳过")
                     continue
                 
-                # 获取段落信息
-                paragraph_id = sentence_data.get('paragraph_id')
-                is_new_paragraph = sentence_data.get('is_new_paragraph', False)
-                
                 # 创建句子
                 sentence = text_manager.add_sentence_to_text(
                     text_id=article_id,
                     sentence_text=sentence_body,
-                    difficulty_level=None,
-                    paragraph_id=paragraph_id,
-                    is_new_paragraph=is_new_paragraph
+                    difficulty_level=None
                 )
                 total_sentences += 1
                 

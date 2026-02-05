@@ -150,17 +150,13 @@ class TextDataAccessLayer:
         sentence_id: int,
         sentence_body: str,
         difficulty_level: Optional[str] = None,
-        paragraph_id: Optional[int] = None,
-        is_new_paragraph: Optional[bool] = None,
     ):
-        """创建句子（支持段落信息）"""
+        """创建句子"""
         return self._crud.create_sentence(
             text_id,
             sentence_id,
             sentence_body,
             difficulty_level=difficulty_level,
-            paragraph_id=paragraph_id,
-            is_new_paragraph=is_new_paragraph,
         )
     
     def get_sentences_by_text(self, text_id: int):

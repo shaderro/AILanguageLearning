@@ -1,5 +1,6 @@
 import React, { useState, useRef, useContext, useCallback, useEffect, useMemo } from 'react'
 import TokenSpan from './TokenSpan'
+import { getTokenKey } from '../utils/tokenUtils'
 import GrammarNotationCard from './notation/GrammarNotationCard'
 import GrammarNoteBadge from './notation/GrammarNoteBadge'
 import { NotationContext } from '../contexts/NotationContext'
@@ -434,8 +435,10 @@ export default function SentenceContainer({
           }
         }
         
+        const tokenKey = getTokenKey(sentenceIndex, token, tokenIndex)
+
         return (
-          <React.Fragment key={`${sentenceIndex}-${tokenIndex}`}>
+          <React.Fragment key={tokenKey}>
             <TokenSpan
               token={token}
               tokenIdx={tokenIndex}

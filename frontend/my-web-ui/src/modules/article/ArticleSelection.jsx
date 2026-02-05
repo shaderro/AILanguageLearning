@@ -1,7 +1,7 @@
 import ArticleList from './components/ArticleList'
 import { useArticles } from '../../hooks/useApi'
 import { useUser } from '../../contexts/UserContext'
-import { useLanguage } from '../../contexts/LanguageContext'
+import { useLanguage, languageNameToCode } from '../../contexts/LanguageContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { apiService } from '../../services/api'
@@ -170,8 +170,57 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     }
   })
 
-  // 文章已经在后端过滤，直接使用mappedArticles
-  const filteredArticles = mappedArticles
+  // 文章过滤：后端应该已经过滤，但添加前端备用过滤以确保正确性
+  const filteredArticles = useMemo(() => {
+    if (!selectedLanguage || selectedLanguage === 'all') {
+      return mappedArticles
+    }
+    
+    // 前端备用过滤：如果后端过滤不生效，这里会再次过滤
+    // 支持多种语言格式匹配（中文、英文、代码等）
+    const languageVariants = [
+      selectedLanguage, // 原始值（如 "英文"）
+      languageNameToCode(selectedLanguage), // 语言代码（如 "en"）
+      // 可能的其他格式
+      selectedLanguage === '中文' ? 'Chinese' : null,
+      selectedLanguage === '英文' ? 'English' : null,
+      selectedLanguage === '德文' ? 'German' : null,
+    ].filter(Boolean)
+    
+    // 调试：检查文章语言分布
+    const languageDistribution = {}
+    mappedArticles.forEach(article => {
+      const lang = article.language || '(null)'
+      languageDistribution[lang] = (languageDistribution[lang] || 0) + 1
+    })
+    console.log(`🔍 [ArticleSelection] 文章语言分布:`, languageDistribution, `筛选语言: ${selectedLanguage}`)
+    
+    const filtered = mappedArticles.filter(article => {
+      if (!article.language) {
+        // 如果文章没有语言信息，根据配置决定是否显示
+        // 默认不显示没有语言信息的文章
+        return false
+      }
+      
+      // 检查文章语言是否匹配任何变体
+      const articleLang = String(article.language).toLowerCase()
+      const matches = languageVariants.some(variant => 
+        articleLang === String(variant).toLowerCase()
+      )
+      
+      return matches
+    })
+    
+    // 如果过滤后数量与原始数量相同，说明后端可能已经过滤了
+    // 如果过滤后数量不同，说明后端过滤可能不生效，使用前端过滤结果
+    if (filtered.length !== mappedArticles.length) {
+      console.log(`🔍 [ArticleSelection] 前端过滤生效: ${mappedArticles.length} -> ${filtered.length} (语言: ${selectedLanguage})`)
+    } else if (mappedArticles.length > 0) {
+      console.log(`⚠️ [ArticleSelection] 前端过滤未生效: 所有 ${mappedArticles.length} 篇文章都匹配语言 ${selectedLanguage}`)
+    }
+    
+    return filtered
+  }, [mappedArticles, selectedLanguage])
 
   const [previewOverrides, setPreviewOverrides] = useState(() => {
     const initial = {}

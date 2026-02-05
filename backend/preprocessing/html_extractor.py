@@ -159,6 +159,8 @@ def _clean_extracted_text(text: str) -> str:
     清洗提取的文本
     
     清洗规则：
+    - 移除 Wikipedia 引用链接（如 [5], [3.3], [1][2]）
+    - 移除图片标题和说明（如 "图：", "图片：", "Image:", "Bild:"）
     - 去掉多余换行（连续3个以上换行符合并为2个）
     - 去掉"来源：…"、"阅读更多"等模式
     - 去除首尾空白
@@ -172,7 +174,33 @@ def _clean_extracted_text(text: str) -> str:
     if not text:
         return ""
     
-    # 去掉特定文本模式
+    # 第一步：移除 Wikipedia 引用链接
+    # 匹配格式：[数字] 或 [数字.数字] 或 [字母数字] 或连续的引用 [1][2][3]
+    # 例如：[5], [3.3], [1][2], [a], [A1], [1][2][3]
+    # 先处理连续的引用链接（如 [1][2][3]），然后处理单个引用
+    text = re.sub(r'(\[\d+(?:\.\d+)?\])+', '', text)  # 连续数字引用 [1][2][3]
+    text = re.sub(r'(\[[a-zA-Z0-9]+\])+', '', text)  # 连续字母数字引用 [a][b][c]
+    text = re.sub(r'\[\d+(?:\.\d+)?\]', '', text)  # 单个数字引用 [5], [3.3]
+    text = re.sub(r'\[[a-zA-Z0-9]+\]', '', text)  # 单个字母数字引用 [a], [A1]
+    
+    # 第二步：移除图片标题和说明
+    # 匹配以图片相关关键词开头的行（中英文德文）
+    # 也匹配行内包含图片标题的情况（但只移除整行如果主要是图片说明）
+    image_patterns = [
+        r'^图[：:].*?$',  # "图：xxx"
+        r'^图片[：:].*?$',  # "图片：xxx"
+        r'^图像[：:].*?$',  # "图像：xxx"
+        r'^Image:.*?$',  # "Image: xxx"
+        r'^Bild:.*?$',  # "Bild: xxx" (德语)
+        r'^Abbildung.*?$',  # "Abbildung xxx" (德语)
+        r'^Figure.*?$',  # "Figure xxx"
+        r'^图片说明[：:].*?$',  # "图片说明：xxx"
+        r'^图片来源[：:].*?$',  # "图片来源：xxx"
+        r'^Caption:.*?$',  # "Caption: xxx" (英文)
+        r'^Bildunterschrift:.*?$',  # "Bildunterschrift: xxx" (德语)
+    ]
+    
+    # 第三步：去掉特定文本模式
     patterns_to_remove = [
         r'来源[：:].*?$',  # "来源：xxx"
         r'阅读更多.*?$',  # "阅读更多"
@@ -182,6 +210,18 @@ def _clean_extracted_text(text: str) -> str:
         r'点击查看.*?$',  # "点击查看"
         r'分享到.*?$',  # "分享到"
         r'Share.*?$',  # "Share"
+        # Wikipedia 特定内容
+        r'^编辑.*?$',  # "编辑" 开头的行
+        r'^Bearbeitet.*?$',  # "Bearbeitet" 开头的行（德语）
+        r'^Last edited.*?$',  # "Last edited" 开头的行
+        r'^参考文献.*?$',  # "参考文献" 开头的行
+        r'^References.*?$',  # "References" 开头的行
+        r'^Literatur.*?$',  # "Literatur" 开头的行（德语）
+        r'^外部链接.*?$',  # "外部链接" 开头的行
+        r'^External links.*?$',  # "External links" 开头的行
+        r'^Externe Links.*?$',  # "Externe Links" 开头的行（德语）
+        r'^导航.*?$',  # "导航" 开头的行
+        r'^Navigation.*?$',  # "Navigation" 开头的行
     ]
     
     lines = text.split('\n')
@@ -192,6 +232,16 @@ def _clean_extracted_text(text: str) -> str:
         if not line:
             continue
         
+        # 检查是否是图片标题/说明
+        is_image_line = False
+        for pattern in image_patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                is_image_line = True
+                break
+        
+        if is_image_line:
+            continue
+        
         # 检查是否匹配需要移除的模式
         should_remove = False
         for pattern in patterns_to_remove:
@@ -200,7 +250,18 @@ def _clean_extracted_text(text: str) -> str:
                 break
         
         if not should_remove:
-            cleaned_lines.append(line)
+            # 进一步清理行内可能残留的引用标记
+            cleaned_line = line
+            # 移除行内可能残留的引用链接（包括连续的和单个的）
+            cleaned_line = re.sub(r'(\[\d+(?:\.\d+)?\])+', '', cleaned_line)  # 连续数字引用
+            cleaned_line = re.sub(r'(\[[a-zA-Z0-9]+\])+', '', cleaned_line)  # 连续字母数字引用
+            cleaned_line = re.sub(r'\[\d+(?:\.\d+)?\]', '', cleaned_line)  # 单个数字引用
+            cleaned_line = re.sub(r'\[[a-zA-Z0-9]+\]', '', cleaned_line)  # 单个字母数字引用
+            # 移除多余空格（但保留单词之间的单个空格）
+            cleaned_line = re.sub(r'\s+', ' ', cleaned_line).strip()
+            
+            if cleaned_line:
+                cleaned_lines.append(cleaned_line)
     
     # 合并文本
     cleaned_text = '\n'.join(cleaned_lines)

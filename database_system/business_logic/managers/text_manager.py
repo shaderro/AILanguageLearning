@@ -36,21 +36,15 @@ class TextManager:
         sentence_id: int,
         sentence_body: str,
         difficulty_level: Optional[str] = None,
-        paragraph_id: Optional[int] = None,
-        is_new_paragraph: Optional[bool] = None,
     ) -> Sentence:
         """
         创建句子
-
-        支持段落信息（paragraph_id / is_new_paragraph），用于前端分段显示。
         """
         return self.dal.create_sentence(
             text_id,
             sentence_id,
             sentence_body,
             difficulty_level=difficulty_level,
-            paragraph_id=paragraph_id,
-            is_new_paragraph=is_new_paragraph,
         )
     
     def get_sentences(self, text_id: int) -> List[Sentence]:

@@ -35,13 +35,13 @@ class DataController:
             self.grammar_manager = GrammarRuleManager(use_new_structure=True)
             self.vocab_manager = VocabManager(use_new_structure=True)
             self.text_manager = OriginalTextManager(use_new_structure=True)
-            print("✅ 已启用新数据结构模式")
+            print("[OK] 已启用新数据结构模式")
         else:
             # 旧结构模式
             self._init_old_structure()
             
         if self.save_to_new_data_class:
-            print("✅ 已启用新结构数据保存模式")
+            print("[OK] 已启用新结构数据保存模式")
             
         # 根据结构模式选择对话记录类
         if self.use_new_structure:
@@ -55,7 +55,7 @@ class DataController:
         self.grammar_manager = GrammarRuleManager(use_new_structure=False)
         self.vocab_manager = VocabManager(use_new_structure=False)
         self.text_manager = OriginalTextManager(use_new_structure=False)
-        print("✅ 已启用旧数据结构模式")
+        print("[OK] 已启用旧数据结构模式")
 
     def load_data(self, grammar_path: str, vocab_path: str, text_path: str, dialogue_record_path: str, dialogue_history_path: str):
         """

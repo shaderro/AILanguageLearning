@@ -113,80 +113,90 @@ async def rate_limit_middleware(request: Request, call_next):
     只对需要认证的接口进行 rate limit（通过 Authorization header 识别用户）
     对于不需要认证的接口（如健康检查），跳过 rate limit
     """
-    # 跳过健康检查和文档接口
-    if request.url.path in ["/", "/api/health", "/docs", "/openapi.json", "/redoc"]:
+    # 🔧 修复：添加异常处理，避免请求中断时导致 500 错误
+    try:
+        # 跳过健康检查和文档接口
+        if request.url.path in ["/", "/api/health", "/docs", "/openapi.json", "/redoc"]:
+            return await call_next(request)
+        
+        # 尝试从 Authorization header 获取用户ID
+        user_id = None
+        authorization = request.headers.get("authorization")
+        
+        if authorization and authorization.startswith("Bearer "):
+            try:
+                token = authorization.replace("Bearer ", "")
+                from backend.utils.auth import decode_access_token
+                payload = decode_access_token(token)
+                if payload and "sub" in payload:
+                    user_id = int(payload["sub"])
+            except Exception:
+                # Token 解析失败，跳过 rate limit（让认证中间件处理）
+                pass
+        
+        # 如果没有用户ID，跳过 rate limit（可能是公开接口）
+        if user_id is None:
+            return await call_next(request)
+        
+        # 检查 rate limit（先检查，再记录）
+        allowed, remaining, reset_in = check_rate_limit(user_id, request.url.path)
+        config, config_key = get_rate_limit_config(request.url.path)
+        max_requests = config["max_requests"]
+        
+        # 记录请求历史（用于调试）
+        history = _request_history[user_id]
+        history.append((
+            time.time(),
+            request.url.path,
+            request.method,
+            f"{remaining}/{max_requests}"
+        ))
+        # 只保留最近的请求历史
+        if len(history) > _MAX_HISTORY_SIZE:
+            history.pop(0)
+        
+        if not allowed:
+            # 记录被限流的请求详情
+            storage_key = (user_id, config_key)
+            current_count = _rate_limit_storage[storage_key][0]
+            print(f"🚫 [RateLimit] 用户 {user_id} 触发限制: {request.method} {request.url.path}")
+            print(f"   配置类型: {config_key}, 当前窗口内请求数: {current_count}/{max_requests}")
+            print(f"   最近 {min(len(history), 10)} 条请求:")
+            for ts, path, method, _ in history[-10:]:
+                dt = datetime.fromtimestamp(ts).strftime("%H:%M:%S")
+                print(f"     {dt} {method} {path}")
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "error": "Rate limit exceeded",
+                    "message": f"请求过于频繁，请 {reset_in} 秒后再试",
+                    "retry_after": reset_in
+                },
+                headers={
+                    "X-RateLimit-Limit": str(max_requests),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(int(time.time()) + reset_in),
+                    "Retry-After": str(reset_in)
+                }
+            )
+        
+        # 添加 rate limit 信息到响应头
+        response = await call_next(request)
+        response.headers["X-RateLimit-Limit"] = str(max_requests)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + reset_in)
+        
+        # 调试日志：记录请求（仅在接近限制时）
+        if remaining < 5:
+            print(f"⚠️ [RateLimit] 用户 {user_id} 剩余 {remaining} 次请求: {request.method} {request.url.path}")
+        
+        return response
+    except HTTPException:
+        # 🔧 重新抛出 HTTPException（包括 429），让 FastAPI 正确处理
+        raise
+    except Exception as e:
+        # 🔧 捕获其他异常（如 EndOfStream），记录但不影响请求处理
+        print(f"⚠️ [RateLimit] 中间件处理异常（跳过 rate limit）: {e}")
+        # 如果发生异常，跳过 rate limit，让请求继续处理
         return await call_next(request)
-    
-    # 尝试从 Authorization header 获取用户ID
-    user_id = None
-    authorization = request.headers.get("authorization")
-    
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            token = authorization.replace("Bearer ", "")
-            from backend.utils.auth import decode_access_token
-            payload = decode_access_token(token)
-            if payload and "sub" in payload:
-                user_id = int(payload["sub"])
-        except Exception:
-            # Token 解析失败，跳过 rate limit（让认证中间件处理）
-            pass
-    
-    # 如果没有用户ID，跳过 rate limit（可能是公开接口）
-    if user_id is None:
-        return await call_next(request)
-    
-    # 检查 rate limit（先检查，再记录）
-    allowed, remaining, reset_in = check_rate_limit(user_id, request.url.path)
-    config, config_key = get_rate_limit_config(request.url.path)
-    max_requests = config["max_requests"]
-    
-    # 记录请求历史（用于调试）
-    history = _request_history[user_id]
-    history.append((
-        time.time(),
-        request.url.path,
-        request.method,
-        f"{remaining}/{max_requests}"
-    ))
-    # 只保留最近的请求历史
-    if len(history) > _MAX_HISTORY_SIZE:
-        history.pop(0)
-    
-    if not allowed:
-        # 记录被限流的请求详情
-        storage_key = (user_id, config_key)
-        current_count = _rate_limit_storage[storage_key][0]
-        print(f"🚫 [RateLimit] 用户 {user_id} 触发限制: {request.method} {request.url.path}")
-        print(f"   配置类型: {config_key}, 当前窗口内请求数: {current_count}/{max_requests}")
-        print(f"   最近 {min(len(history), 10)} 条请求:")
-        for ts, path, method, _ in history[-10:]:
-            dt = datetime.fromtimestamp(ts).strftime("%H:%M:%S")
-            print(f"     {dt} {method} {path}")
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail={
-                "error": "Rate limit exceeded",
-                "message": f"请求过于频繁，请 {reset_in} 秒后再试",
-                "retry_after": reset_in
-            },
-            headers={
-                "X-RateLimit-Limit": str(max_requests),
-                "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(int(time.time()) + reset_in),
-                "Retry-After": str(reset_in)
-            }
-        )
-    
-    # 添加 rate limit 信息到响应头
-    response = await call_next(request)
-    response.headers["X-RateLimit-Limit"] = str(max_requests)
-    response.headers["X-RateLimit-Remaining"] = str(remaining)
-    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + reset_in)
-    
-    # 调试日志：记录请求（仅在接近限制时）
-    if remaining < 5:
-        print(f"⚠️ [RateLimit] 用户 {user_id} 剩余 {remaining} 次请求: {request.method} {request.url.path}")
-    
-    return response
 

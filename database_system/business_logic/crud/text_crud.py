@@ -55,17 +55,13 @@ class TextCRUD:
         return query.all()
     
     def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
-                       difficulty_level: Optional[str] = None,
-                       paragraph_id: Optional[int] = None,
-                       is_new_paragraph: Optional[bool] = None) -> Sentence:
+                       difficulty_level: Optional[str] = None) -> Sentence:
         """创建句子"""
         sentence = Sentence(
             text_id=text_id,
             sentence_id=sentence_id,
             sentence_body=sentence_body,
-            sentence_difficulty_level=difficulty_level,
-            paragraph_id=paragraph_id,
-            is_new_paragraph=is_new_paragraph
+            sentence_difficulty_level=difficulty_level
         )
         self.session.add(sentence)
         self.session.commit()

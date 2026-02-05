@@ -491,6 +491,24 @@ export default function TokenSpan({
   const setShowNotationWithTrace = useCallback(
     (nextValue, reason) => {
       const prevValue = showNotation
+      
+      // 🔧 如果新值和当前值相同，跳过更新，避免不必要的重新渲染
+      if (prevValue === nextValue) {
+        logVocabNotationDebug('[isVisible trace]', {
+          source: 'TokenSpan',
+          prevValue,
+          nextValue,
+          reason: `${reason} (skipped, same value)`,
+          articleId,
+          sentenceId: tokenSentenceId,
+          tokenId: tokenSentenceTokenId,
+          displayText,
+          isMouseOverToken,
+          isHoveringSession: isHoveringRef.current,
+        })
+        return
+      }
+      
       const nextNotation = nextValue
         ? { articleId, sentenceId: tokenSentenceId, tokenId: tokenSentenceTokenId }
         : null
