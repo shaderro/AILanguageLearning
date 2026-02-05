@@ -144,10 +144,24 @@ class TextDataAccessLayer:
         """搜索文章（可选用户过滤）"""
         return self._crud.search_texts(keyword, user_id=user_id)
     
-    def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
-                       difficulty_level: Optional[str] = None):
-        """创建句子"""
-        return self._crud.create_sentence(text_id, sentence_id, sentence_body, difficulty_level)
+    def create_sentence(
+        self,
+        text_id: int,
+        sentence_id: int,
+        sentence_body: str,
+        difficulty_level: Optional[str] = None,
+        paragraph_id: Optional[int] = None,
+        is_new_paragraph: Optional[bool] = None,
+    ):
+        """创建句子（支持段落信息）"""
+        return self._crud.create_sentence(
+            text_id,
+            sentence_id,
+            sentence_body,
+            difficulty_level=difficulty_level,
+            paragraph_id=paragraph_id,
+            is_new_paragraph=is_new_paragraph,
+        )
     
     def get_sentences_by_text(self, text_id: int):
         """获取文章的所有句子"""

@@ -30,10 +30,28 @@ class TextManager:
         """搜索文章（可选用户过滤）"""
         return self.dal.search_texts(keyword, user_id=user_id)
     
-    def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
-                       difficulty_level: Optional[str] = None) -> Sentence:
-        """创建句子"""
-        return self.dal.create_sentence(text_id, sentence_id, sentence_body, difficulty_level)
+    def create_sentence(
+        self,
+        text_id: int,
+        sentence_id: int,
+        sentence_body: str,
+        difficulty_level: Optional[str] = None,
+        paragraph_id: Optional[int] = None,
+        is_new_paragraph: Optional[bool] = None,
+    ) -> Sentence:
+        """
+        创建句子
+
+        支持段落信息（paragraph_id / is_new_paragraph），用于前端分段显示。
+        """
+        return self.dal.create_sentence(
+            text_id,
+            sentence_id,
+            sentence_body,
+            difficulty_level=difficulty_level,
+            paragraph_id=paragraph_id,
+            is_new_paragraph=is_new_paragraph,
+        )
     
     def get_sentences(self, text_id: int) -> List[Sentence]:
         """获取文章的所有句子"""
