@@ -449,13 +449,10 @@ async def log_requests(request, call_next):
     try:
         # 如果是 POST 请求，尝试记录请求体大小（但不影响后续处理）
         if request.method == "POST":
-            # 使用 stream 方式读取，避免消耗请求体
-            body_bytes = b""
-            async for chunk in request.stream():
-                body_bytes += chunk
+            # 使用 FastAPI 官方推荐方式：一次性读取 body，然后重新注入 _receive
+            body_bytes = await request.body()
             if body_bytes:
                 print(f"📦 [Request] Body size: {len(body_bytes)} bytes")
-                # 🔧 修复：将 body 放回，使用正确的 ASGI receive 格式
                 async def receive():
                     return {"type": "http.request", "body": body_bytes, "more_body": False}
                 request._receive = receive
