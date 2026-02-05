@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends, Header
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from typing import Optional
 import json
 import requests
@@ -317,6 +319,33 @@ def _derive_language_context(sentence_data: dict):
 
 # 创建FastAPI应用
 app = FastAPI(title="AI Language Learning API", version="1.0.0")
+
+# ==================== 全局校验错误处理（422） =====================
+# 生产环境登录 / 其他接口出现 422 时，记录更详细的日志，并返回可读字符串，避免前端直接渲染复杂对象崩溃
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    try:
+        body = await request.body()
+    except Exception:
+        body = b""
+    
+    print("❌ [ValidationError] 请求路径:", request.url.path)
+    print("❌ [ValidationError] 原始请求体:", body.decode("utf-8", errors="ignore"))
+    print("❌ [ValidationError] 详细错误:", exc.errors())
+
+    # 将 pydantic 错误数组压缩成一行字符串，方便前端展示
+    messages = []
+    for err in exc.errors():
+        loc = ".".join(str(x) for x in err.get("loc", []))
+        msg = err.get("msg", "")
+        if loc or msg:
+            messages.append(f"{loc}: {msg}" if loc else msg)
+    message = " | ".join(messages) if messages else "请求参数校验失败"
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": message},
+    )
 
 # ==================== CORS 配置 =====================
 # MVP 阶段：允许所有来源（方便开发和测试）
