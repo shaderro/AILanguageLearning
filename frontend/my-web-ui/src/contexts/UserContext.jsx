@@ -14,6 +14,37 @@ import guestDataManager from '../utils/guestDataManager'
 
 const UserContext = createContext(null)
 
+// 将后端错误（可能是 string / object / array）规范化成可渲染的字符串，避免 React 渲染 object 报错
+function normalizeApiError(error) {
+  const detail = error?.response?.data?.detail
+
+  if (typeof detail === 'string' && detail.trim()) return detail
+  if (typeof error?.message === 'string' && error.message.trim()) return error.message
+
+  // FastAPI 422: detail 通常是 [{loc, msg, type}, ...]
+  if (Array.isArray(detail)) {
+    const msgs = detail
+      .map((item) => {
+        const loc = Array.isArray(item?.loc) ? item.loc.join('.') : ''
+        const msg = item?.msg || ''
+        return [loc, msg].filter(Boolean).join(': ')
+      })
+      .filter(Boolean)
+
+    if (msgs.length) return msgs.join(' | ')
+  }
+
+  if (detail && typeof detail === 'object') {
+    try {
+      return JSON.stringify(detail)
+    } catch {
+      return '请求失败（错误详情无法解析）'
+    }
+  }
+
+  return '请求失败'
+}
+
 export function UserProvider({ children }) {
   const [userId, setUserId] = useState(null)
   const [token, setToken] = useState(null)
@@ -178,9 +209,9 @@ export function UserProvider({ children }) {
         }
       }
       
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || error.message || '登录失败'
+      return {
+        success: false,
+        error: normalizeApiError(error) || '登录失败',
       }
     }
   }
@@ -228,7 +259,7 @@ export function UserProvider({ children }) {
       console.error('❌ [UserContext] 注册失败:', error)
       return { 
         success: false, 
-        error: error.response?.data?.detail || error.message || '注册失败'
+        error: normalizeApiError(error) || '注册失败',
       }
     }
   }

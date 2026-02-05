@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 const authApi = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 增加到 30 秒，避免刷新后验证 token 时超时
+  timeout: 120000, // 生产环境（Render）可能存在冷启动；登录/验证接口允许更长超时
   headers: {
     'Content-Type': 'application/json',
   },
