@@ -16,7 +16,7 @@ try:
     NEW_STRUCTURE_AVAILABLE = True
 except ImportError:
     NEW_STRUCTURE_AVAILABLE = False
-    print("⚠️ 新数据结构类不可用，将使用旧结构")
+    print("[WARN] 新数据结构类不可用，将使用旧结构")
 
 
 class OriginalTextManager:
@@ -47,9 +47,9 @@ class OriginalTextManager:
         self.use_new_structure = use_new_structure and NEW_STRUCTURE_AVAILABLE
         
         if self.use_new_structure:
-            print("✅ OriginalTextManager: 已启用新数据结构模式")
+            print("[OK] OriginalTextManager: 已启用新数据结构模式")
         else:
-            print("✅ OriginalTextManager: 使用旧数据结构模式")
+            print("[OK] OriginalTextManager: 使用旧数据结构模式")
 
 #Generate a new unique text ID. If no texts exist, returns 1.
     def get_new_text_id(self) -> int:
@@ -71,7 +71,15 @@ class OriginalTextManager:
         text = self.original_texts[text_id]
         return len(text.text_by_sentence)+1
 
-    def add_sentence_to_text(self, text_id: int, sentence_text: str):
+    def add_sentence_to_text(
+        self,
+        text_id: int,
+        sentence_text: str,
+        difficulty_level: Optional[str] = None,
+        paragraph_id: Optional[int] = None,
+        is_new_paragraph: Optional[bool] = None,
+        **kwargs,
+    ):
         if text_id not in self.original_texts:
             raise ValueError(f"text_id {text_id} does not exist.")
         current_text = self.original_texts[text_id]
@@ -80,13 +88,13 @@ class OriginalTextManager:
         if self.use_new_structure:
             # 使用新结构创建句子，tokens先留空
             new_sentence = NewSentence(
-                text_id=text_id, 
+                text_id=text_id,
                 sentence_id=current_sentence_id,
-                sentence_body=sentence_text, 
-                grammar_annotations=[], 
+                sentence_body=sentence_text,
+                grammar_annotations=[],
                 vocab_annotations=[],
-                sentence_difficulty_level=None,  # 暂时不设置难度
-                tokens=None  # tokens先留空，先不分词
+                sentence_difficulty_level=None,  # 暂时不设置难度（JSON 版本不使用段落信息）
+                tokens=None,  # tokens先留空，先不分词
             )
         else:
             # 使用旧结构创建句子
@@ -177,7 +185,7 @@ class OriginalTextManager:
         保存数据为新结构格式（数组格式，包含 sentence_difficulty_level、tokens 等新字段）
         """
         if not self.use_new_structure:
-            print("⚠️ 当前未使用新结构，无法保存为新格式")
+            print("[WARN] 当前未使用新结构，无法保存为新格式")
             return
             
         export_data = []
@@ -218,7 +226,7 @@ class OriginalTextManager:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(export_data, f, ensure_ascii=False, indent=2)
         
-        print(f"✅ 已保存 {len(export_data)} 个文本到文件（数组格式）: {path}")
+        print(f"[OK] 已保存 {len(export_data)} 个文本到文件（数组格式）: {path}")
 
     def add_grammar_example_to_sentence(self, text_id: int, sentence_id: int, rule_id: int):
         text = self.original_texts.get(text_id)
@@ -364,7 +372,7 @@ class OriginalTextManager:
                     )
                 self.original_texts[int(tid)] = text
                 
-            print(f"✅ 成功加载 {len(self.original_texts)} 个文本文件")
+            print(f"[OK] 成功加载 {len(self.original_texts)} 个文本文件")
             if self.use_new_structure:
                 print("📝 使用新数据结构，tokens字段已预留但暂未分词")
             else:
@@ -386,20 +394,20 @@ class OriginalTextManager:
             bool: 切换是否成功
         """
         if not NEW_STRUCTURE_AVAILABLE:
-            print("❌ 新数据结构类不可用，无法切换")
+            print("[ERROR] 新数据结构类不可用，无法切换")
             return False
             
         if self.use_new_structure:
-            print("✅ 已经在使用新结构模式")
+            print("[OK] 已经在使用新结构模式")
             return True
             
         try:
             # 重新加载所有数据到新结构
             self.use_new_structure = True
-            print("✅ 已切换到新结构模式")
+            print("[OK] 已切换到新结构模式")
             return True
         except Exception as e:
-            print(f"❌ 切换到新结构失败: {e}")
+            print(f"[ERROR] 切换到新结构失败: {e}")
             self.use_new_structure = False
             return False
     
@@ -411,16 +419,16 @@ class OriginalTextManager:
             bool: 切换是否成功
         """
         if not self.use_new_structure:
-            print("✅ 已经在使用旧结构模式")
+            print("[OK] 已经在使用旧结构模式")
             return True
             
         try:
             # 重新加载所有数据到旧结构
             self.use_new_structure = False
-            print("✅ 已切换回旧结构模式")
+            print("[OK] 已切换回旧结构模式")
             return True
         except Exception as e:
-            print(f"❌ 切换回旧结构失败: {e}")
+            print(f"[ERROR] 切换回旧结构失败: {e}")
             return False
     
     def get_structure_mode(self) -> str:
