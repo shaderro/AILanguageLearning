@@ -53,19 +53,58 @@ def process_article(
     else:
         print("✅ 检测到空格语言，使用单词级别分词")
     
-    # 步骤1: 分割句子
-    print("\n步骤1: 分割句子...")
-    sentences_text = split_sentences(raw_text, language_code=language_code)
-    print(f"分割得到 {len(sentences_text)} 个句子")
+    # 步骤1: 识别段落边界并分割句子
+    print("\n步骤1: 识别段落边界并分割句子...")
+    
+    # 先按段落分割（空行作为段落分隔符）
+    paragraphs = []
+    current_paragraph = ""
+    paragraph_id = 1
+    
+    # 统一换行符为 \n，然后按换行符分割
+    normalized_text = raw_text.replace('\r\n', '\n').replace('\r', '\n')
+    lines = normalized_text.split('\n')
+    
+    for line in lines:
+        line_stripped = line.strip()
+        if not line_stripped:
+            # 空行：如果当前段落不为空，则结束当前段落
+            if current_paragraph.strip():
+                paragraphs.append((paragraph_id, current_paragraph.strip()))
+                paragraph_id += 1
+                current_paragraph = ""
+        else:
+            # 非空行：添加到当前段落
+            if current_paragraph:
+                current_paragraph += "\n" + line
+            else:
+                current_paragraph = line
+    
+    # 处理最后一个段落
+    if current_paragraph.strip():
+        paragraphs.append((paragraph_id, current_paragraph.strip()))
+    
+    print(f"识别得到 {len(paragraphs)} 个段落")
+    
+    # 对每个段落分割句子，并记录段落ID
+    sentences_with_paragraph = []
+    for para_id, para_text in paragraphs:
+        para_sentences = split_sentences(para_text, language_code=language_code)
+        for sentence_text in para_sentences:
+            sentences_with_paragraph.append((para_id, sentence_text))
+    
+    print(f"分割得到 {len(sentences_with_paragraph)} 个句子")
     
     # 步骤2: 为每个句子分割tokens并创建结构化数据
     print("\n步骤2: 分割tokens并创建结构化数据...")
     sentences = []
     global_token_id = 0
     global_word_token_id = 1
+    last_paragraph_id = 0
     
-    for sentence_id, sentence_text in enumerate(sentences_text, 1):
-        print(f"  处理句子 {sentence_id}/{len(sentences_text)}: {sentence_text[:50]}...")
+    for sentence_id, (para_id, sentence_text) in enumerate(sentences_with_paragraph, 1):
+        # 使用 sentences_with_paragraph 的长度作为总句子数，避免未定义变量错误
+        print(f"  处理句子 {sentence_id}/{len(sentences_with_paragraph)}: {sentence_text[:50]}...")
         
         # 分割tokens（根据语言类型选择分词方式）
         token_dicts = split_tokens(sentence_text, is_non_whitespace=is_non_whitespace)
@@ -92,13 +131,19 @@ def process_article(
                         token["word_token_id"] = mapped_id
                 print(f"    - 生成 {len(sentence_word_tokens)} 个 word tokens")
         
+        # 判断是否是新段落的开始
+        is_new_paragraph = (para_id != last_paragraph_id)
+        last_paragraph_id = para_id
+        
         # 创建句子数据
         sentence_data = {
             "sentence_id": sentence_id,
             "sentence_body": sentence_text,
             "tokens": tokens_with_id,
             "word_tokens": sentence_word_tokens,
-            "token_count": len(tokens_with_id)
+            "token_count": len(tokens_with_id),
+            "paragraph_id": para_id,
+            "is_new_paragraph": is_new_paragraph
         }
         
         sentences.append(sentence_data)
