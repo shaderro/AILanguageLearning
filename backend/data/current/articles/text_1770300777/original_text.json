@@ -1,0 +1,134 @@
+{
+  "text_id": 1770300777,
+  "text_title": "测试",
+  "text_by_sentence": [
+    {
+      "text_id": 1770300777,
+      "sentence_id": 1,
+      "sentence_body": "这是一篇测试文章。",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "这",
+          "token_type": "text",
+          "global_token_id": 0,
+          "sentence_token_id": 1,
+          "word_token_id": 1
+        },
+        {
+          "token_body": "是",
+          "token_type": "text",
+          "global_token_id": 1,
+          "sentence_token_id": 2,
+          "word_token_id": 1
+        },
+        {
+          "token_body": "一",
+          "token_type": "text",
+          "global_token_id": 2,
+          "sentence_token_id": 3,
+          "word_token_id": 2
+        },
+        {
+          "token_body": "篇",
+          "token_type": "text",
+          "global_token_id": 3,
+          "sentence_token_id": 4,
+          "word_token_id": 2
+        },
+        {
+          "token_body": "测",
+          "token_type": "text",
+          "global_token_id": 4,
+          "sentence_token_id": 5,
+          "word_token_id": 3
+        },
+        {
+          "token_body": "试",
+          "token_type": "text",
+          "global_token_id": 5,
+          "sentence_token_id": 6,
+          "word_token_id": 3
+        },
+        {
+          "token_body": "文",
+          "token_type": "text",
+          "global_token_id": 6,
+          "sentence_token_id": 7,
+          "word_token_id": 4
+        },
+        {
+          "token_body": "章",
+          "token_type": "text",
+          "global_token_id": 7,
+          "sentence_token_id": 8,
+          "word_token_id": 4
+        },
+        {
+          "token_body": "。",
+          "token_type": "punctuation",
+          "global_token_id": 8,
+          "sentence_token_id": 9,
+          "word_token_id": 5
+        }
+      ],
+      "word_tokens": [
+        {
+          "word_token_id": 1,
+          "word_body": "这是",
+          "token_ids": [
+            1,
+            2
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 2,
+          "word_body": "一篇",
+          "token_ids": [
+            3,
+            4
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 3,
+          "word_body": "测试",
+          "token_ids": [
+            5,
+            6
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 4,
+          "word_body": "文章",
+          "token_ids": [
+            7,
+            8
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        },
+        {
+          "word_token_id": 5,
+          "word_body": "。",
+          "token_ids": [
+            9
+          ],
+          "pos_tag": null,
+          "lemma": null,
+          "linked_vocab_id": null
+        }
+      ]
+    }
+  ]
+}

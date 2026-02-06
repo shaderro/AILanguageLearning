@@ -238,6 +238,22 @@ export const authService = {
   },
 
   /**
+   * 直接重置密码（测试阶段，无需token）
+   * @param {string} email - 邮箱（可选）
+   * @param {number} userId - 用户ID（可选）
+   * @param {string} newPassword - 新密码
+   * @returns {Promise<{success: boolean, message: string, user_id?: number}>}
+   */
+  resetPasswordDirect: async (email = null, userId = null, newPassword) => {
+    const response = await authApi.post('/api/auth/reset-password-direct', {
+      email,
+      user_id: userId,
+      new_password: newPassword
+    })
+    return response.data
+  },
+
+  /**
    * 兑换邀请码
    * @param {string} code - 邀请码
    * @returns {Promise<{success: boolean, data: {code: string, granted_tokens: number, token_balance: number, redeemed_at: string}, message: string}>}

@@ -195,6 +195,13 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=6, description="新密码（至少6位）")
 
 
+class ResetPasswordDirectRequest(BaseModel):
+    """直接重置密码请求（测试阶段，无需token）"""
+    email: Optional[str] = Field(None, description="邮箱（可选）")
+    user_id: Optional[int] = Field(None, description="用户ID（可选）")
+    new_password: str = Field(..., min_length=6, description="新密码（至少6位）")
+
+
 # ==================== 路由器 ====================
 
 router = APIRouter(
@@ -608,6 +615,68 @@ async def get_all_users_debug(session: Session = Depends(get_db_session)):
             "count": len(users)
         }
     }
+
+
+@router.post("/reset-password-direct")
+async def reset_password_direct(
+    request: ResetPasswordDirectRequest,
+    session: Session = Depends(get_db_session)
+):
+    """
+    直接重置密码（测试阶段，无需token）
+    
+    - **email**: 邮箱（可选）
+    - **user_id**: 用户ID（可选）
+    - **new_password**: 新密码（至少6位）
+    
+    返回：
+    - success: 是否成功
+    - message: 提示信息
+    
+    注意：至少需要提供 email 或 user_id 之一
+    ⚠️ 此接口仅用于测试阶段，生产环境应移除或添加严格权限控制
+    """
+    try:
+        user = None
+        
+        # 优先使用 email 查询
+        if request.email:
+            user = session.query(User).filter(User.email == request.email).first()
+        # 如果 email 未提供或未找到，且提供了 user_id，则使用 user_id 查询
+        elif request.user_id:
+            user = session.query(User).filter(User.user_id == request.user_id).first()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="请提供邮箱或用户ID"
+            )
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在"
+            )
+        
+        # 加密新密码
+        new_password_hash = hash_password(request.new_password)
+        
+        # 更新密码
+        user.password_hash = new_password_hash
+        session.commit()
+        
+        print(f"✅ [ResetPasswordDirect] 密码重置成功: user_id={user.user_id}, email={user.email}")
+        
+        return {
+            "success": True,
+            "message": "密码重置成功，请使用新密码登录",
+            "user_id": user.user_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"❌ [ResetPasswordDirect] 重置密码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"重置密码失败: {str(e)}")
 
 
 @router.get("/debug/users")
