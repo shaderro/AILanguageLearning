@@ -286,6 +286,7 @@ function ChatView({
         if (items.length > 0) {
           // 🔧 与后端 /api/chat/history 的返回字段对齐：
           // backend 返回字段为 text / quote_text / is_user / created_at
+          const defaultWelcome = getTranslatedText("你好！我是聊天助手，有什么可以帮助你的吗？")
           const historyMessages = items.map(item => ({
             id: item.id,
             text: item.text, // 修复：使用后端返回的 text 字段，而不是不存在的 message
@@ -294,8 +295,23 @@ function ChatView({
             quote: item.quote_text || null
           })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
           
-          // 🔧 合并历史记录和当前消息（去重）
+          // 🔧 有历史记录时的策略：
+          // - 如果当前只有一条本地欢迎语，则直接用历史记录替换（不再显示欢迎语）
+          // - 否则合并并去重
           setMessages(prev => {
+            const isOnlyWelcome =
+              prev.length === 1 &&
+              !prev[0].isUser &&
+              typeof prev[0].text === 'string' &&
+              (prev[0].text === defaultWelcome || prev[0].text === "你好！我是聊天助手，有什么可以帮助你的吗？")
+
+            if (isOnlyWelcome) {
+              // 直接用历史记录替换欢迎语
+              window.chatViewMessagesRef[normalizedArticleId] = historyMessages
+              return historyMessages
+            }
+
+            // 否则合并去重
             const existingIds = new Set(prev.map(m => m.id))
             const newMessages = historyMessages.filter(m => !existingIds.has(m.id))
             const merged = [...prev, ...newMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
