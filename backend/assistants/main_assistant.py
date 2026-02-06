@@ -394,6 +394,7 @@ class MainAssistant:
         # 使用 session_state 中的 selected_token
         # 🔧 获取 user_id 用于数据库保存（实现跨设备同步）
         user_id = str(self.session_state.user_id) if hasattr(self.session_state, 'user_id') and self.session_state.user_id else None
+        print(f"🔍 [MainAssistant] 获取到的 user_id: {user_id} (类型: {type(user_id)}, session_state.user_id={getattr(self.session_state, 'user_id', 'NOT_SET')})")
         current_selected_token = self.session_state.current_selected_token
         if current_selected_token:
             self.dialogue_record.add_user_message(quoted_sentence, user_question, current_selected_token, user_id=user_id)

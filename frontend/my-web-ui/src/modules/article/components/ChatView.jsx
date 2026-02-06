@@ -284,13 +284,15 @@ function ChatView({
         const items = resp?.data?.data?.items || []
         
         if (items.length > 0) {
+          console.log('💬 [ChatView] 历史记录 items 原始数据:', items)
           const historyMessages = items.map(item => ({
             id: item.id,
-            text: item.message,
+            text: item.text || item.message || '',  // ✅ 修复：使用 item.text（后端返回的字段名）
             isUser: item.is_user,
             timestamp: new Date(item.created_at),
-            quote: item.quote || null
+            quote: item.quote_text || item.quote || null  // ✅ 修复：使用 item.quote_text
           })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          console.log('💬 [ChatView] 历史记录转换后:', historyMessages)
           
           // 🔧 合并历史记录和当前消息（去重）
           setMessages(prev => {

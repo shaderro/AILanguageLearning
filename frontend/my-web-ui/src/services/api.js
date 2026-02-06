@@ -793,6 +793,7 @@ export const apiService = {
     params.limit = limit
     params.offset = offset
     console.log('💬 [Frontend] Fetching chat history params:', params)
+    console.log('💬 [Frontend] Authorization header:', api.defaults.headers.common['Authorization'] || api.defaults.headers?.common?.Authorization || 'NOT SET')
     return api.get("/api/chat/history", { params })
   },
 

@@ -1350,6 +1350,15 @@ async def chat_with_assistant(
         else:
             print(f"ℹ️ [Chat #{request_id}] 未提供认证 token，使用默认用户: {user_id}")
         
+        # 🔧 设置 session_state.user_id（用于跨设备同步）
+        if hasattr(session_state, 'user_id'):
+            session_state.user_id = user_id
+            print(f"✅ [Chat #{request_id}] session_state.user_id 已设置: {user_id}")
+        else:
+            # 如果 session_state 没有 user_id 属性，动态添加
+            setattr(session_state, 'user_id', user_id)
+            print(f"✅ [Chat #{request_id}] session_state.user_id 已动态添加: {user_id}")
+        
         # 🔧 从 payload 获取 UI 语言（用于控制 AI 输出语言）
         ui_language = payload.get('ui_language', '中文')  # 默认为中文
         print("\n" + "="*80)
