@@ -284,12 +284,14 @@ function ChatView({
         const items = resp?.data?.data?.items || []
         
         if (items.length > 0) {
+          // 🔧 与后端 /api/chat/history 的返回字段对齐：
+          // backend 返回字段为 text / quote_text / is_user / created_at
           const historyMessages = items.map(item => ({
             id: item.id,
-            text: item.message,
+            text: item.text, // 修复：使用后端返回的 text 字段，而不是不存在的 message
             isUser: item.is_user,
             timestamp: new Date(item.created_at),
-            quote: item.quote || null
+            quote: item.quote_text || null
           })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
           
           // 🔧 合并历史记录和当前消息（去重）
