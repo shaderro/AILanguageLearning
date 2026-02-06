@@ -276,12 +276,25 @@ function ChatView({
   useEffect(() => {
     if (!articleId || isProcessing || loadingHistoryRef.current) return
     
+    console.log('💬 [ChatView] 尝试加载历史记录:', {
+      articleId,
+      isProcessing,
+      loadingHistoryRef: loadingHistoryRef.current,
+      currentMessagesCount: messages.length,
+      normalizedArticleId,
+    })
+    
     loadingHistoryRef.current = true
     const loadHistory = async () => {
       try {
         const { apiService } = await import('../../../services/api')
         const resp = await apiService.getChatHistory({ textId: articleId, limit: 200 })
         const items = resp?.data?.data?.items || []
+        console.log('💬 [ChatView] /api/chat/history 响应:', {
+          raw: resp?.data,
+          itemsLength: items.length,
+          firstItem: items[0] || null,
+        })
         
         if (items.length > 0) {
           // 🔧 与后端 /api/chat/history 的返回字段对齐：
@@ -295,10 +308,19 @@ function ChatView({
             quote: item.quote_text || null
           })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
           
+          console.log('💬 [ChatView] 映射后的 historyMessages:', {
+            count: historyMessages.length,
+            first: historyMessages[0] || null,
+          })
+          
           // 🔧 有历史记录时的策略：
           // - 如果当前只有一条本地欢迎语，则直接用历史记录替换（不再显示欢迎语）
           // - 否则合并并去重
           setMessages(prev => {
+            console.log('💬 [ChatView] setMessages(before merge):', {
+              prevCount: prev.length,
+              prevSample: prev.slice(0, 3),
+            })
             const isOnlyWelcome =
               prev.length === 1 &&
               !prev[0].isUser &&
@@ -308,6 +330,9 @@ function ChatView({
             if (isOnlyWelcome) {
               // 直接用历史记录替换欢迎语
               window.chatViewMessagesRef[normalizedArticleId] = historyMessages
+              console.log('💬 [ChatView] 检测到仅欢迎语，直接用历史记录替换:', {
+                replacedCount: historyMessages.length,
+              })
               return historyMessages
             }
 
@@ -316,6 +341,11 @@ function ChatView({
             const newMessages = historyMessages.filter(m => !existingIds.has(m.id))
             const merged = [...prev, ...newMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
             window.chatViewMessagesRef[normalizedArticleId] = merged
+            console.log('💬 [ChatView] 合并历史记录:', {
+              existingCount: prev.length,
+              newMessagesCount: newMessages.length,
+              mergedCount: merged.length,
+            })
             return merged
           })
         }

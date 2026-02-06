@@ -36,19 +36,25 @@ const internalLog = (level, message, data = null) => {
  */
 export const getSystemLanguage = () => {
   if (typeof navigator === 'undefined') {
-    console.log('🔍 [getSystemLanguage] 服务端渲染环境，返回默认值: en')
+    // 🔇 避免在生产环境/高频调用场景刷屏，只在需要时手动打开调试
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 [getSystemLanguage] 服务端渲染环境，返回默认值: en')
+    }
     return 'en' // 服务端渲染时默认返回英文
   }
 
   const systemLang = navigator.language || navigator.userLanguage || 'en'
   const langCode = systemLang.toLowerCase().split('-')[0] // 提取主语言代码，如 'zh-CN' -> 'zh'
 
-  console.log('🔍 [getSystemLanguage] 原始语言信息:', {
-    navigatorLanguage: navigator.language,
-    navigatorUserLanguage: navigator.userLanguage,
-    systemLang,
-    langCode
-  })
+  // 🔇 避免刷屏：仅在开发环境下输出详细日志
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 [getSystemLanguage] 原始语言信息:', {
+      navigatorLanguage: navigator.language,
+      navigatorUserLanguage: navigator.userLanguage,
+      systemLang,
+      langCode
+    })
+  }
 
   // Normalize 成支持的语言代码
   const normalizedMap = {
@@ -63,12 +69,14 @@ export const getSystemLanguage = () => {
   const normalized = normalizedMap[langCode] || 'en'
   const result = supportedLanguages.includes(normalized) ? normalized : 'en'
   
-  console.log('🔍 [getSystemLanguage] 语言检测结果:', {
-    langCode,
-    normalized,
-    result,
-    isEnglish: result === 'en'
-  })
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 [getSystemLanguage] 语言检测结果:', {
+      langCode,
+      normalized,
+      result,
+      isEnglish: result === 'en'
+    })
+  }
   
   return result
 }
