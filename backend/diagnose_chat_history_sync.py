@@ -191,7 +191,8 @@ def diagnose_chat_history_sync(environment=None):
         
         # 测试：查询特定 user_id 的消息（整数）
         print("\n   测试3: 查询 user_id=2 的消息（整数类型）...")
-        user_2_int = chat_manager.list_messages(user_id=2, limit=10)
+        print("      说明: PostgreSQL 中 user_id 字段是 TEXT，直接用整数查询会报错；这里自动转为字符串后查询")
+        user_2_int = chat_manager.list_messages(user_id=str(2), limit=10)
         print(f"      结果: {len(user_2_int)} 条消息")
         
         # 比较结果
