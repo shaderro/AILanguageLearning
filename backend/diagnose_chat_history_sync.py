@@ -88,6 +88,22 @@ def diagnose_chat_history_sync(environment=None):
             print(f"     pip install psycopg2-binary")
             print(f"   或者:")
             print(f"     pip install psycopg2")
+        elif 'could not translate host name' in error_msg.lower() or 'name or service not known' in error_msg.lower():
+            print(f"   [ERROR] 数据库连接失败: {e}")
+            print(f"\n   [提示] 无法解析数据库主机名，可能的原因:")
+            print(f"   1. 使用了 Render 内部 URL（只能从 Render 服务内部访问）")
+            print(f"   2. 需要使用 Render Dashboard 中的 'External Connection String'")
+            print(f"   3. 或者使用 Render CLI 的数据库代理功能")
+            print(f"\n   [解决方案]")
+            print(f"   方法1: 使用外部连接字符串（推荐）")
+            print(f"     - 登录 Render Dashboard")
+            print(f"     - 进入 PostgreSQL 服务")
+            print(f"     - 在 'Connections' 标签页找到 'External Connection String'")
+            print(f"     - 复制外部连接字符串（主机名通常是 'dpg-xxx-a.oregon-postgres.render.com'）")
+            print(f"\n   方法2: 使用 Render CLI 数据库代理")
+            print(f"     - 安装 Render CLI: https://render.com/docs/cli")
+            print(f"     - 运行: render db:proxy <database-name>")
+            print(f"     - 使用代理后的本地连接字符串")
         else:
             print(f"   [ERROR] 数据库连接失败: {e}")
         return
