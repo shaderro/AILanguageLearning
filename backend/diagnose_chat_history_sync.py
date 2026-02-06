@@ -68,8 +68,28 @@ def diagnose_chat_history_sync(environment=None):
         engine = db_manager.get_engine()
         print(f"   [OK] 数据库连接成功")
         print(f"   数据库类型: {'PostgreSQL' if 'postgres' in str(db_manager.database_url).lower() else 'SQLite'}")
+    except ImportError as e:
+        if 'psycopg2' in str(e) or 'psycopg' in str(e):
+            print(f"   [ERROR] 数据库连接失败: {e}")
+            print(f"\n   [提示] 需要安装 PostgreSQL 驱动才能连接生产数据库")
+            print(f"   请运行以下命令安装:")
+            print(f"     pip install psycopg2-binary")
+            print(f"   或者:")
+            print(f"     pip install psycopg2")
+        else:
+            print(f"   [ERROR] 数据库连接失败: {e}")
+        return
     except Exception as e:
-        print(f"   [ERROR] 数据库连接失败: {e}")
+        error_msg = str(e)
+        if 'psycopg2' in error_msg or 'psycopg' in error_msg:
+            print(f"   [ERROR] 数据库连接失败: {e}")
+            print(f"\n   [提示] 需要安装 PostgreSQL 驱动才能连接生产数据库")
+            print(f"   请运行以下命令安装:")
+            print(f"     pip install psycopg2-binary")
+            print(f"   或者:")
+            print(f"     pip install psycopg2")
+        else:
+            print(f"   [ERROR] 数据库连接失败: {e}")
         return
     
     # 2. 检查表是否存在
