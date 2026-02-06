@@ -7,6 +7,7 @@ import { authService } from '../services/authService'
 import { useUser } from '../../../contexts/UserContext'
 import { useLanguage } from '../../../contexts/LanguageContext'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
+import ChangePasswordModal from './ChangePasswordModal'
 
 const profileTexts = {
   zh: {
@@ -109,6 +110,7 @@ const ProfilePage = ({ onClose, onLogout }) => {
   const [inviteCode, setInviteCode] = useState('')
   const [isRedeeming, setIsRedeeming] = useState(false)
   const [redeemMessage, setRedeemMessage] = useState('')
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const t = profileTexts[uiLanguage] || profileTexts.zh
 
   // 获取用户信息
@@ -135,8 +137,7 @@ const ProfilePage = ({ onClose, onLogout }) => {
   }, [token, t.fetchError, t.notLoggedIn])
 
   const handleChangePassword = () => {
-    // TODO: 打开修改密码对话框或跳转到修改密码页面
-    alert(t.changePasswordAlert)
+    setIsChangePasswordModalOpen(true)
   }
 
   const handleRedeemInviteCode = async () => {
@@ -412,6 +413,14 @@ const ProfilePage = ({ onClose, onLogout }) => {
           </div>
         </div>
       </div>
+
+      {/* 修改密码模态框 */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        userId={userId}
+        userEmail={userInfo?.email}
+      />
     </div>
   )
 }
