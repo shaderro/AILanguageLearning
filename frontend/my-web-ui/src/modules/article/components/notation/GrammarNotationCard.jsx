@@ -237,9 +237,9 @@ export default function GrammarNotationCard({
         right: position.right !== 'auto' ? `${position.right}px` : 'auto',
         transform: position.left !== 'auto' ? 'none' : 'translateX(-50%)',
         width: '100%',
-        maxWidth: '800px',
+        maxWidth: '1200px',  // ✅ 增加最大宽度：从 800px 增加到 1200px
         minWidth: '300px',
-        maxHeight: '200px',
+        maxHeight: '600px',  // ✅ 增加最大高度：从 200px 增加到 600px，避免内容截断
         minHeight: '80px',
         height: 'auto',
         padding: '16px',
@@ -252,10 +252,12 @@ export default function GrammarNotationCard({
     >
       <div 
         style={{ 
-          maxHeight: 'calc(200px - 16px - 16px)',
+          maxHeight: 'calc(600px - 16px - 16px)',  // ✅ 同步更新内部容器最大高度
           height: 'auto',
           overflowY: 'auto',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          wordWrap: 'break-word',  // ✅ 确保长单词可以换行
+          wordBreak: 'break-word'  // ✅ 防止文本溢出
         }}
       >
         {isLoading && (
@@ -308,7 +310,10 @@ export default function GrammarNotationCard({
                     paddingLeft: '8px', 
                     borderLeft: `2px solid ${colors.primary[100]}`,
                     padding: '4px 0 4px 8px',
-                    whiteSpace: 'pre-wrap'
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',  // ✅ 确保长文本可以换行
+                    wordBreak: 'break-word',  // ✅ 防止文本溢出
+                    overflowWrap: 'break-word'  // ✅ 额外的换行保护
                   }}>
                     {parseExplanation(rule.rule_summary || rule.explanation || '')}
                   </div>
@@ -321,7 +326,10 @@ export default function GrammarNotationCard({
                       paddingLeft: '8px', 
                       borderLeft: '2px solid #dcfce7',
                       padding: '4px 0 4px 8px',
-                      whiteSpace: 'pre-wrap'
+                      whiteSpace: 'pre-wrap',
+                      wordWrap: 'break-word',  // ✅ 确保长文本可以换行
+                      wordBreak: 'break-word',  // ✅ 防止文本溢出
+                      overflowWrap: 'break-word'  // ✅ 额外的换行保护
                     }}>
                       {parseExplanation(rule.context_explanation || '')}
                     </div>
