@@ -288,10 +288,11 @@ function ChatView({
     const loadHistory = async () => {
       try {
         const { apiService } = await import('../../../services/api')
+        // 注意：apiService.getChatHistory 已经过 Axios 拦截器处理，直接返回 innerData（即 { items, count, ... }）
         const resp = await apiService.getChatHistory({ textId: articleId, limit: 200 })
-        const items = resp?.data?.data?.items || []
+        const items = resp?.items || []
         console.log('💬 [ChatView] /api/chat/history 响应:', {
-          raw: resp?.data,
+          raw: resp,
           itemsLength: items.length,
           firstItem: items[0] || null,
         })
