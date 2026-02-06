@@ -11,6 +11,13 @@
 
 import sys
 import os
+import argparse
+
+# 修复 Windows 控制台编码问题
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # 添加项目根目录到路径
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,8 +28,12 @@ from backend.data_managers.chat_message_manager_db import ChatMessageManagerDB
 from sqlalchemy import text, inspect
 from collections import defaultdict
 
-def diagnose_chat_history_sync():
-    """诊断聊天历史记录同步问题"""
+def diagnose_chat_history_sync(environment=None):
+    """诊断聊天历史记录同步问题
+    
+    Args:
+        environment: 数据库环境 ('development', 'testing', 'production')，如果不指定则从环境变量或配置读取
+    """
     
     print("=" * 80)
     print("[诊断] 聊天历史记录跨设备同步诊断")
@@ -30,14 +41,27 @@ def diagnose_chat_history_sync():
     
     # 1. 检查数据库连接
     print("\n[1] 检查数据库连接...")
-    try:
-        from backend.config import ENV
-        environment = ENV
-    except ImportError:
-        import os
-        environment = os.getenv("ENV", "development")
+    
+    # 优先使用命令行参数，其次使用环境变量，最后使用默认值
+    if environment is None:
+        try:
+            from backend.config import ENV
+            environment = ENV
+        except ImportError:
+            environment = os.getenv("ENV", "development")
     
     print(f"   环境: {environment}")
+    
+    # 检查是否有 DATABASE_URL（生产环境需要）
+    database_url = os.getenv("DATABASE_URL")
+    if environment == "production":
+        if not database_url:
+            print(f"   [WARN] 警告: 生产环境需要设置 DATABASE_URL 环境变量")
+            print(f"   请设置: set DATABASE_URL=postgresql://... (Windows)")
+            print(f"   或: export DATABASE_URL=postgresql://... (Linux/Mac)")
+            print(f"   或: $env:DATABASE_URL='postgresql://...' (PowerShell)")
+        else:
+            print(f"   [OK] 已检测到 DATABASE_URL 环境变量")
     
     try:
         db_manager = DatabaseManager(environment)
@@ -191,4 +215,15 @@ def diagnose_chat_history_sync():
     print("\n[完成] 诊断完成")
 
 if __name__ == "__main__":
-    diagnose_chat_history_sync()
+    parser = argparse.ArgumentParser(description='诊断聊天历史记录跨设备同步问题')
+    parser.add_argument(
+        '--env', 
+        '--environment',
+        type=str,
+        choices=['development', 'testing', 'production'],
+        default=None,
+        help='数据库环境 (development/testing/production)，默认从环境变量或配置读取'
+    )
+    
+    args = parser.parse_args()
+    diagnose_chat_history_sync(environment=args.env)
