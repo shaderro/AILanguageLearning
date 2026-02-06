@@ -8,7 +8,7 @@ class GrammarExampleExplanationAssistant(SubAssistant):
     def __init__(self):
         super().__init__(
             sys_prompt=grammar_example_explanation_sys_prompt,
-            max_tokens=100,
+            max_tokens=4000,  # 🔧 增加到 4000，避免 context_explanation 被截断（中文解释可能较长）
             parse_json=False
         )
 

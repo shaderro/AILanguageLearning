@@ -50,7 +50,6 @@ def get_chat_history(
     """
     # 🔒 强制使用当前登录用户的 user_id（忽略任何查询参数中的 user_id）
     user_id = str(current_user.user_id)
-    print(f"🔍 [ChatHistory] 获取历史记录请求: text_id={text_id}, sentence_id={sentence_id}, user_id={user_id}, limit={limit}, offset={offset}")
     
     # 获取 ChatMessageManagerDB 实例
     chat_manager = get_chat_manager()

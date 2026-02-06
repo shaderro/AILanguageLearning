@@ -195,8 +195,6 @@ class ChatMessageManagerDB:
     if sentence_id is not None:
       conditions.append(self._table.c.sentence_id == sentence_id)
 
-    print(f"🔍 [ChatMessageManagerDB] list_messages 调用: user_id={user_id}, text_id={text_id}, sentence_id={sentence_id}, limit={limit}, offset={offset}, conditions={len(conditions)}")
-
     if conditions:
       stmt = stmt.where(and_(*conditions))
 
@@ -208,11 +206,6 @@ class ChatMessageManagerDB:
     # 执行查询
     with self.engine.connect() as conn:
       rows = conn.execute(stmt).fetchall()
-
-    print(f"✅ [ChatMessageManagerDB] 查询结果: 找到 {len(rows)} 条消息")
-    if len(rows) > 0:
-      first_row = rows[0]
-      print(f"📋 [ChatMessageManagerDB] 第一条消息: user_id={first_row.user_id}, text_id={first_row.text_id}, sentence_id={first_row.sentence_id}, is_user={first_row.is_user}")
 
     # 转换结果
     results: List[Dict[str, Any]] = []

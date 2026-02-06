@@ -228,6 +228,14 @@ export default function GrammarNotationCard({
 
   if (!isVisible) return null
 
+  // 🔧 计算 tooltip 宽度，使其与 ArticleViewer 宽度一致
+  // ArticleViewer 使用 flex-1，与 ChatView 并排（ChatView 默认 320px，最大 600px，gap=32px）
+  // 使用 calc 计算：视口宽度 - ChatView最大宽度(600px) - gap(32px) - padding(32px)
+  // 但为了更准确，我们使用一个合理的最大宽度，并确保不会超出 ArticleViewer
+  const TOOLTIP_MAX_WIDTH = 'calc(100vw - 600px - 64px)' // 视口宽度 - ChatView最大宽度 - gap和padding
+  const TOOLTIP_MAX_HEIGHT = '600px' // 增加最大高度，超出时使用滚动
+  const TOOLTIP_INNER_MAX_HEIGHT = 'calc(600px - 32px)' // 减去上下 padding (16px * 2)
+
   return (
     <div 
       className="fixed bg-white border border-gray-300 rounded-lg shadow-lg z-50 notation-card"
@@ -237,9 +245,9 @@ export default function GrammarNotationCard({
         right: position.right !== 'auto' ? `${position.right}px` : 'auto',
         transform: position.left !== 'auto' ? 'none' : 'translateX(-50%)',
         width: '100%',
-        maxWidth: '1200px',  // ✅ 增加最大宽度：从 800px 增加到 1200px
+        maxWidth: TOOLTIP_MAX_WIDTH,
         minWidth: '300px',
-        maxHeight: '600px',  // ✅ 增加最大高度：从 200px 增加到 600px，避免内容截断
+        maxHeight: TOOLTIP_MAX_HEIGHT,
         minHeight: '80px',
         height: 'auto',
         padding: '16px',
@@ -252,12 +260,10 @@ export default function GrammarNotationCard({
     >
       <div 
         style={{ 
-          maxHeight: 'calc(600px - 16px - 16px)',  // ✅ 同步更新内部容器最大高度
+          maxHeight: TOOLTIP_INNER_MAX_HEIGHT,
           height: 'auto',
           overflowY: 'auto',
-          overflowX: 'hidden',
-          wordWrap: 'break-word',  // ✅ 确保长单词可以换行
-          wordBreak: 'break-word'  // ✅ 防止文本溢出
+          overflowX: 'hidden'
         }}
       >
         {isLoading && (
@@ -310,10 +316,7 @@ export default function GrammarNotationCard({
                     paddingLeft: '8px', 
                     borderLeft: `2px solid ${colors.primary[100]}`,
                     padding: '4px 0 4px 8px',
-                    whiteSpace: 'pre-wrap',
-                    wordWrap: 'break-word',  // ✅ 确保长文本可以换行
-                    wordBreak: 'break-word',  // ✅ 防止文本溢出
-                    overflowWrap: 'break-word'  // ✅ 额外的换行保护
+                    whiteSpace: 'pre-wrap'
                   }}>
                     {parseExplanation(rule.rule_summary || rule.explanation || '')}
                   </div>
@@ -326,10 +329,7 @@ export default function GrammarNotationCard({
                       paddingLeft: '8px', 
                       borderLeft: '2px solid #dcfce7',
                       padding: '4px 0 4px 8px',
-                      whiteSpace: 'pre-wrap',
-                      wordWrap: 'break-word',  // ✅ 确保长文本可以换行
-                      wordBreak: 'break-word',  // ✅ 防止文本溢出
-                      overflowWrap: 'break-word'  // ✅ 额外的换行保护
+                      whiteSpace: 'pre-wrap'
                     }}>
                       {parseExplanation(rule.context_explanation || '')}
                     </div>
