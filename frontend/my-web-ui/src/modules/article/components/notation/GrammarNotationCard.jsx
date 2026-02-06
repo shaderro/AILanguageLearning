@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { apiService } from '../../../../services/api'
 import { colors } from '../../../../design-tokens'
 import { useUIText } from '../../../../i18n/useUIText'
@@ -116,6 +116,7 @@ export default function GrammarNotationCard({
   const [grammarRules, setGrammarRules] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [articleRect, setArticleRect] = useState(null)
 
   useEffect(() => {
     if (isVisible && textId && sentenceId) {
@@ -169,6 +170,34 @@ export default function GrammarNotationCard({
       setError(null)
     }
   }, [isVisible, textId, sentenceId, cachedGrammarRules, getGrammarRuleById])
+
+  const measureArticleRect = useCallback(() => {
+    if (typeof document === 'undefined') return
+    // ArticleViewer 的滚动容器：`className="... article-scrollbar"`
+    const el = document.querySelector('.article-scrollbar')
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    if (!rect || !rect.width) return
+    setArticleRect({
+      left: rect.left,
+      width: rect.width,
+    })
+  }, [])
+
+  // 打开 tooltip 时测量 article view 宽度，并在 resize / scroll 时更新
+  useLayoutEffect(() => {
+    if (!isVisible) {
+      setArticleRect(null)
+      return
+    }
+    measureArticleRect()
+    window.addEventListener('resize', measureArticleRect)
+    window.addEventListener('scroll', measureArticleRect, true)
+    return () => {
+      window.removeEventListener('resize', measureArticleRect)
+      window.removeEventListener('scroll', measureArticleRect, true)
+    }
+  }, [isVisible, measureArticleRect])
 
   const fetchSentenceGrammarRules = async (textId, sentenceId) => {
     try {
@@ -228,11 +257,8 @@ export default function GrammarNotationCard({
 
   if (!isVisible) return null
 
-  // 🔧 计算 tooltip 宽度，使其与 ArticleViewer 宽度一致
-  // ArticleViewer 使用 flex-1，与 ChatView 并排（ChatView 默认 320px，最大 600px，gap=32px）
-  // 使用 calc 计算：视口宽度 - ChatView最大宽度(600px) - gap(32px) - padding(32px)
-  // 但为了更准确，我们使用一个合理的最大宽度，并确保不会超出 ArticleViewer
-  const TOOLTIP_MAX_WIDTH = 'calc(100vw - 600px - 64px)' // 视口宽度 - ChatView最大宽度 - gap和padding
+  // 🔧 tooltip 宽度：与 article view 宽度保持一致（直接测量 .article-scrollbar）
+  const TOOLTIP_MAX_WIDTH = articleRect?.width ? `${Math.floor(articleRect.width)}px` : '800px'
   const TOOLTIP_MAX_HEIGHT = '600px' // 增加最大高度，超出时使用滚动
   const TOOLTIP_INNER_MAX_HEIGHT = 'calc(600px - 32px)' // 减去上下 padding (16px * 2)
 
@@ -241,10 +267,12 @@ export default function GrammarNotationCard({
       className="fixed bg-white border border-gray-300 rounded-lg shadow-lg z-50 notation-card"
       style={{
         top: `${position.top}px`,
-        left: position.left !== 'auto' ? `${position.left}px` : 'auto',
+        // 如果测量到了 articleRect，则强制与 article view 左对齐
+        left: articleRect?.left != null ? `${Math.floor(articleRect.left)}px` : (position.left !== 'auto' ? `${position.left}px` : 'auto'),
         right: position.right !== 'auto' ? `${position.right}px` : 'auto',
-        transform: position.left !== 'auto' ? 'none' : 'translateX(-50%)',
-        width: '100%',
+        // 与 article view 对齐时，不需要 transform
+        transform: articleRect?.left != null ? 'none' : (position.left !== 'auto' ? 'none' : 'translateX(-50%)'),
+        width: articleRect?.width ? `${Math.floor(articleRect.width)}px` : '100%',
         maxWidth: TOOLTIP_MAX_WIDTH,
         minWidth: '300px',
         maxHeight: TOOLTIP_MAX_HEIGHT,
