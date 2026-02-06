@@ -1455,11 +1455,38 @@ async def chat_with_assistant(
         effective_sentence_body = selected_text if selected_text else current_sentence.sentence_body
         print("🚀 [Chat] 生成主回答...")
         try:
+            # ✅ 关键修复：在生成回答前保存用户消息到 chat_messages（跨设备同步依赖它）
+            try:
+                from backend.data_managers.selected_token import SelectedToken
+                chat_user_id = str(user_id) if user_id is not None else None
+                selected_token_for_save = local_state.current_selected_token or SelectedToken.from_full_sentence(current_sentence)
+                main_assistant.dialogue_record.add_user_message(
+                    current_sentence,
+                    current_input,
+                    selected_token_for_save,
+                    user_id=chat_user_id
+                )
+                print(f"✅ [Chat #{request_id}] 已保存用户消息到 chat_messages (user_id={chat_user_id})")
+            except Exception as e:
+                print(f"⚠️ [Chat #{request_id}] 保存用户消息失败（不影响回答生成）: {e}")
+
             ai_response = main_assistant.answer_question_function(
                 quoted_sentence=current_sentence,
                 user_question=current_input,
                 sentence_body=effective_sentence_body
             )
+
+            # ✅ 关键修复：保存 AI 响应到 chat_messages
+            try:
+                chat_user_id = str(user_id) if user_id is not None else None
+                main_assistant.dialogue_record.add_ai_response(
+                    current_sentence,
+                    ai_response,
+                    user_id=chat_user_id
+                )
+                print(f"✅ [Chat #{request_id}] 已保存AI响应到 chat_messages (user_id={chat_user_id})")
+            except Exception as e:
+                print(f"⚠️ [Chat #{request_id}] 保存AI响应失败（不影响返回）: {e}")
         finally:
             # 确保 session 被正确关闭
             db_session.close()
