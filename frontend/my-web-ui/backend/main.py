@@ -1457,9 +1457,13 @@ async def chat_with_assistant(
         try:
             # ✅ 关键修复：在生成回答前保存用户消息到 chat_messages（跨设备同步依赖它）
             try:
-                from backend.data_managers.selected_token import SelectedToken
+                # SelectedToken 定义在 backend.assistants.chat_info.selected_token
+                from backend.assistants.chat_info.selected_token import SelectedToken
                 chat_user_id = str(user_id) if user_id is not None else None
-                selected_token_for_save = local_state.current_selected_token or SelectedToken.from_full_sentence(current_sentence)
+                # 如果 SessionState 中已经有 selected_token，则直接复用；否则创建整句选择
+                selected_token_for_save = getattr(local_state, "current_selected_token", None)
+                if not selected_token_for_save:
+                    selected_token_for_save = SelectedToken.from_full_sentence(current_sentence)
                 main_assistant.dialogue_record.add_user_message(
                     current_sentence,
                     current_input,
