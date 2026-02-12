@@ -28,11 +28,34 @@ class GrammarManager:
             return self.dal.get_starred_grammar_rules()
         return self.dal.list_all_grammar_rules(skip, limit)
     
-    def add_grammar_rule(self, rule_name: str, rule_summary: str,
-                        source: str = "auto", is_starred: bool = False, user_id: int = None,
-                        language: str = None) -> GrammarRule:
-        """添加语法规则"""
-        return self.dal.add_grammar_rule(rule_name, rule_summary, source, is_starred, user_id, language)
+    def add_grammar_rule(
+        self,
+        rule_name: str,
+        rule_summary: str,
+        source: str = "auto",
+        is_starred: bool = False,
+        user_id: int = None,
+        language: str = None,
+        display_name: Optional[str] = None,
+        canonical_category: Optional[str] = None,
+        canonical_subtype: Optional[str] = None,
+        canonical_function: Optional[str] = None,
+        canonical_key: Optional[str] = None,
+    ) -> GrammarRule:
+        """添加语法规则（支持可选 canonical 字段 & display_name）"""
+        return self.dal.add_grammar_rule(
+            rule_name,
+            rule_summary,
+            source,
+            is_starred,
+            user_id,
+            language,
+            display_name=display_name,
+            canonical_category=canonical_category,
+            canonical_subtype=canonical_subtype,
+            canonical_function=canonical_function,
+            canonical_key=canonical_key,
+        )
     
     def search_grammar_rules(self, keyword: str) -> List[GrammarRule]:
         """搜索语法规则"""

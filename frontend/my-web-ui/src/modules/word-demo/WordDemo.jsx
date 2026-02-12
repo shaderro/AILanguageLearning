@@ -283,7 +283,7 @@ function WordDemo() {
     if (currentReviewIndex < reviewWords.length) {
       const currentVocab = reviewWords[currentReviewIndex]
       return (
-        <div className="h-full bg-gray-100 p-8">
+        <div className="h-full bg-white p-8">
           <div className="max-w-6xl mx-auto">
             <VocabReviewCard
               vocab={currentVocab}
@@ -314,7 +314,7 @@ function WordDemo() {
       )
     }
     return (
-      <div className="h-full bg-gray-100 p-8">
+      <div className="h-full bg-white p-8">
         <div className="max-w-6xl mx-auto">
           <ReviewResults results={reviewResults} onBack={handleBackToWords} />
         </div>
@@ -372,7 +372,7 @@ function WordDemo() {
     }
     
     return (
-      <div className="h-full bg-gray-100 p-8">
+      <div className="h-full bg-white p-8">
         <div className="max-w-6xl mx-auto">
           <VocabDetailCard
             vocab={selectedWord}
@@ -470,26 +470,19 @@ function WordDemo() {
 
   return (
     <LearnPageLayout
-      title={t('词汇学习')}
+      title=""
       onStartReview={handleStartReview}
       onSearch={(value) => setSearchTerm(value)}
       onFilterChange={handleFilterChange}
       filters={filters}
       onRefresh={handleRefreshData}
       showFilters={true}
-      showSearch={true}
-      showRefreshButton={true}
-      backgroundClass="bg-gray-100"
+      showSearch={false}
+      showRefreshButton={false}
+      backgroundClass="bg-white"
       sortOrder={sortOrder}
       onSortChange={setSortOrder}
     >
-      {/* 显示当前语言过滤状态 */}
-      <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
-        <p className="text-sm text-blue-700">
-          <span className="font-medium">当前筛选：</span>{selectedLanguage}
-          <span className="ml-2 text-gray-600">({list.length} 个词汇)</span>
-        </p>
-      </div>
       {/* 搜索建议区域（可选） */}
       {wordInfo.isSuccess && wordInfo.data?.status === 'success' && (
         <div className="col-span-1 md:col-span-2 lg:col-span-3">

@@ -103,10 +103,10 @@ const LearnCard = ({
 
   // 获取学习状态显示颜色
   const getLearnStatusColor = (learnStatus) => {
-    if (!learnStatus) return 'text-gray-500'
+    if (!learnStatus) return 'text-gray-400'
     if (learnStatus === 'mastered') return 'text-green-600'
-    if (learnStatus === 'not_mastered') return 'text-gray-500'
-    return 'text-gray-500'
+    if (learnStatus === 'not_mastered') return 'text-gray-400'
+    return 'text-gray-400'
   }
 
   // 根据数据类型确定显示内容
@@ -117,105 +117,59 @@ const LearnCard = ({
 
     if (type === 'vocab') {
       return (
-        <div className="space-y-2">
-          {/* 词汇本身 */}
-          <div className="text-lg font-semibold text-gray-900">
-            {data?.vocab_body || t('未知词汇')}
-          </div>
-          
-          {/* 解释内容 */}
-          {data?.explanation && (
-            <div>
-              <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
-                {parseExplanation(data.explanation, data?.vocab_body)}
+        <>
+          <div className="flex-1 space-y-2">
+            {/* 词汇本身 */}
+            <div className="text-lg font-semibold text-gray-900">
+              {data?.vocab_body || t('未知词汇')}
+            </div>
+            
+            {/* 解释内容 */}
+            {data?.explanation && (
+              <div>
+                <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
+                  {parseExplanation(data.explanation, data?.vocab_body)}
+                </div>
               </div>
-            </div>
-          )}
-          
-          <div className="flex flex-col space-y-1 mt-2">
-            <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>{t('来源')}: {data?.source || t('未知')}</span>
-              {onToggleStar && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation(); // 阻止触发卡片的 onClick
-                    onToggleStar(type === 'vocab' ? data.vocab_id : data.rule_id, data.is_starred);
-                  }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title={data?.is_starred ? t('取消收藏') : t('收藏')}
-                >
-                  {data?.is_starred ? (
-                    <svg className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 text-gray-400 hover:text-yellow-500 transition-colors" viewBox="0 0 20 20">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                    </svg>
-                  )}
-                </button>
-              )}
-            </div>
-            {/* 学习状态显示 */}
-            <div className="text-xs">
-              <span className={getLearnStatusColor(data?.learn_status)}>
-                {t('状态')}: {formatLearnStatus(data?.learn_status)}
-              </span>
-            </div>
+            )}
           </div>
-        </div>
+          
+          {/* 学习状态显示 - 固定在底部 */}
+          <div className="text-xs mt-4">
+            <span className={getLearnStatusColor(data?.learn_status)}>
+              {t('状态')}: {formatLearnStatus(data?.learn_status)}
+            </span>
+          </div>
+        </>
       )
     }
 
     if (type === 'grammar') {
       return (
-        <div className="space-y-2">
-          {/* 语法规则名称 */}
-          <div className="text-lg font-semibold text-gray-900">
-            {data?.rule_name || t('未知规则')}
-          </div>
-          
-          {/* 解释内容 */}
-          {data?.rule_summary && (
-            <div>
-              <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
-                {parseExplanation(data.rule_summary)}
+        <>
+          <div className="flex-1 space-y-2">
+            {/* 语法规则名称 */}
+            <div className="text-lg font-semibold text-gray-900">
+              {data?.rule_name || t('未知规则')}
+            </div>
+            
+            {/* 解释内容 */}
+            {data?.rule_summary && (
+              <div>
+                <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
+                  {parseExplanation(data.rule_summary)}
+                </div>
               </div>
-            </div>
-          )}
-          
-          <div className="flex flex-col space-y-1 mt-2">
-            <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>{t('来源')}: {data?.source || t('未知')}</span>
-              {onToggleStar && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation(); // 阻止触发卡片的 onClick
-                    onToggleStar(type === 'vocab' ? data.vocab_id : data.rule_id, data.is_starred);
-                  }}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                  title={data?.is_starred ? t('取消收藏') : t('收藏')}
-                >
-                  {data?.is_starred ? (
-                    <svg className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 text-gray-400 hover:text-yellow-500 transition-colors" viewBox="0 0 20 20">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                    </svg>
-                  )}
-                </button>
-              )}
-            </div>
-            {/* 学习状态显示 */}
-            <div className="text-xs">
-              <span className={getLearnStatusColor(data?.learn_status)}>
-                {t('状态')}: {formatLearnStatus(data?.learn_status)}
-              </span>
-            </div>
+            )}
           </div>
-        </div>
+          
+          {/* 学习状态显示 - 固定在底部 */}
+          <div className="text-xs mt-4">
+            <span className={getLearnStatusColor(data?.learn_status)}>
+              {t('状态')}: {formatLearnStatus(data?.learn_status)}
+            </span>
+          </div>
+        </>
       )
     }
 
@@ -234,11 +188,9 @@ const LearnCard = ({
       loading={loading}
       error={error}
       onClick={onClick}
-      className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform h-full flex flex-col"
+      className="bg-white rounded-lg border border-gray-200 p-4 transition-all duration-300 cursor-pointer transform hover:scale-105 transition-transform h-full flex flex-col"
     >
-      <div className="flex-1">
-        {getCardContent()}
-      </div>
+      {getCardContent()}
     </CardBase>
   )
 }

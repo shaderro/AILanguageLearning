@@ -7,8 +7,12 @@ from assistants.chat_info.selected_token import SelectedToken
 
 @dataclass
 class GrammarToAdd:
-    rule_name: str
-    rule_explanation: str
+    canonical_category: str  # 规范化类别
+    canonical_subtype: str   # 规范化子类型
+    canonical_function: str  # 规范化功能
+    canonical_key: str       # 规范化键值（用于查重）
+    display_name: str        # 显示名称（确定添加后生成）
+    rule_summary: str        # 规则摘要（确定添加后生成）
 
 @dataclass
 class VocabToAdd:
@@ -16,8 +20,11 @@ class VocabToAdd:
 
 @dataclass
 class GrammarSummary:
-    grammar_rule_name: str
-    grammar_rule_summary: str
+    canonical_category: str  # 规范化类别
+    canonical_subtype: str   # 规范化子类型
+    canonical_function: str  # 规范化功能
+    canonical_key: str       # 规范化键值（用于查重）
+    # 注意：display_name 和 rule_summary 在确定添加后生成，不在此处
 
 @dataclass
 class VocabSummary:
@@ -96,14 +103,42 @@ class SessionState:
         """
         self.check_relevant_decision = CheckRelevantDecision(grammar=grammar, vocab=vocab)
     
-    def add_grammar_summary(self, name: str, summary: str):
-        self.summarized_results.append(GrammarSummary(grammar_rule_name=name, grammar_rule_summary=summary))
+    def add_grammar_summary(
+        self, 
+        canonical_category: str,
+        canonical_subtype: str,
+        canonical_function: str,
+        canonical_key: str
+    ):
+        """添加语法总结（包含 canonical 字段）"""
+        self.summarized_results.append(GrammarSummary(
+            canonical_category=canonical_category,
+            canonical_subtype=canonical_subtype,
+            canonical_function=canonical_function,
+            canonical_key=canonical_key
+        ))
 
     def add_vocab_summary(self, vocab: str):
         self.summarized_results.append(VocabSummary(vocab=vocab))
 
-    def add_grammar_to_add(self, rule_name: str, rule_explanation: str):
-        self.grammar_to_add.append(GrammarToAdd(rule_name=rule_name, rule_explanation=rule_explanation))
+    def add_grammar_to_add(
+        self,
+        canonical_category: str,
+        canonical_subtype: str,
+        canonical_function: str,
+        canonical_key: str,
+        display_name: str,
+        rule_summary: str
+    ):
+        """添加要保存到数据库的语法规则（包含 canonical 字段和生成的 display_name、rule_summary）"""
+        self.grammar_to_add.append(GrammarToAdd(
+            canonical_category=canonical_category,
+            canonical_subtype=canonical_subtype,
+            canonical_function=canonical_function,
+            canonical_key=canonical_key,
+            display_name=display_name,
+            rule_summary=rule_summary
+        ))
 
     def add_vocab_to_add(self, vocab: str):
         self.vocab_to_add.append(VocabToAdd(vocab=vocab))

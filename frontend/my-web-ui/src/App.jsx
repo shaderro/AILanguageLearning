@@ -19,6 +19,7 @@ import { UiLanguageProvider } from './contexts/UiLanguageContext'
 import { useUIText } from './i18n/useUIText'
 import UIDemoPage from './pages/UIDemo'
 import LandingPage from './pages/LandingPage'
+import PrivacyPolicyAndTerms from './pages/PrivacyPolicyAndTerms'
 import { colors } from './design-tokens'
 
 function AppContent() {
@@ -107,6 +108,7 @@ function AppContent() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false)
   const [showProfilePage, setShowProfilePage] = useState(false)
+  const [showPPTermsPage, setShowPPTermsPage] = useState(false)
   
   // 从 UserContext 获取用户信息和方法
   const { 
@@ -170,6 +172,15 @@ function AppContent() {
     )
   }
 
+  // 如果显示 PP & Terms 页面
+  if (showPPTermsPage) {
+    return (
+      <PrivacyPolicyAndTerms
+        onBack={() => setShowPPTermsPage(false)}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto">
       <div className="bg-white shadow-sm border-b">
@@ -188,9 +199,9 @@ function AppContent() {
                 </button>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navButton('wordDemo', t('单词演示'))}
-                {navButton('grammarDemo', t('语法演示'))}
-                {navButton('article', t('文章'))}
+                {navButton('wordDemo', t('词汇'))}
+                {navButton('grammarDemo', t('语法'))}
+                {navButton('article', t('阅读'))}
               </div>
             </div>
 
@@ -265,6 +276,10 @@ function AppContent() {
         onSwitchToLogin={() => {
           setShowRegisterModal(false)
           setShowLoginModal(true)
+        }}
+        onOpenPPTerms={() => {
+          setShowRegisterModal(false)
+          setShowPPTermsPage(true)
         }}
       />
 

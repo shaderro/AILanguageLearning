@@ -109,6 +109,13 @@ class GrammarRule(Base):
     rule_name = Column(String(255), nullable=False)
     rule_summary = Column(Text, nullable=False)
     language = Column(String(50), nullable=True)  # 语言：中文、英文、德文
+    # 展示用名称（可选，保留 rule_name 作为主键/唯一约束的一部分）
+    display_name = Column(String(255), nullable=True)
+    # 规范化语法分类信息（全部可空，逐步填充）
+    canonical_category = Column(String(255), nullable=True)
+    canonical_subtype = Column(String(255), nullable=True)
+    canonical_function = Column(String(255), nullable=True)
+    canonical_key = Column(String(255), nullable=True)
     source = Column(EnumType(SourceType, length=50), default=SourceType.AUTO, nullable=False)
     is_starred = Column(Boolean, default=False, nullable=False)
     learn_status = Column(EnumType(LearnStatus, length=50), default=LearnStatus.NOT_MASTERED, nullable=False)  # 学习状态：未掌握/已掌握

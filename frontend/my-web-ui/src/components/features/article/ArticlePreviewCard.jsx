@@ -145,7 +145,7 @@ export function ArticlePreviewCard({
     <BaseCard
       padding="sm"
       interactive="none"
-      className={`group shadow-none transition-shadow duration-200 hover:shadow-md ${className ?? ''}`}
+      className={`group shadow-none transition-shadow duration-200 ${className ?? ''}`}
       style={{ width: widthValue, height: heightValue, ...style }}
     >
       <div className="flex h-full flex-col space-y-1">

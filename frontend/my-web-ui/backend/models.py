@@ -35,6 +35,13 @@ class GrammarRule(BaseModel):
     rule_id: int
     rule_name: str
     rule_summary: str
+    # 展示用名称（可选，兼容旧字段 rule_name）
+    display_name: Optional[str] = None
+    # 规范化语法分类信息（可选）
+    canonical_category: Optional[str] = None
+    canonical_subtype: Optional[str] = None
+    canonical_function: Optional[str] = None
+    canonical_key: Optional[str] = None
     examples: List[GrammarExample]  # 修复：应该是对象列表，不是字符串列表
     source: str
     is_starred: bool

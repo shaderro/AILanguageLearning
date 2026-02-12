@@ -53,14 +53,14 @@ const SingleFilterOption = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          hover:border-gray-400 transition-colors duration-200
-          ${isOpen ? 'ring-2 ring-blue-500 border-blue-500' : ''}
+          w-full h-[38px] px-3 text-left bg-white border border-gray-300 rounded-md shadow-sm
+          focus:outline-none focus:ring-2 focus:ring-[#5BE2C2] focus:border-[#5BE2C2]
+          hover:border-[#5BE2C2] transition-colors duration-200 flex items-center min-w-0
+          ${isOpen ? 'ring-2 ring-[#5BE2C2] border-[#5BE2C2]' : ''}
         `}
       >
-        <div className="flex items-center justify-between">
-          <span className={`${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}>
+        <div className="flex items-center justify-between min-w-0 flex-1 overflow-hidden">
+          <span className={`${selectedOption ? 'text-gray-900' : 'text-gray-500'} truncate flex-1 min-w-0`}>
             {selectedOption ? selectedOption.label : t(placeholder)}
           </span>
           <svg 
@@ -87,9 +87,10 @@ const SingleFilterOption = ({
                     type="button"
                     onClick={() => handleSelect(option)}
                     className={`
-                      w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors
-                      ${selectedValue === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-900'}
+                      w-full px-3 py-2 text-left hover:bg-[#f2fbf8] transition-colors truncate
+                      ${selectedValue === option.value ? 'bg-[#f2fbf8] text-[#84c4b5]' : 'text-gray-900'}
                     `}
+                    title={option.label}
                   >
                     {option.label}
                   </button>

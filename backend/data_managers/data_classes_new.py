@@ -68,6 +68,13 @@ class GrammarRule:
     rule_id: int
     name: str
     explanation: str
+    # 展示用名称（可选，兼容旧字段 name）
+    display_name: Optional[str] = None
+    # 规范化语法分类信息（可选）
+    canonical_category: Optional[str] = None
+    canonical_subtype: Optional[str] = None
+    canonical_function: Optional[str] = None
+    canonical_key: Optional[str] = None
     language: Optional[str] = None  # 语言：中文、英文、德文
     source: Literal["auto", "qa", "manual"] = "auto"
     is_starred: bool = False

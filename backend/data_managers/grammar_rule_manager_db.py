@@ -102,9 +102,20 @@ class GrammarRuleManager:
         
         return GrammarAdapter.model_to_dto(grammar_model, include_examples=True)
     
-    def add_new_rule(self, name: str, explanation: str, 
-                     source: str = "qa", is_starred: bool = False, user_id: int = None,
-                     language: str = None) -> GrammarDTO:
+    def add_new_rule(
+        self,
+        name: str,
+        explanation: str,
+        source: str = "qa",
+        is_starred: bool = False,
+        user_id: int = None,
+        language: str = None,
+        display_name: Optional[str] = None,
+        canonical_category: Optional[str] = None,
+        canonical_subtype: Optional[str] = None,
+        canonical_function: Optional[str] = None,
+        canonical_key: Optional[str] = None,
+    ) -> GrammarDTO:
         """
         添加新语法规则
         
@@ -131,12 +142,18 @@ class GrammarRuleManager:
             print(f"创建规则ID: {new_rule.rule_id}")
         """
         grammar_model = self.db_manager.add_grammar_rule(
-            rule_name=name,  # 注意字段映射
-            rule_summary=explanation,  # 注意字段映射
+            rule_name=name,  # 注意字段映射（旧字段）
+            rule_summary=explanation,  # 注意字段映射（旧字段）
             source=source,
             is_starred=is_starred,
             user_id=user_id,
-            language=language
+            language=language,
+            # 新字段：仅当上层显式传入时才写入，旧调用保持为 None
+            display_name=display_name,
+            canonical_category=canonical_category,
+            canonical_subtype=canonical_subtype,
+            canonical_function=canonical_function,
+            canonical_key=canonical_key,
         )
         
         return GrammarAdapter.model_to_dto(grammar_model)

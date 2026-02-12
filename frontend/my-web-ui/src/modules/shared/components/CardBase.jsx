@@ -7,11 +7,11 @@ const CardBase = ({
   error, 
   onClick, 
   children,
-  className = "bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform"
+  className = "bg-white rounded-lg border border-gray-200 p-4 transition-all duration-300 cursor-pointer transform hover:scale-105 transition-transform"
 }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4"></div>
           <div className="h-4 bg-gray-200 rounded mb-2"></div>

@@ -17,6 +17,7 @@ from backend.assistants.sub_assistants.summarize_vocab import SummarizeVocabAssi
 # CompareGrammarRuleAssistant（语法相似度比较，已启用）
 from backend.assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
 from backend.assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
+from backend.assistants.sub_assistants.grammar_explanation import GrammarExplanationAssistant
 from backend.assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
 from backend.assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
 from backend.data_managers.data_classes import Sentence
@@ -57,6 +58,7 @@ class MainAssistant:
         # 语法比较功能（已启用）
         self.compare_grammar_rule_assistant = CompareGrammarRuleAssistant()
         self.grammar_example_explanation_assistant = GrammarExampleExplanationAssistant()
+        self.grammar_explanation_assistant = GrammarExplanationAssistant()
         self.vocab_example_explanation_assistant = VocabExampleExplanationAssistant()
         self.vocab_explanation_assistant = VocabExplanationAssistant()
         self.data_controller = data_controller_instance if data_controller_instance else data_controller.DataController(max_turns)
@@ -614,7 +616,6 @@ class MainAssistant:
             
             # 🔧 使用 UI 语言而不是文章语言
             output_language = self.ui_language or self.session_state.current_language or "中文"
-            print(f"🔍 [DEBUG] 调用summarize_grammar_rule_assistant，输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
             grammar_summary = self.summarize_grammar_rule_assistant.run(
                 sentence_body,
                 user_input,
@@ -622,30 +623,106 @@ class MainAssistant:
                 language=output_language,
                 user_id=self._user_id, session=self._db_session
             )
-            print(f"🔍 [DEBUG] grammar_summary 类型: {type(grammar_summary)}, 值: {grammar_summary}")
-            if isinstance(grammar_summary, dict):
-                grammar_name = grammar_summary.get("grammar_rule_name", "Unknown")
-                grammar_explanation = grammar_summary.get("grammar_rule_summary", "No explanation provided")
-                if grammar_name and grammar_name != "Unknown" and grammar_explanation and grammar_explanation != "No explanation provided":
-                    self.session_state.add_grammar_summary(
-                        grammar_name,
-                        grammar_explanation
+            print(f"✅ [DEBUG] summarize_grammar_rule 输出结果: {grammar_summary}")
+            
+            # 处理新的格式：display_name + canonical
+            def process_new_format_grammar(grammar_dict: dict):
+                """处理新格式的语法规则（display_name + canonical）"""
+                display_name = grammar_dict.get("display_name")
+                canonical = grammar_dict.get("canonical", {})
+                canonical_category = canonical.get("category")
+                canonical_subtype = canonical.get("subtype")
+                canonical_function = canonical.get("function")
+                
+                # 验证必要字段
+                if not display_name or not canonical_category or not canonical_subtype:
+                    print(f"⚠️ [DEBUG] 新格式语法规则缺少必要字段: display_name={display_name}, category={canonical_category}, subtype={canonical_subtype}")
+                    return False
+                
+                print(f"✅ [DEBUG] 检测到新格式语法规则: display_name={display_name}, category={canonical_category}, subtype={canonical_subtype}")
+                
+                # 🔧 1. 先生成 canonical_key（用于查重）
+                # 🔧 获取文章的实际语言（从数据库），而不是 session_state.current_language（可能是 UI 语言）
+                from backend.data_managers.canonical_key_generator import generate_canonical_key
+                article_language = None
+                current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else sentence_body
+                user_id = getattr(self.session_state, 'user_id', None) or self._user_id
+                
+                if current_sentence and hasattr(current_sentence, 'text_id') and user_id:
+                    try:
+                        from database_system.database_manager import DatabaseManager
+                        from database_system.business_logic.models import OriginalText
+                        db_manager = DatabaseManager('development')
+                        session = db_manager.get_session()
+                        try:
+                            text_model = session.query(OriginalText).filter(
+                                OriginalText.text_id == current_sentence.text_id,
+                                OriginalText.user_id == user_id
+                            ).first()
+                            if text_model:
+                                article_language = text_model.language
+                                print(f"🔍 [DEBUG] 从数据库获取文章language用于生成canonical_key: {article_language} (text_id={current_sentence.text_id})")
+                            else:
+                                print(f"⚠️ [DEBUG] 文章不存在，无法获取language: text_id={current_sentence.text_id}, user_id={user_id}")
+                        finally:
+                            session.close()
+                    except Exception as e:
+                        print(f"⚠️ [DEBUG] 获取文章language失败: {e}")
+                
+                # 如果无法从数据库获取，使用默认值
+                if not article_language:
+                    article_language = "中文"
+                    print(f"⚠️ [DEBUG] 无法获取文章language，使用默认值: {article_language}")
+                
+                try:
+                    canonical_key = generate_canonical_key(
+                        language=article_language,
+                        category=canonical_category,
+                        subtype=canonical_subtype
                     )
-                    print(f"✅ [DEBUG] 添加语法总结: {grammar_name}")
-                else:
-                    print(f"⚠️ [DEBUG] 语法总结为空或无效: name={grammar_name}, explanation={grammar_explanation}")
+                    print(f"✅ [DEBUG] 生成 canonical_key: {canonical_key} (使用文章language: {article_language})")
+                except Exception as e:
+                    print(f"❌ [DEBUG] 生成 canonical_key 失败: {e}")
+                    canonical_key = None
+                
+                # 如果 canonical_key 生成失败，使用组合 key 作为 fallback
+                if not canonical_key:
+                    canonical_key = f"{canonical_category}::{canonical_subtype}"
+                    print(f"⚠️ [DEBUG] canonical_key 生成失败，使用 fallback: {canonical_key}")
+                
+                # 🔧 2. 添加到 GrammarSummary（使用新格式）
+                # 注意：rule_summary 将在查重后生成（只有新语法才需要）
+                self.session_state.add_grammar_summary(
+                    canonical_category=canonical_category,
+                    canonical_subtype=canonical_subtype,
+                    canonical_function=canonical_function or "",
+                    canonical_key=canonical_key
+                )
+                print(f"✅ [DEBUG] 添加新格式语法总结: display_name={display_name}, canonical_key={canonical_key}")
+                
+                # 临时存储 display_name（用于后续添加到数据库）
+                # rule_summary 将在查重后生成
+                if not hasattr(self.session_state, '_grammar_metadata'):
+                    self.session_state._grammar_metadata = {}
+                # 使用 canonical_key 作为 key（现在一定有值）
+                metadata_key = canonical_key
+                self.session_state._grammar_metadata[metadata_key] = {
+                    'display_name': display_name,
+                    'rule_summary': None  # 将在查重后生成
+                }
+                print(f"🔍 [DEBUG] 临时存储语法元数据: key={metadata_key}, display_name={display_name}")
+                
+                return True
+            
+            # 处理返回结果（支持单个对象或列表）
+            grammar_list = []
+            if isinstance(grammar_summary, dict):
+                # 单个对象
+                grammar_list = [grammar_summary]
             elif isinstance(grammar_summary, list) and len(grammar_summary) > 0:
-                for grammar in grammar_summary:
-                    grammar_name = grammar.get("grammar_rule_name", "Unknown")
-                    grammar_explanation = grammar.get("grammar_rule_summary", "No explanation provided")
-                    if grammar_name and grammar_name != "Unknown" and grammar_explanation and grammar_explanation != "No explanation provided":
-                        self.session_state.add_grammar_summary(
-                            name=grammar_name,
-                            summary=grammar_explanation
-                        )
-                        print(f"✅ [DEBUG] 添加语法总结: {grammar_name}")
-                    else:
-                        print(f"⚠️ [DEBUG] 语法总结为空或无效: name={grammar_name}, explanation={grammar_explanation}")
+                # 列表格式（支持多个语法知识点）
+                grammar_list = grammar_summary
+                print(f"✅ [DEBUG] 检测到多个语法知识点: {len(grammar_list)} 个")
             elif isinstance(grammar_summary, str):
                 if grammar_summary.strip() == "":
                     print(f"⚠️ [DEBUG] AI 返回空字符串，表示没有新的语法规则")
@@ -653,6 +730,23 @@ class MainAssistant:
                     print(f"⚠️ [DEBUG] AI 返回字符串（非空）: {grammar_summary}")
             else:
                 print(f"⚠️ [DEBUG] grammar_summary 类型未知: {type(grammar_summary)}, 值: {grammar_summary}")
+            
+            # 处理每个语法知识点
+            for grammar_item in grammar_list:
+                if isinstance(grammar_item, dict):
+                    # 检查是否是新格式
+                    if "display_name" in grammar_item and "canonical" in grammar_item:
+                        process_new_format_grammar(grammar_item)
+                    else:
+                        # 旧格式兼容（向后兼容）
+                        grammar_name = grammar_item.get("grammar_rule_name", "Unknown")
+                        grammar_explanation = grammar_item.get("grammar_rule_summary", "No explanation provided")
+                        if grammar_name and grammar_name != "Unknown" and grammar_explanation and grammar_explanation != "No explanation provided":
+                            print(f"⚠️ [DEBUG] 检测到旧格式语法规则，已弃用: {grammar_name}")
+                        else:
+                            print(f"⚠️ [DEBUG] 语法总结为空或无效: name={grammar_name}, explanation={grammar_explanation}")
+                else:
+                    print(f"⚠️ [DEBUG] 语法规则格式不支持: {type(grammar_item)}, 值: {grammar_item}")
 
         # 检查是否与词汇相关
         if self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.vocab:
@@ -787,14 +881,15 @@ class MainAssistant:
                             print(f"📚 文章无语言信息，获取所有语言的语法规则 (user_id={user_id})")
                         
                         grammar_models = query.all()
-                        # 构建规则字典：{name, rule_id, language}
+                        # 构建规则字典：{name, rule_id, language, canonical_key}
                         for rule_model in grammar_models:
                             current_grammar_rules.append({
                                 'name': rule_model.rule_name,
                                 'rule_id': rule_model.rule_id,
-                                'language': rule_model.language
+                                'language': rule_model.language,
+                                'canonical_key': rule_model.canonical_key  # 新增：包含 canonical_key
                             })
-                        print(f"📚 当前已有 {len(current_grammar_rules)} 个语法规则（包含language信息，user_id={user_id}）")
+                        print(f"📚 当前已有 {len(current_grammar_rules)} 个语法规则（包含language和canonical_key信息，user_id={user_id}）")
                     finally:
                         session.close()
                 except Exception as e:
@@ -812,214 +907,221 @@ class MainAssistant:
             print(f"📚 现有语法规则列表: {[r['name'] for r in current_grammar_rules]}")
             new_grammar_summaries = []
         
-        # 🧪 测试阶段：语法相关则直接新增语法（跳过相似度判断）
-        print("🧪 测试阶段：语法相关则直接新增语法（跳过相似度判断）")
+        # 🔧 查重逻辑：基于 canonical_key 进行对比
+        # 🔧 同时检查 grammar_to_add 和已有语法列表，避免重复添加
+        print("🔍 开始语法规则查重（基于 canonical_key）...")
+        
+        # 构建待查重的语法列表（包括已有语法和 grammar_to_add）
+        all_existing_grammars = []
+        
+        # 1. 添加已有语法规则
+        for existing_rule_info in current_grammar_rules:
+            existing_canonical_key = existing_rule_info.get('canonical_key')
+            if existing_canonical_key:  # 只添加有 canonical_key 的规则
+                all_existing_grammars.append({
+                    'canonical_key': existing_canonical_key,
+                    'rule_id': existing_rule_info.get('rule_id'),
+                    'name': existing_rule_info.get('name'),
+                    'language': existing_rule_info.get('language'),
+                    'source': 'existing'  # 标记来源
+                })
+        
+        # 2. 添加 grammar_to_add 中的语法规则（避免同一轮对话中重复添加）
+        if hasattr(self.session_state, 'grammar_to_add') and self.session_state.grammar_to_add:
+            for grammar_to_add in self.session_state.grammar_to_add:
+                if hasattr(grammar_to_add, 'canonical_key') and grammar_to_add.canonical_key:
+                    all_existing_grammars.append({
+                        'canonical_key': grammar_to_add.canonical_key,
+                        'rule_id': None,  # grammar_to_add 中的规则还没有 rule_id
+                        'name': grammar_to_add.display_name,
+                        'language': article_language,  # 使用文章语言
+                        'source': 'grammar_to_add'  # 标记来源
+                    })
+        
+        print(f"🔍 [DEBUG] 查重列表包含: {len(all_existing_grammars)} 个语法规则（已有: {len([g for g in all_existing_grammars if g['source'] == 'existing'])}, grammar_to_add: {len([g for g in all_existing_grammars if g['source'] == 'grammar_to_add'])})")
+        
         for result in self.session_state.summarized_results:
             if isinstance(result, GrammarSummary):
-                print(f"🔍 检查语法规则: {result.grammar_rule_name} (文章language: {article_language})")
-                # 🧪 测试阶段：直接添加，跳过相似度判断
-                print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将直接添加为新规则 (继承文章language: {article_language})")
-                new_grammar_summaries.append(result)
-                continue
+                # 新格式：使用 canonical_key 进行查重
+                new_canonical_key = result.canonical_key
+                print(f"🔍 检查语法规则: canonical_key={new_canonical_key} (文章language: {article_language})")
                 
-                # 以下代码在测试阶段被跳过
-                has_similar = False
+                if not new_canonical_key:
+                    print(f"⚠️ [DEBUG] 新语法规则的 canonical_key 为空，跳过查重，直接添加为新规则")
+                    new_grammar_summaries.append(result)
+                    continue
                 
-                # 🔧 仅对比相同语言的语法规则
-                for existing_rule_info in current_grammar_rules:
-                    existing_rule = existing_rule_info['name']
+                # 轮询所有语法列表（包括已有语法和 grammar_to_add），查找是否有相同的 canonical_key
+                found_existing = False
+                existing_rule_id = None
+                existing_rule_name = None
+                existing_source = None
+                
+                for existing_rule_info in all_existing_grammars:
+                    existing_canonical_key = existing_rule_info.get('canonical_key')
+                    existing_rule_id = existing_rule_info.get('rule_id')
+                    existing_rule_name = existing_rule_info.get('name')
                     existing_rule_language = existing_rule_info.get('language')
+                    existing_source = existing_rule_info.get('source')
                     
-                    # 🔧 语言过滤逻辑：
-                    # 1. 如果现有规则没有language字段，直接跳过（不参与对比）
-                    if existing_rule_language is None:
-                        print(f"🔍 [DEBUG] 跳过无language的语法规则: '{existing_rule}' (现有规则无language字段，不参与对比)")
-                        continue
+                    # 🔧 语言过滤：只对比相同语言的语法规则
+                    if article_language and existing_rule_language:
+                        if article_language != existing_rule_language:
+                            print(f"🔍 [DEBUG] 跳过不同语言的语法规则: '{existing_rule_name}' (language={existing_rule_language}, source={existing_source}) vs 文章language={article_language}")
+                            continue
                     
-                    # 2. 如果现有规则有language，但文章没有language，跳过（避免混淆）
-                    if article_language is None:
-                        print(f"🔍 [DEBUG] 跳过对比：文章无language，现有规则有language='{existing_rule_language}'")
-                        continue
-                    
-                    # 3. 如果文章和现有规则都有language，只对比相同语言的
-                    if article_language != existing_rule_language:
-                        print(f"🔍 [DEBUG] 跳过不同语言的语法规则: '{existing_rule}' (language={existing_rule_language}) vs 文章language={article_language}")
-                        continue
-                    
-                    # 4. 只有文章和现有规则的language相同，才进行对比
-                    print(f"🔍 [DEBUG] 比较语法规则: '{existing_rule}' vs '{result.grammar_rule_name}'")
-                    compare_result = self.compare_grammar_rule_assistant.run(
-                        existing_rule,
-                        result.grammar_rule_name,
-                        verbose=False,
-                        user_id=self._user_id, session=self._db_session
-                    )
-                    print(f"🔍 [DEBUG] 相似度比较结果: {compare_result}")
-                    
-                    # 确保 compare_result 是字典类型
-                    if isinstance(compare_result, str):
-                        try:
-                            compare_result = json.loads(compare_result)
-                            print(f"🔍 [DEBUG] 解析JSON后的结果: {compare_result}")
-                        except Exception as e:
-                            print(f"❌ [DEBUG] JSON解析失败: {e}")
-                            compare_result = {"is_similar": False}
-                    elif isinstance(compare_result, list) and len(compare_result) > 0:
-                        compare_result = compare_result[0] if isinstance(compare_result[0], dict) else {"is_similar": False}
-                        print(f"🔍 [DEBUG] 取列表第一个元素: {compare_result}")
-                    elif not isinstance(compare_result, dict):
-                        print(f"❌ [DEBUG] 结果不是字典类型: {type(compare_result)}")
-                        compare_result = {"is_similar": False}
-                    
-                    is_similar = compare_result.get("is_similar", False)
-                    print(f"🔍 [DEBUG] 最终相似度判断: {is_similar}")
-                    
-                    if is_similar:
-                        print(f"✅ 语法规则 '{result.grammar_rule_name}' 与现有规则 '{existing_rule}' 相似 (language={existing_rule_language})")
-                        has_similar = True
-                        # 🔧 使用从数据库获取的rule_id，如果没有则回退到文件系统管理器
-                        existing_rule_id = existing_rule_info.get('rule_id')
-                        if existing_rule_id is None:
-                            try:
-                                existing_rule_id = self.data_controller.grammar_manager.get_id_by_rule_name(existing_rule)
-                            except ValueError:
-                                print(f"⚠️ [DEBUG] 无法获取rule_id: {existing_rule}")
-                                continue
+                    # 🔧 查重逻辑：如果 canonical_key 一致，则判断为"当前语法已存在"
+                    if existing_canonical_key == new_canonical_key:
+                        print(f"✅ [DEBUG] 找到相同 canonical_key 的语法规则: '{existing_rule_name}' (rule_id={existing_rule_id}, source={existing_source}, canonical_key={existing_canonical_key})")
+                        found_existing = True
+                        break
+                
+                if found_existing:
+                    # 🔧 当前语法已存在（在已有语法或 grammar_to_add 中），不加入新语法
+                    if existing_source == 'existing' and existing_rule_id:
+                        # 如果是在已有语法中找到，进入添加句子为 grammar example 流程
+                        print(f"✅ 语法规则已存在 (canonical_key={new_canonical_key})，将添加为 grammar example，不创建新规则")
                         
                         # 为现有语法规则添加新例句
-                        current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
-                        if current_sentence:
+                        current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else sentence_body
+                        if current_sentence and existing_rule_id:
                             # 验证句子完整性
-                            self._ensure_sentence_integrity(current_sentence, "现有语法 Example 调用")
-                            print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{existing_rule}'")
-                            # 🔧 使用 UI 语言而不是文章语言
-                            output_language = self.ui_language or self.session_state.current_language or "中文"
-                            print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
-                            example_explanation_raw = self.grammar_example_explanation_assistant.run(
-                                sentence=current_sentence,
-                                grammar=existing_rule,
-                                language=output_language,
-                                user_id=self._user_id, session=self._db_session
-                            )
-                            print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
-                            
-                            # 🔧 解析 JSON 字符串，提取 explanation 字段
-                            example_explanation = None
-                            if isinstance(example_explanation_raw, str):
-                                try:
-                                    from backend.assistants.utility import parse_json_from_text
-                                    parsed = parse_json_from_text(example_explanation_raw)
-                                    if isinstance(parsed, dict) and "explanation" in parsed:
-                                        example_explanation = parsed["explanation"]
-                                    else:
-                                        example_explanation = example_explanation_raw
-                                except Exception as e:
-                                    print(f"⚠️ [DEBUG] 解析 grammar example_explanation JSON 失败: {e}，使用原始字符串")
-                                    example_explanation = example_explanation_raw
-                            elif isinstance(example_explanation_raw, dict) and "explanation" in example_explanation_raw:
-                                example_explanation = example_explanation_raw["explanation"]
-                            else:
-                                example_explanation = str(example_explanation_raw) if example_explanation_raw else None
-                            
-                            print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
-                            
-                            try:
-                                print(f"🔍 [DEBUG] 尝试添加现有语法的grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={existing_rule_id}")
-                                print(f"🔍 [DEBUG] explanation_context: {example_explanation}")
+                            if hasattr(current_sentence, 'text_id') and hasattr(current_sentence, 'sentence_id'):
+                                self._ensure_sentence_integrity(current_sentence, "现有语法 Example 调用")
+                                print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{existing_rule_name}' (rule_id={existing_rule_id})")
+                                # 🔧 使用 UI 语言而不是文章语言
+                                output_language = self.ui_language or self.session_state.current_language or "中文"
+                                print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                                 
-                                # 🔧 新增：为现有语法创建grammar notation（在add_grammar_example之前）
-                                print(f"🔍 [DEBUG] ========== 开始为现有语法创建grammar notation ==========")
-                                print(f"🔍 [DEBUG] 当前句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
-                                print(f"🔍 [DEBUG] 现有语法规则ID: {existing_rule_id}")
-                                print(f"🔍 [DEBUG] 现有语法规则名称: {existing_rule}")
+                                # 获取 display_name 用于 grammar_example_explanation
+                                display_name = ""
+                                if hasattr(self.session_state, '_grammar_metadata') and self.session_state._grammar_metadata:
+                                    metadata = self.session_state._grammar_metadata.get(new_canonical_key, {})
+                                    display_name = metadata.get('display_name', existing_rule_name)
                                 
-                                # 获取 token_indices（从 session_state 中的 selected_token）
-                                token_indices = self._get_token_indices_from_selection(current_sentence)
-                                print(f"🔍 [DEBUG] 提取的token_indices: {token_indices}")
-                                print(f"🔍 [DEBUG] token_indices类型: {type(token_indices)}")
-                                print(f"🔍 [DEBUG] token_indices长度: {len(token_indices) if token_indices else 0}")
-                                
-                                # 使用unified_notation_manager创建grammar notation
-                                from backend.data_managers.unified_notation_manager import get_unified_notation_manager
-                                notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
-                                print(f"🔍 [DEBUG] notation_manager创建成功: {type(notation_manager)}")
-                                
-                                # 获取user_id（优先使用session_state中的user_id）
-                                user_id_for_notation = getattr(self.session_state, 'user_id', None) or "default_user"
-                                
-                                print(f"🔍 [DEBUG] 调用mark_notation参数:")
-                                print(f"  - notation_type: grammar")
-                                print(f"  - user_id: {user_id_for_notation}")
-                                print(f"  - text_id: {current_sentence.text_id}")
-                                print(f"  - sentence_id: {current_sentence.sentence_id}")
-                                print(f"  - grammar_id: {existing_rule_id}")
-                                print(f"  - marked_token_ids: {token_indices}")
-                                
-                                success = notation_manager.mark_notation(
-                                    notation_type="grammar",
-                                    user_id=user_id_for_notation,
-                                    text_id=current_sentence.text_id,
-                                    sentence_id=current_sentence.sentence_id,
-                                    grammar_id=existing_rule_id,
-                                    marked_token_ids=token_indices
+                                example_explanation_raw = self.grammar_example_explanation_assistant.run(
+                                    sentence=current_sentence,
+                                    grammar=display_name or existing_rule_name,
+                                    language=output_language,
+                                    user_id=self._user_id, session=self._db_session
                                 )
+                                print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
                                 
-                                print(f"🔍 [DEBUG] mark_notation返回结果: {success}")
-                                print(f"🔍 [DEBUG] 结果类型: {type(success)}")
+                                # 🔧 解析 JSON 字符串，提取 explanation 字段
+                                example_explanation = None
+                                if isinstance(example_explanation_raw, str):
+                                    try:
+                                        from backend.assistants.utility import parse_json_from_text
+                                        parsed = parse_json_from_text(example_explanation_raw)
+                                        if isinstance(parsed, dict) and "explanation" in parsed:
+                                            example_explanation = parsed["explanation"]
+                                        else:
+                                            example_explanation = example_explanation_raw
+                                    except Exception as e:
+                                        print(f"⚠️ [DEBUG] 解析 grammar example_explanation JSON 失败: {e}，使用原始字符串")
+                                        example_explanation = example_explanation_raw
+                                elif isinstance(example_explanation_raw, dict) and "explanation" in example_explanation_raw:
+                                    example_explanation = example_explanation_raw["explanation"]
+                                else:
+                                    example_explanation = str(example_explanation_raw) if example_explanation_raw else None
                                 
-                                if success:
-                                    print(f"✅ [DEBUG] 现有语法的grammar_notation创建成功")
-                                    # 记录到 session_state 以便返回给前端
-                                    # 🔧 使用实际的 user_id（整数）而不是字符串
-                                    actual_user_id = getattr(self.session_state, 'user_id', None)
-                                    self.session_state.add_created_grammar_notation(
+                                print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
+                                
+                                try:
+                                    print(f"🔍 [DEBUG] 尝试添加现有语法的grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={existing_rule_id}")
+                                    print(f"🔍 [DEBUG] explanation_context: {example_explanation}")
+                                    
+                                    # 🔧 为现有语法创建grammar notation（在add_grammar_example之前）
+                                    print(f"🔍 [DEBUG] ========== 开始为现有语法创建grammar notation ==========")
+                                    print(f"🔍 [DEBUG] 当前句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                                    print(f"🔍 [DEBUG] 现有语法规则ID: {existing_rule_id}")
+                                    print(f"🔍 [DEBUG] 现有语法规则名称: {existing_rule_name}")
+                                    
+                                    # 获取 token_indices（从 session_state 中的 selected_token）
+                                    token_indices = self._get_token_indices_from_selection(current_sentence)
+                                    print(f"🔍 [DEBUG] 提取的token_indices: {token_indices}")
+                                    print(f"🔍 [DEBUG] token_indices类型: {type(token_indices)}")
+                                    
+                                    # 获取 user_id（用于 notation，需要转换为字符串）
+                                    user_id_for_notation = getattr(self.session_state, 'user_id', None)
+                                    if user_id_for_notation is None:
+                                        user_id_for_notation = self._user_id
+                                    # 确保 user_id 是字符串类型
+                                    if isinstance(user_id_for_notation, int):
+                                        user_id_for_notation = str(user_id_for_notation)
+                                    
+                                    # 调用 unified_notation_manager 创建 grammar notation
+                                    from backend.data_managers.unified_notation_manager import get_unified_notation_manager
+                                    notation_manager = get_unified_notation_manager(use_database=True, use_legacy_compatibility=True)
+                                    print(f"🔍 [DEBUG] 调用mark_notation参数:")
+                                    print(f"  - notation_type: grammar")
+                                    print(f"  - user_id: {user_id_for_notation}")
+                                    print(f"  - text_id: {current_sentence.text_id}")
+                                    print(f"  - sentence_id: {current_sentence.sentence_id}")
+                                    print(f"  - grammar_id: {existing_rule_id}")
+                                    print(f"  - marked_token_ids: {token_indices}")
+                                    
+                                    success = notation_manager.mark_notation(
+                                        notation_type="grammar",
+                                        user_id=user_id_for_notation,
                                         text_id=current_sentence.text_id,
                                         sentence_id=current_sentence.sentence_id,
                                         grammar_id=existing_rule_id,
-                                        marked_token_ids=token_indices,
-                                        user_id=actual_user_id
+                                        marked_token_ids=token_indices
                                     )
-                                    print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建完成 ==========")
-                                else:
-                                    print(f"❌ [DEBUG] 现有语法的grammar_notation创建失败")
-                                    print(f"🔍 [DEBUG] ========== 现有语法grammar notation创建失败 ==========")
-                                
-                                # 🔧 修复：如果使用数据库管理器创建了 grammar，也应该使用数据库管理器创建 example
-                                user_id = getattr(self.session_state, 'user_id', None)
-                                if user_id:
-                                    try:
-                                        from database_system.database_manager import DatabaseManager
-                                        from backend.data_managers import GrammarRuleManagerDB
-                                        from database_system.business_logic.models import OriginalText
-                                        db_manager = DatabaseManager('development')
-                                        session = db_manager.get_session()
+                                    
+                                    print(f"🔍 [DEBUG] mark_notation返回结果: {success}")
+                                    print(f"🔍 [DEBUG] 结果类型: {type(success)}")
+                                    
+                                    if success:
+                                        # 🔧 使用实际的 user_id（整数）而不是字符串
+                                        actual_user_id = getattr(self.session_state, 'user_id', None)
+                                        self.session_state.add_created_grammar_notation(
+                                            text_id=current_sentence.text_id,
+                                            sentence_id=current_sentence.sentence_id,
+                                            grammar_id=existing_rule_id,
+                                            marked_token_ids=token_indices,
+                                            user_id=actual_user_id
+                                        )
+                                        print(f"✅ [DEBUG] 成功创建grammar notation并添加到session_state")
+                                    else:
+                                        print(f"⚠️ [DEBUG] mark_notation返回False，但继续执行")
+                                    
+                                    # 添加 grammar example
+                                    # 🔧 使用数据库管理器添加 grammar example（如果使用数据库）
+                                    user_id = getattr(self.session_state, 'user_id', None)
+                                    if user_id:
                                         try:
-                                            # 🔧 先检查text_id是否存在于数据库中且属于当前用户
-                                            text_model = session.query(OriginalText).filter(
-                                                OriginalText.text_id == current_sentence.text_id,
-                                                OriginalText.user_id == user_id
-                                            ).first()
-                                            if not text_model:
-                                                print(f"⚠️ [DEBUG] 跳过添加grammar_example，因为text_id={current_sentence.text_id}不存在或不属于用户{user_id}")
-                                                continue
-                                            
-                                            grammar_db_manager = GrammarRuleManagerDB(session)
-                                            grammar_db_manager.add_grammar_example(
-                                                rule_id=existing_rule_id,
-                                                text_id=current_sentence.text_id,
-                                                sentence_id=current_sentence.sentence_id,
-                                                explanation_context=example_explanation
-                                            )
-                                            print(f"✅ [DEBUG] 现有语法的grammar_example已添加到数据库: rule_id={existing_rule_id}, text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
-                                        finally:
-                                            session.close()
-                                    except Exception as e:
-                                        print(f"❌ [DEBUG] 使用数据库管理器创建grammar_example失败: {e}")
-                                        import traceback
-                                        traceback.print_exc()
-                                        # 回退到文件系统管理器
-                                        print(f"⚠️ [DEBUG] 回退到文件系统管理器")
-                                        if existing_rule_id in self.data_controller.grammar_manager.grammar_bundles:
+                                            from database_system.database_manager import DatabaseManager
+                                            from backend.data_managers import GrammarRuleManagerDB
+                                            from database_system.business_logic.models import OriginalText
+                                            db_manager = DatabaseManager('development')
+                                            session = db_manager.get_session()
+                                            try:
+                                                # 🔧 先检查text_id是否存在于数据库中且属于当前用户
+                                                text_model = session.query(OriginalText).filter(
+                                                    OriginalText.text_id == current_sentence.text_id,
+                                                    OriginalText.user_id == user_id
+                                                ).first()
+                                                if not text_model:
+                                                    print(f"⚠️ [DEBUG] 跳过添加grammar_example，因为text_id={current_sentence.text_id}不存在或不属于用户{user_id}")
+                                                else:
+                                                    grammar_db_manager = GrammarRuleManagerDB(session)
+                                                    grammar_db_manager.add_grammar_example(
+                                                        rule_id=existing_rule_id,
+                                                        text_id=current_sentence.text_id,
+                                                        sentence_id=current_sentence.sentence_id,
+                                                        explanation_context=example_explanation
+                                                    )
+                                                    print(f"✅ [DEBUG] 现有语法的grammar_example已添加到数据库: rule_id={existing_rule_id}, text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
+                                            finally:
+                                                session.close()
+                                        except Exception as e:
+                                            print(f"❌ [DEBUG] 使用数据库管理器创建grammar_example失败: {e}")
+                                            import traceback
+                                            traceback.print_exc()
+                                            # 回退到文件系统管理器
+                                            print(f"⚠️ [DEBUG] 回退到文件系统管理器")
                                             self.data_controller.add_grammar_example(
                                                 rule_id=existing_rule_id,
                                                 text_id=current_sentence.text_id,
@@ -1027,37 +1129,167 @@ class MainAssistant:
                                                 explanation_context=example_explanation
                                             )
                                             print(f"✅ [DEBUG] 现有语法的grammar_example添加成功（文件系统）")
-                                        else:
-                                            print(f"⚠️ [DEBUG] rule_id={existing_rule_id} 不在 global_dc 中，跳过添加到文件系统")
-                                else:
-                                    # 没有user_id，使用文件系统管理器
-                                    self.data_controller.add_grammar_example(
-                                        rule_id=existing_rule_id,
-                                        text_id=current_sentence.text_id,
-                                        sentence_id=current_sentence.sentence_id,
-                                        explanation_context=example_explanation
-                                    )
-                                    print(f"✅ [DEBUG] 现有语法的grammar_example添加成功（文件系统）")
-                                    
-                            except ValueError as e:
-                                print(f"⚠️ [DEBUG] 跳过添加现有语法的grammar_example，因为: {e}")
-                            except Exception as e:
-                                print(f"❌ [DEBUG] 添加现有语法的grammar_example时发生错误: {e}")
-                        break
-                
-                # 🔧 如果没有相似的（在相同语言中），添加为新语法（继承文章的language）
-                if not has_similar:
-                    print(f"🆕 新语法知识点：'{result.grammar_rule_name}'，将添加为新规则 (继承文章language: {article_language})")
+                                    else:
+                                        # 没有user_id，使用文件系统管理器
+                                        self.data_controller.add_grammar_example(
+                                            rule_id=existing_rule_id,
+                                            text_id=current_sentence.text_id,
+                                            sentence_id=current_sentence.sentence_id,
+                                            explanation_context=example_explanation
+                                        )
+                                        print(f"✅ [DEBUG] 现有语法的grammar_example添加成功（文件系统）")
+                                    print(f"✅ [DEBUG] 成功为现有语法规则添加grammar_example: rule_id={existing_rule_id}")
+                                except Exception as e:
+                                    print(f"❌ [DEBUG] 添加grammar_example失败: {e}")
+                                    import traceback
+                                    traceback.print_exc()
+                            else:
+                                print(f"⚠️ [DEBUG] 无法添加grammar example: current_sentence={current_sentence}, existing_rule_id={existing_rule_id}")
+                    else:
+                        # 如果是在 grammar_to_add 中找到，说明同一轮对话中已经准备添加，跳过
+                        print(f"✅ 语法规则已在 grammar_to_add 中 (canonical_key={new_canonical_key})，跳过重复添加")
+                    
+                    # 不添加到 new_grammar_summaries
+                    continue
+                else:
+                    # 🔧 canonical_key 不一致，进入添加新语法规则流程
+                    print(f"🆕 新语法知识点：canonical_key='{new_canonical_key}'，将添加为新规则 (继承文章language: {article_language})")
                     new_grammar_summaries.append(result)
         
-        # 将新语法添加到 grammar_to_add
+        # 将新语法添加到 grammar_to_add（只有查重通过的新语法才会到这里）
         if not DISABLE_GRAMMAR_FEATURES:
             for grammar in new_grammar_summaries:
-                print(f"🆕 添加新语法: {grammar.grammar_rule_name}")
-                self.session_state.add_grammar_to_add(
-                    rule_name=grammar.grammar_rule_name,
-                    rule_explanation=grammar.grammar_rule_summary
-                )
+                if isinstance(grammar, GrammarSummary):
+                    # 新格式：从 GrammarSummary 和临时存储中提取数据
+                    canonical_key = grammar.canonical_key
+                    display_name = ""
+                    rule_summary = ""
+                    
+                    # 从临时存储中获取 display_name
+                    if hasattr(self.session_state, '_grammar_metadata') and self.session_state._grammar_metadata:
+                        # 尝试使用 canonical_key 查找
+                        metadata = self.session_state._grammar_metadata.get(canonical_key, {})
+                        if not metadata and canonical_key:
+                            # 如果没找到，尝试使用组合 key
+                            fallback_key = f"{grammar.canonical_category}::{grammar.canonical_subtype}"
+                            metadata = self.session_state._grammar_metadata.get(fallback_key, {})
+                        display_name = metadata.get('display_name', '')
+                        rule_summary = metadata.get('rule_summary', None)  # 可能是 None，表示还未生成
+                        print(f"🔍 [DEBUG] 从临时存储获取元数据: canonical_key={canonical_key}, display_name={display_name}, rule_summary={'已生成' if rule_summary else '未生成'}...")
+                    
+                    if not display_name:
+                        # 如果没有找到，使用默认值
+                        display_name = f"{grammar.canonical_category}::{grammar.canonical_subtype}"
+                        print(f"⚠️ [DEBUG] 未找到 display_name，使用默认值: {display_name}")
+                    
+                    # 🔧 如果 rule_summary 还未生成，现在生成（只有新语法才需要）
+                    if not rule_summary:
+                        print(f"🔍 [DEBUG] rule_summary 未生成，现在调用 grammar_explanation_assistant 生成...")
+                        # 获取用户引用的句子
+                        sentence_body = effective_sentence_body
+                        # 构建 grammar_dict 用于 grammar_explanation_assistant
+                        grammar_dict = {
+                            "display_name": display_name,
+                            "canonical": {
+                                "category": grammar.canonical_category,
+                                "subtype": grammar.canonical_subtype,
+                                "function": grammar.canonical_function
+                            }
+                        }
+                        # 🔧 获取用户正在学习的语言（文章语言）- 从数据库获取实际语言
+                        learning_language = None
+                        current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else sentence_body
+                        user_id = getattr(self.session_state, 'user_id', None) or self._user_id
+                        
+                        if current_sentence and hasattr(current_sentence, 'text_id') and user_id:
+                            try:
+                                from database_system.database_manager import DatabaseManager
+                                from database_system.business_logic.models import OriginalText
+                                db_manager = DatabaseManager('development')
+                                session = db_manager.get_session()
+                                try:
+                                    text_model = session.query(OriginalText).filter(
+                                        OriginalText.text_id == current_sentence.text_id,
+                                        OriginalText.user_id == user_id
+                                    ).first()
+                                    if text_model:
+                                        learning_language = text_model.language
+                                        print(f"🔍 [DEBUG] 从数据库获取文章language用于grammar_explanation: {learning_language} (text_id={current_sentence.text_id})")
+                                finally:
+                                    session.close()
+                            except Exception as e:
+                                print(f"⚠️ [DEBUG] 获取文章language失败: {e}")
+                        
+                        # 如果无法从数据库获取，使用默认值
+                        if not learning_language:
+                            learning_language = self.session_state.current_language or "中文"
+                            print(f"⚠️ [DEBUG] 无法获取文章language，使用默认值: {learning_language}")
+                        
+                        # 获取输出语言（UI语言）
+                        output_language = self.ui_language or self.session_state.current_language or "中文"
+                        print(f"🔍 [DEBUG] 学习语言: {learning_language}, 输出语言: {output_language}")
+                        try:
+                            explanation_result = self.grammar_explanation_assistant.run(
+                                quoted_sentence=sentence_body,
+                                grammar_summary=grammar_dict,
+                                language=output_language,  # 输出语言（UI语言）
+                                learning_language=learning_language,  # 用户正在学习的语言（文章语言）
+                                user_id=self._user_id,
+                                session=self._db_session
+                            )
+                            print(f"🔍 [DEBUG] grammar_explanation 结果: {type(explanation_result)}, 值: {explanation_result}")
+                            
+                            # 解析解释结果
+                            if isinstance(explanation_result, dict):
+                                rule_summary = explanation_result.get("grammar_explanation", "")
+                            elif isinstance(explanation_result, str):
+                                # 尝试解析 JSON 字符串
+                                try:
+                                    parsed = json.loads(explanation_result)
+                                    rule_summary = parsed.get("grammar_explanation", "")
+                                except:
+                                    rule_summary = explanation_result
+                            
+                            if not rule_summary:
+                                print(f"⚠️ [DEBUG] grammar_explanation 返回空，使用默认解释")
+                                rule_summary = f"{display_name}的语法规则"
+                            
+                            print(f"✅ [DEBUG] 语法规则解释生成成功: {rule_summary[:50]}...")
+                            
+                            # 更新临时存储中的 rule_summary
+                            if hasattr(self.session_state, '_grammar_metadata') and self.session_state._grammar_metadata:
+                                if canonical_key in self.session_state._grammar_metadata:
+                                    self.session_state._grammar_metadata[canonical_key]['rule_summary'] = rule_summary
+                        except Exception as e:
+                            print(f"❌ [DEBUG] grammar_explanation 调用失败: {e}")
+                            import traceback
+                            traceback.print_exc()
+                            rule_summary = f"{display_name}的语法规则"
+                    
+                    if not rule_summary:
+                        rule_summary = f"{display_name}的语法规则"
+                        print(f"⚠️ [DEBUG] 未找到 rule_summary，使用默认值: {rule_summary}")
+                    
+                    print(f"🆕 添加新语法: display_name={display_name}, canonical_key={canonical_key}")
+                    self.session_state.add_grammar_to_add(
+                        canonical_category=grammar.canonical_category,
+                        canonical_subtype=grammar.canonical_subtype,
+                        canonical_function=grammar.canonical_function,
+                        canonical_key=canonical_key,
+                        display_name=display_name,
+                        rule_summary=rule_summary
+                    )
+                else:
+                    # 旧格式兼容（向后兼容）
+                    print(f"🆕 添加新语法（旧格式）: {grammar.grammar_rule_name}")
+                    self.session_state.add_grammar_to_add(
+                        canonical_category="",
+                        canonical_subtype="",
+                        canonical_function="",
+                        canonical_key="",
+                        display_name=grammar.grammar_rule_name,
+                        rule_summary=grammar.grammar_rule_summary
+                    )
 
         print("grammar to add：", self.session_state.grammar_to_add)
         #add to data
@@ -1401,9 +1633,9 @@ class MainAssistant:
         elif self.session_state.grammar_to_add:
             print(f"🔍 [DEBUG] 处理grammar_to_add: {len(self.session_state.grammar_to_add)} 个语法规则")
             for grammar in self.session_state.grammar_to_add:
-                print(f"🔍 [DEBUG] 处理新语法: {grammar.rule_name}")
+                print(f"🔍 [DEBUG] 处理新语法: display_name={grammar.display_name}, canonical_key={grammar.canonical_key}")
                 
-                # 🔧 直接使用数据库管理器创建语法规则（传递language参数）
+                # 🔧 直接使用数据库管理器创建语法规则（传递language参数和canonical字段）
                 grammar_rule_id = None
                 if user_id:
                     try:
@@ -1414,15 +1646,20 @@ class MainAssistant:
                         try:
                             grammar_db_manager = GrammarRuleManagerDB(session)
                             grammar_dto = grammar_db_manager.add_new_rule(
-                                name=grammar.rule_name,
-                                explanation=grammar.rule_explanation,
+                                name=grammar.display_name,  # 使用 display_name 作为 rule_name
+                                explanation=grammar.rule_summary,  # 使用 rule_summary 作为 explanation
                                 source="qa",
                                 is_starred=False,
                                 user_id=user_id,
-                                language=article_language  # 🔧 传递文章的language字段
+                                language=article_language,  # 🔧 传递文章的language字段
+                                display_name=grammar.display_name,  # 新增：传递 display_name
+                                canonical_category=grammar.canonical_category,  # 新增：传递 canonical 字段
+                                canonical_subtype=grammar.canonical_subtype,
+                                canonical_function=grammar.canonical_function,
+                                canonical_key=grammar.canonical_key
                             )
                             grammar_rule_id = grammar_dto.rule_id
-                            print(f"✅ [DEBUG] 新语法规则已添加到数据库: rule_id={grammar_rule_id}, language={article_language}")
+                            print(f"✅ [DEBUG] 新语法规则已添加到数据库: rule_id={grammar_rule_id}, language={article_language}, canonical_key={grammar.canonical_key}")
                         finally:
                             session.close()
                     except Exception as e:
@@ -1432,14 +1669,14 @@ class MainAssistant:
                         # 回退到文件系统管理器
                         print(f"⚠️ [DEBUG] 回退到文件系统管理器")
                         grammar_rule_id = self.data_controller.add_new_grammar_rule(
-                            rule_name=grammar.rule_name,
-                            rule_explanation=grammar.rule_explanation
+                            rule_name=grammar.display_name,
+                            rule_explanation=grammar.rule_summary
                         )
                 else:
                     # 没有user_id，使用文件系统管理器
                     grammar_rule_id = self.data_controller.add_new_grammar_rule(
-                        rule_name=grammar.rule_name,
-                        rule_explanation=grammar.rule_explanation
+                        rule_name=grammar.display_name,
+                        rule_explanation=grammar.rule_summary
                     )
                     print(f"✅ [DEBUG] 新语法规则已添加到文件系统: rule_id={grammar_rule_id}")
                 
@@ -1454,13 +1691,13 @@ class MainAssistant:
                 if current_sentence:
                     # 验证句子完整性
                     self._ensure_sentence_integrity(current_sentence, "新语法 Explanation 调用")
-                    print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{grammar.rule_name}'")
+                    print(f"🔍 [DEBUG] 调用grammar_example_explanation_assistant for '{grammar.display_name}'")
                     # 🔧 使用 UI 语言而不是文章语言
                     output_language = self.ui_language or self.session_state.current_language or "中文"
                     print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                     example_explanation_raw = self.grammar_example_explanation_assistant.run(
                         sentence=current_sentence,
-                        grammar=grammar.rule_name,
+                        grammar=grammar.display_name,  # 使用 display_name
                         language=output_language,
                         user_id=self._user_id, session=self._db_session
                     )
@@ -1556,7 +1793,7 @@ class MainAssistant:
                             print(f"🔍 [DEBUG] ========== 开始创建新语法的grammar notation ==========")
                             print(f"🔍 [DEBUG] 当前句子信息: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}")
                             print(f"🔍 [DEBUG] 语法规则ID: {grammar_rule_id}")
-                            print(f"🔍 [DEBUG] 语法规则名称: {grammar.rule_name}")
+                            print(f"🔍 [DEBUG] 语法规则名称: {grammar.display_name}")
                             
                             # 获取 token_indices（从 session_state 中的 selected_token）
                             token_indices = self._get_token_indices_from_selection(current_sentence)

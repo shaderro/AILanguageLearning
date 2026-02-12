@@ -97,12 +97,42 @@ class GrammarDataAccessLayer:
         """列出所有语法规则"""
         return self._crud.get_all(skip, limit)
     
-    def add_grammar_rule(self, rule_name: str, rule_summary: str,
-                        source: str = "auto", is_starred: bool = False, user_id: int = None,
-                        language: str = None) -> GrammarRule:
-        """添加新语法规则（如果已存在则返回现有记录）"""
+    def add_grammar_rule(
+        self,
+        rule_name: str,
+        rule_summary: str,
+        source: str = "auto",
+        is_starred: bool = False,
+        user_id: int = None,
+        language: str = None,
+        display_name: Optional[str] = None,
+        canonical_category: Optional[str] = None,
+        canonical_subtype: Optional[str] = None,
+        canonical_function: Optional[str] = None,
+        canonical_key: Optional[str] = None,
+    ) -> GrammarRule:
+        """添加新语法规则（如果已存在则返回现有记录）
+        
+        新增支持：
+        - display_name: 展示名称（默认回退为 rule_name）
+        - canonical_category / canonical_subtype / canonical_function / canonical_key
+        
+        兼容说明：旧调用不传这些参数时，行为与之前完全一致。
+        """
         # 🔧 使用 get_or_create 逻辑：如果已存在则返回，不存在则创建
-        return self._crud.get_or_create(rule_name, rule_summary, source, is_starred, user_id, language)
+        return self._crud.get_or_create(
+            rule_name,
+            rule_summary,
+            source,
+            is_starred,
+            user_id,
+            language,
+            display_name=display_name,
+            canonical_category=canonical_category,
+            canonical_subtype=canonical_subtype,
+            canonical_function=canonical_function,
+            canonical_key=canonical_key,
+        )
     
     def search_grammar_rules(self, keyword: str) -> List[GrammarRule]:
         """搜索语法规则"""

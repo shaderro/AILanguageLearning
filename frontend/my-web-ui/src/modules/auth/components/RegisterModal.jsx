@@ -8,7 +8,7 @@ import { authService } from '../services/authService'
 import { useTranslate } from '../../../i18n/useTranslate'
 import { BaseModal, BaseInput, BaseButton, BaseBadge } from '../../../components/base'
 
-const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -18,6 +18,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const [emailUnique, setEmailUnique] = useState(null) // null: 未检查, true: 唯一, false: 不唯一
   const [emailCheckMessage, setEmailCheckMessage] = useState('')
   const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+  const [agreed, setAgreed] = useState(false) // 是否勾选隐私政策与服务条款
   const t = useTranslate()
   
   // 从 UserContext 获取注册方法
@@ -168,7 +169,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       closeOnOverlay={false}
       closeOnEscape={false}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <BaseInput
           label={
             <span>
@@ -223,14 +224,40 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
           </div>
         )}
 
-        <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3">
+        <div className="rounded-md border border-yellow-200 bg-yellow-50 p-2">
           <p className="text-xs text-gray-600">
             {t('💡 注册成功后，系统会自动分配一个用户 ID，请记住它用于登录。')}
           </p>
         </div>
 
-        <div className="flex flex-col space-y-3 pt-2">
-          <BaseButton type="submit" loading={isLoading} fullWidth>
+        {/* 同意条款 */}
+        <div className="text-xs text-gray-600 flex items-center justify-center gap-2">
+          <label className="inline-flex items-center gap-1 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="h-3 w-3 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span>{t('我同意')}</span>
+          </label>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (onOpenPPTerms) {
+                onOpenPPTerms()
+              }
+            }}
+            className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-transparent border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-500"
+          >
+            {t('隐私政策与服务条款')}
+          </button>
+        </div>
+
+        <div className="flex flex-col space-y-2 pt-1">
+          <BaseButton type="submit" loading={isLoading} fullWidth disabled={!agreed}>
             {isLoading ? t('注册中...') : t('注册')}
           </BaseButton>
           <BaseButton type="button" variant="secondary" onClick={onClose} fullWidth>

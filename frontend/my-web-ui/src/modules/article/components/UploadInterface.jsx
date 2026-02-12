@@ -17,6 +17,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
   const [textTitle, setTextTitle] = useState('')
   const [language, setLanguage] = useState('') // 语言：中文、英文、德文
   const [customTitle, setCustomTitle] = useState('') // 自定义文章名（用于URL和文件上传）
+  const MAX_TITLE_LENGTH = 80 // 文章标题最大长度（前端限制）
   const [selectedFile, setSelectedFile] = useState(null) // 选中的文件（来自选择或拖拽）
   const [selectedFileSource, setSelectedFileSource] = useState(null) // 'file' | 'drop'
   const fileInputRef = useRef(null)
@@ -126,7 +127,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         const fileName = file?.name || ''
         const fileExtension = '.' + fileName.split('.').pop().toLowerCase()
         const isPdf = fileExtension === '.pdf' || file?.type === 'application/pdf'
-        const articleTitle = customTitle.trim() || title || fileName.replace(/\.[^/.]+$/, "")
+        const rawTitle = customTitle.trim() || title || fileName.replace(/\.[^/.]+$/, "")
+        const articleTitle = rawTitle.length > MAX_TITLE_LENGTH 
+          ? rawTitle.slice(0, MAX_TITLE_LENGTH) 
+          : rawTitle
 
         if (isPdf) {
           // PDF 超长时，与 URL 一致：直接上传截取后的纯文本（跳过长度检查）
@@ -141,7 +145,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         response = await apiService.uploadText(truncatedContent, title || 'Text Article', language)
       } else if (type === 'url') {
         // 对于URL，直接上传截取后的文本内容
-        const articleTitle = customTitle.trim() || title || 'URL Article'
+        const rawTitle = customTitle.trim() || title || 'URL Article'
+        const articleTitle = rawTitle.length > MAX_TITLE_LENGTH 
+          ? rawTitle.slice(0, MAX_TITLE_LENGTH) 
+          : rawTitle
         console.log('📝 [UploadInterface] 截取后上传URL内容，使用标题:', articleTitle)
         response = await apiService.uploadText(truncatedContent, articleTitle, language, true) // 🔧 传递 skipLengthCheck
       }
@@ -743,6 +750,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             <input
               type="text"
               value={customTitle}
+              maxLength={MAX_TITLE_LENGTH}
               onChange={(e) => setCustomTitle(e.target.value)}
               placeholder={t('自定义文章名（选填）')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -772,6 +780,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             <input
               type="text"
               value={customTitle}
+              maxLength={MAX_TITLE_LENGTH}
               onChange={(e) => setCustomTitle(e.target.value)}
               placeholder={t('自定义文章名（选填）')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"

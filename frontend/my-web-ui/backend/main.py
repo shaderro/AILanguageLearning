@@ -1159,8 +1159,9 @@ def _sync_to_database(user_id: int = None):
             print(f"📚 [Sync] 同步本轮新增的 Grammar Rules (共{len(session_state.grammar_to_add)}个)...")
             synced_grammar = 0
             for grammar_item in session_state.grammar_to_add:
-                rule_name = grammar_item.rule_name
-                rule_explanation = grammar_item.rule_explanation
+                # 🔧 使用新格式：display_name 和 rule_summary
+                rule_name = grammar_item.display_name
+                rule_explanation = grammar_item.rule_summary
                 
                 # 🔧 修复：直接使用add_new_rule，它内部使用get_or_create逻辑（按user_id和rule_name检查）
                 # 如果已存在（属于当前用户），会返回现有记录；如果不存在或属于其他用户，会创建新记录
@@ -1545,29 +1546,25 @@ async def chat_with_assistant(
                 
                 # 🔧 调用 add_new_to_data() 以创建新词汇和 notations
                 print("🧠 [Background] 执行 add_new_to_data()...")
-                # 🔧 关键修复：在调用 add_new_to_data() 之前，先保存 vocab_to_add 和 grammar_to_add
-                # 因为 add_new_to_data() 可能会清空这些列表
-                vocab_to_add_backup = list(local_state.vocab_to_add) if local_state.vocab_to_add else []
-                grammar_to_add_backup = list(local_state.grammar_to_add) if local_state.grammar_to_add else []
-                print(f"🔍 [Background] 备份 vocab_to_add: {len(vocab_to_add_backup)} 个, grammar_to_add: {len(grammar_to_add_backup)} 个")
-
                 main_assistant.add_new_to_data()
                 print("✅ [Background] add_new_to_data() 完成")
                 
-                # 🔧 关键修复：在后台任务完成后，存储新创建的 vocab_to_add 和 grammar_to_add
+                # 🔧 关键修复：在 add_new_to_data() 完成后，从 session_state 获取新创建的 vocab_to_add 和 grammar_to_add
                 # 供前端轮询获取并显示 toast
-                # 🔧 使用备份的数据，因为 add_new_to_data() 可能会清空这些列表
                 grammar_to_add_list = []
                 vocab_to_add_list = []
                 
-                if grammar_to_add_backup:
-                    print(f"🔍 [Background] 从备份恢复 grammar_to_add: {len(grammar_to_add_backup)} 个")
-                    for g in grammar_to_add_backup:
-                        grammar_to_add_list.append({'name': g.rule_name, 'explanation': g.rule_explanation})
+                # 🔧 从 session_state 获取 grammar_to_add（add_new_to_data() 会填充它）
+                if local_state.grammar_to_add:
+                    print(f"🔍 [Background] 从 session_state 获取 grammar_to_add: {len(local_state.grammar_to_add)} 个")
+                    for g in local_state.grammar_to_add:
+                        # 🔧 使用新格式：display_name 和 rule_summary
+                        grammar_to_add_list.append({'name': g.display_name, 'explanation': g.rule_summary})
                 
-                if vocab_to_add_backup:
-                    print(f"🔍 [Background] 从备份恢复 vocab_to_add: {len(vocab_to_add_backup)} 个词汇")
-                    for v in vocab_to_add_backup:
+                # 🔧 从 session_state 获取 vocab_to_add（add_new_to_data() 会填充它）
+                if local_state.vocab_to_add:
+                    print(f"🔍 [Background] 从 session_state 获取 vocab_to_add: {len(local_state.vocab_to_add)} 个词汇")
+                    for v in local_state.vocab_to_add:
                         vocab_body = getattr(v, 'vocab', None)
                         vocab_id = None
                         

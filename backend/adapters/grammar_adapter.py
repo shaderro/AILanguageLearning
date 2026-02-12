@@ -130,13 +130,19 @@ class GrammarAdapter:
         
         return GrammarDTO(
             rule_id=model.rule_id,
-            name=model.rule_name,  # 注意字段映射
-            explanation=model.rule_summary,  # 注意字段映射
+            name=model.rule_name,  # 注意字段映射（旧字段，用于唯一约束等）
+            explanation=model.rule_summary,  # 注意字段映射（旧字段，用于摘要存储）
+            # 新字段：展示名 & canonical 信息
+            display_name=model.display_name or model.rule_name,
+            canonical_category=model.canonical_category,
+            canonical_subtype=model.canonical_subtype,
+            canonical_function=model.canonical_function,
+            canonical_key=model.canonical_key,
             language=model.language,
             source=GrammarAdapter._convert_source_to_dto(model.source),
             is_starred=model.is_starred,
             learn_status=GrammarAdapter._convert_learn_status_to_dto(model.learn_status) if model.learn_status else "not_mastered",
-            examples=examples
+            examples=examples,
         )
     
     @staticmethod
@@ -164,12 +170,20 @@ class GrammarAdapter:
             - DTO.explanation → Model.rule_summary
         """
         model = GrammarModel(
-            rule_name=dto.name,  # 注意字段映射
-            rule_summary=dto.explanation,  # 注意字段映射
+            rule_name=dto.name,  # 注意字段映射（旧字段）
+            rule_summary=dto.explanation,  # 注意字段映射（旧字段）
+            # 新字段：优先使用显式的 display_name，否则回退为 name
+            display_name=getattr(dto, "display_name", None) or dto.name,
+            canonical_category=getattr(dto, "canonical_category", None),
+            canonical_subtype=getattr(dto, "canonical_subtype", None),
+            canonical_function=getattr(dto, "canonical_function", None),
+            canonical_key=getattr(dto, "canonical_key", None),
             language=dto.language,
             source=GrammarAdapter._convert_source_to_model(dto.source),
             is_starred=dto.is_starred,
-            learn_status=GrammarAdapter._convert_learn_status_to_model(getattr(dto, 'learn_status', 'not_mastered'))
+            learn_status=GrammarAdapter._convert_learn_status_to_model(
+                getattr(dto, "learn_status", "not_mastered")
+            ),
         )
         
         # 如果提供了 rule_id，设置它（用于更新场景）

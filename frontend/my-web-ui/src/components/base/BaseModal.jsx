@@ -92,7 +92,7 @@ export function BaseModal({
           </div>
         )}
 
-        <div className="px-6 py-5">{children}</div>
+        <div className="px-6 py-4">{children}</div>
 
         {footer && (
           <div className="border-t border-[var(--modal-border)] px-6 py-4 flex items-center justify-end gap-3">

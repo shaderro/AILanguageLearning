@@ -295,7 +295,7 @@ const GrammarDemo = () => {
       }
       
       return (
-        <div className="h-full bg-gray-100 p-8">
+        <div className="h-full bg-white p-8">
           <div className="max-w-6xl mx-auto">
             <GrammarReviewCard
               grammar={currentItem}
@@ -312,7 +312,7 @@ const GrammarDemo = () => {
       )
     }
     return (
-      <div className="h-full bg-gray-100 p-8">
+      <div className="h-full bg-white p-8">
         <div className="max-w-6xl mx-auto">
           <ReviewResults results={results} onBack={() => setIsReviewMode(false)} />
         </div>
@@ -370,7 +370,7 @@ const GrammarDemo = () => {
     }
     
     return (
-      <div className="h-full bg-gray-100 p-8">
+      <div className="h-full bg-white p-8">
         <div className="max-w-6xl mx-auto">
           <GrammarDetailCard
             grammar={selectedGrammar}
@@ -434,16 +434,16 @@ const GrammarDemo = () => {
   if (isLoading) {
     return (
       <LearnPageLayout
-        title={t('语法学习')}
+        title=""
         onStartReview={startReview}
         onSearch={(value) => setFilterText(value)}
         onFilterChange={handleFilterChange}
         filters={filters}
         showFilters={true}
-        showSearch={true}
-        backgroundClass="bg-gray-100"
+        showSearch={false}
+        backgroundClass="bg-white"
         onRefresh={handleRefreshData}
-        showRefreshButton={true}
+        showRefreshButton={false}
         sortOrder={sortOrder}
         onSortChange={setSortOrder}
       >
@@ -458,16 +458,16 @@ const GrammarDemo = () => {
   if (isError) {
     return (
       <LearnPageLayout
-        title={t('语法学习')}
+        title=""
         onStartReview={startReview}
         onSearch={(value) => setFilterText(value)}
         onFilterChange={handleFilterChange}
         filters={filters}
         showFilters={true}
-        showSearch={true}
-        backgroundClass="bg-gray-100"
+        showSearch={false}
+        backgroundClass="bg-white"
         onRefresh={handleRefreshData}
-        showRefreshButton={true}
+        showRefreshButton={false}
         sortOrder={sortOrder}
         onSortChange={setSortOrder}
       >
@@ -481,27 +481,19 @@ const GrammarDemo = () => {
   // 列表页：使用统一布局
   return (
     <LearnPageLayout
-      title={t('语法学习')}
+      title=""
       onStartReview={startReview}
       onSearch={(value) => setFilterText(value)}
       onFilterChange={handleFilterChange}
       filters={filters}
       showFilters={true}
-      showSearch={true}
-      backgroundClass="bg-gray-100"
+      showSearch={false}
+      backgroundClass="bg-white"
       onRefresh={handleRefreshData}
-      showRefreshButton={true}
+      showRefreshButton={false}
       sortOrder={sortOrder}
       onSortChange={setSortOrder}
     >
-      {/* 显示当前语言过滤状态 */}
-      <div className="col-span-full mb-4 p-3 bg-blue-50 rounded-lg">
-        <p className="text-sm text-blue-700">
-          <span className="font-medium">{t('当前筛选：')}</span>{selectedLanguage}
-          <span className="ml-2 text-gray-600">({list.length} {t('个语法规则')})</span>
-        </p>
-      </div>
-      
       {/* 空状态提示 */}
       {list.length === 0 && !isLoading && (
         <div className="col-span-full flex justify-center items-center h-32">

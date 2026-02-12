@@ -61,10 +61,9 @@ const ArticleCard = ({
   return (
     <div 
       className={`
-        bg-white rounded-lg shadow-md transition-all duration-300 
-        border border-gray-200
+        bg-white rounded-lg border border-gray-200 transition-all duration-300 
         relative
-        ${isProcessing || isFailed ? 'opacity-75 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer transform hover:scale-105'}
+        ${isProcessing || isFailed ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer transform hover:scale-105'}
         ${className}
       `}
       onClick={() => {

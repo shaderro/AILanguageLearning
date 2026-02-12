@@ -1,7 +1,8 @@
 from typing import Optional
 from backend.assistants.sub_assistants.sub_assistant import SubAssistant
 from backend.assistants.utility import parse_json_from_text
-from backend.assistants.sub_assistants.prompt import summarize_grammar_rule_template, summarize_grammar_rule_sys_prompt
+from backend.assistants.sub_assistants.prompt import summarize_grammar_rule_template
+from backend.assistants.sub_assistants.summarize_grammar_prompt import summarize_grammar_rule_sys_prompt
 
 class SummarizeGrammarRuleAssistant(SubAssistant):
 
@@ -48,14 +49,10 @@ class SummarizeGrammarRuleAssistant(SubAssistant):
             language=formatted_language
         )
         
-        # 🔍 打印完整的 system prompt 用于调试
-        print(f"🔍 [SummarizeGrammarRule] ========== System Prompt ==========")
-        print(f"🔍 [SummarizeGrammarRule] Language: {formatted_language}")
-        print(f"🔍 [SummarizeGrammarRule] System Prompt:\n{self.sys_prompt}")
-        print(f"🔍 [SummarizeGrammarRule] ====================================")
-        
         try:
             result = super().run(quoted_sentence, user_question, ai_response, dialogue_context, verbose=verbose, **kwargs)
+            # 只打印输出结果，不打印 prompt
+            print(f"✅ [SummarizeGrammarRule] 输出结果: {result}")
         finally:
             # 恢复原始 sys_prompt，避免影响后续调用
             self.sys_prompt = original_sys_prompt
