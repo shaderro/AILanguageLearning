@@ -501,7 +501,14 @@ export default function SentenceContainer({
               onMouseEnter={() => {
                 const rect = sentenceRef.current?.getBoundingClientRect()
                 if (rect) {
-                  setGrammarCardPosition({ top: rect.bottom + 8, left: rect.left, right: 'auto' })
+                  // 🔧 传递句子的位置信息，让 GrammarNotationCard 自己决定显示位置
+                  setGrammarCardPosition({ 
+                    top: rect.bottom + 8, // 默认显示在下方
+                    left: rect.left, 
+                    right: 'auto',
+                    sentenceTop: rect.top, // 🔧 传递句子顶部位置
+                    sentenceBottom: rect.bottom // 🔧 传递句子底部位置
+                  })
                 }
                 setShowGrammarCard(true)
                 // 🔧 当显示 grammar notation 时，隐藏整句翻译

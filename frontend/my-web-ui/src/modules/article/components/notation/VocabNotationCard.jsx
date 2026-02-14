@@ -288,6 +288,10 @@ export default function VocabNotationCard({
   useEffect(() => {
     if (!isVisible) {
       logVocabNotationDebug('⬜ [VocabNotationCard] visible=false', { textId, sentenceId, tokenIndex })
+      // 🔧 当不可见时，清理加载状态，避免下次显示时仍然显示加载状态
+      if (isLoading) {
+        setIsLoading(false)
+      }
       return
     }
 
@@ -553,10 +557,16 @@ export default function VocabNotationCard({
     return null
   }
 
+  // 🔧 关键修复：当 isVisible 为 false 时，完全不渲染，避免多个隐藏的卡片堆叠
+  if (!isVisible) {
+    return null
+  }
+
   let displayContent = note
 
+  // 🔧 优化显示逻辑：避免重复显示"正在生成解释"
   if (isLoading) {
-    // 🔧 显示"正在生成解释"的灰色文字
+    // 🔧 显示"正在生成解释"的灰色文字（带加载动画）
     displayContent = (
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
@@ -579,10 +589,21 @@ export default function VocabNotationCard({
         </div>
       </div>
     )
-  } else if (vocabExample === null && !isLoading) {
-    // 🔧 如果example为null且不在加载中，显示"正在生成解释"
+  } else if (vocabExample === null && !isLoading && !error) {
+    // 🔧 如果example为null且不在加载中且没有错误，显示"正在生成解释"（不带动画，避免与 isLoading 状态重复）
+    // 🔧 注意：这个状态应该很少出现，因为如果 isLoading 为 false，通常意味着已经加载完成
     displayContent = (
-      <div className="text-gray-500 text-sm">正在生成解释...</div>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-gray-500 text-sm">正在生成解释...</span>
+      </div>
+    )
+  } else if (!vocabExample && !isLoading && !error && note) {
+    // 🔧 如果有备用 note，显示它
+    displayContent = (
+      <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+        {note}
+      </div>
     )
   }
 

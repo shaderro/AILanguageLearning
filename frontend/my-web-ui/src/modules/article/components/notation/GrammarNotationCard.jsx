@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import { apiService } from '../../../../services/api'
 import { colors } from '../../../../design-tokens'
 import { useUIText } from '../../../../i18n/useUIText'
@@ -117,6 +117,8 @@ export default function GrammarNotationCard({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [articleRect, setArticleRect] = useState(null)
+  const cardRef = useRef(null)
+  const [cardHeight, setCardHeight] = useState(null)
 
   useEffect(() => {
     if (isVisible && textId && sentenceId) {
@@ -255,6 +257,56 @@ export default function GrammarNotationCard({
     }
   }
 
+  // 🔧 测量 tooltip 实际高度，用于动态调整位置
+  useLayoutEffect(() => {
+    if (isVisible && cardRef.current) {
+      const h = cardRef.current.getBoundingClientRect().height
+      if (h && h !== cardHeight) {
+        setCardHeight(h)
+      }
+    }
+  }, [isVisible, cardHeight, grammarRules.length]) // 当 grammarRules 数量变化时重新测量
+
+  // 🔧 动态计算位置：如果 tooltip 会超出视口底部，则显示在句子上方
+  const [finalPosition, setFinalPosition] = useState(position)
+  
+  useEffect(() => {
+    if (!isVisible || !position.top) {
+      setFinalPosition(position)
+      return
+    }
+    
+    const calculatePosition = () => {
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+      const actualHeight = cardHeight || 300 // 使用实际高度，如果没有则使用估算值
+      const spaceBelow = viewportHeight - position.top
+      const sentenceTop = position.sentenceTop // 从 position 中获取句子顶部位置
+      
+      // 🔧 如果下方空间不够（无法完整显示 tooltip），且上方有足够空间，则显示在上方
+      if (spaceBelow < actualHeight && sentenceTop && sentenceTop >= actualHeight) {
+        // 显示在句子上方（tooltip 底部与句子顶部对齐，留 8px 间距）
+        setFinalPosition({
+          ...position,
+          top: sentenceTop - actualHeight - 8
+        })
+      } else {
+        // 默认显示在句子下方
+        setFinalPosition(position)
+      }
+    }
+    
+    calculatePosition()
+    
+    // 🔧 监听滚动和窗口大小变化，重新计算位置
+    window.addEventListener('scroll', calculatePosition, true)
+    window.addEventListener('resize', calculatePosition)
+    
+    return () => {
+      window.removeEventListener('scroll', calculatePosition, true)
+      window.removeEventListener('resize', calculatePosition)
+    }
+  }, [isVisible, position, cardHeight])
+
   if (!isVisible) return null
 
   // 🔧 tooltip 宽度：与 article view 宽度保持一致（直接测量 .article-scrollbar）
@@ -264,12 +316,13 @@ export default function GrammarNotationCard({
 
   return (
     <div 
+      ref={cardRef}
       className="fixed bg-white border border-gray-300 rounded-lg shadow-lg z-50 notation-card"
       style={{
-        top: `${position.top}px`,
+        top: `${finalPosition.top}px`,
         // 如果测量到了 articleRect，则强制与 article view 左对齐
-        left: articleRect?.left != null ? `${Math.floor(articleRect.left)}px` : (position.left !== 'auto' ? `${position.left}px` : 'auto'),
-        right: position.right !== 'auto' ? `${position.right}px` : 'auto',
+        left: articleRect?.left != null ? `${Math.floor(articleRect.left)}px` : (finalPosition.left !== 'auto' ? `${finalPosition.left}px` : 'auto'),
+        right: finalPosition.right !== 'auto' ? `${finalPosition.right}px` : 'auto',
         // 与 article view 对齐时，不需要 transform
         transform: articleRect?.left != null ? 'none' : (position.left !== 'auto' ? 'none' : 'translateX(-50%)'),
         width: articleRect?.width ? `${Math.floor(articleRect.width)}px` : '100%',
@@ -320,51 +373,98 @@ export default function GrammarNotationCard({
         )}
 
         {!isLoading && !error && grammarRules.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {grammarRules.map((rule, index) => (
-              <div 
-                key={rule.notation_id || index} 
-                style={{ 
-                  borderBottom: index < grammarRules.length - 1 ? '1px solid #f3f4f6' : 'none',
-                  paddingBottom: '12px'
-                }}
-              >
-                <div style={{ 
-                  fontWeight: '600', 
-                  color: colors.primary[600], 
-                  marginBottom: '8px',
-                  fontSize: '16px'
-                }}>
-                  {rule.rule_name || rule.name}
-                </div>
-                <div style={{ fontSize: '14px', color: '#374151', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: '500' }}>{t('规则解释:')}</span>
-                  <div style={{ 
-                    marginTop: '4px', 
-                    paddingLeft: '8px', 
-                    borderLeft: `2px solid ${colors.primary[100]}`,
-                    padding: '4px 0 4px 8px',
-                    whiteSpace: 'pre-wrap'
-                  }}>
-                    {parseExplanation(rule.rule_summary || rule.explanation || '')}
-                  </div>
-                </div>
-                {rule.context_explanation && (
-                  <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                    <span style={{ fontWeight: '500' }}>{t('上下文解释:')}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {grammarRules.map((rule, index) => {
+              // 🔧 构建语法规则详情页面的 URL
+              const grammarId = rule.rule_id || rule.grammar_id
+              const detailUrl = grammarId 
+                ? `${window.location.origin}${window.location.pathname}?page=grammarDemo&grammarId=${grammarId}`
+                : null
+              
+              // 🔧 处理点击事件：在新标签页打开详情页面
+              const handleTitleClick = (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (detailUrl) {
+                  window.open(detailUrl, '_blank', 'noopener,noreferrer')
+                }
+              }
+              
+              return (
+                <div 
+                  key={rule.notation_id || `grammar-${rule.rule_id || rule.grammar_id}-${index}`} 
+                  style={{ 
+                    borderBottom: index < grammarRules.length - 1 ? '1px solid #e5e7eb' : 'none',
+                    paddingBottom: index < grammarRules.length - 1 ? '20px' : '0'
+                  }}
+                >
+                  {/* 🔧 可点击的标题：绿色下划线幽灵按钮 */}
+                  <button
+                    onClick={handleTitleClick}
+                    disabled={!detailUrl}
+                    style={{ 
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      margin: 0,
+                      cursor: detailUrl ? 'pointer' : 'default',
+                      textAlign: 'left',
+                      fontWeight: '600', 
+                      color: colors.primary[600], 
+                      marginBottom: '8px',
+                      fontSize: '16px',
+                      textDecoration: 'underline',
+                      textDecorationColor: '#10b981', // 绿色下划线
+                      textDecorationThickness: '2px',
+                      textUnderlineOffset: '4px',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (detailUrl) {
+                        e.target.style.color = colors.primary[700]
+                        e.target.style.textDecorationColor = '#059669' // 深绿色
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (detailUrl) {
+                        e.target.style.color = colors.primary[600]
+                        e.target.style.textDecorationColor = '#10b981' // 恢复绿色
+                      }
+                    }}
+                  >
+                    {rule.rule_name || rule.name || t('语法规则')}
+                  </button>
+                  
+                  {/* 🔧 只显示 context_explanation */}
+                  {rule.context_explanation ? (
                     <div style={{ 
-                      marginTop: '4px', 
+                      fontSize: '14px', 
+                      color: '#374151',
+                      marginTop: '8px',
                       paddingLeft: '8px', 
                       borderLeft: '2px solid #dcfce7',
                       padding: '4px 0 4px 8px',
-                      whiteSpace: 'pre-wrap'
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.6'
                     }}>
                       {parseExplanation(rule.context_explanation || '')}
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: '#9ca3af',
+                      fontStyle: 'italic',
+                      marginTop: '8px',
+                      paddingLeft: '8px', 
+                      borderLeft: '2px solid #dcfce7',
+                      padding: '4px 0 4px 8px'
+                    }}>
+                      {t('暂无上下文解释')}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

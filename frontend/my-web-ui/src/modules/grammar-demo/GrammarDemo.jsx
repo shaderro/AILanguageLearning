@@ -124,6 +124,13 @@ const GrammarDemo = () => {
     }
   })
 
+  // 🔧 从 URL 参数读取 grammarId（用于新标签页打开）
+  const getGrammarIdFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    const grammarId = params.get('grammarId')
+    return grammarId ? parseInt(grammarId) : null
+  }
+  
   const [selectedGrammar, setSelectedGrammar] = useState(null)
   const [selectedGrammarId, setSelectedGrammarId] = useState(null)
   const [selectedGrammarIndex, setSelectedGrammarIndex] = useState(-1)
@@ -132,6 +139,35 @@ const GrammarDemo = () => {
   const [reviewItems, setReviewItems] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [results, setResults] = useState([])
+  
+  // 🔧 从 URL 参数初始化 selectedGrammarId（用于新标签页打开）
+  useEffect(() => {
+    const urlGrammarId = getGrammarIdFromURL()
+    if (urlGrammarId && urlGrammarId !== selectedGrammarId) {
+      setSelectedGrammarId(urlGrammarId)
+      // 计算当前语法在列表中的索引（等待 allGrammar 加载完成）
+      if (allGrammar.length > 0) {
+        const index = allGrammar.findIndex(g => g.rule_id === urlGrammarId)
+        if (index >= 0) {
+          setSelectedGrammarIndex(index)
+        }
+      }
+    }
+  }, []) // 只在组件挂载时执行一次
+  
+  // 🔧 当 allGrammar 加载完成后，如果 URL 中有 grammarId，设置索引
+  useEffect(() => {
+    const urlGrammarId = getGrammarIdFromURL()
+    if (urlGrammarId && allGrammar.length > 0 && selectedGrammarIndex === -1) {
+      const index = allGrammar.findIndex(g => g.rule_id === urlGrammarId)
+      if (index >= 0) {
+        setSelectedGrammarIndex(index)
+        if (!selectedGrammarId) {
+          setSelectedGrammarId(urlGrammarId)
+        }
+      }
+    }
+  }, [allGrammar, selectedGrammarIndex, selectedGrammarId])
 
   // 🔧 新增：当选中语法时，获取完整的语法详情（包含examples）
   useEffect(() => {
