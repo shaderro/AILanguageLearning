@@ -139,7 +139,16 @@ function AppContent() {
     const isActive = currentPage === id
     return (
       <button
-        onClick={() => setCurrentPage(id)}
+        onClick={() => {
+          setCurrentPage(id)
+          // 🔧 修复问题1：当点击语法按钮时，清除URL中的grammarId参数
+          if (id === 'grammarDemo') {
+            const params = new URLSearchParams(window.location.search)
+            params.delete('grammarId')
+            const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
+            window.history.replaceState({}, '', newUrl)
+          }
+        }}
         className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
         style={{
           borderColor: isActive ? colors.primary[600] : 'transparent',

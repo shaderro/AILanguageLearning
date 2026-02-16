@@ -57,6 +57,9 @@ export function UserProvider({ children }) {
   const isInitializedRef = useRef(false) // 🔧 使用 ref 标记是否已经初始化，避免重复初始化
 
   // 初始化：从 localStorage 恢复登录状态或创建游客ID
+  // 🔧 用于标记用户是否主动登录，以便忽略自动登录的结果
+  const userInitiatedLoginRef = useRef(false)
+  
   useEffect(() => {
     // 🔧 如果已经初始化过，直接返回，避免重复初始化
     if (isInitializedRef.current) {
@@ -78,6 +81,13 @@ export function UserProvider({ children }) {
               setTimeout(() => reject(new Error('验证超时')), 120000) // 增加到2分钟
             )
           ])
+          
+          // 🔧 检查用户是否在等待期间主动登录了
+          if (userInitiatedLoginRef.current) {
+            console.log('⚠️ [UserContext] 用户已主动登录，忽略自动登录结果')
+            return
+          }
+          
           console.log('✅ [UserContext] Token 有效，自动登录:', user)
           
           // 🔧 确保状态更新是同步的，避免在更新过程中被其他逻辑干扰
@@ -90,6 +100,11 @@ export function UserProvider({ children }) {
           // 🔧 确保状态已设置完成
           console.log('✅ [UserContext] 登录状态已设置，userId:', savedUserId)
         } catch (error) {
+          // 🔧 检查用户是否在等待期间主动登录了
+          if (userInitiatedLoginRef.current) {
+            console.log('⚠️ [UserContext] 用户已主动登录，忽略自动登录错误')
+            return
+          }
           console.log('⚠️ [UserContext] Token 验证失败:', error.message || error)
           // 🔧 修改逻辑：如果是网络错误或超时，不切换模式，保持登录状态
           // 只有在明确的认证错误（401）且不是网络问题时，才考虑切换
@@ -150,10 +165,16 @@ export function UserProvider({ children }) {
    * 登录
    */
   const login = async (inputUserId, inputPassword, inputEmail = null) => {
+    // 🔧 标记用户主动登录，防止自动登录覆盖
+    userInitiatedLoginRef.current = true
+    
     try {
       console.log('🔐 [UserContext] 登录中...', { userId: inputUserId, email: inputEmail })
       
       const result = await authService.login(inputUserId, inputPassword, inputEmail)
+      
+      // 🔧 登录成功后，重置标志（因为现在已经是新用户了）
+      userInitiatedLoginRef.current = false
       
       console.log('✅ [UserContext] 登录成功:', result)
       
@@ -182,6 +203,10 @@ export function UserProvider({ children }) {
     } catch (error) {
       console.error('❌ [UserContext] 登录请求失败:', error)
       
+      // 🔧 注意：登录失败时，保持 userInitiatedLoginRef.current = true
+      // 这样可以防止自动登录覆盖用户的登录尝试（即使失败了）
+      // 用户需要手动刷新页面或重新登录才能清除这个状态
+      
       // 🔧 修复：如果超时但localStorage中已有token，说明登录实际上已经成功
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         console.log('⏱️ [UserContext] 登录请求超时，检查localStorage中是否有token...')
@@ -205,10 +230,15 @@ export function UserProvider({ children }) {
             setShowMigrationDialog(true)
           }
           
+          // 🔧 登录成功（超时但token已保存），重置标志
+          userInitiatedLoginRef.current = false
           return { success: true, userId: savedAuth.userId, token: savedAuth.token }
         }
       }
       
+      // 🔧 登录失败，保持标志为 true，防止自动登录覆盖用户的登录尝试
+      // 这样即使用户3登录失败，也不会自动登录用户5
+      // 用户需要手动刷新页面或重新登录才能清除这个状态
       return {
         success: false,
         error: normalizeApiError(error) || '登录失败',

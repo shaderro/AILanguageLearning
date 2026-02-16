@@ -141,9 +141,13 @@ const GrammarDemo = () => {
   const [results, setResults] = useState([])
   
   // 🔧 从 URL 参数初始化 selectedGrammarId（用于新标签页打开）
+  // 🔧 修复问题1：只在URL中明确包含grammarId时才设置（用于新标签页打开），而不是每次组件挂载都设置
   useEffect(() => {
     const urlGrammarId = getGrammarIdFromURL()
+    // 🔧 如果URL中有grammarId，说明是从新标签页打开，应该显示详情页
+    // 如果URL中没有grammarId，但selectedGrammarId有值，说明是用户点击了列表项，保持当前状态
     if (urlGrammarId && urlGrammarId !== selectedGrammarId) {
+      console.log(`🔍 [GrammarDemo] URL中有grammarId=${urlGrammarId}，设置详情页`)
       setSelectedGrammarId(urlGrammarId)
       // 计算当前语法在列表中的索引（等待 allGrammar 加载完成）
       if (allGrammar.length > 0) {
@@ -152,6 +156,13 @@ const GrammarDemo = () => {
           setSelectedGrammarIndex(index)
         }
       }
+    } else if (!urlGrammarId && selectedGrammarId) {
+      // 🔧 如果URL中没有grammarId，但selectedGrammarId有值，说明用户点击了导航栏的"语法"按钮
+      // 应该清除selectedGrammarId，显示列表页
+      console.log(`🔍 [GrammarDemo] URL中没有grammarId，清除selectedGrammarId，显示列表页`)
+      setSelectedGrammarId(null)
+      setSelectedGrammarIndex(-1)
+      setSelectedGrammar(null)
     }
   }, []) // 只在组件挂载时执行一次
   

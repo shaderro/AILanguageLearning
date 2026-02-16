@@ -408,15 +408,26 @@ function ChatView({
     return () => clearTimeout(timeoutId)
   }, [messages.length])
   
+  // 🔧 修复问题3：防止重复处理 pendingMessage
+  const processingPendingMessageRef = useRef(false)
+  
   // 🔧 处理 pendingMessage（来自 useChatEvent）
   useEffect(() => {
-    if (!pendingMessage || isProcessing) return
+    if (!pendingMessage || isProcessing || processingPendingMessageRef.current) {
+      if (processingPendingMessageRef.current) {
+        console.log('⏭️ [ChatView] 跳过重复处理 pendingMessage（正在处理中）')
+      }
+      return
+    }
     
     console.log('📥 [ChatView] 收到 pendingMessage', {
       text: pendingMessage.text,
       quotedText: pendingMessage.quotedText,
       hasContext: !!pendingContext
     })
+    
+    // 🔧 标记为正在处理，防止重复处理
+    processingPendingMessageRef.current = true
     
     // 🔧 自动发送消息
     const sendPendingMessage = async () => {
@@ -560,7 +571,8 @@ function ChatView({
                 if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
                   console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                   const items = [
-                    ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.name || g.title || g.rule || tUI('语法')}`),
+                    // 🔧 修复问题2：使用正确的字段名 display_name（新格式）或 name/title/rule（旧格式兼容）
+                    ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.display_name || g.name || g.title || g.rule || tUI('语法')}`),
                     ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
                   ]
                   
@@ -650,6 +662,8 @@ function ChatView({
         setIsProcessing(false)
         clearPendingMessage()
         clearPendingContext()
+        // 🔧 修复问题3：处理完成后，重置处理标记
+        processingPendingMessageRef.current = false
       }
     }
     
@@ -912,7 +926,8 @@ function ChatView({
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
                 console.log(`🍞 [ChatView] [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                 const items = [
-                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.name || g.title || g.rule || tUI('语法')}`),
+                  // 🔧 修复问题2：使用正确的字段名 display_name（新格式）或 name/title/rule（旧格式兼容）
+                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.display_name || g.name || g.title || g.rule || tUI('语法')}`),
                   ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
                 ]
                 
@@ -1162,7 +1177,8 @@ function ChatView({
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
                 console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                 const items = [
-                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.name || g.title || g.rule || tUI('语法')}`),
+                  // 🔧 修复问题2：使用正确的字段名 display_name（新格式）或 name/title/rule（旧格式兼容）
+                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.display_name || g.name || g.title || g.rule || tUI('语法')}`),
                   ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
                 ]
                 
