@@ -695,10 +695,11 @@ function ChatView({
             }
             
             let pollCount = 0
-            const maxPolls = 10
-            const pollInterval = 3000  // 🔧 改为3秒一次（原来是1秒），减少请求频率
+            const maxPolls = 15  // 🔧 增加最大轮询次数，适应线上服务器延迟
+            const pollInterval = 1500  // 🔧 缩短到1.5秒一次，加快响应速度（线上服务器需要更频繁的轮询）
             
-            pollPendingKnowledgeRef.current = setInterval(async () => {
+            // 🔧 立即执行第一次轮询（不等待 pollInterval），减少延迟
+            const pollOnce = async () => {
               pollCount++
               try {
                 const { apiService } = await import('../../../services/api')
@@ -833,13 +834,19 @@ function ChatView({
                     console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 已创建 ${items.length} 个toast（全部立即显示）`)
                   }
                   
-                  // 🔧 刷新 notation 缓存，使 article view 自动更新
+                  // 🔧 刷新 notation 缓存，使 article view 自动更新（使用 await 确保完成）
                   if (refreshGrammarNotations) {
                     console.log('🔄 [ChatView] sendPendingMessage - 检测到新知识点，刷新 notation 缓存...')
                     console.log('🔄 [ChatView] sendPendingMessage - refreshGrammarNotations 类型:', typeof refreshGrammarNotations)
                     try {
-                      refreshGrammarNotations()
-                      console.log('✅ [ChatView] sendPendingMessage - notation 缓存刷新完成')
+                      // 🔧 如果是异步函数，等待完成；否则立即执行
+                      const refreshResult = refreshGrammarNotations()
+                      if (refreshResult && typeof refreshResult.then === 'function') {
+                        await refreshResult
+                        console.log('✅ [ChatView] sendPendingMessage - notation 缓存刷新完成（异步）')
+                      } else {
+                        console.log('✅ [ChatView] sendPendingMessage - notation 缓存刷新完成（同步）')
+                      }
                     } catch (err) {
                       console.error('❌ [ChatView] sendPendingMessage - notation 缓存刷新失败:', err)
                     }
@@ -876,17 +883,26 @@ function ChatView({
                   pollPendingKnowledgeRef.current = null
                 }
               }
-            }, pollInterval)
+            }
             
-            console.log(`🔍 [ChatView] sendPendingMessage - ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+            // 🔧 延迟启动轮询，给后台任务一些时间执行（线上服务器可能需要更长时间）
+            setTimeout(() => {
+              // 立即执行第一次轮询
+              pollOnce()
+              
+              // 然后设置定时轮询
+              pollPendingKnowledgeRef.current = setInterval(pollOnce, pollInterval)
+              console.log(`🔍 [ChatView] sendPendingMessage - ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+            }, 500)  // 🔧 延迟 500ms 启动，确保后台任务有时间开始执行
             
             // 🔧 设置超时清理（双重保险）
             setTimeout(() => {
               if (pollPendingKnowledgeRef.current) {
                 clearInterval(pollPendingKnowledgeRef.current)
                 pollPendingKnowledgeRef.current = null
+                console.log(`🔍 [ChatView] sendPendingMessage - ⏸️ 超时清理轮询`)
               }
-            }, maxPolls * pollInterval)
+            }, 500 + maxPolls * pollInterval)  // 🔧 加上延迟启动的时间
           } else {
             console.log(`🔍 [ChatView] sendPendingMessage - ❌ textId无效(${textId})，无法启动轮询`)
           }
@@ -1204,10 +1220,11 @@ function ChatView({
           }
           
           let pollCount = 0
-          const maxPolls = 10
-          const pollInterval = 3000  // 🔧 改为3秒一次（原来是1秒），减少请求频率
+          const maxPolls = 15  // 🔧 增加最大轮询次数，适应线上服务器延迟
+          const pollInterval = 1500  // 🔧 缩短到1.5秒一次，加快响应速度（线上服务器需要更频繁的轮询）
           
-          pollPendingKnowledgeRef.current = setInterval(async () => {
+          // 🔧 立即执行第一次轮询（不等待 pollInterval），减少延迟
+          const pollOnce = async () => {
             pollCount++
             try {
               const { apiService } = await import('../../../services/api')
@@ -1327,10 +1344,21 @@ function ChatView({
                   return updated
                 })
                 
-                // 🔧 刷新 notation 缓存，使 article view 自动更新
+                // 🔧 刷新 notation 缓存，使 article view 自动更新（使用 await 确保完成）
                 if (refreshGrammarNotations) {
                   console.log('🔄 [ChatView] 检测到新知识点，刷新 notation 缓存...')
-                  refreshGrammarNotations()
+                  try {
+                    // 🔧 如果是异步函数，等待完成；否则立即执行
+                    const refreshResult = refreshGrammarNotations()
+                    if (refreshResult && typeof refreshResult.then === 'function') {
+                      await refreshResult
+                      console.log('✅ [ChatView] notation 缓存刷新完成（异步）')
+                    } else {
+                      console.log('✅ [ChatView] notation 缓存刷新完成（同步）')
+                    }
+                  } catch (err) {
+                    console.error('❌ [ChatView] notation 缓存刷新失败:', err)
+                  }
                 }
                 
                 // 🔧 找到数据后立即停止轮询
@@ -1362,17 +1390,26 @@ function ChatView({
                 pollPendingKnowledgeRef.current = null
               }
             }
-          }, pollInterval)
+          }
           
-          console.log(`🔍 [ChatView] ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+          // 🔧 延迟启动轮询，给后台任务一些时间执行（线上服务器可能需要更长时间）
+          setTimeout(() => {
+            // 立即执行第一次轮询
+            pollOnce()
+            
+            // 然后设置定时轮询
+            pollPendingKnowledgeRef.current = setInterval(pollOnce, pollInterval)
+            console.log(`🔍 [ChatView] ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+          }, 500)  // 🔧 延迟 500ms 启动，确保后台任务有时间开始执行
           
           // 🔧 设置超时清理（双重保险）
           setTimeout(() => {
             if (pollPendingKnowledgeRef.current) {
               clearInterval(pollPendingKnowledgeRef.current)
               pollPendingKnowledgeRef.current = null
+              console.log(`🔍 [ChatView] ⏸️ 超时清理轮询`)
             }
-          }, maxPolls * pollInterval)
+          }, 500 + maxPolls * pollInterval)  // 🔧 加上延迟启动的时间
         } else {
           console.log(`🔍 [ChatView] ❌ textId无效(${textId})，无法启动轮询`)
         }
@@ -1563,10 +1600,11 @@ function ChatView({
           }
           
           let pollCount = 0
-          const maxPolls = 10
-          const pollInterval = 3000  // 🔧 改为3秒一次（原来是1秒），减少请求频率
+          const maxPolls = 15  // 🔧 增加最大轮询次数，适应线上服务器延迟
+          const pollInterval = 1500  // 🔧 缩短到1.5秒一次，加快响应速度（线上服务器需要更频繁的轮询）
           
-          pollPendingKnowledgeRef.current = setInterval(async () => {
+          // 🔧 立即执行第一次轮询（不等待 pollInterval），减少延迟
+          const pollOnce = async () => {
             pollCount++
             try {
               const { apiService } = await import('../../../services/api')
@@ -1709,17 +1747,26 @@ function ChatView({
                 pollPendingKnowledgeRef.current = null
               }
             }
-          }, pollInterval)
+          }
           
-          console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+          // 🔧 延迟启动轮询，给后台任务一些时间执行（线上服务器可能需要更长时间）
+          setTimeout(() => {
+            // 立即执行第一次轮询
+            pollOnce()
+            
+            // 然后设置定时轮询
+            pollPendingKnowledgeRef.current = setInterval(pollOnce, pollInterval)
+            console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ✅ 轮询已设置，interval ID:`, pollPendingKnowledgeRef.current)
+          }, 500)  // 🔧 延迟 500ms 启动，确保后台任务有时间开始执行
           
           // 🔧 设置超时清理（双重保险）
           setTimeout(() => {
             if (pollPendingKnowledgeRef.current) {
               clearInterval(pollPendingKnowledgeRef.current)
               pollPendingKnowledgeRef.current = null
+              console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ⏸️ 超时清理轮询`)
             }
-          }, maxPolls * pollInterval)
+          }, 500 + maxPolls * pollInterval)  // 🔧 加上延迟启动的时间
         } else {
           console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - ❌ textId无效(${textId})，无法启动轮询`)
         }
