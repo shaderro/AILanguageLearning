@@ -123,6 +123,19 @@ export default function GrammarNotationCard({
   useEffect(() => {
     if (isVisible && textId && sentenceId) {
       if (cachedGrammarRules && getGrammarRuleById) {
+        // 🔍 诊断日志：检查传入的 cachedGrammarRules
+        console.log('🔍 [GrammarNotationCard] 处理 cachedGrammarRules:', {
+          textId,
+          sentenceId,
+          cachedGrammarRulesCount: cachedGrammarRules?.length || 0,
+          cachedGrammarRules: cachedGrammarRules?.map(n => ({
+            notation_id: n.notation_id,
+            grammar_id: n.grammar_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id
+          }))
+        })
+        
         const rules = cachedGrammarRules.map(notation => {
           const rule = getGrammarRuleById(notation.grammar_id)
           if (!rule) {
@@ -150,6 +163,17 @@ export default function GrammarNotationCard({
           }
           return result
         }).filter(Boolean)
+        
+        console.log('✅ [GrammarNotationCard] 处理后的 rules:', {
+          rulesCount: rules.length,
+          rules: rules.map(r => ({
+            rule_id: r.rule_id,
+            grammar_id: r.grammar_id,
+            rule_name: r.rule_name,
+            notation_id: r.notation_id
+          }))
+        })
+        
         setGrammarRules(rules)
         setIsLoading(false)
         setError(null)
@@ -311,8 +335,8 @@ export default function GrammarNotationCard({
 
   // 🔧 tooltip 宽度：与 article view 宽度保持一致（直接测量 .article-scrollbar）
   const TOOLTIP_MAX_WIDTH = articleRect?.width ? `${Math.floor(articleRect.width)}px` : '800px'
-  const TOOLTIP_MAX_HEIGHT = '600px' // 增加最大高度，超出时使用滚动
-  const TOOLTIP_INNER_MAX_HEIGHT = 'calc(600px - 32px)' // 减去上下 padding (16px * 2)
+  const TOOLTIP_MAX_HEIGHT = '200px' // 🔧 改为原来的 1/3 (600px / 3 = 200px)，超出时使用滚动
+  const TOOLTIP_INNER_MAX_HEIGHT = 'calc(200px - 32px)' // 🔧 减去上下 padding (16px * 2)
 
   return (
     <div 

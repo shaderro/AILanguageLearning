@@ -440,7 +440,7 @@ async def get_grammar_notation_details(
     user_id: str = Query("default_user", description="用户ID（将被忽略，实际以当前登录用户为准）"),
     current_user: User = Depends(get_current_user),
 ):
-    """获取语法标注详情"""
+    """获取句子的所有语法标注详情（支持多个语法知识点）"""
     try:
         print(f"[API] Getting grammar notation details: {text_id}:{sentence_id}")
         
@@ -460,22 +460,29 @@ async def get_grammar_notation_details(
         try:
             crud = GrammarNotationCRUD(session)
             effective_user_id = int(current_user.user_id)
-            notation = crud.get_by_sentence(text_id, sentence_id, effective_user_id)
+            notations = crud.get_by_sentence(text_id, sentence_id, effective_user_id)  # 🔧 修复：现在返回列表
             
-            if notation:
-                data = {
-                    "user_id": notation.user_id,
-                    "text_id": notation.text_id,
-                    "sentence_id": notation.sentence_id,
-                    "grammar_id": notation.grammar_id,
-                    "marked_token_ids": notation.marked_token_ids,
-                    "created_at": notation.created_at.isoformat() if notation.created_at else None
-                }
+            if notations and len(notations) > 0:
+                # 🔧 修复：返回所有 notations 的列表（始终返回数组格式，支持多个语法知识点）
+                notation_list = [
+                    {
+                        "notation_id": n.id,
+                        "user_id": n.user_id,
+                        "text_id": n.text_id,
+                        "sentence_id": n.sentence_id,
+                        "grammar_id": n.grammar_id,
+                        "marked_token_ids": n.marked_token_ids or [],
+                        "created_at": n.created_at.isoformat() if n.created_at else None
+                    }
+                    for n in notations
+                ]
+                
+                # 🔧 始终返回数组格式，支持多个语法知识点
                 session.close()
                 return NotationResponse(
                     success=True,
-                    data=data,
-                    message="成功获取语法标注详情"
+                    data=notation_list,  # 数组格式（支持单个或多个语法知识点）
+                    message=f"成功获取 {len(notation_list)} 个语法标注"
                 )
             else:
                 session.close()

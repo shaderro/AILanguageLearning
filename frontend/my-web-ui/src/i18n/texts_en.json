@@ -141,6 +141,7 @@
   "登录": "Login",
   "知识点总结": "Key point summary",
   "知识点已总结并加入列表": "Knowledge point summarized and added to list",
+  "已有知识点：{type} {name} 加入新例句": "Existing knowledge point: {type} {name} added new example",
   "确定要删除文章": "Delete this article?",
   "确定要退出登录吗？": "Sign out now?",
   "确认删除": "Confirm delete",

@@ -51,6 +51,8 @@ class SessionState:
         self.vocab_to_add: List[VocabToAdd] = []
         self.created_grammar_notations: List[dict] = []  # 新增：本轮创建的 grammar notations
         self.created_vocab_notations: List[dict] = []  # 新增：本轮创建的 vocab notations
+        self.existing_grammar_notations: List[dict] = []  # 新增：已有语法知识点的 notation（用于 toast）
+        self.existing_vocab_notations: List[dict] = []  # 新增：已有词汇知识点的 notation（用于 toast）
         self.user_id: Optional[int] = None  # 新增：当前用户ID
         self.current_language: Optional[str] = None
         self.current_language_code: Optional[str] = None
@@ -166,6 +168,8 @@ class SessionState:
         self.vocab_to_add.clear()
         self.created_grammar_notations.clear()
         self.created_vocab_notations.clear()
+        self.existing_grammar_notations.clear()
+        self.existing_vocab_notations.clear()
         # 保留：current_sentence、current_selected_token、current_input
     
     def add_created_grammar_notation(self, text_id: int, sentence_id: int, grammar_id: int, marked_token_ids: list = None, user_id: int = None):
@@ -189,6 +193,24 @@ class SessionState:
             'sentence_id': sentence_id,
             'token_id': token_id,
             'vocab_id': vocab_id,
+            'user_id': final_user_id
+        })
+    
+    def add_existing_grammar_notation(self, grammar_id: int, display_name: str, user_id: int = None):
+        """记录已有语法知识点的 notation（用于 toast）"""
+        final_user_id = user_id if user_id is not None else (getattr(self, 'user_id', None) or 'default_user')
+        self.existing_grammar_notations.append({
+            'grammar_id': grammar_id,
+            'display_name': display_name,
+            'user_id': final_user_id
+        })
+    
+    def add_existing_vocab_notation(self, vocab_id: int, vocab_body: str, user_id: int = None):
+        """记录已有词汇知识点的 notation（用于 toast）"""
+        final_user_id = user_id if user_id is not None else (getattr(self, 'user_id', None) or 'default_user')
+        self.existing_vocab_notations.append({
+            'vocab_id': vocab_id,
+            'vocab_body': vocab_body,
             'user_id': final_user_id
         })
 

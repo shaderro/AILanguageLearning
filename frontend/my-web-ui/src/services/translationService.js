@@ -46,16 +46,10 @@ export const getSystemLanguage = () => {
   const systemLang = navigator.language || navigator.userLanguage || 'en'
   const langCode = systemLang.toLowerCase().split('-')[0] // 提取主语言代码，如 'zh-CN' -> 'zh'
 
-  // 🔇 避免刷屏：仅在开发环境下输出详细日志
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 [getSystemLanguage] 原始语言信息:', {
-      navigatorLanguage: navigator.language,
-      navigatorUserLanguage: navigator.userLanguage,
-      systemLang,
-      langCode
-    })
-  }
-
+  // 🔇 避免刷屏：使用缓存机制，只在首次调用或结果变化时输出日志
+  const cacheKey = 'getSystemLanguage_lastResult'
+  const lastResult = sessionStorage.getItem(cacheKey)
+  
   // Normalize 成支持的语言代码
   const normalizedMap = {
     'en': 'en',
@@ -69,13 +63,18 @@ export const getSystemLanguage = () => {
   const normalized = normalizedMap[langCode] || 'en'
   const result = supportedLanguages.includes(normalized) ? normalized : 'en'
   
-  if (process.env.NODE_ENV === 'development') {
+  // 🔇 只在结果变化时输出日志（避免刷屏）
+  if (process.env.NODE_ENV === 'development' && lastResult !== result) {
     console.log('🔍 [getSystemLanguage] 语言检测结果:', {
+      navigatorLanguage: navigator.language,
+      navigatorUserLanguage: navigator.userLanguage,
+      systemLang,
       langCode,
       normalized,
       result,
       isEnglish: result === 'en'
     })
+    sessionStorage.setItem(cacheKey, result)
   }
   
   return result

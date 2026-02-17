@@ -17,6 +17,11 @@
 - `paragraph_id` (INTEGER, nullable)
 - `is_new_paragraph` (BOOLEAN, default FALSE, nullable)
 
+### 3. grammar_notations 表唯一约束更新
+- **旧约束**: `UNIQUE(user_id, text_id, sentence_id)`
+- **新约束**: `UNIQUE(user_id, text_id, sentence_id, grammar_id)`
+- **目的**: 允许同一句子有多个不同的语法知识点（只要 grammar_id 不同）
+
 ## ⚠️ 迁移前准备
 
 ### 1. 备份数据库
@@ -57,7 +62,9 @@ pg_dump -h your_host -U your_user -d your_database -F c -f backup_before_migrati
 
 3. **打开迁移脚本**
    - 在 Query Tool 中，点击 **Open File** 按钮（📁）
-   - 选择 `migrate_postgresql_schema.sql` 文件
+   - 选择迁移脚本文件：
+     - `migrate_postgresql_schema.sql` - 用于 grammar_rules 和 sentences 表字段迁移
+     - `migrate_postgresql_grammar_notation_pgadmin.sql` - **用于 grammar_notations 表唯一约束迁移（推荐）**
 
 4. **检查脚本内容**
    - 确认脚本中的表名和字段名正确
@@ -84,6 +91,38 @@ psql -h your_host -U your_user -d your_database
 # 或直接执行
 psql -h your_host -U your_user -d your_database -f migrate_postgresql_schema.sql
 ```
+
+### 方法3：执行 grammar_notations 表唯一约束迁移
+
+**重要：** 此迁移允许同一句子有多个不同的语法知识点。
+
+1. **打开迁移脚本**
+   - 在 Query Tool 中打开 `migrate_postgresql_grammar_notation_pgadmin.sql`
+
+2. **检查数据**
+   - 执行前检查是否有重复数据：
+   ```sql
+   -- 检查是否有违反新约束的数据
+   SELECT user_id, text_id, sentence_id, grammar_id, COUNT(*) as count
+   FROM grammar_notations
+   WHERE grammar_id IS NOT NULL
+   GROUP BY user_id, text_id, sentence_id, grammar_id
+   HAVING COUNT(*) > 1;
+   ```
+   - 如果返回结果，需要先清理重复数据
+
+3. **执行迁移**
+   - 点击 **Execute** 按钮（▶️）或按 `F5`
+   - 脚本会自动：
+     - 检查当前约束状态
+     - 删除旧约束（如果不包含 grammar_id）
+     - 创建新约束（包含 grammar_id）
+     - 验证迁移结果
+
+4. **查看执行结果**
+   - 在 **Messages** 标签页查看详细日志
+   - 确认看到 "✅ 迁移成功！" 消息
+   - 检查约束定义是否正确
 
 ## ✅ 验证迁移结果
 
@@ -148,6 +187,34 @@ SELECT COUNT(*) FROM sentences WHERE sentence_body IS NULL;
 ```
 
 **预期结果：** 两个查询都应该返回 0。
+
+### 5. 检查 grammar_notations 表唯一约束
+
+```sql
+-- 检查唯一约束是否包含 grammar_id
+SELECT 
+    conname AS constraint_name,
+    pg_get_constraintdef(oid) AS constraint_definition,
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 
+            FROM pg_attribute a
+            WHERE a.attrelid = c.conrelid
+            AND a.attnum = ANY(c.conkey)
+            AND a.attname = 'grammar_id'
+        ) THEN '✅ 包含 grammar_id'
+        ELSE '❌ 不包含 grammar_id'
+    END AS status
+FROM pg_constraint c
+WHERE conrelid = 'grammar_notations'::regclass
+AND contype = 'u'
+ORDER BY conname;
+```
+
+**预期结果：** 
+- 应该返回至少一行
+- `status` 列应该显示 `✅ 包含 grammar_id`
+- `constraint_definition` 应该包含 `(user_id, text_id, sentence_id, grammar_id)`
 
 ## 🔄 回滚方案
 
@@ -222,19 +289,31 @@ pg_restore -h your_host -U your_user -d your_database backup_before_migration.du
 - 在维护窗口期间执行
 - 检查是否有长时间运行的事务
 
+### 问题5：唯一约束冲突（grammar_notations 迁移）
+
+**错误信息：** `duplicate key value violates unique constraint`
+
+**解决方案：**
+- 检查是否有重复数据：`SELECT user_id, text_id, sentence_id, grammar_id, COUNT(*) FROM grammar_notations GROUP BY user_id, text_id, sentence_id, grammar_id HAVING COUNT(*) > 1;`
+- 如果有重复数据，需要先清理重复记录
+- 确保 `grammar_id` 字段不为 NULL（如果为 NULL，需要先处理）
+
 ## 📊 迁移后检查清单
 
 - [ ] 备份已创建
 - [ ] 迁移脚本执行成功
 - [ ] grammar_rules 表新增 5 个字段
 - [ ] sentences 表新增 2 个字段
+- [ ] **grammar_notations 表唯一约束已更新（包含 grammar_id）**
 - [ ] display_name 已回填
 - [ ] 数据完整性检查通过
 - [ ] 应用程序测试通过
 
 ## 🔗 相关文件
 
-- `migrate_postgresql_schema.sql` - PostgreSQL 迁移脚本
+- `migrate_postgresql_schema.sql` - PostgreSQL 迁移脚本（grammar_rules 和 sentences 表）
+- `migrate_postgresql_grammar_notation_pgadmin.sql` - **GrammarNotation 唯一约束迁移脚本（推荐使用）**
+- `migrate_postgresql_grammar_notation_constraint.sql` - GrammarNotation 唯一约束迁移脚本（旧版本）
 - `migrate_grammar_rules.py` - SQLite 迁移脚本（参考）
 - `migrate_sentences_add_paragraph_columns.py` - 段落字段迁移脚本（参考）
 

@@ -127,23 +127,27 @@ class GrammarNotationCRUD:
         return query.all()
     
     def get_by_sentence(self, text_id: int, sentence_id: int, 
-                        user_id: Optional[str] = None) -> Optional[GrammarNotation]:
-        """获取句子的语法标注"""
+                        user_id: Optional[str] = None) -> List[GrammarNotation]:
+        """获取句子的所有语法标注（支持多个语法知识点）"""
         query = self.session.query(GrammarNotation).filter(
             GrammarNotation.text_id == text_id,
             GrammarNotation.sentence_id == sentence_id
         )
         if user_id:
             query = query.filter(GrammarNotation.user_id == user_id)
-        return query.first()
+        return query.all()  # 🔧 修复：返回所有匹配的 notations，而不是只返回第一个
     
-    def exists(self, user_id: str, text_id: int, sentence_id: int) -> bool:
-        """检查标注是否存在"""
-        return self.session.query(GrammarNotation).filter(
+    def exists(self, user_id: str, text_id: int, sentence_id: int, grammar_id: Optional[int] = None) -> bool:
+        """检查标注是否存在（支持按 grammar_id 检查，以支持同一句子有多个语法知识点）"""
+        query = self.session.query(GrammarNotation).filter(
             GrammarNotation.user_id == user_id,
             GrammarNotation.text_id == text_id,
             GrammarNotation.sentence_id == sentence_id
-        ).count() > 0
+        )
+        # 🔧 如果提供了 grammar_id，也加入过滤条件（支持多个语法知识点）
+        if grammar_id is not None:
+            query = query.filter(GrammarNotation.grammar_id == grammar_id)
+        return query.count() > 0
     
     def delete(self, user_id: str, text_id: int, sentence_id: int) -> bool:
         """删除语法标注"""

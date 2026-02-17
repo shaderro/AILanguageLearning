@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { useUIText } from '../../../i18n/useUIText'
 
-const ToastNotice = ({ 
+const ToastNotice = memo(({ 
   message, 
   duration = 120000, // 调试阶段：2分钟
   onClose,
@@ -99,6 +99,8 @@ const ToastNotice = ({
       </div>
     </div>
   )
-}
+})
+
+ToastNotice.displayName = 'ToastNotice'
 
 export default ToastNotice

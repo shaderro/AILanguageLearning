@@ -1083,7 +1083,17 @@ class MainAssistant:
                                             marked_token_ids=token_indices,
                                             user_id=actual_user_id
                                         )
-                                        print(f"✅ [DEBUG] 成功创建grammar notation并添加到session_state")
+                                        # 🔧 记录已有语法知识点的 notation（用于 toast）
+                                        display_name_for_toast = display_name or existing_rule_name
+                                        print(f"🔍 [DEBUG] 准备记录已有语法知识点到 existing_grammar_notations: grammar_id={existing_rule_id}, display_name={display_name_for_toast}, user_id={actual_user_id}")
+                                        self.session_state.add_existing_grammar_notation(
+                                            grammar_id=existing_rule_id,
+                                            display_name=display_name_for_toast,
+                                            user_id=actual_user_id
+                                        )
+                                        print(f"✅ [DEBUG] 成功创建grammar notation并添加到session_state（已有知识点）")
+                                        print(f"🔍 [DEBUG] 当前 existing_grammar_notations 数量: {len(self.session_state.existing_grammar_notations)}")
+                                        print(f"🔍 [DEBUG] existing_grammar_notations 内容: {self.session_state.existing_grammar_notations}")
                                     else:
                                         print(f"⚠️ [DEBUG] mark_notation返回False，但继续执行")
                                     
@@ -1562,6 +1572,17 @@ class MainAssistant:
                                             vocab_id=existing_vocab_id,
                                             user_id=actual_user_id
                                         )
+                                        # 🔧 记录已有词汇知识点的 notation（用于 toast）
+                                        vocab_body = getattr(result, 'vocab', None) or vocab
+                                        print(f"🔍 [DEBUG] 准备记录已有词汇知识点到 existing_vocab_notations: vocab_id={existing_vocab_id}, vocab_body={vocab_body}, user_id={actual_user_id}")
+                                        self.session_state.add_existing_vocab_notation(
+                                            vocab_id=existing_vocab_id,
+                                            vocab_body=vocab_body,
+                                            user_id=actual_user_id
+                                        )
+                                        print(f"✅ [DEBUG] 成功创建vocab notation并添加到session_state（已有知识点）")
+                                        print(f"🔍 [DEBUG] 当前 existing_vocab_notations 数量: {len(self.session_state.existing_vocab_notations)}")
+                                        print(f"🔍 [DEBUG] existing_vocab_notations 内容: {self.session_state.existing_vocab_notations}")
                                 else:
                                     print("⚠️ [DEBUG] 无法创建vocab notation：token_id为空（已尝试从句子中查找但未找到匹配的token）")
                             except Exception as vn_err:

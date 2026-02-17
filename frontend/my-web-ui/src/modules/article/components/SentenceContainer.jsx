@@ -51,7 +51,8 @@ export default function SentenceContainer({
   const {
     hasGrammarNotation,
     getGrammarNotationsForSentence,
-    getGrammarRuleById
+    getGrammarRuleById,
+    grammarNotations: contextGrammarNotations  // 🔧 获取 grammarNotations 状态，用于触发重新计算
   } = notationContext || {}
   
   // Grammar notation hover state
@@ -92,11 +93,41 @@ export default function SentenceContainer({
   // 🔧 使用 useMemo 缓存结果，避免每次渲染都调用函数（可能导致无限循环）
   const hasGrammar = useMemo(() => {
     return hasGrammarNotation ? hasGrammarNotation(sentenceId) : false
-  }, [hasGrammarNotation, sentenceId])
+  }, [hasGrammarNotation, sentenceId, contextGrammarNotations])  // 🔧 添加 contextGrammarNotations 依赖，确保缓存更新时重新计算
+  
+  // 🔧 使用 ref 缓存上次的结果，只在结果变化时输出日志
+  const lastGrammarNotationsRef = useRef(null)
   
   const grammarNotations = useMemo(() => {
-    return getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
-  }, [getGrammarNotationsForSentence, sentenceId])
+    const result = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
+    
+    // 🔍 诊断日志：只在结果变化时输出（避免刷屏）
+    const lastResult = lastGrammarNotationsRef.current
+    const currentNotationIds = result.map(n => n.notation_id || n.grammar_id).sort().join(',')
+    const lastNotationIds = lastResult?.notationIds || ''
+    
+    if (result.length > 0 && (result.length !== lastResult?.count || currentNotationIds !== lastNotationIds)) {
+      console.log('🔍 [SentenceContainer] grammarNotations for sentence (结果变化):', {
+        sentenceId,
+        count: result.length,
+        previousCount: lastResult?.count || 0,
+        notations: result.map(n => ({
+          notation_id: n.notation_id,
+          grammar_id: n.grammar_id,
+          text_id: n.text_id,
+          sentence_id: n.sentence_id
+        }))
+      })
+      
+      // 更新缓存
+      lastGrammarNotationsRef.current = {
+        count: result.length,
+        notationIds: currentNotationIds
+      }
+    }
+    
+    return result
+  }, [getGrammarNotationsForSentence, sentenceId, contextGrammarNotations])  // 🔧 添加 contextGrammarNotations 依赖，确保缓存更新时重新计算
   
   // 🔧 移除调试日志，避免刷屏（如果需要调试，可以使用条件判断）
   // if (grammarNotations.length > 0) {

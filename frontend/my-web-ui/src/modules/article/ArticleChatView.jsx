@@ -475,8 +475,8 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     isTokenAsked,
     getNotationContent,
     setNotationContent,
-    vocabNotations.length,  // 🔧 只依赖长度，避免数组引用变化导致不必要的重新渲染
-    grammarNotations.length  // 🔧 只依赖长度，避免数组引用变化导致不必要的重新渲染
+    vocabNotations,  // 🔧 依赖整个数组，确保内容变化时也能触发更新
+    grammarNotations  // 🔧 依赖整个数组，确保内容变化时也能触发更新
   ])
 
   // 🔧 新增：处理 AI 详细解释请求（内部组件，可以使用 useChatEvent）

@@ -323,7 +323,8 @@ class GrammarNotation(Base):
             ['sentences.text_id', 'sentences.sentence_id'],
             ondelete='CASCADE'
         ),
-        UniqueConstraint('user_id', 'text_id', 'sentence_id', name='uq_grammar_notation')
+        # 🔧 修复：将 grammar_id 加入唯一约束，支持同一句子有多个不同的语法知识点
+        UniqueConstraint('user_id', 'text_id', 'sentence_id', 'grammar_id', name='uq_grammar_notation')
     )
     
     # 关系

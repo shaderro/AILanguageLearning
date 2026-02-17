@@ -208,10 +208,46 @@ export function useNotationCache(articleId) {
   }, [grammarNotations, vocabNotations])
 
   // 获取句子的grammar notations
+  // 🔧 使用 ref 缓存上次的结果，只在结果变化时输出日志
+  const lastResultCacheRef = useRef(new Map()) // key: sentenceId, value: { count, notationIds }
+  
   const getGrammarNotationsForSentence = useCallback((sentenceId) => {
-    return grammarNotationsRef.current.filter(notation => 
-      notation.sentence_id === sentenceId
-    )
+    // 🔧 确保类型一致（数字比较）
+    const sid = Number(sentenceId)
+    const filtered = grammarNotationsRef.current.filter(notation => {
+      const notationSid = Number(notation.sentence_id)
+      return notationSid === sid
+    })
+    
+    // 🔍 诊断日志：只在结果变化时输出（避免刷屏）
+    const lastResult = lastResultCacheRef.current.get(sid)
+    const currentNotationIds = filtered.map(n => n.notation_id || n.grammar_id).sort().join(',')
+    const lastNotationIds = lastResult?.notationIds || ''
+    
+    // 只在结果数量变化或 notation IDs 变化时输出日志
+    if (filtered.length > 0 && (filtered.length !== lastResult?.count || currentNotationIds !== lastNotationIds)) {
+      console.log('🔍 [useNotationCache] getGrammarNotationsForSentence (结果变化):', {
+        sentenceId,
+        sid,
+        totalNotations: grammarNotationsRef.current.length,
+        filteredCount: filtered.length,
+        previousCount: lastResult?.count || 0,
+        filteredNotations: filtered.map(n => ({
+          notation_id: n.notation_id,
+          grammar_id: n.grammar_id,
+          sentence_id: n.sentence_id,
+          text_id: n.text_id
+        }))
+      })
+      
+      // 更新缓存
+      lastResultCacheRef.current.set(sid, {
+        count: filtered.length,
+        notationIds: currentNotationIds
+      })
+    }
+    
+    return filtered
   }, []) // 🔧 不依赖数组，使用 ref 访问最新值
 
   // 获取句子的vocab notations
@@ -414,47 +450,147 @@ export function useNotationCache(articleId) {
 
   // 添加新的grammar notation到缓存
   const addGrammarNotationToCache = useCallback((notation) => {
-    console.log('➕ [useNotationCache] Adding grammar notation to cache:', notation)
+    // 🔍 诊断日志：追踪调用来源
+    const stackTrace = new Error().stack
+    console.log('➕ [useNotationCache] addGrammarNotationToCache 被调用:', {
+      notation_id: notation.notation_id,
+      grammar_id: notation.grammar_id,
+      text_id: notation.text_id,
+      sentence_id: notation.sentence_id,
+      callStack: stackTrace?.split('\n').slice(1, 5).join(' -> ')
+    })
+    
     setGrammarNotations(prev => {
+      console.log('🔍 [useNotationCache] addGrammarNotationToCache - 当前缓存状态:', {
+        prevCount: prev.length,
+        existingNotations: prev.map(n => ({
+          notation_id: n.notation_id,
+          grammar_id: n.grammar_id,
+          text_id: n.text_id,
+          sentence_id: n.sentence_id
+        }))
+      })
+      
       // 检查是否已存在，避免重复添加
-      const exists = prev.some(n => 
-        n.text_id === notation.text_id && 
-        n.sentence_id === notation.sentence_id && 
-        n.grammar_id === notation.grammar_id
-      )
+      const exists = prev.some(n => {
+        const match = n.text_id === notation.text_id && 
+                     n.sentence_id === notation.sentence_id && 
+                     n.grammar_id === notation.grammar_id
+        if (match) {
+          console.warn('⚠️ [useNotationCache] 发现重复的 grammar notation:', {
+            existing: {
+              notation_id: n.notation_id,
+              grammar_id: n.grammar_id,
+              text_id: n.text_id,
+              sentence_id: n.sentence_id
+            },
+            new: {
+              notation_id: notation.notation_id,
+              grammar_id: notation.grammar_id,
+              text_id: notation.text_id,
+              sentence_id: notation.sentence_id
+            }
+          })
+        }
+        return match
+      })
+      
       if (exists) {
-        console.log('⚠️ [useNotationCache] Grammar notation already exists in cache')
+        console.log('⚠️ [useNotationCache] Grammar notation already exists in cache, 跳过添加')
         return prev
       }
-      return [...prev, notation]
+      
+      const newList = [...prev, notation]
+      console.log('✅ [useNotationCache] Grammar notation 添加成功:', {
+        prevCount: prev.length,
+        newCount: newList.length,
+        addedNotation: {
+          notation_id: notation.notation_id,
+          grammar_id: notation.grammar_id,
+          text_id: notation.text_id,
+          sentence_id: notation.sentence_id
+        }
+      })
+      return newList
     })
   }, [])
 
   // 添加新的vocab notation到缓存
   const addVocabNotationToCache = useCallback((notation) => {
+    // 🔍 诊断日志：追踪调用来源
+    const stackTrace = new Error().stack
     console.log('➕ [useNotationCache] ========== 开始添加 vocab notation 到缓存 ==========')
+    console.log('➕ [useNotationCache] addVocabNotationToCache 被调用:', {
+      notation_id: notation.notation_id,
+      vocab_id: notation.vocab_id,
+      text_id: notation.text_id,
+      sentence_id: notation.sentence_id,
+      token_index: notation.token_index,
+      token_id: notation.token_id,
+      callStack: stackTrace?.split('\n').slice(1, 5).join(' -> ')
+    })
     console.log('➕ [useNotationCache] 接收到的 notation:', JSON.stringify(notation, null, 2))
     
     setVocabNotations(prev => {
       console.log('➕ [useNotationCache] setVocabNotations 回调执行，prev 数量:', prev.length)
-      console.log('➕ [useNotationCache] prev 内容:', prev)
+      console.log('🔍 [useNotationCache] addVocabNotationToCache - 当前缓存状态:', {
+        prevCount: prev.length,
+        existingNotations: prev.map(n => ({
+          notation_id: n.notation_id,
+          vocab_id: n.vocab_id,
+          text_id: n.text_id,
+          sentence_id: n.sentence_id,
+          token_index: n.token_index,
+          token_id: n.token_id
+        }))
+      })
+      
       // 检查是否已存在，避免重复添加
       const exists = prev.some(n => {
         const match = n.text_id === notation.text_id && 
                      n.sentence_id === notation.sentence_id && 
                      (n.token_index === notation.token_index || n.token_id === notation.token_id || n.token_id === notation.token_index)
         if (match) {
-          console.log('⚠️ [useNotationCache] 发现重复的 notation:', n)
+          console.warn('⚠️ [useNotationCache] 发现重复的 vocab notation:', {
+            existing: {
+              notation_id: n.notation_id,
+              vocab_id: n.vocab_id,
+              text_id: n.text_id,
+              sentence_id: n.sentence_id,
+              token_index: n.token_index,
+              token_id: n.token_id
+            },
+            new: {
+              notation_id: notation.notation_id,
+              vocab_id: notation.vocab_id,
+              text_id: notation.text_id,
+              sentence_id: notation.sentence_id,
+              token_index: notation.token_index,
+              token_id: notation.token_id
+            }
+          })
         }
         return match
       })
+      
       if (exists) {
         console.log('⚠️ [useNotationCache] Vocab notation already exists in cache, 不添加')
         return prev
       }
+      
       const newList = [...prev, notation]
-      console.log('✅ [useNotationCache] 添加成功，新列表数量:', newList.length)
-      console.log('✅ [useNotationCache] 新列表:', newList)
+      console.log('✅ [useNotationCache] Vocab notation 添加成功:', {
+        prevCount: prev.length,
+        newCount: newList.length,
+        addedNotation: {
+          notation_id: notation.notation_id,
+          vocab_id: notation.vocab_id,
+          text_id: notation.text_id,
+          sentence_id: notation.sentence_id,
+          token_index: notation.token_index,
+          token_id: notation.token_id
+        }
+      })
       console.log('✅ [useNotationCache] 新列表 JSON:', JSON.stringify(newList, null, 2))
       return newList
     })

@@ -121,10 +121,10 @@ class GrammarNotationManager:
                 from database_system.business_logic.crud.notation_crud import GrammarNotationCRUD
                 crud = GrammarNotationCRUD(session)
                 
-                # 检查是否已存在
+                # 🔧 检查是否已存在（包含 grammar_id，支持同一句子有多个语法知识点）
                 if crud.exists(grammar_notation.user_id, grammar_notation.text_id, 
-                              grammar_notation.sentence_id):
-                    print(f"[INFO] [GrammarNotation] Already exists: {grammar_notation.text_id}:{grammar_notation.sentence_id}")
+                              grammar_notation.sentence_id, grammar_notation.grammar_id):
+                    print(f"[INFO] [GrammarNotation] Already exists: {grammar_notation.text_id}:{grammar_notation.sentence_id}, grammar_id={grammar_notation.grammar_id}")
                     session.close()
                     return True
                 

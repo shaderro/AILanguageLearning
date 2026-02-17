@@ -1108,12 +1108,16 @@ async def trigger_sync_to_db():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def _sync_to_database(user_id: int = None):
+def _sync_to_database(user_id: int = None, session_state_instance: SessionState = None):
     """同步 JSON 数据到数据库
     
     参数:
         user_id: 当前用户ID，用于关联新创建的数据
+        session_state_instance: 可选的 SessionState 实例，如果不提供则使用全局 session_state
     """
+    # 🔧 修复：使用传入的 session_state_instance，如果没有则使用全局 session_state
+    state = session_state_instance if session_state_instance is not None else session_state
+    
     try:
         from database_system.database_manager import DatabaseManager
         from backend.data_managers import GrammarRuleManagerDB, VocabManagerDB
@@ -1136,8 +1140,8 @@ def _sync_to_database(user_id: int = None):
             # 🔧 可选：如果需要，可以同步当前操作相关的文章
             # 从 session_state 获取当前文章ID
             current_text_id = None
-            if hasattr(session_state, 'current_sentence') and session_state.current_sentence:
-                current_text_id = getattr(session_state.current_sentence, 'text_id', None)
+            if hasattr(state, 'current_sentence') and state.current_sentence:
+                current_text_id = getattr(state.current_sentence, 'text_id', None)
             
             if current_text_id and user_id:
                 try:
@@ -1156,9 +1160,15 @@ def _sync_to_database(user_id: int = None):
                     print(f"⚠️ [Sync] 检查当前文章时出错: {e}")
             
             # 同步 Grammar Rules（只同步本轮新增的）
-            print(f"📚 [Sync] 同步本轮新增的 Grammar Rules (共{len(session_state.grammar_to_add)}个)...")
+            print(f"📚 [Sync] 同步本轮新增的 Grammar Rules (共{len(state.grammar_to_add)}个)...")
+            print(f"🔍 [Sync] 诊断：state.grammar_to_add 类型: {type(state.grammar_to_add)}, 长度: {len(state.grammar_to_add) if state.grammar_to_add else 0}")
+            if state.grammar_to_add:
+                print(f"🔍 [Sync] 诊断：state.grammar_to_add 内容: {[g.display_name if hasattr(g, 'display_name') else str(g) for g in state.grammar_to_add]}")
+            else:
+                print(f"🔍 [Sync] 诊断：state.grammar_to_add 为空或 None")
+                print(f"🔍 [Sync] 注意：语法规则可能已在 add_new_to_data() 中创建到数据库，这里只做验证")
             synced_grammar = 0
-            for grammar_item in session_state.grammar_to_add:
+            for grammar_item in state.grammar_to_add:
                 # 🔧 使用新格式：display_name 和 rule_summary
                 rule_name = grammar_item.display_name
                 rule_explanation = grammar_item.rule_summary
@@ -1193,7 +1203,7 @@ def _sync_to_database(user_id: int = None):
                             print(f"📝 [Sync] Grammar rule已存在（当前用户）: {rule_name} (ID: {new_rule.rule_id})")
                     
                     # 同步本轮的grammar notation（如果有）
-                    for notation in session_state.created_grammar_notations:
+                    for notation in state.created_grammar_notations:
                         # 只同步与当前rule相关的notation（通过grammar_id匹配）
                         # 注意：此时新rule刚创建，需要在assistant中先记录rule_id
                         pass  # TODO: 需要从assistant中传递grammar_id映射
@@ -1212,12 +1222,12 @@ def _sync_to_database(user_id: int = None):
             # 但实际上 examples 已经在 main_assistant 中创建了，所以这里不需要再同步
             
             # 同步 Vocab Expressions（只同步本轮新增的）
-            print(f"📖 [Sync] 同步本轮新增的 Vocab Expressions (共{len(session_state.vocab_to_add)}个)...")
+            print(f"📖 [Sync] 同步本轮新增的 Vocab Expressions (共{len(state.vocab_to_add)}个)...")
             print(f"  ℹ️  注意：vocab 已在 main_assistant 中使用数据库管理器创建，这里只同步 examples（如果需要）")
             synced_vocab = 0
             
             # 从session_state获取本轮新增的vocab
-            for vocab_item in session_state.vocab_to_add:
+            for vocab_item in state.vocab_to_add:
                 vocab_body = vocab_item.vocab
                 
                 # 🔧 修复：直接从数据库查找 vocab（因为已经在 main_assistant 中创建了）
@@ -1550,16 +1560,40 @@ async def chat_with_assistant(
                 print("✅ [Background] add_new_to_data() 完成")
                 
                 # 🔧 关键修复：在 add_new_to_data() 完成后，从 session_state 获取新创建的 vocab_to_add 和 grammar_to_add
-                # 供前端轮询获取并显示 toast
+                # 以及已有知识点的 notation，供前端轮询获取并显示 toast
                 grammar_to_add_list = []
                 vocab_to_add_list = []
+                existing_grammar_list = []
+                existing_vocab_list = []
                 
                 # 🔧 从 session_state 获取 grammar_to_add（add_new_to_data() 会填充它）
                 if local_state.grammar_to_add:
                     print(f"🔍 [Background] 从 session_state 获取 grammar_to_add: {len(local_state.grammar_to_add)} 个")
                     for g in local_state.grammar_to_add:
-                        # 🔧 使用新格式：display_name 和 rule_summary
-                        grammar_to_add_list.append({'name': g.display_name, 'explanation': g.rule_summary})
+                        # 🔧 使用新格式：display_name 和 rule_summary，标记为新知识点
+                        grammar_to_add_list.append({
+                            'name': g.display_name, 
+                            'explanation': g.rule_summary,
+                            'type': 'new'  # 新知识点
+                        })
+                
+                # 🔧 从 session_state 获取已有语法知识点的 notation
+                print(f"🔍 [Background] 检查 existing_grammar_notations: hasattr={hasattr(local_state, 'existing_grammar_notations')}")
+                if hasattr(local_state, 'existing_grammar_notations'):
+                    print(f"🔍 [Background] existing_grammar_notations 值: {local_state.existing_grammar_notations}")
+                    print(f"🔍 [Background] existing_grammar_notations 长度: {len(local_state.existing_grammar_notations) if local_state.existing_grammar_notations else 0}")
+                if hasattr(local_state, 'existing_grammar_notations') and local_state.existing_grammar_notations:
+                    print(f"🔍 [Background] 从 session_state 获取 existing_grammar_notations: {len(local_state.existing_grammar_notations)} 个")
+                    for idx, g in enumerate(local_state.existing_grammar_notations):
+                        print(f"🔍 [Background] 处理 existing_grammar_notation[{idx}]: {g}")
+                        existing_grammar_list.append({
+                            'name': g.get('display_name', ''),
+                            'grammar_id': g.get('grammar_id'),
+                            'type': 'existing'  # 已有知识点
+                        })
+                    print(f"🔍 [Background] existing_grammar_list 构建完成: {existing_grammar_list}")
+                else:
+                    print(f"⚠️ [Background] existing_grammar_notations 为空或不存在")
                 
                 # 🔧 从 session_state 获取 vocab_to_add（add_new_to_data() 会填充它）
                 if local_state.vocab_to_add:
@@ -1588,14 +1622,54 @@ async def chat_with_assistant(
                             print(f"⚠️ [Background] 从数据库查询 vocab_id 失败: {db_err}")
                         
                         if vocab_id:
-                            vocab_to_add_list.append({'vocab': vocab_body, 'vocab_id': vocab_id})
+                            vocab_to_add_list.append({
+                                'vocab': vocab_body, 
+                                'vocab_id': vocab_id,
+                                'type': 'new'  # 新知识点
+                            })
                             print(f"✅ [Background] 添加 vocab_to_add: vocab='{vocab_body}', vocab_id={vocab_id}")
                         else:
-                            vocab_to_add_list.append({'vocab': vocab_body, 'vocab_id': None})
+                            vocab_to_add_list.append({
+                                'vocab': vocab_body, 
+                                'vocab_id': None,
+                                'type': 'new'  # 新知识点
+                            })
+                
+                # 🔧 从 session_state 获取已有词汇知识点的 notation
+                print(f"🔍 [Background] 检查 existing_vocab_notations: hasattr={hasattr(local_state, 'existing_vocab_notations')}")
+                if hasattr(local_state, 'existing_vocab_notations'):
+                    print(f"🔍 [Background] existing_vocab_notations 值: {local_state.existing_vocab_notations}")
+                    print(f"🔍 [Background] existing_vocab_notations 长度: {len(local_state.existing_vocab_notations) if local_state.existing_vocab_notations else 0}")
+                if hasattr(local_state, 'existing_vocab_notations') and local_state.existing_vocab_notations:
+                    print(f"🔍 [Background] 从 session_state 获取 existing_vocab_notations: {len(local_state.existing_vocab_notations)} 个")
+                    for idx, v in enumerate(local_state.existing_vocab_notations):
+                        print(f"🔍 [Background] 处理 existing_vocab_notation[{idx}]: {v}")
+                        existing_vocab_list.append({
+                            'vocab': v.get('vocab_body', ''),
+                            'vocab_id': v.get('vocab_id'),
+                            'type': 'existing'  # 已有知识点
+                        })
+                    print(f"🔍 [Background] existing_vocab_list 构建完成: {existing_vocab_list}")
+                else:
+                    print(f"⚠️ [Background] existing_vocab_notations 为空或不存在")
+                
+                # 🔧 合并新知识点和已有知识点的列表
+                all_grammar_list = grammar_to_add_list + existing_grammar_list
+                all_vocab_list = vocab_to_add_list + existing_vocab_list
+                
+                print(f"🔍 [Background] ========== 知识点汇总 ==========")
+                print(f"🔍 [Background] 新语法知识点: {len(grammar_to_add_list)} 个")
+                print(f"🔍 [Background] 已有语法知识点: {len(existing_grammar_list)} 个")
+                print(f"🔍 [Background] 新词汇知识点: {len(vocab_to_add_list)} 个")
+                print(f"🔍 [Background] 已有词汇知识点: {len(existing_vocab_list)} 个")
+                print(f"🔍 [Background] 合并后语法总数: {len(all_grammar_list)} 个")
+                print(f"🔍 [Background] 合并后词汇总数: {len(all_vocab_list)} 个")
+                print(f"🔍 [Background] all_grammar_list 详情: {all_grammar_list}")
+                print(f"🔍 [Background] all_vocab_list 详情: {all_vocab_list}")
                 
                 # 存储到临时存储中，供前端轮询获取
-                print(f"🔍 [Background] 检查是否需要存储知识点: grammar={len(grammar_to_add_list)}, vocab={len(vocab_to_add_list)}")
-                if grammar_to_add_list or vocab_to_add_list:
+                print(f"🔍 [Background] 检查是否需要存储知识点: 新语法={len(grammar_to_add_list)}, 已有语法={len(existing_grammar_list)}, 新词汇={len(vocab_to_add_list)}, 已有词汇={len(existing_vocab_list)}")
+                if all_grammar_list or all_vocab_list:
                     print(f"🔍 [Background] 有知识点需要存储，检查 current_sentence...")
                     print(f"🔍 [Background] current_sentence 类型: {type(current_sentence)}")
                     print(f"🔍 [Background] current_sentence 是否有 text_id 属性: {hasattr(current_sentence, 'text_id')}")
@@ -1608,11 +1682,15 @@ async def chat_with_assistant(
                         if text_id:
                             key = (user_id, text_id)
                             pending_knowledge_points[key] = {
-                                'grammar_to_add': grammar_to_add_list,
-                                'vocab_to_add': vocab_to_add_list,
+                                'grammar_to_add': all_grammar_list,  # 包含新知识点和已有知识点
+                                'vocab_to_add': all_vocab_list,  # 包含新知识点和已有知识点
                                 'timestamp': datetime.now().isoformat()
                             }
-                            print(f"✅ [Background] 存储新知识点到临时存储: user_id={user_id}, text_id={text_id} (type={type(text_id).__name__}), grammar={len(grammar_to_add_list)}, vocab={len(vocab_to_add_list)}")
+                            print(f"✅ [Background] 存储知识点到临时存储: user_id={user_id}, text_id={text_id} (type={type(text_id).__name__}), 语法总数={len(all_grammar_list)} (新={len(grammar_to_add_list)}, 已有={len(existing_grammar_list)}), 词汇总数={len(all_vocab_list)} (新={len(vocab_to_add_list)}, 已有={len(existing_vocab_list)})")
+                            print(f"🔍 [Background] 存储的数据详情:")
+                            print(f"🔍 [Background]   grammar_to_add: {all_grammar_list}")
+                            print(f"🔍 [Background]   vocab_to_add: {all_vocab_list}")
+                            print(f"🔍 [Background] pending_knowledge_points[{key}] = {pending_knowledge_points[key]}")
                             print(f"🔍 [Background] 临时存储的 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
                         else:
                             print(f"⚠️ [Background] text_id 转换失败，无法存储新知识点")
@@ -1624,7 +1702,7 @@ async def chat_with_assistant(
                 
                 # 同步到数据库
                 print("💾 [Background] 同步数据到数据库...")
-                _sync_to_database(user_id=user_id)
+                _sync_to_database(user_id=user_id, session_state_instance=local_state)
                 
                 # 保存到 JSON 文件（保持兼容）
                 save_data_async(
@@ -1813,6 +1891,7 @@ async def get_pending_knowledge(
             print(f"✅ [PendingKnowledge] 找到数据: grammar={len(data.get('grammar_to_add', []))}, vocab={len(data.get('vocab_to_add', []))}")
             print(f"✅ [PendingKnowledge] grammar_to_add 详情: {data.get('grammar_to_add', [])}")
             print(f"✅ [PendingKnowledge] vocab_to_add 详情: {data.get('vocab_to_add', [])}")
+            print(f"🔍 [PendingKnowledge] 返回的完整数据结构: {data}")
             # 返回后删除，避免重复获取
             del pending_knowledge_points[key]
             print(f"✅ [PendingKnowledge] 返回新知识点: user_id={user_id}, text_id={text_id}, grammar={len(data['grammar_to_add'])}, vocab={len(data['vocab_to_add'])}")

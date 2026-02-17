@@ -20,8 +20,8 @@
  * - Component lifecycle hooks
  */
 
-import { useState, useRef, useEffect, useCallback, memo } from 'react'
-import { flushSync } from 'react-dom'
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
+import { flushSync, createPortal } from 'react-dom'
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
 import { useChatEvent } from '../contexts/ChatEventContext'
@@ -258,6 +258,19 @@ function ChatView({
   }
   const [toasts, setToasts] = useState(() => window.chatViewToastsRef || [])
   
+  // 🔧 优化：使用 useCallback 稳定 onClose 回调，避免每次渲染都创建新函数
+  const handleToastClose = useCallback((toastId) => {
+    setToasts(prev => {
+      const newToasts = prev.filter(x => x.id !== toastId)
+      const reindexed = newToasts.map((toast, index) => ({
+        ...toast,
+        slot: index
+      }))
+      window.chatViewToastsRef = reindexed
+      return reindexed
+    })
+  }, [])
+  
   // 🔧 同步全局 ref
   useEffect(() => {
     window.chatViewMessagesRef[normalizedArticleId] = messages
@@ -338,14 +351,50 @@ function ChatView({
             }
 
             // 否则合并去重
+            // 🔧 改进去重逻辑：不仅检查ID，还要检查内容和时间戳（防止ID不一致导致的重复）
             const existingIds = new Set(prev.map(m => m.id))
-            const newMessages = historyMessages.filter(m => !existingIds.has(m.id))
+            const existingContentSet = new Set(
+              prev.map(m => {
+                // 使用内容和时间戳（精确到秒）作为唯一标识
+                const timeKey = m.timestamp instanceof Date 
+                  ? Math.floor(m.timestamp.getTime() / 1000)
+                  : Math.floor(new Date(m.timestamp).getTime() / 1000)
+                return `${m.isUser ? 'user' : 'ai'}:${m.text?.substring(0, 100)}:${timeKey}`
+              })
+            )
+            
+            const newMessages = historyMessages.filter(m => {
+              // 检查ID是否已存在
+              if (existingIds.has(m.id)) {
+                return false
+              }
+              
+              // 检查内容和时间戳是否已存在（防止ID不一致导致的重复）
+              const timeKey = m.timestamp instanceof Date 
+                ? Math.floor(m.timestamp.getTime() / 1000)
+                : Math.floor(new Date(m.timestamp).getTime() / 1000)
+              const contentKey = `${m.isUser ? 'user' : 'ai'}:${m.text?.substring(0, 100)}:${timeKey}`
+              
+              if (existingContentSet.has(contentKey)) {
+                console.warn('⚠️ [ChatView] 历史记录中发现重复内容（不同ID），跳过:', {
+                  historyId: m.id,
+                  historyText: m.text?.substring(0, 50),
+                  historyTimestamp: m.timestamp,
+                  existingIds: Array.from(existingIds).slice(0, 5)
+                })
+                return false
+              }
+              
+              return true
+            })
+            
             const merged = [...prev, ...newMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
             window.chatViewMessagesRef[normalizedArticleId] = merged
             console.log('💬 [ChatView] 合并历史记录:', {
               existingCount: prev.length,
               newMessagesCount: newMessages.length,
               mergedCount: merged.length,
+              skippedByContent: historyMessages.length - newMessages.length - (historyMessages.length - historyMessages.filter(m => !existingIds.has(m.id)).length)
             })
             return merged
           })
@@ -370,13 +419,65 @@ function ChatView({
   
   // 🔧 添加消息（立即显示）
   const addMessage = useCallback((newMessage) => {
+    // 🔍 诊断日志：追踪消息添加
+    const stackTrace = new Error().stack
+    console.log('🔍 [ChatView] addMessage 被调用:', {
+      messageId: newMessage.id,
+      messageText: newMessage.text?.substring(0, 50) + '...',
+      isUser: newMessage.isUser,
+      timestamp: newMessage.timestamp,
+      articleId: newMessage.articleId,
+      normalizedArticleId,
+      currentMessagesCount: messages.length,
+      callStack: stackTrace?.split('\n').slice(1, 4).join(' -> ')
+    })
+    
     flushSync(() => {
       setMessages(prev => {
-        if (prev.some(m => m.id === newMessage.id)) {
+        // 🔍 诊断日志：检查是否已存在
+        const existingMessage = prev.find(m => m.id === newMessage.id)
+        if (existingMessage) {
+          console.warn('⚠️ [ChatView] addMessage - 消息已存在，跳过添加:', {
+            messageId: newMessage.id,
+            existingMessage: {
+              text: existingMessage.text?.substring(0, 50),
+              timestamp: existingMessage.timestamp,
+              isUser: existingMessage.isUser
+            },
+            newMessage: {
+              text: newMessage.text?.substring(0, 50),
+              timestamp: newMessage.timestamp,
+              isUser: newMessage.isUser
+            }
+          })
           return prev
         }
+        
+        // 🔍 诊断日志：检查是否有相同内容但不同ID的消息
+        const duplicateContent = prev.find(m => 
+          m.text === newMessage.text && 
+          m.isUser === newMessage.isUser &&
+          Math.abs(new Date(m.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 1000
+        )
+        if (duplicateContent) {
+          console.warn('⚠️ [ChatView] addMessage - 检测到重复内容（不同ID）:', {
+            existingId: duplicateContent.id,
+            newId: newMessage.id,
+            text: newMessage.text?.substring(0, 50),
+            timeDiff: Math.abs(new Date(duplicateContent.timestamp).getTime() - new Date(newMessage.timestamp).getTime())
+          })
+        }
+        
         const updated = [...prev, newMessage].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
         window.chatViewMessagesRef[normalizedArticleId] = updated
+        
+        console.log('✅ [ChatView] addMessage - 消息已添加:', {
+          messageId: newMessage.id,
+          prevCount: prev.length,
+          updatedCount: updated.length,
+          allMessageIds: updated.map(m => m.id)
+        })
+        
         return updated
       })
     })
@@ -390,7 +491,7 @@ function ChatView({
     }))
     const trimmed = normalized.slice(0, 200)
     saveAllMessagesToLS(trimmed)
-  }, [normalizedArticleId])
+  }, [normalizedArticleId, messages.length])
   
   // 🔧 保存消息到 localStorage
   useEffect(() => {
@@ -413,21 +514,36 @@ function ChatView({
   
   // 🔧 处理 pendingMessage（来自 useChatEvent）
   useEffect(() => {
+    // 🔍 诊断日志：追踪 useEffect 触发
+    console.log('🔍 [ChatView] useEffect(pendingMessage) 触发:', {
+      hasPendingMessage: !!pendingMessage,
+      pendingMessageText: pendingMessage?.text?.substring(0, 50),
+      isProcessing,
+      processingPendingMessageRef: processingPendingMessageRef.current,
+      pendingContext: !!pendingContext
+    })
+    
     if (!pendingMessage || isProcessing || processingPendingMessageRef.current) {
       if (processingPendingMessageRef.current) {
         console.log('⏭️ [ChatView] 跳过重复处理 pendingMessage（正在处理中）')
+      } else if (isProcessing) {
+        console.log('⏭️ [ChatView] 跳过处理 pendingMessage（isProcessing=true）')
+      } else if (!pendingMessage) {
+        console.log('⏭️ [ChatView] 跳过处理 pendingMessage（pendingMessage为空）')
       }
       return
     }
     
-    console.log('📥 [ChatView] 收到 pendingMessage', {
+    console.log('📥 [ChatView] 收到 pendingMessage，开始处理', {
       text: pendingMessage.text,
       quotedText: pendingMessage.quotedText,
-      hasContext: !!pendingContext
+      hasContext: !!pendingContext,
+      timestamp: pendingMessage.timestamp
     })
     
     // 🔧 标记为正在处理，防止重复处理
     processingPendingMessageRef.current = true
+    console.log('🔍 [ChatView] 设置 processingPendingMessageRef.current = true')
     
     // 🔧 自动发送消息
     const sendPendingMessage = async () => {
@@ -504,13 +620,46 @@ function ChatView({
         }
         
         // 🔧 处理 notations（与 handleSendMessage 相同）
+        // 🔍 诊断日志：追踪 notation 添加
         if (response?.created_grammar_notations?.length > 0) {
-          response.created_grammar_notations.forEach(n => {
+          console.log('🔍 [ChatView] sendPendingMessage - 处理 grammar notations:', {
+            count: response.created_grammar_notations.length,
+            notations: response.created_grammar_notations.map(n => ({
+              notation_id: n.notation_id,
+              grammar_id: n.grammar_id,
+              text_id: n.text_id,
+              sentence_id: n.sentence_id
+            }))
+          })
+          response.created_grammar_notations.forEach((n, idx) => {
+            console.log(`🔍 [ChatView] sendPendingMessage - 添加 grammar notation ${idx + 1}/${response.created_grammar_notations.length}:`, {
+              notation_id: n.notation_id,
+              grammar_id: n.grammar_id,
+              text_id: n.text_id,
+              sentence_id: n.sentence_id
+            })
             if (addGrammarNotationToCache) addGrammarNotationToCache(n)
           })
         }
         if (response?.created_vocab_notations?.length > 0) {
-          response.created_vocab_notations.forEach(n => {
+          console.log('🔍 [ChatView] sendPendingMessage - 处理 vocab notations:', {
+            count: response.created_vocab_notations.length,
+            notations: response.created_vocab_notations.map(n => ({
+              notation_id: n.notation_id,
+              vocab_id: n.vocab_id,
+              text_id: n.text_id,
+              sentence_id: n.sentence_id,
+              token_index: n.token_id || n.token_index
+            }))
+          })
+          response.created_vocab_notations.forEach((n, idx) => {
+            console.log(`🔍 [ChatView] sendPendingMessage - 添加 vocab notation ${idx + 1}/${response.created_vocab_notations.length}:`, {
+              notation_id: n.notation_id,
+              vocab_id: n.vocab_id,
+              text_id: n.text_id,
+              sentence_id: n.sentence_id,
+              token_index: n.token_id || n.token_index
+            })
             if (addVocabNotationToCache) addVocabNotationToCache({
               ...n,
               token_index: n.token_id || n.token_index
@@ -556,49 +705,146 @@ function ChatView({
                 console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 开始轮询 pending-knowledge: user_id=${userId}, text_id=${textId}`)
                 const resp = await apiService.getPendingKnowledge({ user_id: userId, text_id: textId })
                 console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 原始响应:`, JSON.stringify(resp, null, 2))
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 原始响应类型:`, typeof resp)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] resp.success:`, resp?.success)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] resp.data:`, resp?.data)
                 
                 // 🔧 修复：API 响应拦截器已经返回 response.data，所以 resp 是 { success: true, data: {...} }
                 // 需要访问 resp.data，而不是 resp.data.data
                 const data = resp?.data || {}
                 console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 提取的data:`, JSON.stringify(data, null, 2))
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] data.grammar_to_add:`, data.grammar_to_add)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] data.vocab_to_add:`, data.vocab_to_add)
                 
                 // 🔧 修复：后端返回的字段名是 grammar_to_add 和 vocab_to_add
                 const pendingGrammar = data.grammar_to_add || []
                 const pendingVocab = data.vocab_to_add || []
                 
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ========== Toast 诊断日志 ==========`)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 原始响应:`, resp)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 提取的data:`, data)
                 console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 解析后的数据: grammar=${pendingGrammar.length} (${JSON.stringify(pendingGrammar)}), vocab=${pendingVocab.length} (${JSON.stringify(pendingVocab)})`)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] pendingGrammar 类型: ${Array.isArray(pendingGrammar)}, 长度: ${pendingGrammar.length}`)
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] pendingVocab 类型: ${Array.isArray(pendingVocab)}, 长度: ${pendingVocab.length}`)
                 
+                console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 检查条件: pendingGrammar.length=${pendingGrammar.length}, pendingVocab.length=${pendingVocab.length}`)
                 if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
-                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
-                  const items = [
-                    // 🔧 修复问题2：使用正确的字段名 display_name（新格式）或 name/title/rule（旧格式兼容）
-                    ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.display_name || g.name || g.title || g.rule || tUI('语法')}`),
-                    ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
-                  ]
+                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] ✅ 检测到知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
+                  
+                  // 🔧 根据类型生成不同的 toast 消息
+                  const items = []
+                  const seenItems = new Set()  // 🔧 用于去重
+                  console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] 开始生成 toast items...`)
+                  
+                  // 处理语法知识点
+                  pendingGrammar.forEach(g => {
+                    // 🔧 修复：后端返回的字段名是 'name'，不是 'display_name'
+                    const name = g.name || g.display_name || g.title || g.rule || tUI('语法')
+                    const type = g.type || 'new'  // 默认为新知识点
+                    
+                    // 🔧 去重：使用 name 作为唯一标识
+                    const itemKey = `grammar:${name}`
+                    if (seenItems.has(itemKey)) {
+                      console.log(`⚠️ [ChatView] sendPendingMessage - [轮询${pollCount}] 跳过重复的语法知识点: ${name}`)
+                      return
+                    }
+                    seenItems.add(itemKey)
+                    
+                    if (type === 'existing') {
+                      // 已有知识点：使用新文案
+                      const message = tUI('已有知识点：{type} {name} 加入新例句')
+                        .replace('{type}', tUI('语法'))
+                        .replace('{name}', name)
+                      items.push({ message, type: 'existing', key: itemKey })
+                    } else {
+                      // 新知识点：保持现状
+                      items.push({ 
+                        message: `🆕 ${tUI('语法')}: ${name} ${tUI('知识点已总结并加入列表')}`, 
+                        type: 'new',
+                        key: itemKey
+                      })
+                    }
+                  })
+                  
+                  // 处理词汇知识点
+                  pendingVocab.forEach(v => {
+                    const vocab = v.vocab || tUI('词汇')
+                    const type = v.type || 'new'  // 默认为新知识点
+                    
+                    // 🔧 去重：使用 vocab 作为唯一标识
+                    const itemKey = `vocab:${vocab}`
+                    if (seenItems.has(itemKey)) {
+                      console.log(`⚠️ [ChatView] sendPendingMessage - [轮询${pollCount}] 跳过重复的词汇知识点: ${vocab}`)
+                      return
+                    }
+                    seenItems.add(itemKey)
+                    
+                    if (type === 'existing') {
+                      // 已有知识点：使用新文案
+                      const message = tUI('已有知识点：{type} {name} 加入新例句')
+                        .replace('{type}', tUI('词汇'))
+                        .replace('{name}', vocab)
+                      items.push({ message, type: 'existing', key: itemKey })
+                    } else {
+                      // 新知识点：保持现状
+                      items.push({ 
+                        message: `🆕 ${tUI('词汇')}: ${vocab} ${tUI('知识点已总结并加入列表')}`, 
+                        type: 'new',
+                        key: itemKey
+                      })
+                    }
+                  })
                   
                   console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
                   console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] items:`, items)
                   console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 当前toasts数量:`, toasts.length)
+                  console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 当前toasts状态:`, toasts)
                   
-                  items.forEach((item, idx) => {
-                    setTimeout(() => {
-                      const id = Date.now() + Math.random()
-                      const toastMessage = `${item} ${tUI('知识点已总结并加入列表')}`
-                      const newToast = { id, message: toastMessage, slot: toasts.length + idx }
-                      console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
-                      setToasts(prev => {
-                        const updated = [...prev, newToast]
-                        console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
-                        window.chatViewToastsRef = updated
-                        return updated
+                  if (items.length === 0) {
+                    console.warn(`⚠️ [ChatView] sendPendingMessage - [轮询${pollCount}] items 为空，无法创建 toast`)
+                  } else {
+                    console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 开始创建 ${items.length} 个toast...`)
+                    // 🔧 修复：一次性创建所有 toast，确保所有知识点都能显示
+                    // 所有 toast 立即显示，通过 slot 控制位置（垂直堆叠）
+                    setToasts(prev => {
+                      const baseSlot = prev.length
+                      console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 当前toasts数量: ${prev.length}, 基础slot: ${baseSlot}`)
+                      
+                      // 一次性创建所有 toast
+                      const newToasts = items.map((item, idx) => {
+                        const id = Date.now() + Math.random() * 1000 + idx
+                        const newToast = { 
+                          id, 
+                          message: item.message, 
+                          slot: baseSlot + idx
+                        }
+                        console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
+                        console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] toast message: "${newToast.message}"`)
+                        return newToast
                       })
-                    }, idx * 600)
-                  })
+                      
+                      const updated = [...prev, ...newToasts]
+                      console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
+                      console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 更新后的toasts:`, updated)
+                      window.chatViewToastsRef = updated
+                      return updated
+                    })
+                    
+                    console.log(`🍞 [ChatView] sendPendingMessage - [轮询${pollCount}] 已创建 ${items.length} 个toast（全部立即显示）`)
+                  }
                   
                   // 🔧 刷新 notation 缓存，使 article view 自动更新
                   if (refreshGrammarNotations) {
                     console.log('🔄 [ChatView] sendPendingMessage - 检测到新知识点，刷新 notation 缓存...')
-                    refreshGrammarNotations()
+                    console.log('🔄 [ChatView] sendPendingMessage - refreshGrammarNotations 类型:', typeof refreshGrammarNotations)
+                    try {
+                      refreshGrammarNotations()
+                      console.log('✅ [ChatView] sendPendingMessage - notation 缓存刷新完成')
+                    } catch (err) {
+                      console.error('❌ [ChatView] sendPendingMessage - notation 缓存刷新失败:', err)
+                    }
+                  } else {
+                    console.warn('⚠️ [ChatView] sendPendingMessage - refreshGrammarNotations 未定义，无法刷新缓存')
                   }
                   
                   // 🔧 找到数据后立即停止轮询
@@ -609,7 +855,7 @@ function ChatView({
                   }
                   return
                 } else {
-                  console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ⏸️ 暂无新知识点，继续轮询...`)
+                  console.log(`🔍 [ChatView] sendPendingMessage - [轮询${pollCount}] ⏸️ 暂无知识点，继续轮询...`)
                 }
               } catch (err) {
                 console.error(`⚠️ [ChatView] sendPendingMessage - [轮询${pollCount}] 轮询失败:`, err)
@@ -731,10 +977,34 @@ function ChatView({
   
   // 🔧 发送消息
   const handleSendMessage = async () => {
-    console.log(`🔍 [ChatView] handleSendMessage 被调用: inputText="${inputText}", isProcessing=${isProcessing}`)
+    // 🔍 诊断日志：追踪函数调用
+    const stackTrace = new Error().stack
+    console.log(`🔍 [ChatView] handleSendMessage 被调用:`, {
+      inputText: inputText?.substring(0, 50),
+      isProcessing,
+      hasPendingMessage: !!pendingMessage,
+      processingPendingMessageRef: processingPendingMessageRef.current,
+      callStack: stackTrace?.split('\n').slice(1, 4).join(' -> ')
+    })
+    
     if (inputText.trim() === '' || isProcessing) {
       console.log(`🔍 [ChatView] handleSendMessage 被跳过: inputText为空或正在处理`)
       return
+    }
+    
+    // 🔍 诊断日志：检查是否与 pendingMessage 冲突
+    if (pendingMessage && pendingMessage.text === inputText.trim()) {
+      console.warn('⚠️ [ChatView] handleSendMessage - 检测到与 pendingMessage 相同的消息，可能导致重复:', {
+        inputText: inputText.trim(),
+        pendingMessageText: pendingMessage.text,
+        isProcessing,
+        processingPendingMessageRef: processingPendingMessageRef.current
+      })
+    }
+    
+    // 🔍 诊断日志：检查是否正在处理 pendingMessage
+    if (processingPendingMessageRef.current) {
+      console.warn('⚠️ [ChatView] handleSendMessage - processingPendingMessageRef.current = true，可能导致重复处理')
     }
     
     // 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
@@ -824,13 +1094,46 @@ function ChatView({
       }
       
       // 🔧 处理 notations
+      // 🔍 诊断日志：追踪 notation 添加
       if (response?.created_grammar_notations?.length > 0) {
-        response.created_grammar_notations.forEach(n => {
+        console.log('🔍 [ChatView] handleSendMessage - 处理 grammar notations:', {
+          count: response.created_grammar_notations.length,
+          notations: response.created_grammar_notations.map(n => ({
+            notation_id: n.notation_id,
+            grammar_id: n.grammar_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id
+          }))
+        })
+        response.created_grammar_notations.forEach((n, idx) => {
+          console.log(`🔍 [ChatView] handleSendMessage - 添加 grammar notation ${idx + 1}/${response.created_grammar_notations.length}:`, {
+            notation_id: n.notation_id,
+            grammar_id: n.grammar_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id
+          })
           if (addGrammarNotationToCache) addGrammarNotationToCache(n)
         })
       }
       if (response?.created_vocab_notations?.length > 0) {
-        response.created_vocab_notations.forEach(n => {
+        console.log('🔍 [ChatView] handleSendMessage - 处理 vocab notations:', {
+          count: response.created_vocab_notations.length,
+          notations: response.created_vocab_notations.map(n => ({
+            notation_id: n.notation_id,
+            vocab_id: n.vocab_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id,
+            token_index: n.token_id || n.token_index
+          }))
+        })
+        response.created_vocab_notations.forEach((n, idx) => {
+          console.log(`🔍 [ChatView] handleSendMessage - 添加 vocab notation ${idx + 1}/${response.created_vocab_notations.length}:`, {
+            notation_id: n.notation_id,
+            vocab_id: n.vocab_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id,
+            token_index: n.token_id || n.token_index
+          })
           if (addVocabNotationToCache) addVocabNotationToCache({
             ...n,
             token_index: n.token_id || n.token_index
@@ -924,29 +1227,104 @@ function ChatView({
               console.log(`🔍 [ChatView] [轮询${pollCount}] 解析后的数据: grammar=${pendingGrammar.length} (${JSON.stringify(pendingGrammar)}), vocab=${pendingVocab.length} (${JSON.stringify(pendingVocab)})`)
               
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
-                console.log(`🍞 [ChatView] [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
-                const items = [
-                  // 🔧 修复问题2：使用正确的字段名 display_name（新格式）或 name/title/rule（旧格式兼容）
-                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.display_name || g.name || g.title || g.rule || tUI('语法')}`),
-                  ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
-                ]
+                console.log(`🍞 [ChatView] [轮询${pollCount}] ✅ 检测到知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
                 
-                console.log(`🍞 [ChatView] [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
-                console.log(`🍞 [ChatView] [轮询${pollCount}] items:`, items)
+                // 🔧 根据类型生成不同的 toast 消息
+                const items = []
+                const seenItems = new Set()  // 🔧 用于去重（基于知识点名称）
+                
+                // 处理语法知识点
+                pendingGrammar.forEach(g => {
+                  // 🔧 修复：后端返回的字段名是 'name'，不是 'display_name'
+                  const name = g.name || g.display_name || g.title || g.rule || tUI('语法')
+                  const type = g.type || 'new'  // 默认为新知识点
+                  
+                  // 🔧 去重：使用 name 作为唯一标识
+                  const itemKey = `grammar:${name}`
+                  if (seenItems.has(itemKey)) {
+                    console.log(`⚠️ [ChatView] [轮询${pollCount}] 跳过重复的语法知识点: ${name}`)
+                    return
+                  }
+                  seenItems.add(itemKey)
+                  
+                  if (type === 'existing') {
+                    // 已有知识点：使用新文案
+                    const message = tUI('已有知识点：{type} {name} 加入新例句')
+                      .replace('{type}', tUI('语法'))
+                      .replace('{name}', name)
+                    items.push({ message, type: 'existing', key: itemKey })
+                  } else {
+                    // 新知识点：保持现状
+                    items.push({ 
+                      message: `🆕 ${tUI('语法')}: ${name} ${tUI('知识点已总结并加入列表')}`, 
+                      type: 'new',
+                      key: itemKey
+                    })
+                  }
+                })
+                
+                // 处理词汇知识点
+                pendingVocab.forEach(v => {
+                  const vocab = v.vocab || tUI('词汇')
+                  const type = v.type || 'new'  // 默认为新知识点
+                  
+                  // 🔧 去重：使用 vocab 作为唯一标识
+                  const itemKey = `vocab:${vocab}`
+                  if (seenItems.has(itemKey)) {
+                    console.log(`⚠️ [ChatView] [轮询${pollCount}] 跳过重复的词汇知识点: ${vocab}`)
+                    return
+                  }
+                  seenItems.add(itemKey)
+                  
+                  if (type === 'existing') {
+                    // 已有知识点：使用新文案
+                    const message = tUI('已有知识点：{type} {name} 加入新例句')
+                      .replace('{type}', tUI('词汇'))
+                      .replace('{name}', vocab)
+                    items.push({ message, type: 'existing', key: itemKey })
+                  } else {
+                    // 新知识点：保持现状
+                    items.push({ 
+                      message: `🆕 ${tUI('词汇')}: ${vocab} ${tUI('知识点已总结并加入列表')}`, 
+                      type: 'new',
+                      key: itemKey
+                    })
+                  }
+                })
+                
+                // 🔧 二次去重：使用 Set 去除重复的 items（基于 message，作为额外保障）
+                const uniqueItems = []
+                const seenMessages = new Set()
+                items.forEach(item => {
+                  if (!seenMessages.has(item.message)) {
+                    seenMessages.add(item.message)
+                    uniqueItems.push(item)
+                  } else {
+                    console.log(`⚠️ [ChatView] [轮询${pollCount}] 跳过重复的 toast 消息: ${item.message}`)
+                  }
+                })
+                
+                console.log(`🍞 [ChatView] [轮询${pollCount}] 准备创建 ${uniqueItems.length} 个toast (去重前: ${items.length})`)
+                console.log(`🍞 [ChatView] [轮询${pollCount}] items:`, uniqueItems)
                 console.log(`🍞 [ChatView] [轮询${pollCount}] 当前toasts数量:`, toasts.length)
                 
-                items.forEach((item, idx) => {
-                  setTimeout(() => {
-                    const id = Date.now() + Math.random()
-                    const newToast = { id, message: `${item} ${tUI('知识点已总结并加入列表')}`, slot: toasts.length + idx }
-                    console.log(`🍞 [ChatView] [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
-                    setToasts(prev => {
-                      const updated = [...prev, newToast]
-                      console.log(`🍞 [ChatView] [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
-                      window.chatViewToastsRef = updated
-                      return updated
-                    })
-                  }, idx * 600)
+                // 🔧 修复：一次性创建所有 toast，确保所有知识点都能显示
+                setToasts(prev => {
+                  const baseSlot = prev.length
+                  const newToasts = uniqueItems.map((item, idx) => {
+                    const id = Date.now() + Math.random() * 1000 + idx
+                    const newToast = { 
+                      id, 
+                      message: item.message, 
+                      slot: baseSlot + idx
+                    }
+                    console.log(`🍞 [ChatView] [轮询${pollCount}] 创建toast ${idx + 1}/${uniqueItems.length}:`, newToast)
+                    return newToast
+                  })
+                  const updated = [...prev, ...newToasts]
+                  console.log(`🍞 [ChatView] [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
+                  window.chatViewToastsRef = updated
+                  return updated
                 })
                 
                 // 🔧 刷新 notation 缓存，使 article view 自动更新
@@ -1110,13 +1488,46 @@ function ChatView({
       }
       
       // 🔧 处理 notations（与 handleSendMessage 相同）
+      // 🔍 诊断日志：追踪 notation 添加
       if (response?.created_grammar_notations?.length > 0) {
-        response.created_grammar_notations.forEach(n => {
+        console.log('🔍 [ChatView] handleSuggestedQuestionSelect - 处理 grammar notations:', {
+          count: response.created_grammar_notations.length,
+          notations: response.created_grammar_notations.map(n => ({
+            notation_id: n.notation_id,
+            grammar_id: n.grammar_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id
+          }))
+        })
+        response.created_grammar_notations.forEach((n, idx) => {
+          console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - 添加 grammar notation ${idx + 1}/${response.created_grammar_notations.length}:`, {
+            notation_id: n.notation_id,
+            grammar_id: n.grammar_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id
+          })
           if (addGrammarNotationToCache) addGrammarNotationToCache(n)
         })
       }
       if (response?.created_vocab_notations?.length > 0) {
-        response.created_vocab_notations.forEach(n => {
+        console.log('🔍 [ChatView] handleSuggestedQuestionSelect - 处理 vocab notations:', {
+          count: response.created_vocab_notations.length,
+          notations: response.created_vocab_notations.map(n => ({
+            notation_id: n.notation_id,
+            vocab_id: n.vocab_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id,
+            token_index: n.token_id || n.token_index
+          }))
+        })
+        response.created_vocab_notations.forEach((n, idx) => {
+          console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - 添加 vocab notation ${idx + 1}/${response.created_vocab_notations.length}:`, {
+            notation_id: n.notation_id,
+            vocab_id: n.vocab_id,
+            text_id: n.text_id,
+            sentence_id: n.sentence_id,
+            token_index: n.token_id || n.token_index
+          })
           if (addVocabNotationToCache) addVocabNotationToCache({
             ...n,
             token_index: n.token_id || n.token_index
@@ -1175,29 +1586,92 @@ function ChatView({
               console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 解析后的数据: grammar=${pendingGrammar.length} (${JSON.stringify(pendingGrammar)}), vocab=${pendingVocab.length} (${JSON.stringify(pendingVocab)})`)
               
               if (pendingGrammar.length > 0 || pendingVocab.length > 0) {
-                console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ✅ 检测到新知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
-                const items = [
-                  // 🔧 修复问题2：使用正确的字段名 display_name（新格式）或 name/title/rule（旧格式兼容）
-                  ...pendingGrammar.map(g => `🆕 ${tUI('语法')}: ${g.display_name || g.name || g.title || g.rule || tUI('语法')}`),
-                  ...pendingVocab.map(v => `🆕 ${tUI('词汇')}: ${v.vocab || tUI('词汇')}`)
-                ]
+                console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] ✅ 检测到知识点: grammar=${pendingGrammar.length}, vocab=${pendingVocab.length}`)
+                
+                // 🔧 根据类型生成不同的 toast 消息
+                const items = []
+                const seenItems = new Set()  // 🔧 用于去重
+                
+                // 处理语法知识点
+                pendingGrammar.forEach(g => {
+                  // 🔧 修复：后端返回的字段名是 'name'，不是 'display_name'
+                  const name = g.name || g.display_name || g.title || g.rule || tUI('语法')
+                  const type = g.type || 'new'  // 默认为新知识点
+                  
+                  // 🔧 去重：使用 name 作为唯一标识
+                  const itemKey = `grammar:${name}`
+                  if (seenItems.has(itemKey)) {
+                    console.log(`⚠️ [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 跳过重复的语法知识点: ${name}`)
+                    return
+                  }
+                  seenItems.add(itemKey)
+                  
+                  if (type === 'existing') {
+                    // 已有知识点：使用新文案
+                    const message = tUI('已有知识点：{type} {name} 加入新例句')
+                      .replace('{type}', tUI('语法'))
+                      .replace('{name}', name)
+                    items.push({ message, type: 'existing', key: itemKey })
+                  } else {
+                    // 新知识点：保持现状
+                    items.push({ 
+                      message: `🆕 ${tUI('语法')}: ${name} ${tUI('知识点已总结并加入列表')}`, 
+                      type: 'new',
+                      key: itemKey
+                    })
+                  }
+                })
+                
+                // 处理词汇知识点
+                pendingVocab.forEach(v => {
+                  const vocab = v.vocab || tUI('词汇')
+                  const type = v.type || 'new'  // 默认为新知识点
+                  
+                  // 🔧 去重：使用 vocab 作为唯一标识
+                  const itemKey = `vocab:${vocab}`
+                  if (seenItems.has(itemKey)) {
+                    console.log(`⚠️ [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 跳过重复的词汇知识点: ${vocab}`)
+                    return
+                  }
+                  seenItems.add(itemKey)
+                  
+                  if (type === 'existing') {
+                    // 已有知识点：使用新文案
+                    const message = tUI('已有知识点：{type} {name} 加入新例句')
+                      .replace('{type}', tUI('词汇'))
+                      .replace('{name}', vocab)
+                    items.push({ message, type: 'existing', key: itemKey })
+                  } else {
+                    // 新知识点：保持现状
+                    items.push({ 
+                      message: `🆕 ${tUI('词汇')}: ${vocab} ${tUI('知识点已总结并加入列表')}`, 
+                      type: 'new',
+                      key: itemKey
+                    })
+                  }
+                })
                 
                 console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 准备创建 ${items.length} 个toast`)
                 console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] items:`, items)
                 console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 当前toasts数量:`, toasts.length)
                 
-                items.forEach((item, idx) => {
-                  setTimeout(() => {
-                    const id = Date.now() + Math.random()
-                    const newToast = { id, message: `${item} ${tUI('知识点已总结并加入列表')}`, slot: toasts.length + idx }
+                // 🔧 修复：一次性创建所有 toast，确保所有知识点都能显示
+                setToasts(prev => {
+                  const baseSlot = prev.length
+                  const newToasts = items.map((item, idx) => {
+                    const id = Date.now() + Math.random() * 1000 + idx
+                    const newToast = { 
+                      id, 
+                      message: item.message, 
+                      slot: baseSlot + idx
+                    }
                     console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] 创建toast ${idx + 1}/${items.length}:`, newToast)
-                    setToasts(prev => {
-                      const updated = [...prev, newToast]
-                      console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
-                      window.chatViewToastsRef = updated
-                      return updated
-                    })
-                  }, idx * 600)
+                    return newToast
+                  })
+                  const updated = [...prev, ...newToasts]
+                  console.log(`🍞 [ChatView] handleSuggestedQuestionSelect - [轮询${pollCount}] setToasts更新: 从${prev.length}个增加到${updated.length}个`)
+                  window.chatViewToastsRef = updated
+                  return updated
                 })
                 
                 // 🔧 刷新 notation 缓存，使 article view 自动更新
@@ -1499,41 +1973,50 @@ function ChatView({
       </div>
       </div>
 
-      {/* Toast Stack */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none">
-        {toasts.map(t => (
-          <div
-            key={t.id}
-            className="pointer-events-auto"
+      {/* Toast Stack - 使用 Portal 渲染到 body 外，避免影响 ChatView 渲染 */}
+      {useMemo(() => {
+        if (typeof document === 'undefined' || toasts.length === 0) {
+          return null
+        }
+        
+        return createPortal(
+          <div 
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none"
             style={{
-              position: 'absolute',
-              bottom: `${t.slot * 80}px`,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 10000 + t.slot,
-              width: 'auto',
-              minWidth: '320px'
+              willChange: 'transform',  // 🔧 优化：提示浏览器优化 transform
+              isolation: 'isolate',  // 🔧 创建新的层叠上下文，避免影响其他元素
+              // 🔧 注意：contain 属性可能不被所有浏览器支持，如果导致问题可以移除
+              // contain: 'layout style paint',  // 🔧 优化：限制重排和重绘的影响范围
+              transform: 'translateX(-50%)',  // 🔧 使用 transform 而不是 left，避免布局重排
             }}
           >
-            <ToastNotice
-              message={t.message}
-              isVisible={true}
-              duration={10000}
-              onClose={() => {
-                setToasts(prev => {
-                  const newToasts = prev.filter(x => x.id !== t.id)
-                  const reindexed = newToasts.map((toast, index) => ({
-                    ...toast,
-                    slot: index
-                  }))
-                  window.chatViewToastsRef = reindexed
-                  return reindexed
-                })
-              }}
-            />
-          </div>
-        ))}
-      </div>
+            {toasts.map(t => (
+              <div
+                key={t.id}
+                className="pointer-events-auto"
+                style={{
+                  position: 'absolute',
+                  bottom: `${t.slot * 80}px`,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 10000 + t.slot,
+                  width: 'auto',
+                  minWidth: '320px',
+                  willChange: 'transform',  // 🔧 优化：提示浏览器优化 transform
+                }}
+              >
+                <ToastNotice
+                  message={t.message}
+                  isVisible={true}
+                  duration={10000}
+                  onClose={() => handleToastClose(t.id)}
+                />
+              </div>
+            ))}
+          </div>,
+          document.body
+        )
+      }, [toasts])}
     </>
   )
 }
@@ -1563,3 +2046,4 @@ export default memo(ChatView, (prevProps, nextProps) => {
     prevProps.onProcessingChange === nextProps.onProcessingChange
   )
 })
+
