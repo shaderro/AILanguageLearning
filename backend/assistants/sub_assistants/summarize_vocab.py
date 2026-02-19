@@ -25,10 +25,11 @@ class SummarizeVocabAssistant(SubAssistant):
         ai_response: str,
         dialogue_context: Optional[str] = None
     ) -> str:
-        context_info = (
-            f"{dialogue_context}"
-            if dialogue_context else "这是第一轮对话，没有上文。"
-        )
+        # 🔧 当前阶段禁用历史消息，避免 prompt 过长
+        # 即使传入了 dialogue_context，也忽略它
+        if dialogue_context and dialogue_context != "这是第一轮对话，没有上文。":
+            print(f"⚠️ [SummarizeVocab] 检测到传入 dialogue_context（长度: {len(dialogue_context)} 字符），但当前阶段已禁用，将忽略")
+        context_info = "这是第一轮对话，没有上文。"
 
         return summarize_vocab_template.format(
             context_info=context_info,

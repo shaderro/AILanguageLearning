@@ -135,10 +135,18 @@ const GrammarDemo = () => {
   const [selectedGrammarId, setSelectedGrammarId] = useState(null)
   const [selectedGrammarIndex, setSelectedGrammarIndex] = useState(-1)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  // 🔧 缓存详情页面的语法数据，避免切换时重新加载
+  const [detailPageCache, setDetailPageCache] = useState(new Map())
+  // 🔧 延迟显示加载UI的状态（超过0.5s才显示）
+  const [showLoadingUI, setShowLoadingUI] = useState(false)
+  // 🔧 保存上一个卡片数据，在加载期间保持显示
+  const [previousGrammar, setPreviousGrammar] = useState(null)
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [reviewItems, setReviewItems] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [results, setResults] = useState([])
+  // 🔧 缓存预加载的语法详情
+  const [grammarDetailCache, setGrammarDetailCache] = useState(new Map())
   
   // 🔧 从 URL 参数初始化 selectedGrammarId（用于新标签页打开）
   // 🔧 修复问题1：只在URL中明确包含grammarId时才设置（用于新标签页打开），而不是每次组件挂载都设置
@@ -180,16 +188,47 @@ const GrammarDemo = () => {
     }
   }, [allGrammar, selectedGrammarIndex, selectedGrammarId])
 
-  // 🔧 新增：当选中语法时，获取完整的语法详情（包含examples）
+  // 🔧 新增：当选中语法时，获取完整的语法详情（包含examples）- 优化：延迟加载UI显示
   useEffect(() => {
     if (selectedGrammarId) {
+      // 🔧 先检查缓存
+      const cached = detailPageCache.get(selectedGrammarId)
+      if (cached) {
+        console.log(`✅ [GrammarDemo] 使用缓存的语法详情: ${selectedGrammarId}`)
+        setSelectedGrammar(cached)
+        setIsLoadingDetail(false)
+        setShowLoadingUI(false)
+        setPreviousGrammar(cached)
+        return
+      }
+      
+      // 🔧 如果缓存中没有，先尝试从列表数据中获取
+      const listItem = allGrammar.find(g => g.rule_id === selectedGrammarId)
+      if (listItem && listItem.examples && Array.isArray(listItem.examples) && listItem.examples.length > 0) {
+        // 列表数据中已有完整数据，直接使用并缓存
+        setSelectedGrammar(listItem)
+        setIsLoadingDetail(false)
+        setShowLoadingUI(false)
+        setPreviousGrammar(listItem)
+        setDetailPageCache(prev => new Map(prev).set(selectedGrammarId, listItem))
+        return
+      }
+      
+      // 🔧 需要从API加载：保持上一个卡片显示，延迟0.5s后才显示加载UI
       setIsLoadingDetail(true)
+      setShowLoadingUI(false) // 先不显示加载UI
+      // 🔧 previousGrammar 已在切换时保存，这里不需要再次设置
+      
+      // 🔧 延迟0.5s后显示加载UI
+      const loadingUITimer = setTimeout(() => {
+        setShowLoadingUI(true)
+      }, 500)
+      
       console.log(`🔍 [GrammarDemo] Fetching grammar detail for ID: ${selectedGrammarId}`)
       
       // 先从列表中找到对应的语法规则作为后备
-      const listItem = allGrammar.find(g => g.rule_id === selectedGrammarId)
       if (listItem) {
-        setSelectedGrammar(listItem)
+        setPreviousGrammar(listItem)
       }
       
       apiService.getGrammarById(selectedGrammarId)
@@ -199,12 +238,19 @@ const GrammarDemo = () => {
           const grammarData = response?.data?.data || response?.data || response
           if (grammarData) {
             setSelectedGrammar(grammarData)
+            setPreviousGrammar(grammarData)
+            // 🔧 缓存数据
+            setDetailPageCache(prev => new Map(prev).set(selectedGrammarId, grammarData))
           } else if (listItem) {
             // 如果 API 返回的数据格式不对，使用列表中的数据
             console.warn(`⚠️ [GrammarDemo] API response format unexpected, using list data`)
             setSelectedGrammar(listItem)
+            setPreviousGrammar(listItem)
+            setDetailPageCache(prev => new Map(prev).set(selectedGrammarId, listItem))
           }
           setIsLoadingDetail(false)
+          setShowLoadingUI(false)
+          clearTimeout(loadingUITimer)
         })
         .catch(error => {
           console.error(`❌ [GrammarDemo] Error fetching grammar detail:`, error)
@@ -212,18 +258,28 @@ const GrammarDemo = () => {
           if (listItem) {
             console.log(`🔄 [GrammarDemo] Using list data as fallback`)
             setSelectedGrammar(listItem)
+            setPreviousGrammar(listItem)
+            setDetailPageCache(prev => new Map(prev).set(selectedGrammarId, listItem))
           } else {
             // 如果列表中也找不到，设置为 null 以显示错误
             setSelectedGrammar(null)
           }
           setIsLoadingDetail(false)
+          setShowLoadingUI(false)
+          clearTimeout(loadingUITimer)
         })
+      
+      // 🔧 清理定时器
+      return () => {
+        clearTimeout(loadingUITimer)
+      }
     } else {
-      setSelectedGrammar(null)
+      setPreviousGrammar(null)
+      setShowLoadingUI(false)
     }
-  }, [selectedGrammarId, allGrammar])
+  }, [selectedGrammarId, allGrammar, detailPageCache, selectedGrammar])
 
-  const startReview = () => {
+  const startReview = async () => {
     // 使用当前filter和排序后的所有语法规则（保持时间排序）
     // 注意：这里需要在函数内部重新计算 list，因为 list 是在组件渲染时计算的
     const allGrammar = grammarData?.data || []
@@ -261,11 +317,41 @@ const GrammarDemo = () => {
       return
     }
     
+    // 🔧 预加载所有语法规则的详情（包含 examples）
+    const newCache = new Map()
+    const loadPromises = sortedList.map(async (grammar) => {
+      // 如果列表数据中已经有 examples，直接使用
+      if (grammar.examples && Array.isArray(grammar.examples) && grammar.examples.length > 0) {
+        newCache.set(grammar.rule_id, grammar)
+        return
+      }
+      
+      // 否则，异步加载详情
+      try {
+        const response = await apiService.getGrammarById(grammar.rule_id)
+        const detailData = response?.data?.data || response?.data || response
+        if (detailData) {
+          newCache.set(grammar.rule_id, { ...grammar, ...detailData })
+        } else {
+          newCache.set(grammar.rule_id, grammar)
+        }
+      } catch (error) {
+        console.warn(`⚠️ [GrammarDemo] 预加载语法 ${grammar.rule_id} 详情失败:`, error)
+        newCache.set(grammar.rule_id, grammar)
+      }
+    })
+    
     // 使用排序后的列表进行复习（保持时间排序，不随机打乱）
     setReviewItems(sortedList)
     setCurrentIndex(0)
     setResults([])
     setIsReviewMode(true)
+    
+    // 🔧 后台预加载详情（不阻塞界面）
+    Promise.all(loadPromises).then(() => {
+      setGrammarDetailCache(newCache)
+      console.log(`✅ [GrammarDemo] 预加载完成，缓存了 ${newCache.size} 个语法详情`)
+    })
   }
 
   const handleAnswer = async (choice) => {
@@ -290,8 +376,13 @@ const GrammarDemo = () => {
   }
 
   const handleNext = () => {
+    // 🔧 防止连续快速点击导致的卡顿
     if (currentIndex < reviewItems.length - 1) {
-      setCurrentIndex((v) => v + 1)
+      setCurrentIndex((v) => {
+        // 确保不会超出范围
+        const next = v + 1
+        return next < reviewItems.length ? next : v
+      })
     } else {
       // 显示结果页：保持复习模式为真，但将索引推进到长度以触发结果视图
       setCurrentIndex(reviewItems.length)
@@ -323,6 +414,9 @@ const GrammarDemo = () => {
   if (isReviewMode) {
     if (currentIndex < reviewItems.length) {
       const currentItem = reviewItems[currentIndex]
+      // 🔧 优先使用缓存中的完整数据
+      const cachedGrammar = grammarDetailCache.get(currentItem.rule_id)
+      const grammarToShow = cachedGrammar || currentItem
       
       // 处理答案的回调函数，需要同时调用 handleAnswer 和 handleNext
       const handleDontKnow = () => {
@@ -345,7 +439,7 @@ const GrammarDemo = () => {
         <div className="h-full bg-white p-8">
           <div className="max-w-6xl mx-auto">
             <GrammarReviewCard
-              grammar={currentItem}
+              grammar={grammarToShow}
               currentProgress={currentIndex + 1}
               totalProgress={reviewItems.length}
               onClose={() => setIsReviewMode(false)}
@@ -402,6 +496,10 @@ const GrammarDemo = () => {
     
     const handlePreviousGrammar = () => {
       if (currentIndex > 0) {
+        // 🔧 在切换前保存当前卡片，以便在加载期间显示
+        if (selectedGrammar) {
+          setPreviousGrammar(selectedGrammar)
+        }
         const prevGrammar = sortedList[currentIndex - 1]
         setSelectedGrammarId(prevGrammar.rule_id)
         setSelectedGrammarIndex(currentIndex - 1)
@@ -410,24 +508,36 @@ const GrammarDemo = () => {
     
     const handleNextGrammar = () => {
       if (currentIndex < sortedList.length - 1) {
+        // 🔧 在切换前保存当前卡片，以便在加载期间显示
+        if (selectedGrammar) {
+          setPreviousGrammar(selectedGrammar)
+        }
         const nextGrammar = sortedList[currentIndex + 1]
         setSelectedGrammarId(nextGrammar.rule_id)
         setSelectedGrammarIndex(currentIndex + 1)
       }
     }
     
+    // 🔧 在加载期间，如果数据未缓存且加载时间超过0.5s，显示加载UI；否则显示上一个卡片或当前卡片
+    // 🔧 如果 previousGrammar 存在，在加载期间继续显示；否则显示当前卡片或加载状态
+    const displayGrammar = selectedGrammar || previousGrammar
+    // 🔧 如果 previousGrammar 不存在（首次加载），立即显示加载状态；否则延迟0.5s
+    const shouldShowLoading = isLoadingDetail && !detailPageCache.has(selectedGrammarId) && (showLoadingUI || !previousGrammar)
+    
     return (
-      <div className="h-full bg-white p-8">
+      <div className="h-full bg-white p-8" style={{ backgroundColor: 'white', minHeight: '100%' }}>
         <div className="max-w-6xl mx-auto">
           <GrammarDetailCard
-            grammar={selectedGrammar}
-            loading={isLoadingDetail}
+            grammar={displayGrammar}
+            loading={shouldShowLoading}
             onPrevious={currentIndex > 0 ? handlePreviousGrammar : null}
             onNext={currentIndex < sortedList.length - 1 ? handleNextGrammar : null}
             onBack={() => {
               setSelectedGrammar(null)
               setSelectedGrammarId(null)
               setSelectedGrammarIndex(-1)
+              setPreviousGrammar(null)
+              setShowLoadingUI(false)
             }}
             currentIndex={currentIndex}
             totalCount={sortedList.length}

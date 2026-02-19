@@ -1,0 +1,868 @@
+[
+  {
+    "text_id": 1771497426,
+    "sentence_id": 1,
+    "sentence_body": "\"Dr.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "\"",
+        "token_type": "punctuation",
+        "global_token_id": 0,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": "Dr",
+        "token_type": "text",
+        "global_token_id": 1,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 2,
+        "sentence_token_id": 3
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 2,
+    "sentence_body": "Smith went to the store.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Smith",
+        "token_type": "text",
+        "global_token_id": 3,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 4,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "went",
+        "token_type": "text",
+        "global_token_id": 5,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 6,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "to",
+        "token_type": "text",
+        "global_token_id": 7,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 8,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "the",
+        "token_type": "text",
+        "global_token_id": 9,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 10,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "store",
+        "token_type": "text",
+        "global_token_id": 11,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 12,
+        "sentence_token_id": 10
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 3,
+    "sentence_body": "\" \r\n\"Mr. and Mrs.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "\"",
+        "token_type": "punctuation",
+        "global_token_id": 13,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " \r\n",
+        "token_type": "space",
+        "global_token_id": 14,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "\"",
+        "token_type": "punctuation",
+        "global_token_id": 15,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "Mr",
+        "token_type": "text",
+        "global_token_id": 16,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 17,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 18,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 19,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 20,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "Mrs",
+        "token_type": "text",
+        "global_token_id": 21,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 22,
+        "sentence_token_id": 10
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 4,
+    "sentence_body": "Johnson are here.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Johnson",
+        "token_type": "text",
+        "global_token_id": 23,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 24,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "are",
+        "token_type": "text",
+        "global_token_id": 25,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 26,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "here",
+        "token_type": "text",
+        "global_token_id": 27,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 28,
+        "sentence_token_id": 6
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 5,
+    "sentence_body": "\" \r\n\"I met Prof.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "\"",
+        "token_type": "punctuation",
+        "global_token_id": 29,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " \r\n",
+        "token_type": "space",
+        "global_token_id": 30,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "\"",
+        "token_type": "punctuation",
+        "global_token_id": 31,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "I",
+        "token_type": "text",
+        "global_token_id": 32,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 33,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": "met",
+        "token_type": "text",
+        "global_token_id": 34,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 35,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": "Prof",
+        "token_type": "text",
+        "global_token_id": 36,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 37,
+        "sentence_token_id": 9
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 6,
+    "sentence_body": "Brown, Rev.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Brown",
+        "token_type": "text",
+        "global_token_id": 38,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 39,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 40,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "Rev",
+        "token_type": "text",
+        "global_token_id": 41,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 42,
+        "sentence_token_id": 5
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 7,
+    "sentence_body": "White, and Gen.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "White",
+        "token_type": "text",
+        "global_token_id": 43,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 44,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 45,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 46,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 47,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": "Gen",
+        "token_type": "text",
+        "global_token_id": 48,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 49,
+        "sentence_token_id": 7
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 8,
+    "sentence_body": "Black.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Black",
+        "token_type": "text",
+        "global_token_id": 50,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 51,
+        "sentence_token_id": 2
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 9,
+    "sentence_body": "The address is 123 Main St.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "The",
+        "token_type": "text",
+        "global_token_id": 52,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 53,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "address",
+        "token_type": "text",
+        "global_token_id": 54,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 55,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "is",
+        "token_type": "text",
+        "global_token_id": 56,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 57,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "123",
+        "token_type": "text",
+        "global_token_id": 58,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 59,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "Main",
+        "token_type": "text",
+        "global_token_id": 60,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 61,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "St",
+        "token_type": "text",
+        "global_token_id": 62,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 63,
+        "sentence_token_id": 12
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 10,
+    "sentence_body": "New York.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "New",
+        "token_type": "text",
+        "global_token_id": 64,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 65,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "York",
+        "token_type": "text",
+        "global_token_id": 66,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 67,
+        "sentence_token_id": 4
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 11,
+    "sentence_body": "\" \r\nSee you at 3 p.m. tomorrow.Hello!",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "\"",
+        "token_type": "punctuation",
+        "global_token_id": 68,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " \r\n",
+        "token_type": "space",
+        "global_token_id": 69,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "See",
+        "token_type": "text",
+        "global_token_id": 70,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 71,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "you",
+        "token_type": "text",
+        "global_token_id": 72,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 73,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "at",
+        "token_type": "text",
+        "global_token_id": 74,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 75,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "3",
+        "token_type": "text",
+        "global_token_id": 76,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 77,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "p",
+        "token_type": "text",
+        "global_token_id": 78,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 79,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "m",
+        "token_type": "text",
+        "global_token_id": 80,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 81,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 82,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": "tomorrow",
+        "token_type": "text",
+        "global_token_id": 83,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 84,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": "Hello",
+        "token_type": "text",
+        "global_token_id": 85,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "!",
+        "token_type": "punctuation",
+        "global_token_id": 86,
+        "sentence_token_id": 19
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 12,
+    "sentence_body": "We are Dr.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "We",
+        "token_type": "text",
+        "global_token_id": 87,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 88,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "are",
+        "token_type": "text",
+        "global_token_id": 89,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 90,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "Dr",
+        "token_type": "text",
+        "global_token_id": 91,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 92,
+        "sentence_token_id": 6
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 13,
+    "sentence_body": "Who, Miss.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 93,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 94,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 95,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "Miss",
+        "token_type": "text",
+        "global_token_id": 96,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 97,
+        "sentence_token_id": 5
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 14,
+    "sentence_body": "Who, Mrs.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 98,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 99,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 100,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "Mrs",
+        "token_type": "text",
+        "global_token_id": 101,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 102,
+        "sentence_token_id": 5
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 15,
+    "sentence_body": "Who, Ms.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 103,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 104,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 105,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "Ms",
+        "token_type": "text",
+        "global_token_id": 106,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 107,
+        "sentence_token_id": 5
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 16,
+    "sentence_body": "Who and Mr.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 108,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 109,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 110,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 111,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "Mr",
+        "token_type": "text",
+        "global_token_id": 112,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 113,
+        "sentence_token_id": 6
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497426,
+    "sentence_id": 17,
+    "sentence_body": "Who!",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 114,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": "!",
+        "token_type": "punctuation",
+        "global_token_id": 115,
+        "sentence_token_id": 2
+      }
+    ],
+    "word_tokens": []
+  }
+]

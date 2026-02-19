@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { BaseButton, BaseCard, BaseBadge } from '../../base'
-import { colors } from '../../../design-tokens'
+import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
@@ -111,11 +111,18 @@ const GrammarReviewCard = ({
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [grammarWithExamples, setGrammarWithExamples] = useState(grammar)
 
-  // 加载完整的 grammar 详情（包含 examples）
+  // 🔧 加载完整的 grammar 详情（包含 examples）- 优化：如果已有完整数据则跳过请求
   useEffect(() => {
     setShowDefinitions(false)
     setCurrentExampleIndex(0)
     
+    // 🔧 如果传入的 grammar 已经包含 examples，直接使用，无需请求
+    if (grammar && grammar.examples && Array.isArray(grammar.examples) && grammar.examples.length > 0) {
+      setGrammarWithExamples(grammar)
+      return
+    }
+    
+    // 🔧 如果没有 examples，才请求详情（但通常预加载已经完成）
     if (grammar && (!grammar.examples || !Array.isArray(grammar.examples) || grammar.examples.length === 0)) {
       const grammarId = grammar.rule_id
       if (grammarId) {
@@ -392,7 +399,19 @@ const GrammarReviewCard = ({
           </div>
 
           {/* Rule Name */}
-          <h1 className="text-4xl font-bold text-center text-gray-900">
+          <h1 
+            className="text-center break-words"
+            style={{
+              fontSize: componentTokens.grammarVocabTitle.fontSize,
+              fontWeight: componentTokens.grammarVocabTitle.fontWeight,
+              color: componentTokens.grammarVocabTitle.color,
+              lineHeight: componentTokens.grammarVocabTitle.lineHeight,
+              maxWidth: componentTokens.grammarVocabTitle.maxWidth,
+              textAlign: componentTokens.grammarVocabTitle.textAlign,
+              wordWrap: componentTokens.grammarVocabTitle.wordWrap,
+              overflowWrap: componentTokens.grammarVocabTitle.overflowWrap,
+            }}
+          >
             {ruleName}
           </h1>
 

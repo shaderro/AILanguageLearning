@@ -1,6 +1,7 @@
 from data_managers.data_classes import Sentence
 from data_managers.data_classes_new import Sentence as NewSentence
-from assistants.sub_assistants.summarize_dialogue_history import SummarizeDialogueHistoryAssistant
+# 🔧 当前阶段禁用对话历史总结功能，不导入 SummarizeDialogueHistoryAssistant
+# from assistants.sub_assistants.summarize_dialogue_history import SummarizeDialogueHistoryAssistant
 from assistants.chat_info.selected_token import SelectedToken
 import json
 import chardet
@@ -15,13 +16,9 @@ class DialogueHistory:
         self.max_turns = max_turns
         self.messages_history = []
         self.summary = str()
-        # 尝试创建总结助手，如果没有 OPENAI_API_KEY 则设为 None
-        try:
-            self.summarize_dialogue_assistant = SummarizeDialogueHistoryAssistant()
-        except ValueError as e:
-            # OPENAI_API_KEY 未设置，禁用总结功能
-            self.summarize_dialogue_assistant = None
-            print(f"[WARN] 对话历史总结功能已禁用: {e}")
+        # 🔧 禁用对话历史总结功能，避免 prompt 过长
+        self.summarize_dialogue_assistant = None
+        print(f"[INFO] 对话历史总结功能已禁用（当前阶段关闭）")
 
     def add_message(self, user_input: str, ai_response: str, quoted_sentence: SentenceType, selected_token: Optional[SelectedToken] = None):
         """
@@ -59,29 +56,17 @@ class DialogueHistory:
         )
     
     def summarize_dialogue_history(self) -> str:
-        dialogue_history_str = self.message_history_to_string()
-        if not dialogue_history_str:
-            return "No dialogue history to summarize."
-        
-        # 如果没有总结助手（缺少 OPENAI_API_KEY），返回简单总结
-        if self.summarize_dialogue_assistant is None:
-            print("[INFO] 对话历史总结功能未启用（缺少 OPENAI_API_KEY），跳过 AI 总结")
-            return f"对话历史包含 {len(self.messages_history)} 条消息（总结功能未启用，需要 OPENAI_API_KEY）"
-        
-        print("Summarizing dialogue history...")
-        quoted_sentence = self.messages_history[-1]['quote'].sentence_body if self.messages_history else ""
-        print("Quoted sentence for summary:", quoted_sentence)
-        summary = self.summarize_dialogue_assistant.run(dialogue_history_str, self.messages_history[-1]['quote'], verbose=True)
-        if isinstance(summary, str):
-            print("Summary is: \n" + summary)
-            return summary
-        elif isinstance(summary, list) and summary:
-            return summary[0].get("summary", "No summary available.")
-        else:
-            return "No summary available."
+        # 🔧 当前阶段禁用对话历史总结功能，避免 prompt 过长
+        print("[INFO] 对话历史总结功能已禁用（当前阶段关闭），返回空总结")
+        return f"对话历史包含 {len(self.messages_history)} 条消息（总结功能已禁用）"
 
     def keep_in_max_turns(self):
-        self._summarize_and_clear() if len(self.messages_history) > self.max_turns else None
+        # 🔧 禁用自动总结功能，避免 prompt 过长
+        # 如果消息数量超过限制，直接清空历史（不进行总结）
+        if len(self.messages_history) > self.max_turns:
+            print(f"[INFO] 对话历史超过最大轮数 ({len(self.messages_history)} > {self.max_turns})，清空历史（不进行总结）")
+            self.messages_history.clear()
+            self.summary = ""
 
     def save_to_file(self, path: str):
         # 按text_id组织数据，支持新旧数据结构

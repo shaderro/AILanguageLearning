@@ -4,6 +4,7 @@ import { apiService } from '../../../services/api'
 import { useUser } from '../../../contexts/UserContext'
 import guestDataManager from '../../../utils/guestDataManager'
 import { useUIText } from '../../../i18n/useUIText'
+import { BackButton } from '../../../components/base'
 
 // 文章长度限制（字符数）
 const MAX_ARTICLE_LENGTH = 5000
@@ -706,12 +707,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         {/* 标题行：返回按钮左对齐，标题居中 */}
         <div className="relative flex items-center">
           {onBack && (
-            <button
-              onClick={onBack}
-              className="px-2 py-1 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-50"
-            >
-              <span className="text-lg font-semibold">&lt;</span>
-            </button>
+            <BackButton onClick={onBack} />
           )}
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-semibold text-gray-800">{t('上传新文章')}</h2>
         </div>

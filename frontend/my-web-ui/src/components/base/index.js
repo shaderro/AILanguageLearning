@@ -6,4 +6,5 @@ export { BaseInput } from './BaseInput';
 export { BaseSpinner } from './BaseSpinner';
 export { ConfirmDialog } from './ConfirmDialog';
 export { LoadingOverlay } from './LoadingOverlay';
+export { default as BackButton } from './BackButton';
 

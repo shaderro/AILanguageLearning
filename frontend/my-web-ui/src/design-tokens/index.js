@@ -194,6 +194,9 @@ export const transition = tokens.transition
 export const zIndex = tokens.zIndex
 export const breakpoints = tokens.breakpoints
 
+// 导出 componentTokens（从 design-tokens.ts）
+export { componentTokens } from './design-tokens'
+
 // 导出默认值
 export default tokens
 

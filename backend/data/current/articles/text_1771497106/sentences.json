@@ -1,0 +1,104 @@
+[
+  {
+    "text_id": 1771497106,
+    "sentence_id": 1,
+    "sentence_body": "This is Dr.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "This",
+        "token_type": "text",
+        "global_token_id": 0,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 1,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "is",
+        "token_type": "text",
+        "global_token_id": 2,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 3,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "Dr",
+        "token_type": "text",
+        "global_token_id": 4,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 5,
+        "sentence_token_id": 6
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497106,
+    "sentence_id": 2,
+    "sentence_body": "Who, Miss.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 6,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 7,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 8,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "Miss",
+        "token_type": "text",
+        "global_token_id": 9,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 10,
+        "sentence_token_id": 5
+      }
+    ],
+    "word_tokens": []
+  },
+  {
+    "text_id": 1771497106,
+    "sentence_id": 3,
+    "sentence_body": "Who",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Who",
+        "token_type": "text",
+        "global_token_id": 11,
+        "sentence_token_id": 1
+      }
+    ],
+    "word_tokens": []
+  }
+]

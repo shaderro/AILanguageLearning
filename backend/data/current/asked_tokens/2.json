@@ -1888,5 +1888,14 @@
     "type": "sentence",
     "vocab_id": null,
     "grammar_id": 33
+  },
+  {
+    "user_id": "2",
+    "text_id": "1770876917",
+    "sentence_id": 7,
+    "sentence_token_id": null,
+    "type": "sentence",
+    "vocab_id": null,
+    "grammar_id": 39
   }
 ]

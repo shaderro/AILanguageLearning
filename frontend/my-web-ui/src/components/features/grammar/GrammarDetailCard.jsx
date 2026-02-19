@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { BaseCard } from '../../base'
-import { colors } from '../../../design-tokens'
+import { BaseCard, BackButton } from '../../base'
+import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
@@ -299,12 +299,14 @@ const GrammarDetailCard = ({
 
   if (loading) {
     return (
-      <BaseCard padding="lg" className="w-full max-w-4xl mx-auto">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.primary[500] }}></div>
-          <p className="text-gray-600">{t('加载中...')}</p>
-        </div>
-      </BaseCard>
+      <div className="w-full max-w-4xl mx-auto" style={{ backgroundColor: 'white' }}>
+        <BaseCard padding="lg" className="w-full" style={{ backgroundColor: 'white' }}>
+          <div className="text-center py-8" style={{ backgroundColor: 'white' }}>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.primary[500] }}></div>
+            <p className="text-gray-600">{t('加载中...')}</p>
+          </div>
+        </BaseCard>
+      </div>
     )
   }
 
@@ -319,24 +321,21 @@ const GrammarDetailCard = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto" style={{ backgroundColor: 'white' }}>
       <BaseCard
         padding="lg"
         className="w-full relative"
         style={{
           '--card-bg': colors.semantic.bg.primary,
           '--card-border': colors.semantic.border.default,
+          backgroundColor: 'white',
         }}
       >
         {/* 左上角返回按钮 */}
         {onBack && (
-          <button
-            onClick={onBack}
-            className="absolute top-6 left-6 z-10 px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-            aria-label="返回"
-          >
-            {t('返回')}
-          </button>
+          <div className="absolute top-6 left-6 z-10">
+            <BackButton onClick={onBack} />
+          </div>
         )}
         
         {/* 右上角分页控件 */}
@@ -399,7 +398,19 @@ const GrammarDetailCard = ({
         <div className="space-y-6">
           {/* 语法规则标题区域 */}
           <div className="flex flex-col items-center gap-2">
-            <h1 className="text-4xl font-bold text-center" style={{ color: colors.semantic.text.primary }}>
+            <h1 
+              className="text-center break-words"
+              style={{
+                fontSize: componentTokens.grammarVocabTitle.fontSize,
+                fontWeight: componentTokens.grammarVocabTitle.fontWeight,
+                color: componentTokens.grammarVocabTitle.color,
+                lineHeight: componentTokens.grammarVocabTitle.lineHeight,
+                maxWidth: componentTokens.grammarVocabTitle.maxWidth,
+                textAlign: componentTokens.grammarVocabTitle.textAlign,
+                wordWrap: componentTokens.grammarVocabTitle.wordWrap,
+                overflowWrap: componentTokens.grammarVocabTitle.overflowWrap,
+              }}
+            >
               {ruleName}
             </h1>
           </div>

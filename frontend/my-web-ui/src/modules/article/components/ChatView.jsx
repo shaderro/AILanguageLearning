@@ -200,7 +200,7 @@ function ChatView({
     // ⚠️ Language detection: Presentation-only, does NOT affect data fetching
     // Called at initialization time, NOT in render or hooks
     // Using translateText helper function (not hook) for initialization
-    const defaultMessage = getTranslatedText("你好！我是聊天助手，有什么可以帮助你的吗？")
+    const defaultMessage = getTranslatedText("选择有疑问的句子或词汇，向我提问吧！")
     
     return fromLS.length > 0 ? fromLS : [
       { id: 1, text: defaultMessage, isUser: false, timestamp: new Date() }
@@ -313,7 +313,7 @@ function ChatView({
         if (items.length > 0) {
           // 🔧 与后端 /api/chat/history 的返回字段对齐：
           // backend 返回字段为 text / quote_text / is_user / created_at
-          const defaultWelcome = getTranslatedText("你好！我是聊天助手，有什么可以帮助你的吗？")
+          const defaultWelcome = getTranslatedText("选择有疑问的句子或词汇，向我提问吧！")
           const historyMessages = items.map(item => ({
             id: item.id,
             text: item.text, // 修复：使用后端返回的 text 字段，而不是不存在的 message
@@ -339,7 +339,7 @@ function ChatView({
               prev.length === 1 &&
               !prev[0].isUser &&
               typeof prev[0].text === 'string' &&
-              (prev[0].text === defaultWelcome || prev[0].text === "你好！我是聊天助手，有什么可以帮助你的吗？")
+              (prev[0].text === defaultWelcome || prev[0].text === "选择有疑问的句子或词汇，向我提问吧！" || prev[0].text === "你好！我是聊天助手，有什么可以帮助你的吗？")
 
             if (isOnlyWelcome) {
               // 直接用历史记录替换欢迎语
@@ -1848,11 +1848,13 @@ function ChatView({
       {/* Chat Header */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-shrink-0">
         <h2 className="text-lg font-semibold text-gray-800">
-          {disabled ? t('聊天助手 (暂时不可用)') : t('聊天助手')}
+          {disabled ? t('学习助手 (暂时不可用)') : t('学习助手')}
         </h2>
-        <p className="text-sm text-gray-600">
-          {disabled ? t('请先上传文章内容') : t('随时为您提供帮助')}
-        </p>
+        {disabled && (
+          <p className="text-sm text-gray-600">
+            {t('请先上传文章内容')}
+          </p>
+        )}
       </div>
 
       {/* Messages Area */}
@@ -1899,8 +1901,8 @@ function ChatView({
                   )}
                   
                   <p className="text-sm">
-                    {(!message.isUser && message.text === '你好！我是聊天助手，有什么可以帮助你的吗？')
-                      ? t('你好！我是聊天助手，有什么可以帮助你的吗？')
+                    {(!message.isUser && (message.text === '选择有疑问的句子或词汇，向我提问吧！' || message.text === '你好！我是聊天助手，有什么可以帮助你的吗？'))
+                      ? t('选择有疑问的句子或词汇，向我提问吧！')
                       : message.text}
                   </p>
                   <p className="text-xs mt-1 text-gray-500">

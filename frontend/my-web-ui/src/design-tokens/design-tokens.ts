@@ -202,6 +202,31 @@ export const componentTokens = {
       bg: 'transparent',
     },
   },
+  backButton: {
+    // 🔧 统一的返回按钮样式：灰色圆角细边框、灰色底、黑色字（与卡片边框一致）
+    background: '#f3f4f6', // gray-100
+    backgroundHover: '#e5e7eb', // gray-200
+    text: '#111827', // black/gray-900
+    border: '#e5e7eb', // gray-200 (与卡片边框一致)
+    borderWidth: '1px',
+    radius: designTokens.radius.md, // 6px rounded-md
+    paddingX: designTokens.space['4'], // 16px
+    paddingY: designTokens.space['2'], // 8px
+    fontSize: designTokens.font.size.sm, // 0.875rem
+    fontWeight: designTokens.font.weight.normal,
+    transition: 'all 0.2s ease-in-out',
+  },
+  grammarVocabTitle: {
+    // 🔧 语法、词汇大标题样式：字号为原来的2/3，最大宽度为原来的2/3，允许换行
+    fontSize: designTokens.font.size['2xl'], // 1.5rem (text-4xl 是 2.25rem，2/3 约为 1.5rem)
+    fontWeight: designTokens.font.weight.bold,
+    color: designTokens.color.text.primary, // 保持字体颜色不变
+    lineHeight: designTokens.font.lineHeight.tight,
+    maxWidth: '66.67%', // 最大宽度为原来的2/3
+    textAlign: 'center' as const,
+    wordWrap: 'break-word' as const,
+    overflowWrap: 'break-word' as const,
+  },
 } as const
 
 export type DesignTokens = typeof designTokens

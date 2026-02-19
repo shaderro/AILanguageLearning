@@ -14,10 +14,11 @@ class CheckIfRelevant(SubAssistant):
         return super().run(quoted_sentence, input_message, context_info, verbose=verbose)
     
     def build_prompt(self, quoted_sentence: str, input_message: str, context_info: str) -> str:
-        context_info = (
-            f"{context_info}"
-            if context_info else "这是第一轮对话，没有上文。"
-        )
+        # 🔧 当前阶段禁用历史消息，避免 prompt 过长
+        # 即使传入了 context_info，也忽略它
+        if context_info and context_info != "这是第一轮对话，没有上文。":
+            print(f"⚠️ [CheckIfRelevant] 检测到传入 context_info（长度: {len(context_info)} 字符），但当前阶段已禁用，将忽略")
+        context_info = "这是第一轮对话，没有上文。"
         return check_if_relevant_template.format(
             quoted_sentence=quoted_sentence,
             input_message=input_message,

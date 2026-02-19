@@ -22,6 +22,7 @@ import { apiService } from '../../services/api'
 import { useUIText } from '../../i18n/useUIText'
 import { colors } from '../../design-tokens'
 import VocabNotationDebugPanel from './components/VocabNotationDebugPanel'
+import { BackButton } from '../../components/base'
 
 function ArticleCanvas({ children, onClearQuote }) {
   const { clearSelection } = useSelection()
@@ -665,15 +666,9 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                 {/* Buttons above article view */}
                 <div className="flex items-center justify-between mb-2 px-1">
                   {/* Back Button */}
-                  <button
-                    onClick={onBack}
-                    className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-md shadow-sm border border-gray-200 hover:bg-gray-50"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span>{t('Back to Articles')}</span>
-                  </button>
+                  <BackButton onClick={onBack}>
+                    {t('返回')}
+                  </BackButton>
                   {/* Right side buttons container */}
                   <div className="flex items-center gap-3">
                     {/* Auto Translation Toggle Switch */}
