@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { colors } from '../../../design-tokens'
 
-const UserAvatar = ({ userId, onLogout, onOpenProfile }) => {
+const UserAvatar = ({ userId, email, onLogout, onOpenProfile }) => {
   const [showMenu, setShowMenu] = useState(false)
   const { uiLanguage } = useUiLanguage()
 
@@ -14,13 +14,18 @@ const UserAvatar = ({ userId, onLogout, onOpenProfile }) => {
     ? {
         currentUser: 'Current user',
         profile: 'Profile & Settings',
-        logout: 'Sign out'
+        logout: 'Sign out',
+        user: 'User'
       }
     : {
         currentUser: '当前用户',
         profile: '个人中心与设置',
-        logout: '登出'
+        logout: '登出',
+        user: '用户'
       }
+
+  // 🔧 顶部仅显示 "User"（不带 ID），头像为纯色圆点
+  const displayText = labels.user
 
   return (
     <div className="relative">
@@ -29,17 +34,15 @@ const UserAvatar = ({ userId, onLogout, onOpenProfile }) => {
         onClick={() => setShowMenu(!showMenu)}
         className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
       >
-        {/* 头像图标 */}
+        {/* 头像图标：纯色圆点，不显示文字 */}
         <div 
-          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+          className="w-8 h-8 rounded-full"
           style={{ backgroundColor: colors.primary[400] }}
-        >
-          {userId.toString().slice(-1)}
-        </div>
+        />
         
-        {/* 用户ID */}
+        {/* 文本：固定显示 User，不展示 ID 或邮箱 */}
         <span className="text-sm font-medium text-gray-700">
-          User {userId}
+          {displayText}
         </span>
 
         {/* 下拉箭头 */}
@@ -65,13 +68,7 @@ const UserAvatar = ({ userId, onLogout, onOpenProfile }) => {
           {/* 菜单内容 */}
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20">
             <div className="py-1">
-              {/* 用户信息 */}
-              <div className="px-4 py-2 border-b border-gray-200">
-                <p className="text-xs text-gray-500">{labels.currentUser}</p>
-                <p className="text-sm font-semibold text-gray-900">User ID: {userId}</p>
-              </div>
-
-              {/* 菜单项 */}
+              {/* 仅保留设置与退出登录 */}
               <button
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() => {

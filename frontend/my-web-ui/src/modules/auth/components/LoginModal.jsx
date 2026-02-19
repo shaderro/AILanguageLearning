@@ -79,26 +79,27 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassw
         <BaseInput
           label={
             <span>
-              {t('用户 ID')} <span className="text-xs text-gray-400">{t('(可选)')}</span>
-            </span>
-          }
-          type="number"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder={t('请输入您的用户ID（可选）')}
-        />
-
-        <BaseInput
-          label={
-            <span>
-              {t('邮箱')} <span className="text-xs text-gray-400">{t('(可选)')}</span>
+              {t('邮箱')} <span className="text-xs text-gray-400">{t('(推荐)')}</span>
             </span>
           }
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder={t('请输入邮箱（可选，已注册用户可留空）')}
-          helperText={t('💡 提示：至少提供用户ID或邮箱之一')}
+          placeholder={t('请输入邮箱')}
+          helperText={t('💡 提示：推荐使用邮箱登录')}
+        />
+
+        <BaseInput
+          label={
+            <span>
+              {t('用户 ID')} <span className="text-xs text-orange-500 font-medium">{t('(仅内部测试用)')}</span>
+            </span>
+          }
+          type="number"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          placeholder={t('请输入用户ID（仅内部测试用）')}
+          helperText={t('⚠️ 仅用于测试用户（无邮箱账号），普通用户请使用邮箱登录')}
         />
 
         <div className="space-y-1">

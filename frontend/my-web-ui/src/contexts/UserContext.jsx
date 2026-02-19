@@ -48,6 +48,7 @@ function normalizeApiError(error) {
 export function UserProvider({ children }) {
   const [userId, setUserId] = useState(null)
   const [token, setToken] = useState(null)
+  const [email, setEmail] = useState(null) // 🔧 添加 email 状态
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true) // 初始化加载状态
   const [password, setPassword] = useState(null) // 仅用于 debug
@@ -93,12 +94,13 @@ export function UserProvider({ children }) {
           // 🔧 确保状态更新是同步的，避免在更新过程中被其他逻辑干扰
           setUserId(parseInt(savedUserId))
           setToken(savedToken)
+          setEmail(user.email || null) // 🔧 设置 email
           setIsAuthenticated(true)
           setIsGuest(false)
           isInitializedRef.current = true
           
           // 🔧 确保状态已设置完成
-          console.log('✅ [UserContext] 登录状态已设置，userId:', savedUserId)
+          console.log('✅ [UserContext] 登录状态已设置，userId:', savedUserId, 'email:', user.email)
         } catch (error) {
           // 🔧 检查用户是否在等待期间主动登录了
           if (userInitiatedLoginRef.current) {
@@ -119,6 +121,7 @@ export function UserProvider({ children }) {
             console.log('⚠️ [UserContext] 网络错误，保持登录状态（不清除 localStorage）')
             setUserId(parseInt(savedUserId))
             setToken(savedToken)
+            setEmail(null) // 🔧 网络错误时无法获取 email，设为 null
             setIsAuthenticated(true)
             setIsGuest(false)
             isInitializedRef.current = true
@@ -219,6 +222,7 @@ export function UserProvider({ children }) {
           const previousGuestId = isGuest ? userId : null
           setUserId(savedAuth.userId)
           setToken(savedAuth.token)
+          setEmail(null) // 🔧 超时恢复时无法获取 email，设为 null
           setPassword(inputPassword)
           setIsAuthenticated(true)
           setIsGuest(false)
@@ -261,12 +265,16 @@ export function UserProvider({ children }) {
       authService.saveAuth(result.user_id, result.access_token)
       authService.savePasswordMapping(result.user_id, inputPassword)
       
+      // 🔧 从注册响应中获取 email
+      const userEmail = result.email || null
+      
       // 检查游客是否有数据需要迁移
       const previousGuestId = isGuest ? userId : null
       
       // 更新状态（从游客模式切换到登录模式）
       setUserId(result.user_id)
       setToken(result.access_token)
+      setEmail(userEmail) // 🔧 设置 email
       setPassword(inputPassword)
       setIsAuthenticated(true)
       setIsGuest(false)  // 不再是游客
@@ -282,8 +290,7 @@ export function UserProvider({ children }) {
         success: true, 
         userId: result.user_id, 
         token: result.access_token,
-        emailUnique: result.email_unique,
-        emailCheckMessage: result.email_check_message
+        email: userEmail // 🔧 返回 email
       }
     } catch (error) {
       console.error('❌ [UserContext] 注册失败:', error)
@@ -314,6 +321,7 @@ export function UserProvider({ children }) {
     
     setUserId(guestId)
     setToken(null)
+    setEmail(null) // 🔧 清除 email
     setPassword(null)
     setIsAuthenticated(false)
     setIsGuest(true)
@@ -321,6 +329,7 @@ export function UserProvider({ children }) {
 
   const value = {
     userId,
+    email, // 🔧 添加 email
     token,
     password, // 仅用于 debug
     isAuthenticated,

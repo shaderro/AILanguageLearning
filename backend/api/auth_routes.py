@@ -222,32 +222,34 @@ async def register(
     用户注册
     
     - **password**: 密码（至少6位）
-    - **email**: 邮箱
+    - **email**: 邮箱（必填，要求唯一）
     
     返回：
     - access_token: JWT token
     - user_id: 新创建的用户ID
-    - email_unique: email唯一性检查结果（debug模式，不影响注册）
+    - email: 注册的邮箱
     """
     try:
-        # 检查 email 唯一性（debug模式，不阻止注册）
-        email_unique = True
-        email_check_message = "邮箱可用"
-        email_to_save = request.email if request.email else None
+        # 🔧 强制要求邮箱
+        if not request.email or not request.email.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="邮箱为必填项"
+            )
         
-        if request.email:
-            existing_user = session.query(User).filter(User.email == request.email).first()
-            if existing_user:
-                email_unique = False
-                email_check_message = "邮箱已被使用（开发阶段：已跳过email字段，注册成功）"
-                # 开发阶段：如果email已存在，设置为None避免UNIQUE约束错误
-                email_to_save = None
+        # 🔧 检查 email 唯一性，如果已存在则拒绝注册
+        existing_user = session.query(User).filter(User.email == request.email).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="该邮箱已被注册，请使用其他邮箱或直接登录"
+            )
         
         # 加密密码
         password_hash = hash_password(request.password)
         
-        # 创建用户（开发阶段不强制email唯一性，允许注册）
-        new_user = User(password_hash=password_hash, email=email_to_save)
+        # 创建用户（强制 email 唯一性）
+        new_user = User(password_hash=password_hash, email=request.email.strip())
         session.add(new_user)
         session.commit()
         session.refresh(new_user)
@@ -255,41 +257,26 @@ async def register(
         # 生成 JWT token（sub 必须是字符串）
         access_token = create_access_token(data={"sub": str(new_user.user_id)})
         
-        # 返回结果（包含debug信息）
+        # 返回结果（包含 email）
         response = TokenResponse(
             access_token=access_token,
             token_type="bearer",
             user_id=new_user.user_id
         )
-        # 添加debug信息到响应中（通过dict方式）
+        # 添加 email 到响应中
         response_dict = response.model_dump()
-        response_dict["email_unique"] = email_unique
-        response_dict["email_check_message"] = email_check_message
+        response_dict["email"] = new_user.email
         return response_dict
+    except HTTPException:
+        # 重新抛出 HTTP 异常
+        raise
     except Exception as e:
-        # 如果遇到 UNIQUE 约束错误（虽然理论上不应该发生），尝试不带 email 重新注册
+        # 如果遇到 UNIQUE 约束错误，返回友好的错误信息
         if 'UNIQUE constraint failed' in str(e) and 'users.email' in str(e):
-            try:
-                session.rollback()
-                # 重新尝试注册，但不带 email
-                password_hash = hash_password(request.password)
-                new_user = User(password_hash=password_hash, email=None)
-                session.add(new_user)
-                session.commit()
-                session.refresh(new_user)
-                
-                access_token = create_access_token(data={"sub": str(new_user.user_id)})
-                response = TokenResponse(
-                    access_token=access_token,
-                    token_type="bearer",
-                    user_id=new_user.user_id
-                )
-                response_dict = response.model_dump()
-                response_dict["email_unique"] = False
-                response_dict["email_check_message"] = "邮箱已被使用（开发阶段：已跳过email字段，注册成功）"
-                return response_dict
-            except Exception as retry_error:
-                raise HTTPException(status_code=500, detail=f"注册失败: {str(retry_error)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="该邮箱已被注册，请使用其他邮箱或直接登录"
+            )
         raise HTTPException(status_code=500, detail=f"注册失败: {str(e)}")
 
 

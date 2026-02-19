@@ -101,7 +101,7 @@ const profileTexts = {
 import { convertTokensToPoints } from '../../../utils/tokenUtils'
 
 const ProfilePage = ({ onClose, onLogout }) => {
-  const { userId, token } = useUser()
+  const { userId, email, token } = useUser() // 🔧 添加 email
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
   const { uiLanguage, setUiLanguage } = useUiLanguage()
   const [userInfo, setUserInfo] = useState(null)
@@ -221,14 +221,18 @@ const ProfilePage = ({ onClose, onLogout }) => {
                 <span className="text-xs text-gray-400">{t.displayOnly}</span>
               </div>
 
-              {/* 用户ID */}
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t.userId}</label>
-                  <p className="text-sm text-gray-900 mt-1">{userId}</p>
+              {/* 用户ID（仅测试账号显示） */}
+              {!email && userId && (
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      {t.userId} <span className="text-xs text-orange-500">(仅内部测试用)</span>
+                    </label>
+                    <p className="text-sm text-gray-900 mt-1">{userId}</p>
+                  </div>
+                  <span className="text-xs text-gray-400">{t.displayOnly}</span>
                 </div>
-                <span className="text-xs text-gray-400">{t.displayOnly}</span>
-              </div>
+              )}
 
               {/* 密码 */}
               <div className="flex items-center justify-between py-2">
@@ -419,7 +423,7 @@ const ProfilePage = ({ onClose, onLogout }) => {
         isOpen={isChangePasswordModalOpen}
         onClose={() => setIsChangePasswordModalOpen(false)}
         userId={userId}
-        userEmail={userInfo?.email}
+        userEmail={email || userInfo?.email} // 🔧 优先使用 UserContext 的 email
       />
     </div>
   )

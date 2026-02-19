@@ -14,7 +14,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [registeredUserId, setRegisteredUserId] = useState(null)
+  const [registeredEmail, setRegisteredEmail] = useState(null) // 🔧 改为存储 email
   const [emailUnique, setEmailUnique] = useState(null) // null: 未检查, true: 唯一, false: 不唯一
   const [emailCheckMessage, setEmailCheckMessage] = useState('')
   const [isCheckingEmail, setIsCheckingEmail] = useState(false)
@@ -96,8 +96,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
       if (result.success) {
         console.log('✅ [Register] Registration successful')
         
-        // 显示成功页面（会显示用户ID）
-        setRegisteredUserId(result.userId)
+        // 🔧 显示成功页面（显示邮箱而非 user_id）
+        setRegisteredEmail(result.email || email)
       } else {
         setError(result.error)
       }
@@ -111,7 +111,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
 
   const handleCloseSuccess = () => {
     // 关闭成功页面
-    setRegisteredUserId(null)
+    setRegisteredEmail(null)
     setEmail('')
     setPassword('')
     setConfirmPassword('')
@@ -125,7 +125,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
 
   if (!isOpen) return null
 
-  if (registeredUserId) {
+  if (registeredEmail) {
     return (
       <BaseModal
         isOpen={isOpen}
@@ -143,9 +143,9 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-sm text-gray-600">{t('请记住您的用户 ID（登录时需要）')}</p>
+            <p className="text-sm text-gray-600">{t('您可以使用以下邮箱登录')}</p>
             <BaseBadge variant="primary" size="lg">
-              {t('用户 ID:')} {registeredUserId}
+              {registeredEmail}
             </BaseBadge>
           </div>
 
@@ -183,7 +183,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
           required
           error={
             emailUnique === false
-              ? t('❌ 邮箱已被使用（开发阶段仍可注册）')
+              ? t('❌ 该邮箱已被注册，请使用其他邮箱或直接登录')
               : undefined
           }
           helperText={

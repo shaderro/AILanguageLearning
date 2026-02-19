@@ -113,6 +113,7 @@ function AppContent() {
   // 从 UserContext 获取用户信息和方法
   const { 
     userId: currentUserId,
+    email: currentUserEmail, // 🔧 添加 email
     password: currentUserPassword,
     isAuthenticated,
     login,
@@ -251,7 +252,8 @@ function AppContent() {
                   
                   {/* 用户头像 */}
                   <UserAvatar 
-                    userId={currentUserId} 
+                    userId={currentUserId}
+                    email={currentUserEmail} // 🔧 传递 email
                     onLogout={handleLogout}
                     onOpenProfile={() => setShowProfilePage(true)}
                   />
