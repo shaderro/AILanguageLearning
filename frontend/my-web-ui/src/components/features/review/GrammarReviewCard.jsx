@@ -399,21 +399,23 @@ const GrammarReviewCard = ({
           </div>
 
           {/* Rule Name */}
-          <h1 
-            className="text-center break-words"
-            style={{
-              fontSize: componentTokens.grammarVocabTitle.fontSize,
-              fontWeight: componentTokens.grammarVocabTitle.fontWeight,
-              color: componentTokens.grammarVocabTitle.color,
-              lineHeight: componentTokens.grammarVocabTitle.lineHeight,
-              maxWidth: componentTokens.grammarVocabTitle.maxWidth,
-              textAlign: componentTokens.grammarVocabTitle.textAlign,
-              wordWrap: componentTokens.grammarVocabTitle.wordWrap,
-              overflowWrap: componentTokens.grammarVocabTitle.overflowWrap,
-            }}
-          >
-            {ruleName}
-          </h1>
+          <div className="flex justify-center">
+            <h1 
+              className="text-center break-words"
+              style={{
+                fontSize: componentTokens.grammarVocabTitle.fontSize,
+                fontWeight: componentTokens.grammarVocabTitle.fontWeight,
+                color: componentTokens.grammarVocabTitle.color,
+                lineHeight: componentTokens.grammarVocabTitle.lineHeight,
+                maxWidth: '300px', // 复习卡片：固定最大宽度（卡片详情页面 max-w-4xl=896px 的 1/3 约为 300px）
+                textAlign: componentTokens.grammarVocabTitle.textAlign,
+                wordWrap: componentTokens.grammarVocabTitle.wordWrap,
+                overflowWrap: componentTokens.grammarVocabTitle.overflowWrap,
+              }}
+            >
+              {ruleName}
+            </h1>
+          </div>
 
           {/* Example Sentence Card */}
           {exampleSentences.length > 0 && (

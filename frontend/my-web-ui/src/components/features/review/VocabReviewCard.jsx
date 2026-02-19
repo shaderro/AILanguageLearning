@@ -513,7 +513,7 @@ const VocabReviewCard = ({
                 fontWeight: componentTokens.grammarVocabTitle.fontWeight,
                 color: componentTokens.grammarVocabTitle.color,
                 lineHeight: componentTokens.grammarVocabTitle.lineHeight,
-                maxWidth: componentTokens.grammarVocabTitle.maxWidth,
+                maxWidth: '300px', // 复习卡片：固定最大宽度（卡片详情页面 max-w-4xl=896px 的 1/3 约为 300px）
                 textAlign: componentTokens.grammarVocabTitle.textAlign,
                 wordWrap: componentTokens.grammarVocabTitle.wordWrap,
                 overflowWrap: componentTokens.grammarVocabTitle.overflowWrap,
