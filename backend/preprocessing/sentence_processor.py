@@ -12,16 +12,31 @@ from typing import List, Optional
 CHINESE_PUNCTUATION_PATTERN = r'(……|…|[。！？!?])'
 
 # 缩写白名单（这些缩写后的句号不应该切句）
+# 注意：_is_known_abbreviation 函数会将单词转为小写后比较，所以这里只需要小写形式
 ABBREVIATION_WHITELIST = [
     # 德语常见缩写
     "z.b.", "u.a.", "etc.", "usw.", "ca.", "bzw.", "vgl.", "u.ä.",
     "d.h.", "i.e.", "e.g.", "z. b.", "u. a.", "u. ä.",
-    # 职称
-    "dr.", "prof.", "dipl.-ing.",
-    # 月份
-    "jan.", "feb.", "mär.", "apr.", "aug.", "sep.", "okt.", "nov.", "dez.",
-    # 英文常见缩写
-    "mr.", "mrs.", "ms.", "jr.", "sr.", "vs.", "a.m.", "p.m.",
+    # 职称和称谓（英文）- 包括 Dr., Mr., Mrs., Ms. 等
+    "dr.", "mr.", "mrs.", "ms.", "miss.", "prof.", "rev.", "gen.", "capt.", 
+    "lt.", "sgt.", "col.", "maj.", "adm.", "gov.", "sen.", "rep.", "pres.",
+    "jr.", "sr.", "esq.", "ph.d.", "m.d.", "d.d.s.", "d.v.m.",
+    # 地名和地址缩写（注意：dr. 在地址中表示 drive，与职称 dr. 相同但含义不同）
+    "st.", "ave.", "blvd.", "rd.", "ln.", "ct.", "pl.", "pkwy.",
+    "n.", "s.", "e.", "w.", "ne.", "nw.", "se.", "sw.",
+    # 公司和组织
+    "inc.", "ltd.", "llc.", "corp.", "co.", "assoc.", "dept.", "univ.",
+    # 时间相关
+    "a.m.", "p.m.", "b.c.", "a.d.", "b.c.e.", "c.e.",
+    # 月份（英文）
+    "jan.", "feb.", "mar.", "apr.", "may.", "jun.", "jul.", "aug.", 
+    "sep.", "sept.", "oct.", "nov.", "dec.",
+    # 月份（德语）
+    "mär.", "okt.", "dez.",
+    # 其他常见缩写
+    "vs.", "et al.", "cf.", "viz.", "approx.",
+    "no.", "vol.", "pp.", "p.", "ch.", "sec.", "fig.", "ex.", "ed.",
+    "min.", "max.", "temp.",
 ]
 
 # 日期模式
@@ -68,7 +83,7 @@ def _is_ordinal_dot_de(text: str, index: int) -> bool:
 
 
 def _is_multi_letter_abbreviation(text: str, index: int) -> bool:
-    """多字母缩写（B.C. / A.D. / U.S.A.）：匹配 ([A-Z]\.){2,} 模式"""
+    """多字母缩写（B.C. / A.D. / U.S.A.）：匹配 ([A-Z]\\.){2,} 模式"""
     if index == 0:
         return False
     
@@ -96,7 +111,13 @@ def _is_single_letter_abbreviation(text: str, index: int) -> bool:
 def _is_known_abbreviation(text: str, index: int) -> bool:
     """白名单缩写：检查句号前的单词是否在白名单中"""
     word = _get_word_ending_at(text, index).lower()
-    return word in ABBREVIATION_WHITELIST
+    # 检查带句号和不带句号的版本（因为 _get_word_ending_at 可能不包含句号）
+    word_with_dot = word + "."
+    is_match = word in ABBREVIATION_WHITELIST or word_with_dot in ABBREVIATION_WHITELIST
+    # 调试日志（仅在需要时启用）
+    # if is_match:
+    #     print(f"[DEBUG] 匹配缩写: '{word}' 或 '{word_with_dot}' 在白名单中")
+    return is_match
 
 
 def _is_abbreviation_dot(text: str, index: int) -> bool:
@@ -380,10 +401,20 @@ def split_sentences(text: str, language_code: Optional[str] = None) -> List[str]
     if not text:
         return []
     
+    # 🔧 如果 language_code 为 None，尝试自动检测（默认为英文）
+    if language_code is None:
+        # 检查是否包含中文字符
+        if any('\u4e00' <= char <= '\u9fff' for char in text):
+            language_code = "zh"
+        else:
+            # 默认为英文，使用空格语言分句逻辑（包含缩写保护）
+            language_code = "en"
+    
     if language_code == "zh":
         return _split_chinese_sentences(text)
     
     # 空格语言（英文/德语等）使用统一实现
+    # 注意：即使 language_code 为 None，也会使用英文分句逻辑（包含缩写保护）
     is_german = (language_code == "de")
     return _split_whitespace_sentences(text, is_german=is_german)
 
