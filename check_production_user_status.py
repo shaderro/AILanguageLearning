@@ -17,6 +17,16 @@ if sys.platform == 'win32':
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# 必须在导入 database_system 之前加载 .env，否则 DATABASE_URL 无法被读取
+try:
+    from dotenv import load_dotenv
+    from pathlib import Path
+    env_path = Path(__file__).resolve().parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass
+
 from database_system.database_manager import DatabaseManager
 from database_system.business_logic.models import User
 
@@ -31,10 +41,17 @@ def check_production_user_status(user_id=None):
         from backend.config import ENV
         environment = ENV
     except ImportError:
-        import os
         environment = os.getenv("ENV", "production")  # 默认使用 production
     
     print(f"\n📦 使用环境: {environment}")
+    
+    # 当 ENV=production 时，必须设置 DATABASE_URL 才能连接 PostgreSQL
+    if environment == "production" and not os.getenv("DATABASE_URL"):
+        print("\n❌ 错误: 未检测到 DATABASE_URL 环境变量")
+        print("   请在 .env 中添加: DATABASE_URL=postgresql://用户:密码@主机:端口/数据库名")
+        print("   从 Render Dashboard -> PostgreSQL -> External Database URL 复制")
+        return 1
+    
     print(f"⚠️  注意：确保环境变量指向生产环境的 PostgreSQL 数据库")
     
     db_manager = DatabaseManager(environment)

@@ -10,7 +10,7 @@ import os
 import io
 import string
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 
 # 修复 Windows 控制台编码问题
 if sys.platform == 'win32':
@@ -19,6 +19,16 @@ if sys.platform == 'win32':
 
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# 必须在导入 database_system 之前加载 .env，否则 DATABASE_URL 无法被读取
+try:
+    from dotenv import load_dotenv
+    from pathlib import Path
+    env_path = Path(__file__).resolve().parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass
 
 from database_system.database_manager import DatabaseManager
 from database_system.business_logic.models import InviteCode
@@ -75,9 +85,9 @@ def create_invite_codes(count=5, token_grant=1000000):
                 code=code,
                 token_grant=token_grant,
                 status='active',
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 expires_at=None,  # 不过期
-                note=f"批量生成 - {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}"
+                note=f"批量生成 - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}"
             )
             
             session.add(invite_code)

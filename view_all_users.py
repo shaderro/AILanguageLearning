@@ -17,6 +17,16 @@ if sys.platform == 'win32':
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# 必须在导入 database_system 之前加载 .env，否则 DATABASE_URL 无法被读取
+try:
+    from dotenv import load_dotenv
+    from pathlib import Path
+    env_path = Path(__file__).resolve().parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass
+
 from database_system.database_manager import DatabaseManager
 from database_system.business_logic.models import User
 
