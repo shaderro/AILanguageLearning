@@ -8,13 +8,12 @@ import { authService } from '../services/authService'
 import { useTranslate } from '../../../i18n/useTranslate'
 import { BaseModal, BaseInput, BaseButton, BaseBadge } from '../../../components/base'
 
-const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms, onStartOnboarding }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [registeredEmail, setRegisteredEmail] = useState(null) // 🔧 改为存储 email
   const [emailUnique, setEmailUnique] = useState(null) // null: 未检查, true: 唯一, false: 不唯一
   const [emailCheckMessage, setEmailCheckMessage] = useState('')
   const [isCheckingEmail, setIsCheckingEmail] = useState(false)
@@ -95,9 +94,20 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
       
       if (result.success) {
         console.log('✅ [Register] Registration successful')
-        
-        // 🔧 显示成功页面（显示邮箱而非 user_id）
-        setRegisteredEmail(result.email || email)
+
+        // 清空表单
+        setEmail('')
+        setPassword('')
+        setConfirmPassword('')
+        setEmailUnique(null)
+        setEmailCheckMessage('')
+
+        // 直接进入首次使用流程（选择语言页面）
+        if (onStartOnboarding) {
+          onStartOnboarding()
+        } else {
+          onClose()
+        }
       } else {
         setError(result.error)
       }
@@ -109,55 +119,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onOpenPPTerms }) => {
     }
   }
 
-  const handleCloseSuccess = () => {
-    // 关闭成功页面
-    setRegisteredEmail(null)
-    setEmail('')
-    setPassword('')
-    setConfirmPassword('')
-    setEmailUnique(null)
-    setEmailCheckMessage('')
-    onClose()
-    
-    // 可选：由于已经自动保存了 token，可以直接通知父组件更新登录状态
-    // 这样用户注册后就直接处于登录状态，无需再次登录
-  }
-
   if (!isOpen) return null
-
-  if (registeredEmail) {
-    return (
-      <BaseModal
-        isOpen={isOpen}
-        onClose={handleCloseSuccess}
-        title={t('注册成功！')}
-        subtitle={t('您的账号已创建')}
-        size="sm"
-        closeOnOverlay={false}
-        closeOnEscape={false}
-      >
-        <div className="space-y-6">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <p className="text-sm text-gray-600">{t('您可以使用以下邮箱登录')}</p>
-            <BaseBadge variant="primary" size="lg">
-              {registeredEmail}
-            </BaseBadge>
-          </div>
-
-          <div className="flex flex-col space-y-3">
-            <BaseButton onClick={handleCloseSuccess} fullWidth>
-              {t('开始使用')}
-            </BaseButton>
-          </div>
-        </div>
-      </BaseModal>
-    )
-  }
 
   return (
     <BaseModal

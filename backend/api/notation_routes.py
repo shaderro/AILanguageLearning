@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 # 导入统一管理器
 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
-from database_system.database_manager import DatabaseManager
+from database_system.database_manager import get_database_manager
 from backend.api.auth_routes import get_current_user
 from database_system.business_logic.models import User
 
@@ -25,7 +25,8 @@ def get_db_session():
     except ImportError:
         import os
         environment = os.getenv("ENV", "development")
-    db_manager = DatabaseManager(environment)
+    # 使用按环境缓存的 DatabaseManager 单例
+    db_manager = get_database_manager(environment)
     session = db_manager.get_session()
     try:
         yield session

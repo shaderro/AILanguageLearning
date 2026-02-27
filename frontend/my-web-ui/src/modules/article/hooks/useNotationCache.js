@@ -501,6 +501,7 @@ export function useNotationCache(articleId) {
       }
       
       const newList = [...prev, notation]
+      grammarNotationsRef.current = newList
       console.log('✅ [useNotationCache] Grammar notation 添加成功:', {
         prevCount: prev.length,
         newCount: newList.length,
@@ -579,6 +580,7 @@ export function useNotationCache(articleId) {
       }
       
       const newList = [...prev, notation]
+      vocabNotationsRef.current = newList
       console.log('✅ [useNotationCache] Vocab notation 添加成功:', {
         prevCount: prev.length,
         newCount: newList.length,

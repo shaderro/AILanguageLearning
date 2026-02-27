@@ -167,27 +167,25 @@ export default function SentenceContainer({
   }, [sentence])
   
   const targetLang = useMemo(() => {
-    // 🔧 优先使用 UI 语言设置（用户设置的界面语言）
-    // 如果 UI 语言为英语，自动翻译的目标语言也应该是英语
-    if (uiLanguage === 'en') {
-      // 如果源语言也是英语，则翻译成中文
+    // 🔧 统一逻辑：自动翻译目标语言始终跟随 UI 语言
+    // UiLanguageContext 目前只支持 'zh' | 'en'，这里统一映射为 'zh' 或 'en'
+    const uiLangCode = uiLanguage === 'en' ? 'en' : 'zh'
+
+    // 如果源语言缺失，直接使用 UI 语言代码
+    if (!sourceLang) {
+      return uiLangCode
+    }
+
+    // 如果 UI 语言和源语言相同，则翻译成另一种主要语言
+    // - 源为英文 → 译成中文
+    // - 源为中文 → 译成英文
+    // - 其他源语言（如德语）→ 始终译成 UI 语言
+    if (uiLangCode === sourceLang) {
       return sourceLang === 'en' ? 'zh' : 'en'
     }
-    
-    // 如果 UI 语言为中文，使用原来的逻辑（基于学习语言或系统语言）
-    const globalLang = languageNameToCode(selectedLanguage)
-    const preferredLang = globalLang || getSystemLanguage()
-    
-    if (preferredLang === sourceLang) {
-      const systemLang = getSystemLanguage()
-      if (systemLang !== sourceLang) {
-        return systemLang
-      } else {
-        return sourceLang === 'en' ? 'zh' : 'en'
-      }
-    }
-    return preferredLang
-  }, [uiLanguage, selectedLanguage, sourceLang])
+
+    return uiLangCode
+  }, [uiLanguage, sourceLang])
   
   // 获取句子完整文本
   const sentenceText = useMemo(() => {

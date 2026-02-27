@@ -125,7 +125,7 @@ export const authService = {
   /**
    * 获取当前用户信息
    * @param {string} token - JWT token
-   * @returns {Promise<{user_id: number, email: string, created_at: string}>}
+   * @returns {Promise<{user_id: number, email: string, created_at: string, ui_language?: string, content_language?: string, languages_list?: string[]}>}
    */
   getCurrentUser: async (token) => {
     const response = await authApi.get('/api/auth/me', {
@@ -133,6 +133,15 @@ export const authService = {
         Authorization: `Bearer ${token}`,
       },
     })
+    return response.data
+  },
+
+  /**
+   * 更新当前用户的语言偏好（UI 语言、内容语言、已添加语言列表）
+   * @param {{ ui_language?: string, content_language?: string, languages_list?: string[] }} preferences
+   */
+  updatePreferences: async (preferences) => {
+    const response = await authApi.patch('/api/auth/preferences', preferences)
     return response.data
   },
 

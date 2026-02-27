@@ -2,10 +2,10 @@
  * 个人中心页面
  * 包含账号信息、设置、安全与隐私等
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { authService } from '../services/authService'
 import { useUser } from '../../../contexts/UserContext'
-import { useLanguage } from '../../../contexts/LanguageContext'
+import { useLanguage, languageNameToCode } from '../../../contexts/LanguageContext'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import ChangePasswordModal from './ChangePasswordModal'
 
@@ -100,6 +100,13 @@ const profileTexts = {
 
 import { convertTokensToPoints } from '../../../utils/tokenUtils'
 
+const ALL_LANGUAGES = ['中文', '英文', '德文']
+
+const getLanguageStorageKey = (userId) => {
+  const id = userId || 'guest'
+  return `content_languages_chosen_${id}`
+}
+
 const ProfilePage = ({ onClose, onLogout }) => {
   const { userId, email, token } = useUser() // 🔧 添加 email
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
@@ -111,7 +118,97 @@ const ProfilePage = ({ onClose, onLogout }) => {
   const [isRedeeming, setIsRedeeming] = useState(false)
   const [redeemMessage, setRedeemMessage] = useState('')
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+  const syncTimeoutRef = useRef(null)
+  const lastPayloadRef = useRef(null)
+  const [chosenLanguages, setChosenLanguages] = useState(() => {
+    const initial = selectedLanguage ? [selectedLanguage] : ['德文']
+    if (typeof window === 'undefined') {
+      return initial
+    }
+    try {
+      const key = getLanguageStorageKey(userId)
+      let raw = window.localStorage.getItem(key)
+      // 向后兼容旧的全局键
+      if (!raw) {
+        raw = window.localStorage.getItem('content_languages_chosen')
+      }
+      if (!raw) return initial
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return initial
+      const valid = parsed.filter((lang) => ALL_LANGUAGES.includes(lang))
+      return Array.from(new Set([...initial, ...valid]))
+    } catch {
+      return initial
+    }
+  })
   const t = profileTexts[uiLanguage] || profileTexts.zh
+
+  // 持久化已选择语言列表（按用户维度）
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const key = getLanguageStorageKey(userId)
+      window.localStorage.setItem(key, JSON.stringify(chosenLanguages))
+    } catch {
+      // ignore
+    }
+  }, [chosenLanguages, userId])
+
+  // 同步语言偏好到后端（UI 语言 + 内容语言 + 已添加列表）
+  useEffect(() => {
+    if (!token || !userId) return
+
+    const languagesCodes = chosenLanguages.map((name) => languageNameToCode(name))
+    const currentCode = selectedLanguage ? languageNameToCode(selectedLanguage) : null
+    const payload = {
+      ui_language: uiLanguage,
+      content_language: currentCode,
+      languages_list: languagesCodes,
+    }
+
+    const canonical = JSON.stringify(payload)
+
+    // 如果与上次成功同步的内容一致，则不再发送
+    if (lastPayloadRef.current && lastPayloadRef.current === canonical) {
+      return
+    }
+
+    // 节流：清除上一个未触发的定时器
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current)
+    }
+
+    syncTimeoutRef.current = setTimeout(async () => {
+      try {
+        await authService.updatePreferences(payload)
+        lastPayloadRef.current = canonical
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem(`prefs_dirty_${userId}`)
+          } catch {
+            // ignore
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [ProfilePage] 同步语言偏好到后端失败:', e)
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`prefs_dirty_${userId}`, '1')
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }, 500)
+
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current)
+        syncTimeoutRef.current = null
+      }
+    }
+  }, [chosenLanguages, selectedLanguage, uiLanguage, token, userId])
 
   // 获取用户信息
   useEffect(() => {
@@ -167,6 +264,23 @@ const ProfilePage = ({ onClose, onLogout }) => {
     } finally {
       setIsRedeeming(false)
     }
+  }
+
+  const getLanguageLabel = (lang) => {
+    if (uiLanguage === 'en') {
+      if (lang === '中文') return 'Chinese'
+      if (lang === '英文') return 'English'
+      if (lang === '德文') return 'German'
+    }
+    return lang
+  }
+
+  const handleSelectLanguage = (lang) => {
+    setSelectedLanguage(lang)
+    if (!chosenLanguages.includes(lang)) {
+      setChosenLanguages((prev) => [...prev, lang])
+    }
+    setShowLanguageMenu(false)
   }
 
   if (isLoading) {
@@ -276,15 +390,60 @@ const ProfilePage = ({ onClose, onLogout }) => {
                   <label className="text-sm font-medium text-gray-500">{t.dataLanguageLabel}</label>
                   <p className="text-xs text-gray-400 mt-1">{t.dataLanguageDesc}</p>
                 </div>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="中文">{uiLanguage === 'en' ? 'Chinese' : '中文'}</option>
-                  <option value="英文">{uiLanguage === 'en' ? 'English' : '英文'}</option>
-                  <option value="德文">{uiLanguage === 'en' ? 'German' : '德文'}</option>
-                </select>
+                <div className="flex items-center gap-2">
+                  {/* 已选择语言列表 */}
+                  <div className="flex items-center gap-2">
+                    {chosenLanguages.map((lang) => {
+                      const isActive = lang === selectedLanguage
+                      return (
+                        <button
+                          key={lang}
+                          type="button"
+                          onClick={() => handleSelectLanguage(lang)}
+                          className={[
+                            'px-3 py-1 rounded-full text-xs font-medium border transition-colors',
+                            isActive
+                              ? 'bg-green-100 text-green-800 border-green-300'
+                              : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200',
+                          ].join(' ')}
+                        >
+                          {getLanguageLabel(lang)}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* 添加其它语言 */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowLanguageMenu((prev) => !prev)}
+                      className="w-8 h-8 inline-flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 text-lg leading-none"
+                    >
+                      +
+                    </button>
+                    {showLanguageMenu && (
+                      <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                        {ALL_LANGUAGES.filter((lang) => !chosenLanguages.includes(lang)).length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-gray-400 text-center">
+                            {uiLanguage === 'en' ? 'All added' : '已添加全部语言'}
+                          </div>
+                        ) : (
+                          ALL_LANGUAGES.filter((lang) => !chosenLanguages.includes(lang)).map((lang) => (
+                            <button
+                              key={lang}
+                              type="button"
+                              onClick={() => handleSelectLanguage(lang)}
+                              className="w-full px-3 py-2 text-left text-xs hover:bg-gray-50"
+                            >
+                              {getLanguageLabel(lang)}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Notifications */}

@@ -357,5 +357,7 @@
   "自动翻译": "Auto Translate",
   "朗读": "Read Aloud",
   "停止朗读": "Stop Reading",
-  "没有可朗读的内容": "No readable content"
+  "没有可朗读的内容": "No readable content",
+  "添加": "Add",
+  "已添加全部语言": "All languages added"
 }

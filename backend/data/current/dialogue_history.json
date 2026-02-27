@@ -414,7 +414,273 @@
               }
             ]
           },
-          "timestamp": "2026-02-19T17:46:35.083937",
+          "timestamp": "2026-02-23T23:15:31.096178",
+          "data_type": "new"
+        }
+      ],
+      "max_turns": 100
+    },
+    "1768294825": {
+      "text_title": "Text 1768294825",
+      "current_summary": "用户主要就德语和英语句子的词汇含义、语法结构及词根词缀进行提问。\n\n**德语部分：**\n*   **词汇含义：** 询问了多个德语单词和短语的意思，如“Andernfalls”、“Massendemonstrationen”、“galoppierende”、“Devisenkurse”、“Bewegung”、“regierungskritische”、“übergriffen”、“Wirtschaftshof”、“Gestüt”、“betrieben”、“zudem”、“eigenständiger”、“",
+      "messages": [
+        {
+          "user": "这句话的语法结构是什么？",
+          "ai": "这句话的语法结构是：'Nach buddhistischem Verständnis'（根据佛教的理解）是介词短语作状语，'ist'（是）是系动词，'er'（他）是主语，'jedoch'（然而）是副词作插入语，'nicht der einzig mögliche Buddha'（不是唯一可能的佛）是表语，其中包含否定词'nicht'和带定冠词'der'的形容词短语'einzige mögliche Buddha'。",
+          "sentence_id": 3,
+          "quote": {
+            "text_id": 1768294825,
+            "sentence_id": 3,
+            "sentence_body": "Nach buddhistischem Verständnis ist er jedoch nicht der einzig mögliche Buddha.",
+            "grammar_annotations": [],
+            "vocab_annotations": [],
+            "sentence_difficulty_level": null,
+            "tokens": [
+              {
+                "token_body": "Nach",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 1,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 2,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "buddhistischem",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 3,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 4,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Verständnis",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 5,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 6,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "ist",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 7,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 8,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "er",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 9,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 10,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "jedoch",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 11,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 12,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "nicht",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 13,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 14,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "der",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 15,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 16,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "einzig",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 17,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 18,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "mögliche",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 19,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": " ",
+                "token_type": "space",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 20,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": "Buddha",
+                "token_type": "text",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 21,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              },
+              {
+                "token_body": ".",
+                "token_type": "punctuation",
+                "difficulty_level": null,
+                "global_token_id": null,
+                "sentence_token_id": 22,
+                "pos_tag": null,
+                "lemma": null,
+                "is_grammar_marker": null,
+                "linked_vocab_id": null
+              }
+            ]
+          },
+          "timestamp": "2026-02-23T23:15:31.096239",
           "data_type": "new"
         }
       ],

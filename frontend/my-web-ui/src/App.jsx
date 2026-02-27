@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
@@ -15,16 +15,20 @@ import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
-import { UiLanguageProvider } from './contexts/UiLanguageContext'
+import { UiLanguageProvider, useUiLanguage } from './contexts/UiLanguageContext'
+import { authService } from './modules/auth/services/authService'
 import { useUIText } from './i18n/useUIText'
 import UIDemoPage from './pages/UIDemo'
 import LandingPage from './pages/LandingPage'
+import OnboardingLanguage from './pages/OnboardingLanguage'
+import OnboardingReadingIntro from './pages/OnboardingReadingIntro'
 import PrivacyPolicyAndTerms from './pages/PrivacyPolicyAndTerms'
 import { colors } from './design-tokens'
 
 function AppContent() {
   const queryClient = useQueryClient()
   const t = useUIText()
+  const { uiLanguage, setUiLanguage } = useUiLanguage()
   
   // 🔧 检查是否在重置密码页面
   const isResetPasswordPage = window.location.pathname === '/reset-password'
@@ -109,6 +113,8 @@ function AppContent() {
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false)
   const [showProfilePage, setShowProfilePage] = useState(false)
   const [showPPTermsPage, setShowPPTermsPage] = useState(false)
+  const [showHeaderLanguageMenu, setShowHeaderLanguageMenu] = useState(false)
+  const [showHeaderAddLanguages, setShowHeaderAddLanguages] = useState(false)
   
   // 从 UserContext 获取用户信息和方法
   const { 
@@ -126,6 +132,88 @@ function AppContent() {
   
   // 从 LanguageContext 获取语言选择
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
+  const ALL_LANGUAGES = ['中文', '英文', '德文']
+
+  const getHeaderLanguageStorageKey = () => {
+    const id = currentUserId || 'guest'
+    return `content_languages_chosen_${id}`
+  }
+
+  const resolveHeaderLanguages = () => {
+    const fallback = selectedLanguage ? [selectedLanguage] : ['德文']
+    if (typeof window === 'undefined') {
+      return fallback
+    }
+    try {
+      const key = getHeaderLanguageStorageKey()
+      let raw = window.localStorage.getItem(key)
+      // 向后兼容旧的全局键
+      if (!raw) {
+        raw = window.localStorage.getItem('content_languages_chosen')
+      }
+      if (!raw) return fallback
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return fallback
+      const valid = parsed.filter((lang) => ALL_LANGUAGES.includes(lang))
+      return Array.from(new Set([...valid, ...fallback]))
+    } catch {
+      return fallback
+    }
+  }
+
+  const headerLanguages = resolveHeaderLanguages()
+
+  // 登录后从后端偏好初始化 UI 语言和内容语言（跨设备）
+  useEffect(() => {
+    const initFromPreferences = async () => {
+      if (!isAuthenticated || !currentUserId) return
+      try {
+        const { token } = authService.getAuth()
+        if (!token) return
+        const info = await authService.getCurrentUser(token)
+
+        // UI 语言
+        if (info.ui_language) {
+          setUiLanguage(info.ui_language)
+        }
+
+        // 内容语言：使用 codes -> 中文名称
+        const codeToName = {
+          zh: '中文',
+          en: '英文',
+          de: '德文',
+        }
+
+        if (info.content_language && codeToName[info.content_language]) {
+          setSelectedLanguage(codeToName[info.content_language])
+        } else if (Array.isArray(info.languages_list) && info.languages_list.length > 0) {
+          const first = info.languages_list[0]
+          if (codeToName[first]) {
+            setSelectedLanguage(codeToName[first])
+          }
+        }
+
+        // 同步 per-user 本地 languages_list 缓存
+        if (Array.isArray(info.languages_list) && info.languages_list.length > 0 && typeof window !== 'undefined') {
+          const names = info.languages_list
+            .map((code) => codeToName[code])
+            .filter(Boolean)
+          if (names.length > 0) {
+            const key = getHeaderLanguageStorageKey()
+            try {
+              window.localStorage.setItem(key, JSON.stringify(names))
+            } catch {
+              // ignore
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [App] 初始化用户语言偏好失败:', e)
+      }
+    }
+
+    initFromPreferences()
+  }, [isAuthenticated, currentUserId])
 
   // 处理登出 - 使用 UserContext
   const handleLogout = () => {
@@ -215,32 +303,125 @@ function AppContent() {
               </div>
             </div>
 
-            {/* 右侧：语言切换和登录/用户信息 */}
+            {/* 右侧：语言显示和登录/用户信息 */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* 语言切换下拉选项 - 全局显示 */}
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                <label htmlFor="language-select" className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
-                  {t('正在学习')}
-                </label>
-                <select
-                  id="language-select"
-                  value={!isAuthenticated || !selectedLanguage ? '' : selectedLanguage}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setSelectedLanguage(e.target.value)
+              {/* “正在学习”只在已登录时显示 */}
+              {isAuthenticated && (
+                <div className="relative flex items-center space-x-1 sm:space-x-2">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
+                    {t('正在学习')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowHeaderLanguageMenu((prev) => {
+                        const next = !prev
+                        if (!next) {
+                          setShowHeaderAddLanguages(false)
+                        }
+                        return next
+                      })
                     }
-                  }}
-                  className="px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white text-gray-900"
-                  style={{ '--tw-ring-color': colors.primary[300] }}
-                >
-                  {(!isAuthenticated || !selectedLanguage) && (
-                    <option value="" disabled hidden>{t('请选择')}</option>
+                    className="inline-flex items-center px-2 py-1.5 sm:px-3 border border-gray-300 rounded-md text-xs sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent"
+                    style={{ '--tw-ring-color': colors.primary[300] }}
+                  >
+                    <span className="mr-1">
+                      {selectedLanguage || t('请选择')}
+                    </span>
+                    <svg
+                      className="w-3 h-3 text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showHeaderLanguageMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                      {/* 已添加的语言列表（可直接切换） */}
+                      {headerLanguages.map((lang) => {
+                        const isActiveLang = lang === selectedLanguage
+                        return (
+                          <button
+                            key={lang}
+                            type="button"
+                            onClick={() => {
+                              setSelectedLanguage(lang)
+                              setShowHeaderLanguageMenu(false)
+                              setShowHeaderAddLanguages(false)
+                            }}
+                            className={[
+                              'w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm',
+                              isActiveLang ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50',
+                            ].join(' ')}
+                          >
+                            <span>{lang}</span>
+                            {isActiveLang && (
+                              <svg
+                                className="w-4 h-4 text-green-600"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        )
+                      })}
+                      <div className="my-1 border-t border-gray-100" />
+                      {/* 添加新语言：在此处展开可选语言 */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowHeaderAddLanguages((prev) => !prev)
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <span>{t('添加')}</span>
+                        <span className="text-lg leading-none">+</span>
+                      </button>
+                      {showHeaderAddLanguages && (
+                        <div className="border-t border-gray-100">
+                          {ALL_LANGUAGES.filter((lang) => !headerLanguages.includes(lang)).length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-gray-400 text-center">
+                              {t('已添加全部语言') || '已添加全部语言'}
+                            </div>
+                          ) : (
+                            ALL_LANGUAGES.filter((lang) => !headerLanguages.includes(lang)).map((lang) => (
+                              <button
+                                key={lang}
+                                type="button"
+                                onClick={() => {
+                                  const updated = Array.from(new Set([...headerLanguages, lang]))
+                                  if (typeof window !== 'undefined') {
+                                    try {
+                                      const key = getHeaderLanguageStorageKey()
+                                      window.localStorage.setItem(
+                                        key,
+                                        JSON.stringify(updated),
+                                      )
+                                    } catch {
+                                      // ignore
+                                    }
+                                  }
+                                  setSelectedLanguage(lang)
+                                  setShowHeaderLanguageMenu(false)
+                                  setShowHeaderAddLanguages(false)
+                                }}
+                                className="w-full px-3 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                {lang}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <option value="中文">{t('中文')}</option>
-                  <option value="英文">{t('英文')}</option>
-                  <option value="德文">{t('德文')}</option>
-                </select>
-              </div>
+                </div>
+              )}
               
               {isAuthenticated ? (
                 <>
@@ -292,6 +473,12 @@ function AppContent() {
           setShowRegisterModal(false)
           setShowPPTermsPage(true)
         }}
+        onStartOnboarding={() => {
+          setShowRegisterModal(false)
+          setIsUploadMode(false)
+          setSelectedArticleId(null)
+          setCurrentPage('onboardingLanguage')
+        }}
       />
 
       {/* 忘记密码模态框 */}
@@ -330,6 +517,29 @@ function AppContent() {
                 onRegister={() => setShowRegisterModal(true)}
               />
             </div>
+          )}
+
+          {currentPage === 'onboardingLanguage' && (
+            <OnboardingLanguage
+              onContinue={() => {
+                setCurrentPage('onboardingReading')
+              }}
+            />
+          )}
+
+          {currentPage === 'onboardingReading' && (
+            <OnboardingReadingIntro
+              onStartReading={() => {
+                setIsUploadMode(false)
+                setSelectedArticleId(null)
+                setCurrentPage('article')
+              }}
+              onUploadOwn={() => {
+                setIsUploadMode(true)
+                setSelectedArticleId('upload')
+                setCurrentPage('article')
+              }}
+            />
           )}
 
           {currentPage === 'wordDemo' && <WordDemo />}

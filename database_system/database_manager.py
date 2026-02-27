@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from .data_storage.config.config import DATABASE_CONFIG, DB_FILES
 import os
+from functools import lru_cache
 
 class DatabaseManager:
     def __init__(self, environment: str = 'development'):
@@ -72,5 +73,13 @@ class DatabaseManager:
         return self._Session()
 
 
+@lru_cache()
 def get_database_manager(environment: str = 'development') -> DatabaseManager:
-    return DatabaseManager(environment) 
+    """
+    获取按环境缓存的 DatabaseManager 单例
+    
+    说明：
+    - 使用 lru_cache 保证每个 environment 只创建一个 DatabaseManager 实例
+    - 从而复用同一个 SQLAlchemy Engine / 连接池，避免每个请求重复建连接
+    """
+    return DatabaseManager(environment)

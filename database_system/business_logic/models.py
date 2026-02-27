@@ -364,6 +364,12 @@ class User(Base):
     token_balance = Column(BigInteger, nullable=False, default=0)
     # 最近一次 token 变动时间（用于排查和前端展示，可为空）
     token_updated_at = Column(DateTime, nullable=True)
+    # UI 语言偏好（跨设备记忆）：'zh' | 'en' 等
+    ui_language = Column(String(16), nullable=True)
+    # 当前正在学习的内容语言（代码）：'zh' | 'en' | 'de' 等
+    content_language = Column(String(16), nullable=True)
+    # 用户已添加的内容语言列表（JSON 数组，存语言代码）
+    languages_list = Column(JSON, nullable=True)
     
     # 关联关系
     asked_tokens = relationship('AskedToken', backref='user', cascade='all, delete-orphan')

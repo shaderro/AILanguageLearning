@@ -9,8 +9,8 @@ from sqlalchemy import cast, String
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
-# 导入数据库管理器
-from database_system.database_manager import DatabaseManager
+# 导入数据库管理器（按环境缓存单例）
+from database_system.database_manager import get_database_manager
 from database_system.business_logic.models import User, VocabExpression, Sentence
 
 # 导入认证依赖
@@ -47,7 +47,8 @@ def get_db_session():
         import os
         environment = os.getenv("ENV", "development")
     
-    db_manager = DatabaseManager(environment)
+    # 使用按环境缓存的 DatabaseManager 单例，复用同一个 engine/连接池
+    db_manager = get_database_manager(environment)
     session = db_manager.get_session()
     try:
         yield session

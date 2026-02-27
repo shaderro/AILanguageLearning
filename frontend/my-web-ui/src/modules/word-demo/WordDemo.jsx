@@ -398,17 +398,13 @@ function WordDemo() {
               onDontKnow={() => {
                 handleReviewAnswer('unknown')
                 setTimeout(() => {
-                  if (currentReviewIndex + 1 < reviewWords.length) {
-                    handleNextReview()
-                  }
+                  handleNextReview()
                 }, 300)
               }}
               onKnow={() => {
                 handleReviewAnswer('know')
                 setTimeout(() => {
-                  if (currentReviewIndex + 1 < reviewWords.length) {
-                    handleNextReview()
-                  }
+                  handleNextReview()
                 }, 300)
               }}
             />

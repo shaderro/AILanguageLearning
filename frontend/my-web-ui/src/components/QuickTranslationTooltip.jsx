@@ -169,6 +169,7 @@ export default function QuickTranslationTooltip({
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* 单词和翻译 */}
       <div>

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from pydantic import BaseModel, Field
 from typing import Optional
 
-# 导入数据库管理器
-from database_system.database_manager import DatabaseManager
+# 导入数据库管理器（按环境缓存单例）
+from database_system.database_manager import get_database_manager
 from database_system.business_logic.models import User
 
 # 导入认证工具
@@ -36,7 +36,8 @@ def get_db_session():
         import os
         environment = os.getenv("ENV", "development")
     
-    db_manager = DatabaseManager(environment)
+    # 使用按环境缓存的 DatabaseManager 单例，复用同一个 engine/连接池
+    db_manager = get_database_manager(environment)
     session = db_manager.get_session()
     try:
         yield session
@@ -58,7 +59,8 @@ def _get_session_local():
         import os
         environment = os.getenv("ENV", "development")
     
-    db_manager = DatabaseManager(environment)
+    # 复用与 get_db_session 相同的 DatabaseManager 单例 / engine
+    db_manager = get_database_manager(environment)
     engine = db_manager.get_engine()
     SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
     return SessionLocal
@@ -181,6 +183,9 @@ class UserResponse(BaseModel):
     token_balance: Optional[int] = None
     total_tokens_used: Optional[int] = None  # 累计使用的 token 数量
     role: Optional[str] = None  # 用户角色（'admin' | 'user'）
+    ui_language: Optional[str] = None  # 界面语言偏好（如 'zh' / 'en'）
+    content_language: Optional[str] = None  # 当前内容语言代码（如 'zh' / 'en' / 'de'）
+    languages_list: Optional[list[str]] = None  # 已添加的内容语言代码列表
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -200,6 +205,13 @@ class ResetPasswordDirectRequest(BaseModel):
     email: Optional[str] = Field(None, description="邮箱（可选）")
     user_id: Optional[int] = Field(None, description="用户ID（可选）")
     new_password: str = Field(..., min_length=6, description="新密码（至少6位）")
+
+
+class UserPreferencesUpdateRequest(BaseModel):
+    """更新用户语言偏好请求"""
+    ui_language: Optional[str] = Field(None, description="界面语言代码，如 'zh' / 'en'")
+    content_language: Optional[str] = Field(None, description="当前内容语言代码，如 'zh' / 'en' / 'de'")
+    languages_list: Optional[list[str]] = Field(None, description="已添加的内容语言代码列表")
 
 
 # ==================== 路由器 ====================
@@ -416,7 +428,10 @@ async def get_current_user_info(
             created_at=current_user.created_at.isoformat() if current_user.created_at else None,
             token_balance=current_user.token_balance or 0,
             total_tokens_used=total_tokens_used,
-            role=current_user.role or 'user'
+            role=current_user.role or 'user',
+            ui_language=current_user.ui_language or 'zh',
+            content_language=current_user.content_language,
+            languages_list=current_user.languages_list or None,
         )
         elapsed = (time.time() - start_time) * 1000
         print(f"✅ [Auth] /api/auth/me 请求完成，耗时: {elapsed:.2f}ms")
@@ -576,6 +591,51 @@ async def reset_password(
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail=f"重置密码失败: {str(e)}")
+
+
+@router.patch("/preferences")
+async def update_user_preferences(
+    request: UserPreferencesUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_db_session),
+):
+    """
+    更新当前用户的语言偏好（UI 语言、内容语言、已添加语言列表）。
+
+    请求体字段均为可选，只有提供的字段才会被更新。
+    """
+    try:
+        updated = False
+
+        if request.ui_language is not None:
+            current_user.ui_language = request.ui_language
+            updated = True
+
+        if request.content_language is not None:
+            current_user.content_language = request.content_language
+            updated = True
+
+        if request.languages_list is not None:
+            # 简单过滤：仅保留非空字符串
+            cleaned = [code for code in request.languages_list if isinstance(code, str) and code.strip()]
+            current_user.languages_list = cleaned
+            updated = True
+
+        if updated:
+            session.add(current_user)
+            session.commit()
+
+        return {
+            "success": True,
+            "data": {
+                "ui_language": current_user.ui_language,
+                "content_language": current_user.content_language,
+                "languages_list": current_user.languages_list,
+            },
+        }
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"更新偏好失败: {str(e)}")
 
 
 @router.get("/debug/all-users")

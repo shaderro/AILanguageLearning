@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel, Field
 
-# 导入数据库管理器
-from database_system.database_manager import DatabaseManager
+# 导入数据库管理器（按环境缓存单例）
+from database_system.database_manager import get_database_manager
 
 # 导入数据库版本的 UserManager
 from backend.data_managers.user_manager_db import UserManagerDB
@@ -27,7 +27,8 @@ def get_db_session():
     - 失败时自动 rollback
     - 请求结束时自动 close
     """
-    db_manager = DatabaseManager('development')
+    # 始终使用按环境缓存的 DatabaseManager（默认 development）
+    db_manager = get_database_manager('development')
     session = db_manager.get_session()
     try:
         yield session

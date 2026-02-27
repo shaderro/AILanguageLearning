@@ -511,6 +511,8 @@ function ChatView({
   
   // 🔧 修复问题3：防止重复处理 pendingMessage
   const processingPendingMessageRef = useRef(false)
+  // 🔧 防止发送消息/建议问题被重复触发（setState 异步，isProcessing 可能尚未更新）
+  const sendingRef = useRef(false)
   
   // 🔧 处理 pendingMessage（来自 useChatEvent）
   useEffect(() => {
@@ -541,9 +543,11 @@ function ChatView({
       timestamp: pendingMessage.timestamp
     })
     
-    // 🔧 标记为正在处理，防止重复处理
+    // 🔧 标记为正在处理，并立即清除 pending，避免因依赖变化导致 effect 再次用同一 pending 处理
     processingPendingMessageRef.current = true
-    console.log('🔍 [ChatView] 设置 processingPendingMessageRef.current = true')
+    clearPendingMessage()
+    clearPendingContext()
+    console.log('🔍 [ChatView] 设置 processingPendingMessageRef.current = true，已清除 pending')
     
     // 🔧 自动发送消息
     const sendPendingMessage = async () => {
@@ -672,6 +676,34 @@ function ChatView({
         }
         if (response?.vocab_to_add?.length > 0 || response?.created_vocab_notations?.length > 0) {
           refreshVocab()
+        }
+        
+        // 🔧 即时响应中的语法/词汇也显示知识点弹窗（部分用户后端直接返回 created_*_notations，不经过轮询）
+        const immGrammar = response?.created_grammar_notations || []
+        const immVocab = response?.created_vocab_notations || []
+        if (immGrammar.length > 0 || immVocab.length > 0) {
+          const items = []
+          immGrammar.forEach((n) => {
+            const name = n.rule_name || n.name || n.display_name || tUI('语法')
+            items.push({ message: `🆕 ${tUI('语法')}: ${name} ${tUI('知识点已总结并加入列表')}`, key: `imm-g-${n.notation_id || n.grammar_id}` })
+          })
+          immVocab.forEach((n) => {
+            const vocab = n.vocab || n.vocab_body || tUI('词汇')
+            items.push({ message: `🆕 ${tUI('词汇')}: ${vocab} ${tUI('知识点已总结并加入列表')}`, key: `imm-v-${n.notation_id || n.vocab_id}` })
+          })
+          if (items.length > 0) {
+            setToasts(prev => {
+              const baseSlot = prev.length
+              const newToasts = items.map((item, idx) => ({
+                id: Date.now() + idx + Math.random() * 1000,
+                message: item.message,
+                slot: baseSlot + idx
+              }))
+              const updated = [...prev, ...newToasts]
+              window.chatViewToastsRef = updated
+              return updated
+            })
+          }
         }
         
         // 🔧 轮询新知识点（与 handleSendMessage 相同的逻辑）
@@ -993,20 +1025,24 @@ function ChatView({
   
   // 🔧 发送消息
   const handleSendMessage = async () => {
-    // 🔍 诊断日志：追踪函数调用
-    const stackTrace = new Error().stack
-    console.log(`🔍 [ChatView] handleSendMessage 被调用:`, {
-      inputText: inputText?.substring(0, 50),
-      isProcessing,
-      hasPendingMessage: !!pendingMessage,
-      processingPendingMessageRef: processingPendingMessageRef.current,
-      callStack: stackTrace?.split('\n').slice(1, 4).join(' -> ')
-    })
-    
+    // 🔧 同步防重：避免 Enter + 点击或快速双击导致同一条消息发送两次
+    if (sendingRef.current) {
+      console.log(`🔍 [ChatView] handleSendMessage 被跳过: sendingRef 已锁定`)
+      return
+    }
     if (inputText.trim() === '' || isProcessing) {
       console.log(`🔍 [ChatView] handleSendMessage 被跳过: inputText为空或正在处理`)
       return
     }
+    sendingRef.current = true
+    // 🔍 诊断日志：追踪函数调用
+    const stackTrace = new Error().stack
+    console.log(`🔍 [ChatView] handleSendMessage 开始:`, {
+      inputText: inputText?.substring(0, 50),
+      isProcessing,
+      hasPendingMessage: !!pendingMessage,
+      callStack: stackTrace?.split('\n').slice(1, 4).join(' -> ')
+    })
     
     // 🔍 诊断日志：检查是否与 pendingMessage 冲突
     if (pendingMessage && pendingMessage.text === inputText.trim()) {
@@ -1028,12 +1064,13 @@ function ChatView({
       const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
       if (insufficient) {
         console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
-        // 提示信息已在UI中显示（输入框上方的黄色提示框）
+        sendingRef.current = false
         return
       }
     } else if (!isProcessing && tokenInsufficient) {
       // 如果userInfo还未加载，但之前检查过token不足，也阻止
       console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+      sendingRef.current = false
       return
     }
     
@@ -1163,6 +1200,34 @@ function ChatView({
       }
       if (response?.vocab_to_add?.length > 0 || response?.created_vocab_notations?.length > 0) {
         refreshVocab()
+      }
+      
+      // 🔧 即时响应中的语法/词汇也显示知识点弹窗
+      const immGrammar = response?.created_grammar_notations || []
+      const immVocab = response?.created_vocab_notations || []
+      if (immGrammar.length > 0 || immVocab.length > 0) {
+        const items = []
+        immGrammar.forEach((n) => {
+          const name = n.rule_name || n.name || n.display_name || tUI('语法')
+          items.push({ message: `🆕 ${tUI('语法')}: ${name} ${tUI('知识点已总结并加入列表')}`, key: `imm-g-${n.notation_id || n.grammar_id}` })
+        })
+        immVocab.forEach((n) => {
+          const vocab = n.vocab || n.vocab_body || tUI('词汇')
+          items.push({ message: `🆕 ${tUI('词汇')}: ${vocab} ${tUI('知识点已总结并加入列表')}`, key: `imm-v-${n.notation_id || n.vocab_id}` })
+        })
+        if (items.length > 0) {
+          setToasts(prev => {
+            const baseSlot = prev.length
+            const newToasts = items.map((item, idx) => ({
+              id: Date.now() + idx + Math.random() * 1000,
+              message: item.message,
+              slot: baseSlot + idx
+            }))
+            const updated = [...prev, ...newToasts]
+            window.chatViewToastsRef = updated
+            return updated
+          })
+        }
       }
       
       // 🔧 标记 tokens
@@ -1429,27 +1494,35 @@ function ChatView({
       addMessage(errorMsg)
     } finally {
       setIsProcessing(false)
+      sendingRef.current = false
     }
   }
   
   // 🔧 建议问题选择
   const handleSuggestedQuestionSelect = async (question) => {
-    console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被调用: question="${question}", isProcessing=${isProcessing}`)
+    if (sendingRef.current) {
+      console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被跳过: sendingRef 已锁定`)
+      return
+    }
     if (isProcessing) {
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 被跳过: 正在处理中`)
       return
     }
+    sendingRef.current = true
+    console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 开始: question="${question}"`)
     
     // 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
     if (!isProcessing && userInfo) {
       const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
       if (insufficient) {
         console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+        sendingRef.current = false
         return
       }
     } else if (!isProcessing && tokenInsufficient) {
       // 如果userInfo还未加载，但之前检查过token不足，也阻止
       console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+      sendingRef.current = false
       return
     }
     
@@ -1577,6 +1650,34 @@ function ChatView({
       }
       if (response?.vocab_to_add?.length > 0 || response?.created_vocab_notations?.length > 0) {
         refreshVocab()
+      }
+      
+      // 🔧 即时响应中的语法/词汇也显示知识点弹窗
+      const immGrammarSug = response?.created_grammar_notations || []
+      const immVocabSug = response?.created_vocab_notations || []
+      if (immGrammarSug.length > 0 || immVocabSug.length > 0) {
+        const itemsSug = []
+        immGrammarSug.forEach((n) => {
+          const name = n.rule_name || n.name || n.display_name || tUI('语法')
+          itemsSug.push({ message: `🆕 ${tUI('语法')}: ${name} ${tUI('知识点已总结并加入列表')}`, key: `imm-g-${n.notation_id || n.grammar_id}` })
+        })
+        immVocabSug.forEach((n) => {
+          const vocab = n.vocab || n.vocab_body || tUI('词汇')
+          itemsSug.push({ message: `🆕 ${tUI('词汇')}: ${vocab} ${tUI('知识点已总结并加入列表')}`, key: `imm-v-${n.notation_id || n.vocab_id}` })
+        })
+        if (itemsSug.length > 0) {
+          setToasts(prev => {
+            const baseSlot = prev.length
+            const newToasts = itemsSug.map((item, idx) => ({
+              id: Date.now() + idx + Math.random() * 1000,
+              message: item.message,
+              slot: baseSlot + idx
+            }))
+            const updated = [...prev, ...newToasts]
+            window.chatViewToastsRef = updated
+            return updated
+          })
+        }
       }
       
       // 🔧 轮询新知识点（与 handleSendMessage 相同的逻辑）
@@ -1786,6 +1887,7 @@ function ChatView({
       addMessage(errorMsg)
     } finally {
       setIsProcessing(false)
+      sendingRef.current = false
     }
   }
   
@@ -2001,6 +2103,7 @@ function ChatView({
             disabled={disabled || isProcessing || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
           />
           <button
+            type="button"
             onClick={handleSendMessage}
             disabled={inputText.trim() === '' || disabled || isProcessing || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
             className="px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:brightness-95 active:brightness-90"
