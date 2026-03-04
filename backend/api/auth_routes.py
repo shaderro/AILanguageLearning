@@ -429,7 +429,8 @@ async def get_current_user_info(
             token_balance=current_user.token_balance or 0,
             total_tokens_used=total_tokens_used,
             role=current_user.role or 'user',
-            ui_language=current_user.ui_language or 'zh',
+            # 不强制默认 'zh'，交由前端根据 localStorage / 默认值决定
+            ui_language=current_user.ui_language,
             content_language=current_user.content_language,
             languages_list=current_user.languages_list or None,
         )
@@ -623,6 +624,15 @@ async def update_user_preferences(
 
         if updated:
             session.add(current_user)
+            # 先不 commit，与预置文章导入同事务（任一失败则整体回滚）
+            session.flush()
+
+            # onboarding 或设置里「添加语言」时，自动为该用户导入对应语言的预置文章
+            languages_list = current_user.languages_list or []
+            if languages_list:
+                from backend.data_managers.preset_articles import seed_presets_for_user
+                seed_presets_for_user(session, current_user.user_id, languages_list, commit=False)
+
             session.commit()
 
         return {

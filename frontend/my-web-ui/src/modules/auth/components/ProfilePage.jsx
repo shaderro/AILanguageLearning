@@ -128,11 +128,7 @@ const ProfilePage = ({ onClose, onLogout }) => {
     }
     try {
       const key = getLanguageStorageKey(userId)
-      let raw = window.localStorage.getItem(key)
-      // 向后兼容旧的全局键
-      if (!raw) {
-        raw = window.localStorage.getItem('content_languages_chosen')
-      }
+      const raw = window.localStorage.getItem(key)
       if (!raw) return initial
       const parsed = JSON.parse(raw)
       if (!Array.isArray(parsed)) return initial

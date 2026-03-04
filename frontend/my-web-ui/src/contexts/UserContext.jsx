@@ -49,6 +49,7 @@ export function UserProvider({ children }) {
   const [userId, setUserId] = useState(null)
   const [token, setToken] = useState(null)
   const [email, setEmail] = useState(null) // 🔧 添加 email 状态
+  const [userInfo, setUserInfo] = useState(null) // 缓存 /api/auth/me 返回的完整用户信息
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true) // 初始化加载状态
   const [password, setPassword] = useState(null) // 仅用于 debug
@@ -95,6 +96,7 @@ export function UserProvider({ children }) {
           setUserId(parseInt(savedUserId))
           setToken(savedToken)
           setEmail(user.email || null) // 🔧 设置 email
+          setUserInfo(user)
           setIsAuthenticated(true)
           setIsGuest(false)
           isInitializedRef.current = true
@@ -122,6 +124,7 @@ export function UserProvider({ children }) {
             setUserId(parseInt(savedUserId))
             setToken(savedToken)
             setEmail(null) // 🔧 网络错误时无法获取 email，设为 null
+            setUserInfo(null)
             setIsAuthenticated(true)
             setIsGuest(false)
             isInitializedRef.current = true
@@ -275,6 +278,7 @@ export function UserProvider({ children }) {
       setUserId(result.user_id)
       setToken(result.access_token)
       setEmail(userEmail) // 🔧 设置 email
+      setUserInfo(null) // 新注册用户暂时没有 /me 信息，稍后需要时再获取
       setPassword(inputPassword)
       setIsAuthenticated(true)
       setIsGuest(false)  // 不再是游客
@@ -322,6 +326,7 @@ export function UserProvider({ children }) {
     setUserId(guestId)
     setToken(null)
     setEmail(null) // 🔧 清除 email
+    setUserInfo(null)
     setPassword(null)
     setIsAuthenticated(false)
     setIsGuest(true)
@@ -331,6 +336,7 @@ export function UserProvider({ children }) {
     userId,
     email, // 🔧 添加 email
     token,
+    userInfo, // 完整的 /me 信息（如果已加载）
     password, // 仅用于 debug
     isAuthenticated,
     isGuest,  // 是否为游客模式

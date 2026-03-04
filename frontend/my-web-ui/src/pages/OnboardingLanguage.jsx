@@ -43,9 +43,11 @@ const OnboardingLanguage = ({ onContinue }) => {
   )
 
   const [selectedCode, setSelectedCode] = useState(initialCode)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleContinue = () => {
-    if (!selectedCode) return
+  const handleContinue = async () => {
+    if (!selectedCode || isSubmitting) return
+    setIsSubmitting(true)
     const languageName = LANGUAGE_CODE_TO_NAME[selectedCode] || LANGUAGE_CODE_TO_NAME.de
     setSelectedLanguage(languageName)
     // 首次选择内容语言时，同步到后端偏好（仅在已登录且有 token 时）
@@ -60,7 +62,11 @@ const OnboardingLanguage = ({ onContinue }) => {
         console.warn('⚠️ [OnboardingLanguage] 同步语言偏好失败:', e)
       }
     }
-    syncPreferences()
+    try {
+      await syncPreferences()
+    } finally {
+      setIsSubmitting(false)
+    }
     if (onContinue) {
       onContinue(selectedCode)
     }
@@ -154,7 +160,7 @@ const OnboardingLanguage = ({ onContinue }) => {
           <button
             type="button"
             onClick={handleContinue}
-            disabled={!selectedCode}
+            disabled={!selectedCode || isSubmitting}
             className="w-full inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm sm:text-base font-medium text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             style={{
               backgroundColor: colors.primary[500],
@@ -168,7 +174,7 @@ const OnboardingLanguage = ({ onContinue }) => {
               e.currentTarget.style.backgroundColor = colors.primary[500]
             }}
           >
-            {t('继续')} →
+            {isSubmitting ? t('处理中...') : t('继续')} →
           </button>
         </div>
       </div>

@@ -277,6 +277,7 @@ function WordDemo() {
     })
     
     // 使用排序后的列表进行复习（保持时间排序，不随机打乱）
+    console.log('🔁 [WordDemo] 开始词汇复习，总题数:', sortedList.length)
     setReviewWords(sortedList)
     setCurrentReviewIndex(0)
     setReviewResults([])
@@ -292,6 +293,12 @@ function WordDemo() {
   const handleReviewAnswer = async (choice) => {
     const currentWord = reviewWords[currentReviewIndex]
     setReviewResults((prev) => [...prev, { item: currentWord, choice }])
+    console.log('📝 [WordDemo] 记录复习答案:', {
+      vocab_id: currentWord?.vocab_id,
+      choice,
+      currentIndex: currentReviewIndex,
+      totalWords: reviewWords.length,
+    })
     
     // 如果用户选择"认识"，更新learn_status为mastered
     if (choice === 'know' && currentWord.vocab_id) {
@@ -311,6 +318,11 @@ function WordDemo() {
   }
 
   const handleNextReview = () => {
+    console.log('➡️ [WordDemo] 请求下一题:', {
+      currentIndex: currentReviewIndex,
+      totalWords: reviewWords.length,
+      resultsCount: reviewResults.length,
+    })
     // 🔧 防止连续快速点击导致的卡顿
     if (currentReviewIndex < reviewWords.length - 1) {
       setCurrentReviewIndex((prev) => {
@@ -321,6 +333,7 @@ function WordDemo() {
     } else {
       // 显示结果页：保持复习模式为真，但将索引推进到长度以触发结果视图
       setCurrentReviewIndex(reviewWords.length)
+      console.log('✅ [WordDemo] 已到最后一题，推进到结算页索引:', reviewWords.length)
     }
   }
 
@@ -379,7 +392,25 @@ function WordDemo() {
 
   // 复习模式
   if (isReviewMode) {
-    if (currentReviewIndex < reviewWords.length) {
+    const isReviewComplete =
+      reviewWords.length > 0 && reviewResults.length >= reviewWords.length
+
+    console.log('🔍 [WordDemo] 渲染复习模式:', {
+      currentIndex: currentReviewIndex,
+      totalWords: reviewWords.length,
+      resultsCount: reviewResults.length,
+      isReviewComplete,
+    })
+
+    if (isReviewComplete && currentReviewIndex < reviewWords.length) {
+      console.warn('⚠️ [WordDemo] 复习结果已完成但索引未推进到末尾，强制显示结算页', {
+        currentIndex: currentReviewIndex,
+        totalWords: reviewWords.length,
+        resultsCount: reviewResults.length,
+      })
+    }
+
+    if (!isReviewComplete && currentReviewIndex < reviewWords.length) {
       const currentVocab = reviewWords[currentReviewIndex]
       // 🔧 优先使用缓存中的完整数据
       const cachedVocab = vocabDetailCache.get(currentVocab.vocab_id)

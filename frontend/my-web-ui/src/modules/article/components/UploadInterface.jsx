@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { apiService } from '../../../services/api'
 import { useUser } from '../../../contexts/UserContext'
+import { useLanguage } from '../../../contexts/LanguageContext'
 import guestDataManager from '../../../utils/guestDataManager'
 import { useUIText } from '../../../i18n/useUIText'
 import { BackButton } from '../../../components/base'
@@ -11,12 +12,12 @@ const MAX_ARTICLE_LENGTH = 5000
 
 const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, onBack }) => {
   const { userId, isGuest } = useUser()
+  const { selectedLanguage } = useLanguage()
   const [dragActive, setDragActive] = useState(false)
   const [uploadMethod, setUploadMethod] = useState(null) // 'url', 'file', 'drop', 'text'
   const [showProgress, setShowProgress] = useState(false)
   const [textContent, setTextContent] = useState('')
   const [textTitle, setTextTitle] = useState('')
-  const [language, setLanguage] = useState('') // 语言：中文、英文、德文
   const [customTitle, setCustomTitle] = useState('') // 自定义文章名（用于URL和文件上传）
   const MAX_TITLE_LENGTH = 80 // 文章标题最大长度（前端限制）
   const [selectedFile, setSelectedFile] = useState(null) // 选中的文件（来自选择或拖拽）
@@ -30,6 +31,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
   // 使用 ref 保存待处理的内容，避免组件重新挂载时丢失
   const pendingContentRef = useRef(null)
   const t = useUIText()
+  const language = selectedLanguage || '德文' // 上传文章语言：默认使用当前正在学习的语言
   
   // 调试：监听对话框状态变化
   useEffect(() => {
@@ -113,13 +115,6 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
     setShowLengthDialog(false)
     
     try {
-      // 检查语言是否已选择
-      if (!language) {
-        alert(t('请选择文章语言'))
-        setPendingContent(null)
-        return
-      }
-      
       setShowProgress(true)
       onUploadStart && onUploadStart()
       
@@ -227,12 +222,6 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
     }
 
     try {
-      // 检查语言是否已选择
-      if (!language) {
-        alert(t('请选择文章语言'))
-        return
-      }
-
       const baseTitle = file.name.replace(/\.[^/.]+$/, '')
 
       // 仅对纯文本文件在前端预检查长度；PDF 让后端提取后再检查
@@ -410,10 +399,6 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       alert(t('请先选择文件或拖拽上传文件'))
       return
     }
-    if (!language) {
-      alert(t('请先选择上传文章的语言'))
-      return
-    }
     await startFileUpload(selectedFile, selectedFileSource || 'file')
   }
 
@@ -433,12 +418,6 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       }
       
       try {
-        // 检查语言是否已选择
-        if (!language) {
-          alert(t('请选择文章语言'))
-          return
-        }
-        
         console.log('🚀 [Frontend] 发送URL处理请求...')
         setShowProgress(true)
         onUploadStart && onUploadStart()
@@ -712,25 +691,6 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-semibold text-gray-800">{t('上传新文章')}</h2>
         </div>
       
-      {/* Language Selection - 在所有上传方式上方 */}
-      <div className="w-full max-w-md mx-auto mb-4">
-        <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-2">
-          {t('语言')} <span className="text-red-500">＊</span>
-        </label>
-        <select
-          id="language"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          required
-        >
-          <option value="">{t('请选择语言')}</option>
-          <option value="中文">{t('中文')}</option>
-          <option value="英文">{t('英文')}</option>
-          <option value="德文">{t('德文')}</option>
-        </select>
-      </div>
-      
       <div className="flex-1 flex flex-col items-center justify-center space-y-8">
         {/* Upload URL */}
         <div className="w-full max-w-md">
@@ -753,8 +713,6 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             />
             <button
               type="submit"
-              disabled={!language}
-              title={!language ? t('请先选择上传文章的语言') : ''}
               className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('从网址上传')}

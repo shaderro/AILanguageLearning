@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
@@ -14,7 +14,7 @@ import ProfilePage from './modules/auth/components/ProfilePage'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
-import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
+import { LanguageProvider, useLanguage, languageNameToCode } from './contexts/LanguageContext'
 import { UiLanguageProvider, useUiLanguage } from './contexts/UiLanguageContext'
 import { authService } from './modules/auth/services/authService'
 import { useUIText } from './i18n/useUIText'
@@ -115,6 +115,7 @@ function AppContent() {
   const [showPPTermsPage, setShowPPTermsPage] = useState(false)
   const [showHeaderLanguageMenu, setShowHeaderLanguageMenu] = useState(false)
   const [showHeaderAddLanguages, setShowHeaderAddLanguages] = useState(false)
+  const headerLanguageRef = useRef(null)
   
   // 从 UserContext 获取用户信息和方法
   const { 
@@ -122,6 +123,7 @@ function AppContent() {
     email: currentUserEmail, // 🔧 添加 email
     password: currentUserPassword,
     isAuthenticated,
+    userInfo,
     login,
     register,
     logout,
@@ -146,11 +148,7 @@ function AppContent() {
     }
     try {
       const key = getHeaderLanguageStorageKey()
-      let raw = window.localStorage.getItem(key)
-      // 向后兼容旧的全局键
-      if (!raw) {
-        raw = window.localStorage.getItem('content_languages_chosen')
-      }
+      const raw = window.localStorage.getItem(key)
       if (!raw) return fallback
       const parsed = JSON.parse(raw)
       if (!Array.isArray(parsed)) return fallback
@@ -163,57 +161,70 @@ function AppContent() {
 
   const headerLanguages = resolveHeaderLanguages()
 
-  // 登录后从后端偏好初始化 UI 语言和内容语言（跨设备）
+  // 点击窗口其它位置时，自动关闭“正在学习”下拉
   useEffect(() => {
-    const initFromPreferences = async () => {
-      if (!isAuthenticated || !currentUserId) return
-      try {
-        const { token } = authService.getAuth()
-        if (!token) return
-        const info = await authService.getCurrentUser(token)
-
-        // UI 语言
-        if (info.ui_language) {
-          setUiLanguage(info.ui_language)
-        }
-
-        // 内容语言：使用 codes -> 中文名称
-        const codeToName = {
-          zh: '中文',
-          en: '英文',
-          de: '德文',
-        }
-
-        if (info.content_language && codeToName[info.content_language]) {
-          setSelectedLanguage(codeToName[info.content_language])
-        } else if (Array.isArray(info.languages_list) && info.languages_list.length > 0) {
-          const first = info.languages_list[0]
-          if (codeToName[first]) {
-            setSelectedLanguage(codeToName[first])
-          }
-        }
-
-        // 同步 per-user 本地 languages_list 缓存
-        if (Array.isArray(info.languages_list) && info.languages_list.length > 0 && typeof window !== 'undefined') {
-          const names = info.languages_list
-            .map((code) => codeToName[code])
-            .filter(Boolean)
-          if (names.length > 0) {
-            const key = getHeaderLanguageStorageKey()
-            try {
-              window.localStorage.setItem(key, JSON.stringify(names))
-            } catch {
-              // ignore
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('⚠️ [App] 初始化用户语言偏好失败:', e)
+    if (!showHeaderLanguageMenu) return
+    const handleClickOutside = (event) => {
+      if (!headerLanguageRef.current) return
+      if (!headerLanguageRef.current.contains(event.target)) {
+        setShowHeaderLanguageMenu(false)
+        setShowHeaderAddLanguages(false)
       }
     }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showHeaderLanguageMenu])
 
-    initFromPreferences()
-  }, [isAuthenticated, currentUserId])
+  // 登录后从全局 userInfo 初始化 UI 语言和内容语言（跨设备）
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId || !userInfo) return
+
+    try {
+      const info = userInfo
+
+      // UI 语言
+      if (info.ui_language) {
+        setUiLanguage(info.ui_language)
+      }
+
+      // 内容语言：使用 codes -> 中文名称
+      const codeToName = {
+        zh: '中文',
+        en: '英文',
+        de: '德文',
+      }
+
+      if (info.content_language && codeToName[info.content_language]) {
+        setSelectedLanguage(codeToName[info.content_language])
+      } else if (Array.isArray(info.languages_list) && info.languages_list.length > 0) {
+        const first = info.languages_list[0]
+        if (codeToName[first]) {
+          setSelectedLanguage(codeToName[first])
+        }
+      }
+
+      // 同步 per-user 本地 languages_list 缓存
+      if (Array.isArray(info.languages_list) && info.languages_list.length > 0 && typeof window !== 'undefined') {
+        const names = info.languages_list
+          .map((code) => codeToName[code])
+          .filter(Boolean)
+        if (names.length > 0) {
+          const key = getHeaderLanguageStorageKey()
+          try {
+            window.localStorage.setItem(key, JSON.stringify(names))
+          } catch {
+            // ignore
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ [App] 初始化用户语言偏好失败:', e)
+    }
+  }, [isAuthenticated, currentUserId, userInfo])
 
   // 处理登出 - 使用 UserContext
   const handleLogout = () => {
@@ -307,7 +318,10 @@ function AppContent() {
             <div className="flex items-center space-x-2 sm:space-x-3">
               {/* “正在学习”只在已登录时显示 */}
               {isAuthenticated && (
-                <div className="relative flex items-center space-x-1 sm:space-x-2">
+                <div
+                  ref={headerLanguageRef}
+                  className="relative flex items-center space-x-1 sm:space-x-2"
+                >
                   <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
                     {t('正在学习')}
                   </span>
@@ -393,7 +407,7 @@ function AppContent() {
                               <button
                                 key={lang}
                                 type="button"
-                                onClick={() => {
+                                onClick={async () => {
                                   const updated = Array.from(new Set([...headerLanguages, lang]))
                                   if (typeof window !== 'undefined') {
                                     try {
@@ -409,6 +423,16 @@ function AppContent() {
                                   setSelectedLanguage(lang)
                                   setShowHeaderLanguageMenu(false)
                                   setShowHeaderAddLanguages(false)
+
+                                  // 同步到后端偏好：将上边栏语言转换为代码列表，触发预置文章导入
+                                  try {
+                                    const languageCodes = updated.map((name) => languageNameToCode(name))
+                                    await authService.updatePreferences({
+                                      languages_list: languageCodes,
+                                    })
+                                  } catch (e) {
+                                    console.warn('⚠️ [App] 同步 header 语言到后端失败:', e)
+                                  }
                                 }}
                                 className="w-full px-3 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
                               >
@@ -529,9 +553,13 @@ function AppContent() {
 
           {currentPage === 'onboardingReading' && (
             <OnboardingReadingIntro
-              onStartReading={() => {
+              onStartReading={(articleId) => {
                 setIsUploadMode(false)
-                setSelectedArticleId(null)
+                if (articleId) {
+                  setSelectedArticleId(articleId)
+                } else {
+                  setSelectedArticleId(null)
+                }
                 setCurrentPage('article')
               }}
               onUploadOwn={() => {

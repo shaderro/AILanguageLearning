@@ -1,101 +1,55 @@
 import { useMemo } from 'react'
-import { useLanguage, languageNameToCode } from '../contexts/LanguageContext'
+import { useLanguage } from '../contexts/LanguageContext'
+import { useUser } from '../contexts/UserContext'
+import { useArticles } from '../hooks/useApi'
 import { useUIText } from '../i18n/useUIText'
 import { BaseBadge } from '../components/base'
 import { colors } from '../design-tokens'
 
-const difficultyMeta = {
-  beginner: {
-    label: '初级',
-    badgeVariant: 'success',
-  },
-  intermediate: {
-    label: '中级',
-    badgeVariant: 'warning',
-  },
-  advanced: {
-    label: '高级',
-    badgeVariant: 'danger',
-  },
-}
-
-const PRESET_ARTICLES = {
-  zh: [
-    {
-      id: 'little-prince',
-      difficulty: 'beginner',
-      title: 'The Little Prince',
-      preview: 'Once when I was six years old I saw a magnificent picture...',
-    },
-    {
-      id: 'climate-change',
-      difficulty: 'intermediate',
-      title: 'Climate Change Today',
-      preview: 'Climate change is one of the most pressing challenges...',
-    },
-    {
-      id: 'quantum-computing',
-      difficulty: 'advanced',
-      title: 'Quantum Computing Explained',
-      preview: 'Quantum computing harnesses the phenomena of quantum mechanics...',
-    },
-  ],
-  en: [
-    {
-      id: 'little-prince-en',
-      difficulty: 'beginner',
-      title: 'Der Kleine Prinz',
-      preview: 'Als ich sechs Jahre alt war, sah ich einmal ein prächtiges Bild...',
-    },
-    {
-      id: 'climate-change-en',
-      difficulty: 'intermediate',
-      title: 'Klimawandel Heute',
-      preview: 'Der Klimawandel ist eine der drängendsten Herausforderungen...',
-    },
-    {
-      id: 'quantum-computing-en',
-      difficulty: 'advanced',
-      title: 'Quantencomputing erklärt',
-      preview: 'Quantencomputer nutzen die Phänomene der Quantenmechanik...',
-    },
-  ],
-  de: [
-    {
-      id: 'little-prince-de',
-      difficulty: 'beginner',
-      title: 'The Little Prince',
-      preview: 'Once when I was six years old I saw a magnificent picture...',
-    },
-    {
-      id: 'climate-change-de',
-      difficulty: 'intermediate',
-      title: 'Climate Change Today',
-      preview: 'Climate change is one of the most pressing challenges...',
-    },
-    {
-      id: 'quantum-computing-de',
-      difficulty: 'advanced',
-      title: 'Quantum Computing Explained',
-      preview: 'Quantum computing harnesses the phenomena of quantum mechanics...',
-    },
-  ],
-}
-
 const OnboardingReadingIntro = ({ onStartReading, onUploadOwn }) => {
   const t = useUIText()
   const { selectedLanguage } = useLanguage()
+  const { userId, isGuest } = useUser()
 
-  const langCode = useMemo(
-    () => languageNameToCode(selectedLanguage),
-    [selectedLanguage],
+  // 使用真实的文章列表（已根据 onboarding 选择的语言导入预置文章）
+  const { data, isLoading } = useArticles(userId, selectedLanguage, isGuest)
+
+  const articles = useMemo(() => {
+    if (!data) return []
+    // 兼容多种返回格式（与 ArticleSelection 中的逻辑一致的精简版）
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data.data)) return data.data
+    if (data?.data && Array.isArray(data.data.texts)) return data.data.texts
+    if (Array.isArray(data.texts)) return data.texts
+    return []
+  }, [data])
+
+  // 只展示前 3 篇，作为推荐阅读入口
+  const presets = useMemo(
+    () =>
+      articles.slice(0, 3).map((a) => {
+        const id = a.text_id || a.article_id || a.id
+        const title = a.text_title || a.title || `Article ${id}`
+        const preview =
+          a.preview_text ||
+          a.preview ||
+          a.summary ||
+          a.description ||
+          a.snippet ||
+          a.first_sentence ||
+          ''
+        return {
+          id,
+          title,
+          preview,
+        }
+      }),
+    [articles],
   )
 
-  const presets = PRESET_ARTICLES[langCode] || PRESET_ARTICLES.de
-
-  const handlePresetClick = () => {
-    if (onStartReading) {
-      onStartReading()
+  const handlePresetClick = (articleId) => {
+    if (onStartReading && articleId) {
+      onStartReading(articleId)
     }
   }
 
@@ -118,36 +72,33 @@ const OnboardingReadingIntro = ({ onStartReading, onUploadOwn }) => {
         </div>
 
         <div className="mt-8 space-y-3">
-          {presets.map((article) => {
-            const meta = difficultyMeta[article.difficulty]
-            return (
-              <button
-                key={article.id}
-                type="button"
-                onClick={handlePresetClick}
-                className="w-full text-left rounded-xl border border-gray-200 bg-white px-4 py-4 sm:px-5 sm:py-5 hover:border-primary-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-2">
-                    {meta && (
-                      <BaseBadge
-                        variant={meta.badgeVariant}
-                        size="sm"
-                      >
-                        {meta.label}
-                      </BaseBadge>
-                    )}
-                    <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-                      {article.title}
-                    </h2>
+          {isLoading && presets.length === 0 && (
+            <div className="text-sm text-gray-500">{t('加载中...') || '加载中...'}</div>
+          )}
+          {!isLoading && presets.length === 0 && (
+            <div className="text-sm text-gray-500">{t('暂时没有可用的文章，请稍后在阅读页中查看。') || '暂时没有可用的文章，请稍后在阅读页中查看。'}</div>
+          )}
+          {presets.map((article) => (
+            <button
+              key={article.id}
+              type="button"
+              onClick={() => handlePresetClick(article.id)}
+              className="w-full text-left rounded-xl border border-gray-200 bg-white px-4 py-4 sm:px-5 sm:py-5 hover:border-primary-200 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+                    {article.title}
+                  </h2>
+                  {article.preview && (
                     <p className="text-sm text-gray-500 line-clamp-2">
                       {article.preview}
                     </p>
-                  </div>
+                  )}
                 </div>
-              </button>
-            )
-          })}
+              </div>
+            </button>
+          ))}
         </div>
 
         <div className="mt-8">

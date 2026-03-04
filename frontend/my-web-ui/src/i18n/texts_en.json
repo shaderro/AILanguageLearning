@@ -359,5 +359,12 @@
   "停止朗读": "Stop Reading",
   "没有可朗读的内容": "No readable content",
   "添加": "Add",
-  "已添加全部语言": "All languages added"
+  "已添加全部语言": "All languages added",
+
+  "想阅读什么语言？": "Which language do you want to read?",
+  "选择你想要学习的语言": "Choose the language you want to learn",
+  "继续": "Continue",
+  "开始阅读吧！": "Let's start reading!",
+  "选择一篇文章开始学习，或上传你自己的文章": "Select an article to start learning, or upload your own",
+  "上传自己的文章": "Upload your own article"
 }
