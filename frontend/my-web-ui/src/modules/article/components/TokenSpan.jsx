@@ -8,7 +8,8 @@ import { NotationContext } from '../contexts/NotationContext'
 import { useTokenSelectable } from '../selection/hooks/useTokenSelectable'
 import QuickTranslationTooltip from '../../../components/QuickTranslationTooltip'
 import { getQuickTranslation, getSystemLanguage } from '../../../services/translationService'
-import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import { languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { logVocabNotationDebug } from '../utils/vocabNotationDebug'
 
@@ -48,7 +49,11 @@ export default function TokenSpan({
   // 🔧 新增：高亮范围
   highlightedRange = null,
   // 🔧 新增：Token是否不足（用于禁用AI详细解释按钮）
-  isTokenInsufficient = false
+  isTokenInsufficient = false,
+  // 🔧 新增：源语言代码（来自句子/文章），用于单词自动翻译
+  sourceLanguageCode = null,
+  // 🔧 新增：自动翻译开关（只有开启才显示 hover 单词翻译）
+  autoTranslationEnabled = false
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -72,7 +77,7 @@ export default function TokenSpan({
   const isTextToken = typeof token === 'object' && token?.token_type === 'text'
 
   // 🔧 新增：hover翻译相关状态和逻辑
-  const { selectedLanguage } = useLanguage() // 获取全局语言状态（目标语言）
+  const { uiLanguage } = useUiLanguage() // 🔧 目标语言跟随 UI 语言（与句子翻译一致）
   // 清除调试日志
   const [quickTranslation, setQuickTranslation] = useState(null)
   const [translationSource, setTranslationSource] = useState(null) // 'dictionary' | 'translation'
@@ -80,43 +85,61 @@ export default function TokenSpan({
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false)
   const hoverTranslationTimerRef = useRef(null)
   const translationQueryRef = useRef(null) // 用于取消正在进行的查询
+  const activeHoverTextRef = useRef(null) // 🔧 当前 hover 会话“固定查询词”，用于避免错乱
+  const [hoverQueryText, setHoverQueryText] = useState(null) // 🔧 tooltip 绑定的词（冻结）
 
-  // 获取源语言（从文章数据推断，或使用默认值）
-  // 注意：这里简化处理，实际可以从ArticleViewer传递articleLanguage
-  const sourceLang = useMemo(() => {
-    // 可以从token或sentence中获取语言信息，这里暂时使用默认值'de'
-    // 后续可以通过props传递articleLanguage
-    return 'de' // 默认德语，可以根据实际情况调整
+  const normalizeLangCode = useCallback((code) => {
+    if (!code) return null
+    const s = String(code).trim().toLowerCase()
+    if (['zh', 'zh-cn', 'zh_cn', 'zh-hans', '中文', 'chinese'].includes(s)) return 'zh'
+    if (['zh-tw', 'zh_tw', '繁体中文'].includes(s)) return 'zh'
+    if (['en', 'english', '英文'].includes(s)) return 'en'
+    if (['de', 'german', '德文', '德语'].includes(s)) return 'de'
+    // 兜底：取前缀（例如 fr-FR / ja-JP）
+    const prefix = s.split(/[-_]/)[0]
+    return prefix && prefix.length === 2 ? prefix : null
   }, [])
+
+  // 获取源语言（从句子/文章数据传入，或使用默认值）
+  const sourceLang = useMemo(() => {
+    if (sourceLanguageCode && typeof sourceLanguageCode === 'string') {
+      return normalizeLangCode(sourceLanguageCode) || sourceLanguageCode
+    }
+    // 默认回退：德语
+    return 'de'
+  }, [sourceLanguageCode, normalizeLangCode])
 
   // 获取目标语言（系统语言或全局选择的语言）
   // 🔧 如果目标语言和源语言相同，使用系统语言或fallback到英文/中文
   const targetLang = useMemo(() => {
-    const globalLang = languageNameToCode(selectedLanguage)
-    const preferredLang = globalLang || getSystemLanguage()
-    
-    // 🔧 如果目标语言和源语言相同，需要选择不同的语言
-    if (preferredLang === sourceLang) {
-      const systemLang = getSystemLanguage()
-      // 如果系统语言也不同，使用系统语言；否则fallback到英文或中文
-      if (systemLang !== sourceLang) {
-        return systemLang
-      } else {
-        // 如果系统语言也和源语言相同，fallback到英文（如果源语言不是英文）或中文
-        const fallbackLang = sourceLang === 'en' ? 'zh' : 'en'
-        return fallbackLang
-      }
+    // 🔧 统一逻辑：单词自动翻译目标语言始终跟随 UI 语言（与整句翻译一致）
+    const uiLangCode =
+      uiLanguage === 'en'
+        ? 'en'
+        : uiLanguage === 'zh'
+          ? 'zh'
+          : (getSystemLanguage() || 'zh')
+
+    if (!sourceLang) {
+      return uiLangCode
     }
-    
-    const logData = {
-      sourceLang,
-      selectedLanguage,
-      globalLang,
-      preferredLang,
-      finalTargetLang: preferredLang
+
+    // 如果 UI 语言和源语言相同，则翻译成另一种主要语言
+    if (uiLangCode === sourceLang) {
+      return sourceLang === 'en' ? 'zh' : 'en'
     }
-    return preferredLang
-  }, [selectedLanguage, sourceLang])
+
+    return uiLangCode
+  }, [uiLanguage, sourceLang])
+
+  // 🔧 单词翻译输入：优先使用 word token（例如中文分词后的词），避免逐字翻译导致错乱
+  const translationInputText = useMemo(() => {
+    const candidate = wordTokenInfo?.wordBody
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate
+    }
+    return displayText
+  }, [wordTokenInfo, displayText])
 
   // 🔧 hover翻译查询函数
   const queryQuickTranslation = useCallback(async (word) => {
@@ -129,7 +152,7 @@ export default function TokenSpan({
       translationQueryRef.current = null
     }
 
-    const currentQuery = {}
+    const currentQuery = { word }
     translationQueryRef.current = currentQuery
 
     // 🔧 关闭翻译调试日志
@@ -151,12 +174,12 @@ export default function TokenSpan({
       setIsLoadingTranslation(true)
       setShowQuickTranslation(true)
       
-      // 🔧 单词查询：优先使用词典，如果词典没有结果再使用翻译API
-      // 🔧 返回包含来源信息的对象
+      // 🔧 单词查询：当前阶段仅使用翻译 API（不使用词典）
+      // 🔧 返回包含来源信息的对象，方便调试不同来源
       const translationResult = await getQuickTranslation(word, sourceLang, targetLang, {
-        // debugLogger, // 🔧 关闭调试日志
-        isWord: true, // 明确指定为单词查询
-        useDictionary: true, // 使用词典API
+        // debugLogger, // 🔧 保持关闭调试日志
+        isWord: true,          // 明确指定为单词查询
+        useDictionary: false,  // 不使用词典 API，只用翻译 API
         returnWithSource: true // 返回包含来源信息的对象
       })
       
@@ -180,9 +203,9 @@ export default function TokenSpan({
       // addDebugLog(translation ? 'success' : 'warning', `翻译查询完成: "${word}"`, resultData)
       
       // 检查查询是否已被取消
-      if (translationQueryRef.current === currentQuery) {
+      if (translationQueryRef.current === currentQuery && activeHoverTextRef.current === word) {
         setQuickTranslation(translation)
-        setTranslationSource(translationSource) // 保存来源信息
+        setTranslationSource(translationSource) // 保存来源信息（translation / dictionary 等）
         setIsLoadingTranslation(false)
         // 即使没有翻译结果，也保持显示状态
         setShowQuickTranslation(true)
@@ -206,7 +229,7 @@ export default function TokenSpan({
       // const errorData = { word, error: error.message, stack: error.stack }
       // console.error('❌ [TokenSpan] 翻译查询失败:', error)
       // addDebugLog('error', `翻译查询失败: "${word}"`, errorData)
-      if (translationQueryRef.current === currentQuery) {
+      if (translationQueryRef.current === currentQuery && activeHoverTextRef.current === word) {
         // 🔧 修复：即使查询失败，也保持 tooltip 显示，显示"无翻译"状态
         setQuickTranslation(null)
         setIsLoadingTranslation(false)
@@ -233,9 +256,18 @@ export default function TokenSpan({
     setShowQuickTranslation(false)
     setQuickTranslation(null)
     setIsLoadingTranslation(false)
+    setHoverQueryText(null)
+    activeHoverTextRef.current = null
     // 取消正在进行的查询
     translationQueryRef.current = null
   }, [clearTranslationTimer])
+
+  // 🔧 自动翻译关闭时，清理单词翻译状态
+  useEffect(() => {
+    if (!autoTranslationEnabled) {
+      clearTranslation()
+    }
+  }, [autoTranslationEnabled, clearTranslation])
 
   // 🔧 根据语言代码获取对应的语音
   const getVoiceForLanguage = useCallback((langCode) => {
@@ -718,15 +750,16 @@ export default function TokenSpan({
             }
           }
 
-          // 🔧 已禁用：hover token 时自动翻译单词的功能
-          // 用户要求：去掉 hover token 出现自动翻译单词的功能，保留 hover 句子翻译整句的功能
-          // 以下代码已注释，不再触发单词翻译
-          // if (isTextToken && !hasVocabVisual && hoverAllowed && displayText.trim().length > 0) {
-          //   clearTranslationTimer()
-          //   hoverTranslationTimerRef.current = setTimeout(() => {
-          //     queryQuickTranslation(displayText)
-          //   }, 250)
-          // }
+          // 🔧 单词自动翻译：在没有 vocab notation 时，hover 一小段时间后触发
+          if (autoTranslationEnabled && isTextToken && !hasVocabVisual && hoverAllowed && translationInputText.trim().length > 0) {
+            // 冻结本次 hover 的查询词，避免 wordTokenInfo 异步变化导致“显示词/翻译词”错乱
+            activeHoverTextRef.current = translationInputText
+            setHoverQueryText(translationInputText)
+            clearTranslationTimer()
+            hoverTranslationTimerRef.current = setTimeout(() => {
+              queryQuickTranslation(translationInputText)
+            }, 400)
+          }
         }}
         onMouseLeave={() => {
           setIsMouseOverToken(false)
@@ -755,23 +788,22 @@ export default function TokenSpan({
           if (hasVocabVisual) {
             scheduleHideNotation()
           }
-          // 🔧 已禁用：hover token 时自动翻译单词的功能
-          // 用户要求：去掉 hover token 出现自动翻译单词的功能
-          // 以下代码已注释，不再清除单词翻译状态
-          // if (isTextToken && displayText.trim().length > 0) {
-          //   clearTranslationTimer()
-          //   hoverTranslationTimerRef.current = setTimeout(() => {
-          //     if (translationQueryRef.current) {
-          //       hoverTranslationTimerRef.current = setTimeout(() => {
-          //         clearTranslation()
-          //       }, 500)
-          //     } else {
-          //       clearTranslation()
-          //     }
-          //   }, 200)
-          // } else {
-          //   clearTranslation()
-          // }
+          // 🔧 单词自动翻译：hover 离开后延迟清理翻译状态
+          if (autoTranslationEnabled && isTextToken && translationInputText.trim().length > 0) {
+            clearTranslationTimer()
+            hoverTranslationTimerRef.current = setTimeout(() => {
+              if (translationQueryRef.current) {
+                // 如果还有进行中的查询，再延迟一点再清理
+                hoverTranslationTimerRef.current = setTimeout(() => {
+                  clearTranslation()
+                }, 500)
+              } else {
+                clearTranslation()
+              }
+            }, 200)
+          } else {
+            clearTranslation()
+          }
           // 🔧 调用 token hover 离开回调（用于整句翻译）
           if (onTokenMouseLeave) {
             onTokenMouseLeave()
@@ -861,50 +893,25 @@ export default function TokenSpan({
         />
       )}
 
-      {/* 🔧 已禁用：快速翻译tooltip（单词翻译功能） */}
-      {/* 用户要求：去掉 hover token 出现自动翻译单词的功能，保留 hover 句子翻译整句的功能 */}
-      {/* 以下代码已注释，不再显示单词翻译 tooltip */}
-      {/* {isTextToken && !hasVocabVisual && (
+      {/* 单词快速翻译 tooltip（仅在自动翻译开启时显示；只显示翻译，不显示原始单词；显示在单词上方） */}
+      {autoTranslationEnabled && isTextToken && !hasVocabVisual && (
         <QuickTranslationTooltip
-          word={displayText}
+          word={hoverQueryText || translationInputText}
           translation={quickTranslation}
           translationSource={translationSource}
           isVisible={showQuickTranslation}
           anchorRef={anchorRef}
-          position="bottom"
-          showWord={false}
+          position="top"
+          showWord={false} // 按要求：不显示原始词汇，只显示翻译
           isLoading={isLoadingTranslation}
           onSpeak={handleSpeak}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
-          onAskAI={onAskAI ? async () => {
-            console.log('🔘 [TokenSpan] onAskAI 回调被调用', { 
-              token, 
-              sentenceIdx,
-              displayText,
-              hasOnAskAI: !!onAskAI,
-              tokenType: typeof token,
-              sentenceIdxType: typeof sentenceIdx,
-              isTokenInsufficient
-            })
-            try {
-              const result = onAskAI(token, sentenceIdx)
-              if (result && typeof result.then === 'function') {
-                await result
-              }
-              console.log('✅ [TokenSpan] onAskAI 调用成功')
-            } catch (error) {
-              console.error('❌ [TokenSpan] onAskAI 调用失败', {
-                error: error.message,
-                stack: error.stack,
-                token,
-                sentenceIdx
-              })
-            }
-          } : null}
-          isTokenInsufficient={isTokenInsufficient}
+          // 🔧 不传 onAskAI：不显示“AI详细解释”的幽灵按钮
+          uiScale={0.67}
+          fullWidth={false}
         />
-      )} */}
+      )}
       
       {/* 暂时注释掉 VocabExplanationButton - 以后可能会用到 */}
       {/* {isTextToken && selected && selectedTokenIds.size === 1 && (

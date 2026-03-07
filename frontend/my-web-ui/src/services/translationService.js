@@ -268,7 +268,7 @@ const queryLocalVocab = async (word, sourceLang, targetLang, vocabListGetter = n
  * @param {string} word - 单词
  * @returns {Promise<string|null>} 词典定义，如果查询失败返回null
  */
-const queryEnglishDictionaryAPI = async (word) => {
+export const queryEnglishDictionaryAPI = async (word) => {
   try {
     const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase().trim())}`
     
@@ -319,7 +319,7 @@ const queryEnglishDictionaryAPI = async (word) => {
  * @param {string} targetLang - 目标语言代码（用于提取翻译）
  * @returns {Promise<string|null>} 词典定义或翻译，如果查询失败返回null
  */
-const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
+export const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
   try {
     // Wiktionary API endpoint（支持德语）
     // 使用MediaWiki API查询德语Wiktionary
@@ -456,11 +456,12 @@ const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
                     
                     if (revPage.revisions && revPage.revisions.length > 0) {
                       const revision = revPage.revisions[0]
-                      // 🔧 尝试不同的方式获取内容
-                      const content = revision.slots?.main?.content || 
-                                     revision['*'] || 
-                                     revision.content || 
-                                     ''
+                      // 🔧 尝试不同的方式获取内容（兼容不同结构）
+                      const mainSlot = revision.slots?.main || (revision.slots && revision.slots[Object.keys(revision.slots)[0]])
+                      const content = (mainSlot && (mainSlot['*'] || mainSlot.content)) ||
+                                      revision['*'] ||
+                                      revision.content ||
+                                      ''
                       
                       internalLog('info', `获取到revisions内容`, { 
                         variant, 
@@ -471,9 +472,9 @@ const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
                         revisionKeys: Object.keys(revision)
                       })
                       
-                      // 从wikitext中提取简短定义（简单提取第一段）
-                      if (content && content.length > 50) {
-                        // 提取第一段文本（去除wikitext标记）
+                      // 从 wikitext 中提取简短定义（简单提取第一段）
+                      if (content && content.length > 0) {
+                        // 首先尝试从单行中提取
                         let text = content.split('\n').find(line => {
                           const trimmed = line.trim()
                           return trimmed.length > 20 && 
@@ -485,18 +486,31 @@ const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
                                  !trimmed.startsWith('<!--')
                         }) || content.split('\n').find(line => line.trim().length > 10) || content.split('\n')[0]
                         
-                        // 简单清理wikitext标记
-                        text = text.replace(/\[\[([^\]]+)\]\]/g, '$1') // 链接
-                        text = text.replace(/\{\{([^}]+)\}\}/g, '') // 模板
-                        text = text.replace(/'''([^']+)'''/g, '$1') // 粗体
-                        text = text.replace(/''([^']+)''/g, '$1') // 斜体
-                        text = text.replace(/[=]{2,}/g, '') // 标题标记
-                        text = text.replace(/<ref[^>]*>.*?<\/ref>/g, '') // 引用
-                        text = text.replace(/<[^>]+>/g, '') // HTML标签
-                        text = text.replace(/<!--.*?-->/g, '') // 注释
-                        text = text.trim()
-                        
-                        if (text.length > 20) {
+                        // 简单清理 wikitext 标记
+                        const cleanLine = (input) => {
+                          let t = input || ''
+                          t = t.replace(/\[\[([^\]]+)\]\]/g, '$1') // 链接
+                          t = t.replace(/\{\{([^}]+)\}\}/g, '') // 模板
+                          t = t.replace(/'''([^']+)'''/g, '$1') // 粗体
+                          t = t.replace(/''([^']+)''/g, '$1') // 斜体
+                          t = t.replace(/[=]{2,}/g, '') // 标题标记
+                          t = t.replace(/<ref[^>]*>.*?<\/ref>/g, '') // 引用
+                          t = t.replace(/<[^>]+>/g, '') // HTML标签
+                          t = t.replace(/<!--.*?-->/g, '') // 注释
+                          return t.trim()
+                        }
+
+                        text = cleanLine(text)
+
+                        // 如果单行太短，再从整个内容中粗暴提取前几百字符
+                        if (text.length <= 20) {
+                          let plain = cleanLine(content)
+                          if (plain.length > 0) {
+                            text = plain
+                          }
+                        }
+
+                        if (text.length > 0) {
                           let extract = text
                           if (extract.length > 200) {
                             extract = extract.substring(0, 200) + '...'
@@ -511,10 +525,10 @@ const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
                           })
                           return extract
                         } else {
-                          internalLog('warning', `提取的文本太短`, { variant, textLength: text.length, text: text.substring(0, 100) })
+                          internalLog('warning', `清理后文本为空`, { variant })
                         }
                       } else {
-                        internalLog('warning', `revisions内容为空或太短`, { variant, contentLength: content.length })
+                        internalLog('warning', `revisions内容为空`, { variant, contentLength: content.length })
                       }
                     } else {
                       internalLog('warning', `页面没有revisions`, { variant, pageId: revPageId })
@@ -650,6 +664,150 @@ const normalizeLangCode = (langCode) => {
 }
 
 /**
+ * 解码 HTML 实体（例如 MyMemory 返回的 `&#x0D;`）
+ */
+const decodeHtmlEntities = (input) => {
+  if (typeof input !== 'string') return input
+
+  // 浏览器环境：用 textarea 解码最稳妥
+  if (typeof document !== 'undefined' && document?.createElement) {
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = input
+    return textarea.value
+  }
+
+  // 非浏览器环境兜底：解码常见实体与数字实体
+  return input
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => {
+      const code = parseInt(hex, 16)
+      return Number.isFinite(code) ? String.fromCharCode(code) : _
+    })
+    .replace(/&#(\d+);/g, (_, dec) => {
+      const code = parseInt(dec, 10)
+      return Number.isFinite(code) ? String.fromCharCode(code) : _
+    })
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
+
+/**
+ * 清理翻译结果文本，避免乱码/控制字符污染 UI 与缓存
+ */
+const sanitizeTranslationText = (input) => {
+  if (typeof input !== 'string') return input
+  let s = decodeHtmlEntities(input)
+
+  // 去掉 MyMemory 常见控制字符（例如 &#x0D; -> \r）
+  s = s.replace(/\r/g, '')
+  // 去掉零宽字符
+  s = s.replace(/[\u200B-\u200D\uFEFF]/g, '')
+  // 统一空白
+  s = s.replace(/\u00A0/g, ' ')
+  s = s.trim()
+  return s
+}
+
+/**
+ * 内置超短词/功能词小词表（用于修复外部API在高频短词上的错译）
+ * 说明：只覆盖极少数“确定性很高”的映射，避免引入更多歧义。
+ */
+const BUILTIN_GLOSSARY = {
+  de: {
+    en: {
+      eine: 'a',
+      ein: 'a',
+      einer: 'a',
+      einen: 'a',
+      einem: 'a',
+      eines: 'a',
+      der: 'the',
+      die: 'the',
+      das: 'the',
+      den: 'the',
+      dem: 'the',
+      des: 'the',
+      und: 'and',
+      oder: 'or',
+      nicht: 'not',
+      sich: 'oneself',
+    },
+    zh: {
+      eine: '一个',
+      ein: '一个',
+      einer: '一个',
+      einen: '一个',
+      einem: '一个',
+      eines: '一个',
+      der: '这/那（定冠词）',
+      die: '这/那（定冠词）',
+      das: '这/那（定冠词）',
+      den: '这/那（定冠词）',
+      dem: '这/那（定冠词）',
+      des: '这/那（定冠词）',
+      und: '和',
+      oder: '或者',
+      nicht: '不/没有',
+      sich: '自己',
+    }
+  }
+}
+
+const queryBuiltinGlossary = (word, sourceLang, targetLang) => {
+  if (typeof word !== 'string') return null
+  const w = word.trim().toLowerCase()
+  if (!w) return null
+  const src = String(sourceLang || '').trim().toLowerCase()
+  const tgt = String(targetLang || '').trim().toLowerCase()
+  const table = BUILTIN_GLOSSARY?.[src]?.[tgt]
+  if (!table) return null
+  return table[w] || null
+}
+
+/**
+ * 判断某个“单词翻译”缓存是否可疑（用于避免把明显错误的缓存一直用下去）
+ * 说明：这是启发式规则，只针对高频短词做保护，避免性能/体验损失过大。
+ */
+const isSuspiciousWordTranslation = (word, translation, sourceLang, targetLang) => {
+  if (typeof word !== 'string' || typeof translation !== 'string') return false
+  const w = word.trim()
+  const t = translation.trim()
+  if (!w || !t) return false
+
+  const wLower = w.toLowerCase()
+  const tLower = t.toLowerCase()
+
+  // 完全相同一般意味着无效翻译
+  if (wLower === tLower) return true
+
+  // 德语 -> 英语：对超短词做更严格校验（这类词 MyMemory 很容易给出语料库“错对齐”结果）
+  if (sourceLang === 'de' && targetLang === 'en') {
+    // 4字母及以内，翻译却是较长英文词，常见为错译（例如 eine -> consent）
+    if (wLower.length <= 4 && tLower.length >= 6) return true
+
+    // 常见功能词：只接受少数合理译法，否则视为可疑
+    const deFunctionWords = new Set([
+      'eine', 'ein', 'einer', 'einen', 'einem', 'eines',
+      'der', 'die', 'das', 'den', 'dem', 'des',
+      'und', 'oder', 'nicht', 'sich',
+    ])
+    if (deFunctionWords.has(wLower)) {
+      const ok = new Set([
+        'a', 'an', 'one',
+        'the',
+        'and', 'or', 'not',
+        'oneself', 'himself', 'herself', 'itself', 'themselves',
+      ])
+      if (!ok.has(tLower)) return true
+    }
+  }
+
+  return false
+}
+
+/**
  * 使用MyMemory API查询翻译
  * @param {string} word - 单词
  * @param {string} sourceLang - 源语言代码
@@ -702,18 +860,49 @@ const queryMyMemoryAPI = async (word, sourceLang, targetLang) => {
       const data = await response.json()
       
       if (data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
-        let translation = data.responseData.translatedText.trim()
+        const originalLower = String(word).trim().toLowerCase()
+
+        // MyMemory 有时 responseData 会给出“错对齐”的结果；优先从 matches 里挑选 segment 精确匹配且质量最高的翻译
+        let translationCandidates = []
+
+        const pushCandidate = (text, score = 0) => {
+          const s = sanitizeTranslationText(String(text || ''))
+          if (!s) return
+          const sLower = s.toLowerCase()
+          if (sLower === originalLower) return
+          translationCandidates.push({ text: s, score })
+        }
+
+        // responseData 候选（基础分 0）
+        pushCandidate(data.responseData.translatedText, 0)
+
+        // matches 候选（更可信）
+        if (Array.isArray(data.matches)) {
+          for (const m of data.matches) {
+            if (!m || !m.translation) continue
+            const segLower = sanitizeTranslationText(String(m.segment || '')).toLowerCase()
+            const isExactSegment = segLower === originalLower
+            const quality = Number(m.quality || 0)
+            const matchScore = Number(m.match || 0) // 0~1
+            // 精确匹配 segment + 质量 + matchScore
+            const score = (isExactSegment ? 1000 : 0) + quality + Math.round(matchScore * 100)
+            pushCandidate(m.translation, score)
+          }
+        }
+
+        translationCandidates.sort((a, b) => b.score - a.score)
+        let translation = translationCandidates[0]?.text || null
         
         // 如果翻译结果和原文相同，可能不是有效翻译
-        if (translation.toLowerCase() === word.toLowerCase()) {
+        if (translation && translation.toLowerCase() === originalLower) {
           return null
         }
         
         if (word.length > MAX_LENGTH) {
-          translation += ' (翻译已截断)'
+          translation = `${translation} (翻译已截断)`
         }
         
-        return translation
+        return translation || null
       }
 
       return null
@@ -803,14 +992,14 @@ const queryLibreTranslateAPI = async (word, sourceLang, targetLang) => {
           const data = await response.json()
           
           if (data && data.translatedText) {
-            const translation = data.translatedText.trim()
+            const translation = sanitizeTranslationText(String(data.translatedText))
             
             // 如果翻译结果和原文相同，可能不是有效翻译
-            if (translation.toLowerCase() === word.toLowerCase()) {
+            if (translation && translation.toLowerCase() === word.toLowerCase()) {
               continue
             }
             
-            return translation
+            return translation || null
           }
         } catch (fetchError) {
           clearTimeout(timeoutId)
@@ -943,18 +1132,39 @@ export const getQuickTranslation = async (
     // 自动判断：如果长度较短且不包含空格，认为是单词
     isWord = normalizedWord.length < 50 && !normalizedWord.includes(' ')
   }
+
+  // 🔧 对语言码做更宽松的normalize（避免 de-DE / zh-CN 等影响缓存与规则判断）
+  const normalizedSourceLang = String(sourceLang || '').toLowerCase().split(/[-_]/)[0] || sourceLang
+  const normalizedTargetLang = String(targetLang || '').toLowerCase().split(/[-_]/)[0] || targetLang
+  sourceLang = normalizedSourceLang
+  targetLang = normalizedTargetLang
+
+  // 🔧 单词查询：先尝试内置小词表（修复 MyMemory 在高频短词上的典型错译，如 eine->consent）
+  if (isWord) {
+    const glossaryHit = queryBuiltinGlossary(normalizedWord, sourceLang, targetLang)
+    if (glossaryHit) {
+      const sanitized = sanitizeTranslationText(glossaryHit)
+      setMemoryCache(normalizedWord, sourceLang, targetLang, sanitized)
+      setCachedTranslation(normalizedWord, sourceLang, targetLang, sanitized)
+      if (returnWithSource) {
+        return { text: sanitized, source: 'translation' }
+      }
+      return sanitized
+    }
+  }
   
   // 🔧 改进：支持单个API函数或API数组
   // 如果为 null 或 undefined 则使用默认API列表
   let apiProvider = options.apiProvider
   if (!apiProvider) {
-    apiProvider = defaultTranslationAPIs
+    // 🔧 默认情况下：单词优先 LibreTranslate（对短词更稳），句子优先 MyMemory（速度/覆盖更好）
+    apiProvider = isWord ? [queryLibreTranslateAPI, queryMyMemoryAPI] : [queryMyMemoryAPI, queryLibreTranslateAPI]
   } else if (typeof apiProvider === 'function') {
     // 单个API函数，转换为数组
     apiProvider = [apiProvider]
   } else if (!Array.isArray(apiProvider)) {
     // 无效类型，使用默认
-    apiProvider = defaultTranslationAPIs
+    apiProvider = isWord ? [queryLibreTranslateAPI, queryMyMemoryAPI] : [queryMyMemoryAPI, queryLibreTranslateAPI]
   }
 
   // 记录开始查询
@@ -970,25 +1180,43 @@ export const getQuickTranslation = async (
   if (!isWord || !useDictionary) {
     const memoryCacheResult = getMemoryCache(normalizedWord, sourceLang, targetLang)
     if (memoryCacheResult) {
-      const msg = `从内存缓存获取翻译: "${normalizedWord}" -> "${memoryCacheResult}"`
-      console.log('💾 [TranslationService]', msg)
-      if (debugLogger) {
-        debugLogger('success', msg, { word: normalizedWord, translation: memoryCacheResult, source: 'memory' })
+      const sanitized = sanitizeTranslationText(memoryCacheResult)
+      // 🔧 单词场景：对可疑缓存进行跳过，强制走外部API重新获取并覆盖
+      if (isWord && !useDictionary && isSuspiciousWordTranslation(normalizedWord, sanitized, sourceLang, targetLang)) {
+        // ignore cache
+      } else {
+        const msg = `从内存缓存获取翻译: "${normalizedWord}" -> "${memoryCacheResult}"`
+        console.log('💾 [TranslationService]', msg)
+        if (debugLogger) {
+          debugLogger('success', msg, { word: normalizedWord, translation: memoryCacheResult, source: 'memory' })
+        }
+        if (sanitized !== memoryCacheResult) {
+          setMemoryCache(normalizedWord, sourceLang, targetLang, sanitized)
+          setCachedTranslation(normalizedWord, sourceLang, targetLang, sanitized)
+        }
+        return sanitized
       }
-      return memoryCacheResult
     }
 
     // 2. 查询localStorage缓存（仅当不是单词查询或useDictionary=false时）
     const cachedResult = getCachedTranslation(normalizedWord, sourceLang, targetLang)
     if (cachedResult && cachedResult.translation) {
-      const msg = `从localStorage缓存获取翻译: "${normalizedWord}" -> "${cachedResult.translation}"`
-      console.log('💾 [TranslationService]', msg)
-      if (debugLogger) {
-        debugLogger('success', msg, { word: normalizedWord, translation: cachedResult.translation, source: 'localStorage' })
+      const sanitized = sanitizeTranslationText(cachedResult.translation)
+      if (isWord && !useDictionary && isSuspiciousWordTranslation(normalizedWord, sanitized, sourceLang, targetLang)) {
+        // ignore cache
+      } else {
+        const msg = `从localStorage缓存获取翻译: "${normalizedWord}" -> "${cachedResult.translation}"`
+        console.log('💾 [TranslationService]', msg)
+        if (debugLogger) {
+          debugLogger('success', msg, { word: normalizedWord, translation: cachedResult.translation, source: 'localStorage' })
+        }
+        // 同时更新内存缓存
+        setMemoryCache(normalizedWord, sourceLang, targetLang, sanitized)
+        if (sanitized !== cachedResult.translation) {
+          setCachedTranslation(normalizedWord, sourceLang, targetLang, sanitized)
+        }
+        return sanitized
       }
-      // 同时更新内存缓存
-      setMemoryCache(normalizedWord, sourceLang, targetLang, cachedResult.translation)
-      return cachedResult.translation
     }
   }
 
@@ -999,19 +1227,20 @@ export const getQuickTranslation = async (
     }
     const localVocabResult = await queryLocalVocab(normalizedWord, sourceLang, targetLang, vocabListGetter)
     if (localVocabResult) {
+      const sanitized = sanitizeTranslationText(localVocabResult)
       const msg = `从本地vocabulary表获取翻译: "${normalizedWord}" -> "${localVocabResult}"`
       console.log('📚 [TranslationService]', msg)
       if (debugLogger) {
         debugLogger('success', msg, { word: normalizedWord, translation: localVocabResult, source: 'localVocab' })
       }
       // 保存到缓存
-      setMemoryCache(normalizedWord, sourceLang, targetLang, localVocabResult)
-      setCachedTranslation(normalizedWord, sourceLang, targetLang, localVocabResult)
+      setMemoryCache(normalizedWord, sourceLang, targetLang, sanitized)
+      setCachedTranslation(normalizedWord, sourceLang, targetLang, sanitized)
       // 🔧 返回结果时包含来源信息（本地vocab视为翻译）
       if (returnWithSource) {
-        return { text: localVocabResult, source: 'translation' }
+        return { text: sanitized, source: 'translation' }
       }
-      return localVocabResult
+      return sanitized
     }
   }
 
@@ -1030,6 +1259,7 @@ export const getQuickTranslation = async (
       const dictResult = await queryDictionaryAPI(normalizedWord, sourceLang, targetLang)
       internalLog(dictResult ? 'success' : 'warning', `词典API查询结果`, { word: normalizedWord, hasResult: !!dictResult, result: dictResult?.substring(0, 50) })
       if (dictResult) {
+        const sanitized = sanitizeTranslationText(dictResult)
         // 词典返回的是源语言的定义（英语或德语）
         // 如果目标语言不是源语言，用户会看到源语言定义（更详细）
         // 如果需要目标语言翻译，可以继续使用翻译API
@@ -1040,13 +1270,13 @@ export const getQuickTranslation = async (
           debugLogger('success', msg, { word: normalizedWord, translation: dictResult, source: 'dictionary', sourceLang })
         }
       // 保存到缓存
-      setMemoryCache(normalizedWord, sourceLang, targetLang, dictResult)
-      setCachedTranslation(normalizedWord, sourceLang, targetLang, dictResult)
+      setMemoryCache(normalizedWord, sourceLang, targetLang, sanitized)
+      setCachedTranslation(normalizedWord, sourceLang, targetLang, sanitized)
       // 🔧 返回结果时包含来源信息
       if (returnWithSource) {
-        return { text: dictResult, source: 'dictionary' }
+        return { text: sanitized, source: 'dictionary' }
       }
-      return dictResult
+      return sanitized
       } else {
         internalLog('warning', `词典API未找到结果，继续使用翻译API: "${normalizedWord}"`, { word: normalizedWord, sourceLang, targetLang })
         if (debugLogger) {
@@ -1078,19 +1308,20 @@ export const getQuickTranslation = async (
   try {
     const apiResult = await queryWithMultipleAPIs(normalizedWord, sourceLang, targetLang, apiProvider)
     if (apiResult) {
+      const sanitized = sanitizeTranslationText(apiResult)
       const msg = `从外部API获取翻译: "${normalizedWord}" -> "${apiResult}"`
       console.log('🌐 [TranslationService]', msg)
       if (debugLogger) {
         debugLogger('success', msg, { word: normalizedWord, translation: apiResult, source: 'api', apiCount: apiProvider.length })
       }
       // 保存到缓存
-      setMemoryCache(normalizedWord, sourceLang, targetLang, apiResult)
-      setCachedTranslation(normalizedWord, sourceLang, targetLang, apiResult)
+      setMemoryCache(normalizedWord, sourceLang, targetLang, sanitized)
+      setCachedTranslation(normalizedWord, sourceLang, targetLang, sanitized)
       // 🔧 返回结果时包含来源信息
       if (returnWithSource) {
-        return { text: apiResult, source: 'translation' }
+        return { text: sanitized, source: 'translation' }
       }
-      return apiResult
+      return sanitized
     } else {
       if (debugLogger) {
         debugLogger('warning', `所有外部API均未返回翻译结果: "${normalizedWord}"`, { sourceLang, targetLang, apiCount: apiProvider.length })

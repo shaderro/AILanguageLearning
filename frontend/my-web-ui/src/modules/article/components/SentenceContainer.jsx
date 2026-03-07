@@ -495,6 +495,10 @@ export default function SentenceContainer({
               isCurrentlyReading={isCurrentlyReading}
               // 🔧 新增：AI详细解释回调
               onAskAI={onAskAI}
+              // 🔧 传入源语言代码，供单词自动翻译使用
+              sourceLanguageCode={sourceLang}
+              // 🔧 单词 hover 翻译只在自动翻译开启时显示
+              autoTranslationEnabled={autoTranslationEnabled}
             />
             {/* 🔧 在不同 word token 之间添加空格（只在 hover 时显示） */}
             {shouldAddSpaceAfter && (

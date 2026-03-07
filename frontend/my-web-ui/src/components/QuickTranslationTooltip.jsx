@@ -3,6 +3,7 @@
  * 显示单词和简短翻译，不包含例句，不调用AI
  */
 import { useEffect, useState, useRef } from 'react'
+import { useUIText } from '../i18n/useUIText'
 
 export default function QuickTranslationTooltip({
   word,
@@ -18,11 +19,14 @@ export default function QuickTranslationTooltip({
   onMouseLeave = null, // tooltip hover 离开回调
   onAskAI = null, // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
   isTokenInsufficient = false, // 🔧 Token是否不足（用于禁用AI详细解释按钮）
-  fullWidth = false // 🔧 是否使用全宽模式（与 anchor 宽度一致）
+  fullWidth = false, // 🔧 是否使用全宽模式（与 anchor 宽度一致）
+  uiScale = 1 // 🔧 UI缩放（仅影响 tooltip 自身字体/间距）
 }) {
+  const t = useUIText()
   const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999, width: null })
   const [isPositioned, setIsPositioned] = useState(false)
   const tooltipRef = useRef(null)
+  const shouldCompactPaddingY = uiScale < 1 && !fullWidth
 
   // 计算tooltip位置
   useEffect(() => {
@@ -118,7 +122,7 @@ export default function QuickTranslationTooltip({
     requestAnimationFrame(() => {
       requestAnimationFrame(updatePosition)
     })
-  }, [isVisible, anchorRef, position, word, translation, isLoading, fullWidth])
+  }, [isVisible, anchorRef, position, word, translation, isLoading, fullWidth, uiScale])
   
   // 当 tooltip 隐藏时重置位置状态
   useEffect(() => {
@@ -133,35 +137,20 @@ export default function QuickTranslationTooltip({
   if (!isVisible) {
     return null
   }
-  
-  // 调试日志：检查按钮渲染条件
-  console.log('🔍 [QuickTranslationTooltip] 渲染tooltip，检查AI按钮条件', {
-    word,
-    translation,
-    hasOnAskAI: !!onAskAI,
-    shouldShowButton: !!(onAskAI && word && translation)
-  })
-
-  // 调试日志
-  console.log('🔍 [QuickTranslationTooltip] 渲染tooltip:', {
-    word,
-    translation,
-    isVisible,
-    position: tooltipPosition,
-    hasAnchor: !!anchorRef?.current
-  })
 
   return (
     <div
       ref={tooltipRef}
-      className={`fixed z-[9999] bg-white border border-gray-300 rounded-lg shadow-lg p-3 ${
-        fullWidth ? '' : 'max-w-xs'
-      }`}
+      className={`fixed z-[9999] bg-white border border-gray-300 rounded-lg shadow-lg ${
+        // 🔧 仅缩减“词汇 tooltip”的上下边距到约 2/3（12px -> 8px）
+        // 不缩放字号，不缩放整体框
+        shouldCompactPaddingY ? 'px-3 py-2' : 'p-3'
+      } ${fullWidth ? '' : 'max-w-xs'}`}
       style={{
         top: `${tooltipPosition.top}px`,
         left: `${tooltipPosition.left}px`,
         width: tooltipPosition.width ? `${tooltipPosition.width}px` : undefined,
-        transform: 'translate(0, 0)', // 确保使用计算后的位置
+        transform: 'translate(0, 0)', // 保持原始字号与整体尺寸
         visibility: isPositioned ? 'visible' : 'hidden',
         opacity: isPositioned ? 1 : 0,
         transition: 'opacity 0.1s ease-in-out',
@@ -177,10 +166,7 @@ export default function QuickTranslationTooltip({
           <div className="font-semibold text-sm text-gray-900 mb-1">{word}</div>
         )}
         {isLoading ? (
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm text-gray-600">正在翻译...</span>
-          </div>
+          <div className="text-sm text-gray-500">{t('正在翻译')}</div>
         ) : translation ? (
           <div className="flex items-center gap-2">
             <div className="text-sm text-gray-800 leading-relaxed flex-1">{translation}</div>
@@ -192,7 +178,7 @@ export default function QuickTranslationTooltip({
                   onSpeak(word)
                 }}
                 className="flex-shrink-0 p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                title="朗读"
+                title={t('朗读')}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -201,107 +187,41 @@ export default function QuickTranslationTooltip({
             )}
           </div>
         ) : (
-          // 🔧 修复：如果没有翻译且不在加载，显示提示信息
-          <div className="text-sm text-gray-500 italic">
-            暂无翻译
-            <div className="text-xs text-gray-400 mt-1">可能原因：网络问题、API限制或单词无法翻译</div>
-          </div>
+          <div className="text-sm text-gray-500">{t('翻译失败')}</div>
         )}
       </div>
-      {/* 🔧 显示来源信息：词典或翻译 */}
-      <div className="text-[0.5rem] text-gray-500 mt-1">
-        {translationSource === 'dictionary' ? '词典' : translationSource === 'translation' ? '翻译' : '自动翻译'}
-      </div>
       {/* AI详细解释按钮 - 幽灵按钮样式 */}
-      {(() => {
-        const shouldShowButton = onAskAI && word && translation
-        console.log('🔍 [QuickTranslationTooltip] 检查AI按钮渲染条件', {
-          hasOnAskAI: !!onAskAI,
-          hasWord: !!word,
-          hasTranslation: !!translation,
-          shouldShowButton,
-          wordValue: word,
-          translationValue: translation
-        })
-        
-        if (!shouldShowButton) {
-          console.log('⚠️ [QuickTranslationTooltip] 按钮不渲染，条件不满足', {
-            hasOnAskAI: !!onAskAI,
-            hasWord: !!word,
-            hasTranslation: !!translation
-          })
-          return null
-        }
-        
-        console.log('✅ [QuickTranslationTooltip] 按钮将渲染')
-        
-        return (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              e.preventDefault()
-              // 🔧 如果token不足，不执行任何操作
-              if (isTokenInsufficient) {
-                console.log('⚠️ [QuickTranslationTooltip] Token不足，无法使用AI详细解释功能')
-                return
-              }
-              console.log('🔘 [QuickTranslationTooltip] AI详细解释按钮被点击', { 
-                word, 
-                translation,
-                hasOnAskAI: !!onAskAI,
-                onAskAIType: typeof onAskAI
-              })
-              // 🔧 调用 onAskAI
-              // TokenSpan 已经将 onAskAI 包装成箭头函数，会传递 token 和 sentenceIdx
-              // 所以这里直接调用即可，不需要传递参数
-              if (typeof onAskAI === 'function') {
-                try {
-                  console.log('🔘 [QuickTranslationTooltip] 准备调用 onAskAI', {
-                    hasOnAskAI: !!onAskAI,
-                    onAskAIType: typeof onAskAI,
-                    word
-                  })
-                  // 🔧 直接调用，TokenSpan 已经包装了参数
-                  const result = onAskAI()
-                  console.log('✅ [QuickTranslationTooltip] onAskAI 调用成功', { result })
-                  
-                  // 🔧 如果是 Promise，等待完成
-                  if (result && typeof result.then === 'function') {
-                    result.catch(err => {
-                      console.error('❌ [QuickTranslationTooltip] onAskAI Promise 失败', err)
-                    })
-                  }
-                } catch (error) {
-                  console.error('❌ [QuickTranslationTooltip] onAskAI 调用失败', {
-                    error: error.message,
-                    stack: error.stack,
-                    word
-                  })
+      {onAskAI && word && translation ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            if (isTokenInsufficient) return
+            if (typeof onAskAI === 'function') {
+              try {
+                const result = onAskAI()
+                if (result && typeof result.then === 'function') {
+                  result.catch(() => {})
                 }
-              } else {
-                console.warn('⚠️ [QuickTranslationTooltip] onAskAI 不是函数', { 
-                  onAskAI,
-                  onAskAIType: typeof onAskAI,
-                  word
-                })
+              } catch {
+                // ignore
               }
-            }}
-            onMouseDown={(e) => {
-              e.stopPropagation()
-              console.log('🔘 [QuickTranslationTooltip] AI详细解释按钮 onMouseDown', { word })
-            }}
-            disabled={isTokenInsufficient}
-            className={`mt-2 w-full px-2 py-1 text-xs rounded transition-colors border ${
-              isTokenInsufficient 
-                ? 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent hover:border-gray-300'
-            }`}
-            title={isTokenInsufficient ? "积分不足" : "AI详细解释"}
-          >
-            AI详细解释
-          </button>
-        )
-      })()}
+            }
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation()
+          }}
+          disabled={isTokenInsufficient}
+          className={`mt-2 w-full px-2 py-1 text-xs rounded transition-colors border ${
+            isTokenInsufficient
+              ? 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent hover:border-gray-300'
+          }`}
+          title={isTokenInsufficient ? "积分不足" : "AI详细解释"}
+        >
+          AI详细解释
+        </button>
+      ) : null}
       {/* 小箭头指示器 - 白色背景，灰色边框 */}
       {position === 'bottom' && (
         <>

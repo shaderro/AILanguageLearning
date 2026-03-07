@@ -19,6 +19,7 @@ import { UiLanguageProvider, useUiLanguage } from './contexts/UiLanguageContext'
 import { authService } from './modules/auth/services/authService'
 import { useUIText } from './i18n/useUIText'
 import UIDemoPage from './pages/UIDemo'
+import TestTranslationAPI from './pages/TestDictionaryAPI'
 import LandingPage from './pages/LandingPage'
 import OnboardingLanguage from './pages/OnboardingLanguage'
 import OnboardingReadingIntro from './pages/OnboardingReadingIntro'
@@ -644,6 +645,7 @@ function AppContent() {
           )}
 
           {currentPage === 'UIDemo' && <UIDemoPage />}
+          {currentPage === 'testTranslationAPI' && <TestTranslationAPI />}
         </div>
       </div>
     </div>
