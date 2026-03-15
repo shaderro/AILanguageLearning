@@ -329,10 +329,10 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
       return
     }
     
-    const MAX_LENGTH = 5000
-    const MAX_LENGTH_DISPLAY = '5,000' // 用于显示，避免在 JSX 中计算
+    const MAX_LENGTH = 12000
+    const MAX_LENGTH_DISPLAY = '12,000' // 用于显示，避免在 JSX 中计算
     // 留一些余量，避免 FormData 编码导致超出限制（约 0.3% 的余量）
-    const SAFE_LENGTH = Math.floor(MAX_LENGTH * 0.997) // 49850 字符
+    const SAFE_LENGTH = Math.floor(MAX_LENGTH * 0.997)
     // 确保截取后的内容不超过限制（使用 slice 更安全）
     const originalLength = pendingContent.content.length
     // 使用 slice 截取，留一些余量避免编码问题
@@ -794,7 +794,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">{t('文章长度超出限制')}</h3>
                 <div className="mb-4">
                   <p className="text-gray-600 mb-2">
-                    {t('文章长度为')} <span className="font-semibold text-red-600">{(pendingContent?.content?.length || 0).toLocaleString()}</span> {t('字符， 超过了最大限制')} <span className="font-semibold">5,000</span> {t('字符。')}
+                    {t('文章长度为')} <span className="font-semibold text-red-600">{(pendingContent?.content?.length || 0).toLocaleString()}</span> {t('字符， 超过了最大限制')} <span className="font-semibold">12,000</span> {t('字符。')}
                   </p>
                   <p className="text-sm text-gray-500">
                     {t('如果选择自动截取，将只保留前 5,000 个字符。')}

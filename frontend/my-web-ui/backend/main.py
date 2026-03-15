@@ -64,7 +64,7 @@ except ImportError:
     ENV = os.getenv("ENV", "development")
 
 # 文章长度限制（字符数）
-MAX_ARTICLE_LENGTH = 5000
+MAX_ARTICLE_LENGTH = 12000
 
 # 导入新的标注API路由
 try:
@@ -2489,8 +2489,9 @@ async def upload_file(
         print(f"📤 [Upload] 用户 {user_id} 上传文件: {file.filename}, 标题: {title}, 语言: {language}")
         
         # 验证语言参数
-        if not language or language not in ['中文', '英文', '德文']:
-            return create_error_response("语言参数无效，请选择：中文、英文、德文")
+        allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
+        if not language or language not in allowed_languages:
+            return create_error_response("语言参数无效，请选择正确的学习语言")
         
         # 读取文件内容
         content = await file.read()
@@ -2617,8 +2618,9 @@ async def upload_url(
         print(f"📤 [Upload] 用户 {user_id} 上传URL: {url}, 标题: {title}, 语言: {language}")
         
         # 验证语言参数
-        if not language or language not in ['中文', '英文', '德文']:
-            return create_error_response("语言参数无效，请选择：中文、英文、德文")
+        allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
+        if not language or language not in allowed_languages:
+            return create_error_response("语言参数无效，请选择正确的学习语言")
         
         # 🔧 使用 HTML 提取器从 URL 获取正文
         if extract_main_text_from_url:
@@ -2813,8 +2815,9 @@ async def upload_text(
         print(f"📏 [Upload] 文本后100字符: {text[-100:]}")
         
         # 验证语言参数
-        if not language or language not in ['中文', '英文', '德文']:
-            return create_error_response("语言参数无效，请选择：中文、英文、德文")
+        allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
+        if not language or language not in allowed_languages:
+            return create_error_response("语言参数无效，请选择正确的学习语言")
         
         if not text.strip():
             return create_error_response("文字内容不能为空")

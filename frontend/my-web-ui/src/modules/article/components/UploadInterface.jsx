@@ -8,7 +8,7 @@ import { useUIText } from '../../../i18n/useUIText'
 import { BackButton } from '../../../components/base'
 
 // 文章长度限制（字符数）
-const MAX_ARTICLE_LENGTH = 5000
+const MAX_ARTICLE_LENGTH = 12000
 
 const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, onBack }) => {
   const { userId, isGuest } = useUser()
