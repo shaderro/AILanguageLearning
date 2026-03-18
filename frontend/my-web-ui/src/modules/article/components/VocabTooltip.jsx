@@ -5,7 +5,7 @@ export default function VocabTooltip({ token, explanation, isVisible }) {
   if (!isVisible || !explanation) return null
 
   return (
-    <div className="absolute z-50 mt-1 p-3 bg-gray-900 text-white text-xs rounded shadow-lg max-w-xs">
+    <div className="absolute z-[100000] mt-1 p-3 bg-gray-900 text-white text-xs rounded shadow-lg max-w-xs">
       <div className="font-semibold text-sm">{explanation.word}</div>
       {explanation.pronunciation && (
         <div className="text-gray-300 text-xs mt-1">{explanation.pronunciation}</div>

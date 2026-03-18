@@ -20,10 +20,11 @@ export default function QuickTranslationTooltip({
   onAskAI = null, // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
   isTokenInsufficient = false, // 🔧 Token是否不足（用于禁用AI详细解释按钮）
   fullWidth = false, // 🔧 是否使用全宽模式（与 anchor 宽度一致）
-  uiScale = 1 // 🔧 UI缩放（仅影响 tooltip 自身字体/间距）
+  uiScale = 1, // 🔧 UI缩放（仅影响 tooltip 自身字体/间距）
+  zIndex = 9999, // 🔧 自定义 z-index，用于控制叠放顺序
 }) {
   const t = useUIText()
-  const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999, width: null })
+  const [tooltipPosition, setTooltipPosition] = useState({ top: -9999, left: -9999, width: null, position })
   const [isPositioned, setIsPositioned] = useState(false)
   const tooltipRef = useRef(null)
   const shouldCompactPaddingY = uiScale < 1 && !fullWidth
@@ -48,6 +49,7 @@ export default function QuickTranslationTooltip({
       let top = 0
       let left = 0
       let width = null
+      let effectivePosition = position
 
       // 🔧 如果使用全宽模式，设置宽度为 anchor 的宽度
       if (fullWidth) {
@@ -88,9 +90,27 @@ export default function QuickTranslationTooltip({
           }
       }
 
-      // 确保tooltip不会超出视口
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
+
+      // 🔧 垂直方向自动翻转：优先使用期望位置，如果空间不足则尝试另一侧
+      if (position === 'bottom') {
+        const willOverflowBottom = top + tooltipRect.height > scrollY + viewportHeight - 8
+        if (willOverflowBottom) {
+          // 尝试放到上方
+          effectivePosition = 'top'
+          top = anchorRect.top + scrollY - tooltipRect.height - 8
+        }
+      } else if (position === 'top') {
+        const willOverflowTop = top < scrollY + 8
+        if (willOverflowTop) {
+          // 尝试放到下方
+          effectivePosition = 'bottom'
+          top = anchorRect.bottom + scrollY + 8
+        }
+      }
+
+      // 确保tooltip不会超出视口（在决定最终方向之后）
 
       if (fullWidth) {
         // 全宽模式：确保不超出视口，但保持左对齐
@@ -114,7 +134,7 @@ export default function QuickTranslationTooltip({
         top = scrollY + viewportHeight - tooltipRect.height - 8
       }
 
-      setTooltipPosition({ top, left, width })
+      setTooltipPosition({ top, left, width, position: effectivePosition })
       setIsPositioned(true)
     }
 
@@ -128,7 +148,7 @@ export default function QuickTranslationTooltip({
   useEffect(() => {
     if (!isVisible) {
       setIsPositioned(false)
-      setTooltipPosition({ top: -9999, left: -9999, width: null })
+      setTooltipPosition({ top: -9999, left: -9999, width: null, position })
     }
   }, [isVisible])
 
@@ -141,7 +161,7 @@ export default function QuickTranslationTooltip({
   return (
     <div
       ref={tooltipRef}
-      className={`fixed z-[9999] bg-white border border-gray-300 rounded-lg shadow-lg ${
+      className={`fixed bg-white border border-gray-300 rounded-lg shadow-lg ${
         // 🔧 仅缩减“词汇 tooltip”的上下边距到约 2/3（12px -> 8px）
         // 不缩放字号，不缩放整体框
         shouldCompactPaddingY ? 'px-3 py-2' : 'p-3'
@@ -151,6 +171,7 @@ export default function QuickTranslationTooltip({
         left: `${tooltipPosition.left}px`,
         width: tooltipPosition.width ? `${tooltipPosition.width}px` : undefined,
         transform: 'translate(0, 0)', // 保持原始字号与整体尺寸
+        zIndex,
         visibility: isPositioned ? 'visible' : 'hidden',
         opacity: isPositioned ? 1 : 0,
         transition: 'opacity 0.1s ease-in-out',
@@ -223,7 +244,7 @@ export default function QuickTranslationTooltip({
         </button>
       ) : null}
       {/* 小箭头指示器 - 白色背景，灰色边框 */}
-      {position === 'bottom' && (
+      {tooltipPosition.position === 'bottom' && (
         <>
           {/* 灰色边框箭头 */}
           <div 
@@ -241,7 +262,7 @@ export default function QuickTranslationTooltip({
           />
         </>
       )}
-      {position === 'top' && (
+      {tooltipPosition.position === 'top' && (
         <>
           {/* 灰色边框箭头 */}
           <div 

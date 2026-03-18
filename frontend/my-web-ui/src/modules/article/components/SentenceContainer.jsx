@@ -552,6 +552,8 @@ function SentenceContainer({
           showWord={false}
           isLoading={isLoadingSentenceTranslation}
           fullWidth={true}
+          // 🔧 让单词翻译 tooltip 叠在整句翻译之上：句子用略低的 zIndex
+          zIndex={9998}
         />
       )}
       
