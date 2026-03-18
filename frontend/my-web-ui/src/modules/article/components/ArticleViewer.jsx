@@ -34,6 +34,14 @@ function ArticleViewer({
   isTokenInsufficient = false,  // 🔧 Token是否不足（用于禁用AI详细解释按钮）
   autoTranslationEnabled = false  // 🔧 自动翻译开关状态
 }) {
+  // 🔧 Debug: detect unexpected remounts (selection state loss)
+  useEffect(() => {
+    console.log('🧩 [ArticleViewer] mounted', { articleId })
+    return () => {
+      console.log('🧩 [ArticleViewer] unmounted', { articleId })
+    }
+  }, [articleId])
+
   // Debug logging removed to improve performance
   const { userId } = useUser()
   const t = useUIText()
@@ -179,7 +187,19 @@ function ArticleViewer({
   }, [originalHandleSentenceClick, selectedSentenceIndex])
 
   // Selection context (new system) - need to sync with old token selection system
-  const { clearSelection: clearSelectionContext, selectTokens: selectTokensInContext } = useSelection()
+  const {
+    currentSelection,
+    clearSelection: clearSelectionContext,
+    selectTokens: selectTokensInContext,
+  } = useSelection()
+
+  const selectedSentenceIndexFromSelectionContext = useMemo(() => {
+    if (!currentSelection || currentSelection.type !== 'sentence') return null
+    const sid = currentSelection.sentenceId
+    if (sid === null || sid === undefined) return null
+    const idx = sentences.findIndex(s => (s?.sentence_id ?? s?.id) === sid)
+    return idx >= 0 ? idx : null
+  }, [currentSelection, sentences])
 
   // 🔧 稳定 useTokenSelection 的参数，避免因为参数引用变化导致 hook 重新执行
   const tokenSelectionParams = useMemo(() => ({
@@ -761,10 +781,19 @@ function ArticleViewer({
     // 1. 如果有选中的句子，从选中句子开始
     // 2. 如果没有选中句子，检查是否有上次朗读位置，如果有则继续，否则从可见第一句开始
     let startIndex
-    if (selectedSentenceIndex !== null && selectedSentenceIndex !== undefined) {
+    const preferredSelectedSentenceIndex =
+      selectedSentenceIndexFromSelectionContext !== null && selectedSentenceIndexFromSelectionContext !== undefined
+        ? selectedSentenceIndexFromSelectionContext
+        : selectedSentenceIndex
+
+    if (preferredSelectedSentenceIndex !== null && preferredSelectedSentenceIndex !== undefined) {
       // 从选中的句子开始
-      startIndex = selectedSentenceIndex
-      console.log('🔊 [ArticleViewer] 从选中的句子开始朗读，起始索引:', startIndex)
+      startIndex = preferredSelectedSentenceIndex
+      console.log('🔊 [ArticleViewer] 从选中的句子开始朗读，起始索引:', startIndex, {
+        selectedSentenceIndex,
+        selectedSentenceIndexFromSelectionContext,
+        currentSelection
+      })
     } else if (currentReadingIndexRef.current > 0 && currentReadingIndexRef.current < currentSentences.length) {
       // 从上次朗读位置继续
       startIndex = currentReadingIndexRef.current
@@ -1185,9 +1214,24 @@ function ArticleViewer({
   // 🔧 使用 useCallback 包装 handleReadAloud，避免在 useMemo 中频繁变化
   const handleReadAloudClick = useCallback((e) => {
     e.stopPropagation() // 阻止事件冒泡，避免触发背景点击
-    console.log('🔊 [ArticleViewer] 朗读按钮被点击')
+    const latestSentences = sentencesRef.current || []
+    const idx =
+      selectedSentenceIndexFromSelectionContext !== null && selectedSentenceIndexFromSelectionContext !== undefined
+        ? selectedSentenceIndexFromSelectionContext
+        : selectedSentenceIndex
+    const selected = typeof idx === 'number' && idx >= 0 && idx < latestSentences.length ? latestSentences[idx] : null
+    const selectedText = selected ? getSentenceText(selected) : null
+    console.log('🔊 [ArticleViewer] 朗读按钮被点击', {
+      selectedSentenceIndex,
+      selectedSentenceIndexFromSelectionContext,
+      currentSelection,
+      selectedSentenceId: selected?.sentence_id ?? selected?.id ?? null,
+      selectedSentencePreview: selectedText ? String(selectedText).slice(0, 120) : null,
+      fallbackFirstSentencePreview: latestSentences[0] ? String(getSentenceText(latestSentences[0]) || '').slice(0, 120) : null,
+      isReading: isReadingRef.current,
+    })
     handleReadAloud()
-  }, [handleReadAloud])
+  }, [handleReadAloud, currentSelection, selectedSentenceIndex, selectedSentenceIndexFromSelectionContext])
   
   // 🔧 构建朗读按钮 - 使用 useMemo 缓存，避免不必要的重新创建
   const readAloudButton = useMemo(() => {
