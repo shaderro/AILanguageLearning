@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext, useCallback, useEffect, useMemo } from 'react'
+import React, { memo, useState, useRef, useContext, useCallback, useEffect, useMemo } from 'react'
 import TokenSpan from './TokenSpan'
 import { getTokenKey } from '../utils/tokenUtils'
 import GrammarNotationCard from './notation/GrammarNotationCard'
@@ -14,7 +14,7 @@ import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
  */
-export default function SentenceContainer({
+function SentenceContainer({
   sentence,
   sentenceIndex,
   articleId,
@@ -34,8 +34,8 @@ export default function SentenceContainer({
   onSentenceMouseEnter,
   onSentenceMouseLeave,
   onSentenceClick,
-  getSentenceBackgroundStyle,
-  isSentenceInteracting,
+  interactionClassName = '',
+  isInteracting = false,
   currentReadingToken = null, // 当前正在朗读的 token {sentenceIndex, tokenIndex}
   // 🔧 新增：AI详细解释回调
   onAskAI = null,
@@ -79,12 +79,30 @@ export default function SentenceContainer({
   }
 
   const handleSentenceClick = async (e) => {
+    try {
+      const target = e?.target
+      const currentTarget = e?.currentTarget
+      const targetTag = target?.tagName
+      const currentTag = currentTarget?.tagName
+      const clickedToken = target?.closest ? target.closest('[data-token-id]') : null
+      console.log('🧪 [SentenceContainer] handleSentenceClick', {
+        sentenceIndex,
+        sentenceId,
+        targetTag,
+        currentTag,
+        isTrusted: e?.isTrusted,
+        clickedToken: Boolean(clickedToken),
+        tokenId: clickedToken?.getAttribute ? clickedToken.getAttribute('data-token-id') : null,
+      })
+    } catch (err) {
+      console.warn('⚠️ [SentenceContainer] handleSentenceClick log failed', err)
+    }
     e.stopPropagation()
     onSentenceClick(sentenceIndex)
   }
 
-  const backgroundStyle = getSentenceBackgroundStyle(sentenceIndex)
-  const isInteracting = isSentenceInteracting(sentenceIndex)
+  const backgroundStyle = interactionClassName
+  const hoverStyle = backgroundStyle ? '' : 'hover:bg-gray-100 hover:rounded-md'
   
   // 🔧 获取 sentence_id 用于标识（优先使用数据中的 sentence_id，否则使用索引+1）
   const sentenceId = sentence?.sentence_id || (typeof sentence === 'object' && sentence?.id) || (sentenceIndex + 1)
@@ -201,7 +219,7 @@ export default function SentenceContainer({
   }, [sentence])
   
   // 🔧 检查句子是否被选中或交互中
-  const isSentenceSelected = isSentenceInteracting && isSentenceInteracting(sentenceIndex)
+  const isSentenceSelected = isInteracting
   
   // 🔧 检查是否有 token 被选中（在当前句子中）
   // selectedTokenIds 中的 uid 格式是 `${sentenceIdx}-${sentence_token_id}`
@@ -415,12 +433,27 @@ export default function SentenceContainer({
     <div 
       ref={sentenceRef}
       key={`s-${sentenceIndex}`} 
-      className={`select-none relative transition-all duration-200 ${backgroundStyle} ${selectionSentenceClass}`}
+      className={`select-none relative transition-all duration-200 ${hoverStyle} ${backgroundStyle} ${selectionSentenceClass}`}
       data-sentence="1"
       data-sentence-id={sentenceId}
       data-sentence-index={sentenceIndex}
       onMouseEnter={handleSentenceHover}
       onMouseLeave={handleSentenceHoverLeave}
+      onClickCapture={(e) => {
+        try {
+          const target = e?.target
+          const clickedToken = target?.closest ? target.closest('[data-token-id]') : null
+          console.log('🧪 [SentenceContainer] onClickCapture', {
+            sentenceIndex,
+            sentenceId,
+            targetTag: target?.tagName,
+            clickedToken: Boolean(clickedToken),
+            tokenId: clickedToken?.getAttribute ? clickedToken.getAttribute('data-token-id') : null,
+          })
+        } catch (err) {
+          console.warn('⚠️ [SentenceContainer] onClickCapture log failed', err)
+        }
+      }}
       onClick={(e) => { selOnClick(e); handleSentenceClick(e) }}
       style={{}}
     >
@@ -570,3 +603,5 @@ export default function SentenceContainer({
     </div>
   )
 }
+
+export default memo(SentenceContainer)

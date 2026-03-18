@@ -2,6 +2,16 @@
  * Token utility functions for ArticleViewer
  */
 
+const isDev = (() => {
+  try {
+    return typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV
+  } catch {
+    return false
+  }
+})()
+
+const warnedMissingSentenceIdx = new Set()
+
 /**
  * Generate unique key for token rendering
  *
@@ -43,7 +53,10 @@ export const getTokenId = (token, sentenceIdx) => {
   if (sentenceIdx != null) return `${sentenceIdx}-${sid}`
   // 向后兼容（不推荐）：仅返回 sentence_token_id
   const fallback = String(sid)
-  console.debug('[tokenUtils.getTokenId] Missing sentenceIdx, fallback to sid only:', fallback)
+  if (isDev && !warnedMissingSentenceIdx.has(fallback)) {
+    warnedMissingSentenceIdx.add(fallback)
+    console.debug('[tokenUtils.getTokenId] Missing sentenceIdx, fallback to sid only:', fallback)
+  }
   return fallback
 }
 
