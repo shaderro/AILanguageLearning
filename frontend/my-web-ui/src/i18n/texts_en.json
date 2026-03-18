@@ -18,6 +18,12 @@
   "Examples:": "Examples:",
   "Filters": "Filters",
   "Language Learning App": "LinkText",
+  "Learn from real content": "Learn from real content",
+  "Turn questions into structured knowledge": "Turn questions into structured knowledge",
+  "helps you understand vocabulary and grammar directly from real articles — and automatically builds your personal knowledge system as you learn.": "helps you understand vocabulary and grammar directly from real articles — and automatically builds your personal knowledge system as you learn.",
+  "Product preview": "Product preview",
+  "Highlighted text → AI explanation": "Highlighted text → AI explanation",
+  "Annotation": "Annotation",
   "Loading article...": "Loading article...",
   "Loading articles...": "Loading articles...",
   "Loading...": "Loading...",
@@ -373,5 +379,11 @@
   "继续": "Continue",
   "开始阅读吧！": "Let's start reading!",
   "选择一篇文章开始学习，或上传你自己的文章": "Select an article to start learning, or upload your own",
-  "上传自己的文章": "Upload your own article"
+  "上传自己的文章": "Upload your own article",
+
+  "Read & Ask": "Read & Ask",
+  "AI Explains & Annotates": "AI Explains & Annotates",
+  "Builds Knowledge": "Builds Knowledge",
+  "Grows Your System": "Grows Your System",
+  "Relative clause — modifies \"the book\"": "Relative clause — modifies \"the book\""
 }
