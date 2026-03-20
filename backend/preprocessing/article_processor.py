@@ -49,7 +49,7 @@ def process_article(
     
     print(f"语言: {language} (代码: {language_code}, 类型: {language_category})")
     if is_non_whitespace:
-        print("⚠️  检测到非空格语言，将使用字符级别分词（word token 功能待实现）")
+        print("⚠️  检测到非空格语言，将使用字符级别分词（并尝试生成 word tokens）")
     else:
         print("✅ 检测到空格语言，使用单词级别分词")
     
@@ -78,7 +78,7 @@ def process_article(
             global_token_id += 1
 
         sentence_word_tokens: List[Dict[str, Any]] = []
-        if language_code == "zh":
+        if language_code in ("zh", "ja"):
             sentence_word_tokens, token_word_mapping, global_word_token_id = word_segmentation(
                 language_code,
                 sentence_text,

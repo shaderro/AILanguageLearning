@@ -135,7 +135,8 @@ function AppContent() {
   
   // 从 LanguageContext 获取语言选择
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
-  const ALL_LANGUAGES = ['中文', '英文', '德文']
+  // 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
+  const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
 
   const getHeaderLanguageStorageKey = () => {
     const id = currentUserId || 'guest'
@@ -197,6 +198,12 @@ function AppContent() {
         zh: '中文',
         en: '英文',
         de: '德文',
+        es: '西班牙语',
+        fr: '法语',
+        ja: '日语',
+        ko: '韩语',
+        ar: '阿拉伯语',
+        ru: '俄语',
       }
 
       if (info.content_language && codeToName[info.content_language]) {
@@ -341,7 +348,7 @@ function AppContent() {
                     style={{ '--tw-ring-color': colors.primary[300] }}
                   >
                     <span className="mr-1">
-                      {selectedLanguage || t('请选择')}
+                      {selectedLanguage ? (t(selectedLanguage) || selectedLanguage) : t('请选择')}
                     </span>
                     <svg
                       className="w-3 h-3 text-gray-500"
@@ -371,7 +378,7 @@ function AppContent() {
                               isActiveLang ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50',
                             ].join(' ')}
                           >
-                            <span>{lang}</span>
+                            <span>{t(lang) || lang}</span>
                             {isActiveLang && (
                               <svg
                                 className="w-4 h-4 text-green-600"
@@ -437,7 +444,7 @@ function AppContent() {
                                 }}
                                 className="w-full px-3 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
                               >
-                                {lang}
+                                {t(lang) || lang}
                               </button>
                             ))
                           )}

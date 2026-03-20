@@ -98,7 +98,8 @@ def split_tokens_char_level(text: str) -> List[Dict[str, Any]]:
     
     # 定义标点符号和空白字符的正则表达式
     # 匹配标点符号（包括中文标点）
-    punctuation_pattern = r'[^\w\s\u4e00-\u9fff]'  # 非字母数字、非空白、非中文字符
+    # 说明：将日文假名范围纳入“文本字符”，避免日文被误识别为标点。
+    punctuation_pattern = r'[^\w\s\u4e00-\u9fff\u3040-\u30ff\uff66-\uff9f]'  # 非字母数字、非空白、非中日韩文字符
     # 匹配空白字符
     space_pattern = r'\s+'
     

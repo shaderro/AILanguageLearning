@@ -447,10 +447,21 @@ export default function VocabNotationCard({
     const rect = anchorRef.current.getBoundingClientRect()
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
-    const measuredHeight =
+    const measuredHeightRaw =
       cardRef.current?.getBoundingClientRect().height ||
       cardHeight ||
       DEFAULT_CARD_MAX_HEIGHT
+    // 🔧 统一限制卡片的定位和 maxHeight：不超过视口高度减去上下边距
+    const maxAvailableHeight = Math.max(160, viewportHeight - CARD_MARGIN * 2)
+    // 🔧 “期望高度”只用于决定是否翻转（不参与卡片高度上限），避免首次 hover 时
+    // 因内容尚未渲染/scrollHeight 很小而把 maxHeightPx 压成一行。
+    const contentScrollHeight = cardRef.current?.scrollHeight || null
+    const expectedHeightForFlip = Math.min(
+      contentScrollHeight != null ? contentScrollHeight : measuredHeightRaw,
+      DEFAULT_CARD_MAX_HEIGHT,
+    )
+    // 采用固定的上限高度（520）来呈现卡片；具体可用高度由空间决定
+    const measuredHeight = Math.min(DEFAULT_CARD_MAX_HEIGHT, maxAvailableHeight)
     
     // 左对齐到 token 的左边
     const desiredLeft = rect.left
@@ -460,16 +471,30 @@ export default function VocabNotationCard({
     // 默认显示在 token 正下方
     let top = rect.bottom + CARD_MARGIN
     const spaceBelow = viewportHeight - rect.bottom - CARD_MARGIN
-    const spaceAbove = rect.top
+    const availableAbove = rect.top - CARD_MARGIN
+    let maxHeightPx = maxAvailableHeight
     
-    // 如果下方空间不够（无法完整显示卡片），且上方有足够空间，则显示在上方
-    if (spaceBelow < measuredHeight && spaceAbove >= measuredHeight) {
-      // 显示在 token 正上方，卡片底部与 token 行上边对齐（无间隙）
-      top = rect.top - measuredHeight
+    // 如果下方空间不够（相对于期望高度），则强制显示在 token 正上方
+    if (spaceBelow < expectedHeightForFlip) {
+      // 🔧 关键：卡片底边必须在 token 上方（留 CARD_MARGIN 间距）
+      // 上方可用空间是多少，就最多用多少（避免 top 被夹到 0 导致卡片跑到页面顶部）
+      if (availableAbove > 0) {
+        // 🔧 高度上限直接使用 520（受视口/上方空间限制），避免初始只显示一行
+        maxHeightPx = Math.min(DEFAULT_CARD_MAX_HEIGHT, maxAvailableHeight, availableAbove)
+        top = rect.top - CARD_MARGIN - maxHeightPx // 当 maxHeightPx==availableAbove 时 top==0
+      } else {
+        // 顶部空间为 0：无法放在上方，只能退回下方并限制高度
+        maxHeightPx = Math.min(DEFAULT_CARD_MAX_HEIGHT, maxAvailableHeight, Math.max(0, spaceBelow))
+        top = rect.bottom + CARD_MARGIN
+      }
+    } else {
+      // 下方空间充足：正常显示在下方，但也限制高度不超出可见区域
+      maxHeightPx = Math.min(DEFAULT_CARD_MAX_HEIGHT, maxAvailableHeight, Math.max(0, spaceBelow))
+      top = rect.bottom + CARD_MARGIN
     }
     
-    // 确保不会超出视口边界
-    const finalTop = Math.max(0, Math.min(top, viewportHeight - measuredHeight))
+    // 确保不会超出视口边界（此时 maxHeightPx 已根据空间收缩）
+    const finalTop = Math.max(0, Math.min(top, viewportHeight - maxHeightPx))
     const finalOpacity = isVisible ? 1 : 0
     
     // 🔧 如果位置和透明度没有变化，跳过更新，避免不必要的重新渲染
@@ -491,6 +516,7 @@ export default function VocabNotationCard({
       opacity: finalOpacity,
       pointerEvents: isVisible ? 'auto' : 'none',
       zIndex: 100000,
+      maxHeightPx,
       ...(position || {})
     })
 
@@ -619,7 +645,10 @@ export default function VocabNotationCard({
         ref={cardRef}
         className="bg-white border border-gray-300 rounded-lg shadow-lg p-3"
         style={{
-          maxHeight: `${DEFAULT_CARD_MAX_HEIGHT}px`,
+          // 🔧 使用与定位一致的高度上限，避免被视口裁断
+          maxHeight: portalStyle?.maxHeightPx
+            ? `${portalStyle.maxHeightPx}px`
+            : `min(${DEFAULT_CARD_MAX_HEIGHT}px, calc(100vh - ${CARD_MARGIN * 2}px))`,
           overflowY: 'auto'
         }}
       >

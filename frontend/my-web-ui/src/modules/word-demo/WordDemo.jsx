@@ -15,7 +15,6 @@ import VocabDetailCard from '../../components/features/vocab/VocabDetailCard'
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
   const [selectedWordId, setSelectedWordId] = useState(null)
-  const [selectedWordIndex, setSelectedWordIndex] = useState(-1)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   // 🔧 缓存详情页面的词汇数据，避免切换时重新加载
   const [detailPageCache, setDetailPageCache] = useState(new Map())
@@ -31,7 +30,7 @@ function WordDemo() {
   const [vocabDetailCache, setVocabDetailCache] = useState(new Map())
   
   // 从 UserContext 获取当前用户
-  const { userId, isGuest, isAuthenticated } = useUser()
+  const { userId, isGuest } = useUser()
   
   // 从 LanguageContext 获取选择的语言
   const { selectedLanguage } = useLanguage()
@@ -181,36 +180,6 @@ function WordDemo() {
   const handleWordSelect = (word) => {
     // 🔧 修改：设置 ID 触发详情加载，而不是直接使用列表数据
     setSelectedWordId(word.vocab_id)
-    // 计算当前词汇在列表中的索引
-    const allVocabs = vocabData?.data || []
-    const filteredVocabs = allVocabs
-      .filter((w) => (searchTerm ? String(w.vocab_body || '').toLowerCase().includes(searchTerm.toLowerCase()) : true))
-    
-    const sortedList = [...filteredVocabs].sort((a, b) => {
-      const timeA = a.updated_at || a.created_at
-      const timeB = b.updated_at || b.created_at
-      
-      if (timeA && timeB) {
-        const dateA = new Date(timeA).getTime()
-        const dateB = new Date(timeB).getTime()
-        if (sortOrder === 'desc') {
-          return dateB - dateA
-        } else {
-          return dateA - dateB
-        }
-      }
-      
-      const idA = a.vocab_id || 0
-      const idB = b.vocab_id || 0
-      if (sortOrder === 'desc') {
-        return idB - idA
-      } else {
-        return idA - idB
-      }
-    })
-    
-    const index = sortedList.findIndex(w => w.vocab_id === word.vocab_id)
-    setSelectedWordIndex(index)
   }
 
   const handleStartReview = async () => {
@@ -420,6 +389,7 @@ function WordDemo() {
         <div className="h-full bg-white p-8">
           <div className="max-w-6xl mx-auto">
             <VocabReviewCard
+              key={vocabToShow?.vocab_id}
               vocab={vocabToShow}
               currentProgress={currentReviewIndex + 1}
               totalProgress={reviewWords.length}
@@ -493,7 +463,6 @@ function WordDemo() {
         }
         const prevWord = sortedList[currentIndex - 1]
         setSelectedWordId(prevWord.vocab_id)
-        setSelectedWordIndex(currentIndex - 1)
       }
     }
     
@@ -505,7 +474,6 @@ function WordDemo() {
         }
         const nextWord = sortedList[currentIndex + 1]
         setSelectedWordId(nextWord.vocab_id)
-        setSelectedWordIndex(currentIndex + 1)
       }
     }
     
@@ -526,7 +494,6 @@ function WordDemo() {
             onBack={() => {
               setSelectedWord(null)
               setSelectedWordId(null)
-              setSelectedWordIndex(-1)
               setPreviousWord(null)
               setShowLoadingUI(false)
             }}

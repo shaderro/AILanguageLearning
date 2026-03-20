@@ -158,8 +158,10 @@ function SentenceContainer({
     sentenceId
   })
   
-  // 🔧 分词下划线功能：检测是否为中文（无空格语言）且有 word_tokens
-  const isNonWhitespace = sentence?.is_non_whitespace || sentence?.language_code === 'zh'
+  // 🔧 分词下划线功能：检测是否为非空格语言（中文/日语等）且有 word_tokens
+  const sentenceLangCode = String(sentence?.language_code || '').toLowerCase()
+  const isNonWhitespaceByLang = ['zh', 'ja', 'ko'].includes(sentenceLangCode)
+  const isNonWhitespace = Boolean(sentence?.is_non_whitespace) || isNonWhitespaceByLang
   const wordTokens = sentence?.word_tokens || []
   const hasWordTokens = Array.isArray(wordTokens) && wordTokens.length > 0
   const shouldShowSegmentationUnderline = isNonWhitespace && hasWordTokens

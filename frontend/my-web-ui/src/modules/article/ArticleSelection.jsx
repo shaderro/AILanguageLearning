@@ -184,7 +184,15 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       // 可能的其他格式
       selectedLanguage === '中文' ? 'Chinese' : null,
       selectedLanguage === '英文' ? 'English' : null,
+      selectedLanguage === '英语' ? 'English' : null,
       selectedLanguage === '德文' ? 'German' : null,
+      selectedLanguage === '德语' ? 'German' : null,
+      selectedLanguage === '西班牙语' ? 'Spanish' : null,
+      selectedLanguage === '法语' ? 'French' : null,
+      selectedLanguage === '日语' ? 'Japanese' : null,
+      selectedLanguage === '韩语' ? 'Korean' : null,
+      selectedLanguage === '阿拉伯语' ? 'Arabic' : null,
+      selectedLanguage === '俄语' ? 'Russian' : null,
     ].filter(Boolean)
     
     // 调试：检查文章语言分布
@@ -387,7 +395,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
         <div className="max-w-7xl mx-auto">
             <div className="text-center mb-4">
               <span className="block text-primary-600 font-medium">
-                {t('当前筛选：')}{selectedLanguage}
+                {t('当前筛选：')}{t(selectedLanguage) || selectedLanguage}
               </span>
             </div>
 
@@ -415,7 +423,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                   <p className="text-gray-600">
                     {t('共显示 {count} 篇文章（{language}）')
                       .replace('{count}', enrichedArticles.length)
-                      .replace('{language}', selectedLanguage)
+                      .replace('{language}', t(selectedLanguage) || selectedLanguage)
                     }
                   </p>
                 </div>
@@ -491,14 +499,14 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                       disabled={isProcessing}
                       className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
                     >
-                      取消
+                      {t('取消')}
                     </button>
                     <button
                       onClick={handleConfirmDelete}
                       disabled={isProcessing}
                       className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? '删除中...' : '确认删除'}
+                      {t(isProcessing ? '删除中...' : '确认删除')}
                     </button>
                   </div>
                 </div>

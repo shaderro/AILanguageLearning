@@ -47,6 +47,7 @@ const profileTexts = {
     currentPoints: '当前积分',
     inviteCode: '邀请码',
     enterInviteCode: '请输入邀请码',
+    internalTestingOnly: '(仅内部测试用)',
     redeem: '兑换',
     redeeming: '兑换中...',
     redeemSuccess: '兑换成功',
@@ -90,6 +91,7 @@ const profileTexts = {
     currentPoints: 'Current Points',
     inviteCode: 'Invite Code',
     enterInviteCode: 'Enter invite code',
+    internalTestingOnly: '(Internal testing only)',
     redeem: 'Redeem',
     redeeming: 'Redeeming...',
     redeemSuccess: 'Redeem successful',
@@ -100,7 +102,8 @@ const profileTexts = {
 
 import { convertTokensToPoints } from '../../../utils/tokenUtils'
 
-const ALL_LANGUAGES = ['中文', '英文', '德文']
+// 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
+const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
 
 const getLanguageStorageKey = (userId) => {
   const id = userId || 'guest'
@@ -266,7 +269,15 @@ const ProfilePage = ({ onClose, onLogout }) => {
     if (uiLanguage === 'en') {
       if (lang === '中文') return 'Chinese'
       if (lang === '英文') return 'English'
+      if (lang === '英语') return 'English'
       if (lang === '德文') return 'German'
+      if (lang === '德语') return 'German'
+      if (lang === '西班牙语') return 'Spanish'
+      if (lang === '法语') return 'French'
+      if (lang === '日语') return 'Japanese'
+      if (lang === '韩语') return 'Korean'
+      if (lang === '阿拉伯语') return 'Arabic'
+      if (lang === '俄语') return 'Russian'
     }
     return lang
   }
@@ -336,7 +347,7 @@ const ProfilePage = ({ onClose, onLogout }) => {
                 <div className="flex items-center justify-between py-2 border-b border-gray-100">
                   <div>
                     <label className="text-sm font-medium text-gray-500">
-                      {t.userId} <span className="text-xs text-orange-500">(仅内部测试用)</span>
+                      {t.userId} <span className="text-xs text-orange-500">{t.internalTestingOnly}</span>
                     </label>
                     <p className="text-sm text-gray-900 mt-1">{userId}</p>
                   </div>

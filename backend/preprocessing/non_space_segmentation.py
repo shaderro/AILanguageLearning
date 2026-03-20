@@ -22,6 +22,15 @@ except ImportError:
     print("⚠️  警告: jieba 库未安装，中文分词功能将不可用")
     print("   安装方法: pip install jieba")
 
+try:
+    from janome.tokenizer import Tokenizer as JanomeTokenizer
+    JANOME_AVAILABLE = True
+except ImportError:
+    JANOME_AVAILABLE = False
+    JanomeTokenizer = None
+    print("⚠️  警告: janome 库未安装，日文分词功能将不可用")
+    print("   安装方法: pip install janome")
+
 
 def Chinese_sentence_segmentation(sentence: str) -> List[Tuple[str, int, int]]:
     """
@@ -263,8 +272,34 @@ def Japanese_sentence_segmentation(sentence: str) -> List[Tuple[str, int, int]]:
     Returns:
         List[Tuple[str, int, int]]: 分词结果列表
     """
-    # TODO: 实现日文分词
-    raise NotImplementedError("日文分词功能尚未实现")
+    if not JANOME_AVAILABLE:
+        raise ImportError("janome 库未安装，无法进行日文分词。请运行: pip install janome")
+
+    if not sentence or not isinstance(sentence, str):
+        return []
+
+    tokenizer = JanomeTokenizer()
+    surfaces = [token.surface for token in tokenizer.tokenize(sentence)]
+
+    result: List[Tuple[str, int, int]] = []
+    current_pos = 0
+
+    for word in surfaces:
+        if not word or not str(word).strip():
+            current_pos += len(word or "")
+            continue
+
+        word_start = sentence.find(word, current_pos)
+        if word_start == -1:
+            word_start = current_pos
+            word_end = current_pos + len(word)
+        else:
+            word_end = word_start + len(word)
+
+        result.append((word, word_start, word_end))
+        current_pos = word_end
+
+    return result
 
 
 # 测试代码

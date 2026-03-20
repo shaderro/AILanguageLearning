@@ -308,7 +308,7 @@ class EnhancedArticleProcessor:
         if language:
             print(f"语言: {language} (代码: {language_code}, 类型: {language_category})")
             if is_non_whitespace:
-                print("⚠️  检测到非空格语言，将使用字符级别分词（word token 功能待实现）")
+                print("⚠️  检测到非空格语言，将使用字符级别分词（并尝试生成 word tokens）")
             else:
                 print("✅ 检测到空格语言，使用单词级别分词")
         
@@ -365,7 +365,7 @@ class EnhancedArticleProcessor:
                 global_token_id += 1
             
             sentence_word_tokens: List[Dict[str, Any]] = []
-            if language_code == "zh":
+            if language_code in ("zh", "ja"):
                 sentence_word_tokens, token_word_mapping, global_word_token_id = word_segmentation(
                     language_code,
                     sentence_text,
@@ -411,7 +411,7 @@ class EnhancedArticleProcessor:
         print(f"   总句子数: {len(sentences)}")
         print(f"   总token数: {global_token_id}")
         print(f"   生成词汇解释: {len(self.vocab_expressions)} 个")
-        if language_code == "zh":
+        if language_code in ("zh", "ja"):
             self._print_segmentation_debug_info(result)
         
         return result

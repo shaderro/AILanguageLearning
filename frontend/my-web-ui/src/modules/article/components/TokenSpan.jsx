@@ -95,6 +95,7 @@ export default function TokenSpan({
     if (['zh-tw', 'zh_tw', '繁体中文'].includes(s)) return 'zh'
     if (['en', 'english', '英文'].includes(s)) return 'en'
     if (['de', 'german', '德文', '德语'].includes(s)) return 'de'
+    if (['ja', 'japanese', '日语', '日本語', '日文'].includes(s)) return 'ja'
     // 兜底：取前缀（例如 fr-FR / ja-JP）
     const prefix = s.split(/[-_]/)[0]
     return prefix && prefix.length === 2 ? prefix : null

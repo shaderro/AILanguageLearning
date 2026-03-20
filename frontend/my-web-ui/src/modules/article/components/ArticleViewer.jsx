@@ -85,6 +85,7 @@ function ArticleViewer({
     if (['zh-tw', 'zh_tw', '繁体中文'].includes(lower)) return 'zh'
     if (['en', 'english', '英文'].includes(lower)) return 'en'
     if (['de', 'german', '德文', '德语'].includes(lower)) return 'de'
+    if (['ja', 'japanese', '日语', '日本語', '日文'].includes(lower)) return 'ja'
     if (lower.length === 2) return lower
     return null
   }
@@ -1409,11 +1410,6 @@ function ArticleViewer({
             </pre>
           </div>
         )}
-        {sentences.length > 0 && (
-          <div className="text-xs text-gray-400 mb-2">
-            ✅ 已加载 {sentences.length} 个句子
-          </div>
-        )}
         {sentences.map((sentence, sIdx) => {
           const sentenceId = sentence.sentence_id || (typeof sentence === 'object' && sentence.id)
           const isFlashing = flashingSentenceId === sentenceId
@@ -1484,6 +1480,9 @@ function ArticleViewer({
             </React.Fragment>
           )
         })}
+
+        {/* 🔧 Bottom spacer: allow scrolling past last sentence for comfort */}
+        <div aria-hidden="true" style={{ height: '35vh' }} />
       </div>
       </div>
     </div>

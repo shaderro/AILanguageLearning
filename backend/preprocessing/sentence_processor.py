@@ -9,7 +9,12 @@
 import re
 from typing import List, Optional
 
-CHINESE_PUNCTUATION_PATTERN = r'(……|…|[。！？!?])'
+# 句子切分标点：
+# - 中文/日文通用的全角句末符：。！？？
+# - 日文常见：｡（半角假名/小圆点，用作日文句末）
+# - 兼容阿拉伯问号：؟
+# - 省略号：… / ……
+CHINESE_PUNCTUATION_PATTERN = r'(……|…|[。！？!?؟｡﹖﹗])'
 
 # 缩写白名单（这些缩写后的句号不应该切句）
 # 注意：_is_known_abbreviation 函数会将单词转为小写后比较，所以这里只需要小写形式
@@ -410,13 +415,66 @@ def split_sentences(text: str, language_code: Optional[str] = None) -> List[str]
             # 默认为英文，使用空格语言分句逻辑（包含缩写保护）
             language_code = "en"
     
-    if language_code == "zh":
-        return _split_chinese_sentences(text)
+    if language_code in ("zh", "ja"):
+        sentences = _split_chinese_sentences(text)
+        if language_code == "ja":
+            _debug_print_ja_sentence_split(text, sentences)
+        return sentences
     
     # 空格语言（英文/德语等）使用统一实现
     # 注意：即使 language_code 为 None，也会使用英文分句逻辑（包含缩写保护）
     is_german = (language_code == "de")
     return _split_whitespace_sentences(text, is_german=is_german)
+
+
+def _debug_print_ja_sentence_split(text: str, sentences: List[str]) -> None:
+    """
+    日语分句诊断日志：
+    - 打印输入中常见日语句末标点的出现次数/位置
+    - 打印本轮 split_sentences 的结果数量与 sample
+    """
+    try:
+        print("\n[SentenceProcessor][JA] 🔍 split_sentences debug")
+        preview = (text[:160] + "…") if len(text) > 160 else text
+        print(f"[SentenceProcessor][JA] input preview: {preview.replace(chr(10),'\\\\n').replace(chr(13),'\\\\r')}")
+
+        delimiters = ["。", "｡", "！", "？", "!", "?", "…", "……", "؟", "﹖", "﹗"]
+
+        def _indices_of(s: str, sub: str, max_items: int = 10) -> List[int]:
+            idxs: List[int] = []
+            start = 0
+            while True:
+                i = s.find(sub, start)
+                if i == -1:
+                    break
+                idxs.append(i)
+                if len(idxs) >= max_items:
+                    break
+                start = i + 1
+            return idxs
+
+        for d in delimiters:
+            # 使用 str.count 对单字符/多字符都安全，位置用 find 循环
+            count = text.count(d)
+            idxs = _indices_of(text, d)
+            idxs_preview = idxs if len(idxs) <= 10 else idxs[:10]
+            if count > 0:
+                d_repr = " ".join([f"'{c}'(U+{ord(c):04X})" for c in d])
+                print(f"[SentenceProcessor][JA] delimiter {d!r}: count={count}, first_idxs={idxs_preview} ({d_repr})")
+            else:
+                # 只对可能影响分句的标点打印缺失信息，避免刷屏
+                if d in ["。", "｡", "！", "？", "？", "?", "!", "…", "……"]:
+                    print(f"[SentenceProcessor][JA] delimiter {d!r}: count=0")
+
+        print(f"[SentenceProcessor][JA] produced sentences: {len(sentences)}")
+        for i, s in enumerate(sentences[:6], start=1):
+            sample = (s[:120] + "…") if len(s) > 120 else s
+            print(f"[SentenceProcessor][JA] sentence[{i}]: {sample.replace(chr(10),'\\\\n')}")
+
+        if len(sentences) == 1:
+            print("[SentenceProcessor][JA] ⚠️ 只有1个句子：很可能句末标点未被 CHINESE_PUNCTUATION_PATTERN 命中。")
+    except Exception as e:
+        print(f"[SentenceProcessor][JA] debug log failed: {e}")
 
 def read_and_split_sentences(file_path: str, language_code: Optional[str] = None) -> List[str]:
     """

@@ -9,6 +9,12 @@ const LANGUAGE_CODE_TO_NAME = {
   zh: '中文',
   en: '英文',
   de: '德文',
+  es: '西班牙语',
+  fr: '法语',
+  ja: '日语',
+  ko: '韩语',
+  ar: '阿拉伯语',
+  ru: '俄语',
 }
 
 const languageOptions = [
@@ -25,10 +31,46 @@ const languageOptions = [
     nameEn: 'English',
   },
   {
+    code: 'es',
+    countryCode: 'ES',
+    name: '西班牙语',
+    nameEn: 'Spanish',
+  },
+  {
+    code: 'fr',
+    countryCode: 'FR',
+    name: '法语',
+    nameEn: 'French',
+  },
+  {
+    code: 'ja',
+    countryCode: 'JP',
+    name: '日语',
+    nameEn: 'Japanese',
+  },
+  {
+    code: 'ko',
+    countryCode: 'KR',
+    name: '韩语',
+    nameEn: 'Korean',
+  },
+  {
     code: 'de',
     countryCode: 'DE',
     name: 'Deutsch',
     nameEn: 'German',
+  },
+  {
+    code: 'ar',
+    countryCode: 'AE',
+    name: '阿拉伯语',
+    nameEn: 'Arabic',
+  },
+  {
+    code: 'ru',
+    countryCode: 'RU',
+    name: '俄语',
+    nameEn: 'Russian',
   },
 ]
 

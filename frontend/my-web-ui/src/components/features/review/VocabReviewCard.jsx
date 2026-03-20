@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { BaseButton, BaseCard, BaseBadge } from '../../base'
 import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
@@ -22,7 +22,7 @@ const parseExplanation = (text) => {
         try {
           const parsed = JSON.parse(jsonStr)
           cleanText = parsed.explanation || parsed.definition || text
-        } catch (e) {
+        } catch {
           // 如果不是标准 JSON，尝试处理 Python 字典格式（单引号）
           const explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
           if (explanationMatch) {
@@ -35,13 +35,13 @@ const parseExplanation = (text) => {
             try {
               const parsed = JSON.parse(normalized)
               cleanText = parsed.explanation || parsed.definition || text
-            } catch (e2) {
+            } catch {
               cleanText = text
             }
           }
         }
       }
-    } catch (e) {
+    } catch {
       // 解析失败，使用原始文本
     }
   }
@@ -55,7 +55,7 @@ const parseExplanation = (text) => {
         const parsed = JSON.parse(jsonStr)
         cleanText = parsed.explanation || parsed.definition || cleanText
       }
-    } catch (e) {
+    } catch {
       // 解析失败，继续使用 cleanText
     }
   }
@@ -86,9 +86,11 @@ const VocabReviewCard = ({
   const [showDefinitions, setShowDefinitions] = useState(false)
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [vocabWithExamples, setVocabWithExamples] = useState(vocab)
+  const latestVocabIdRef = useRef(vocab?.vocab_id)
 
   // 🔧 加载完整的 vocab 详情（包含 examples）- 优化：如果已有完整数据则跳过请求
   useEffect(() => {
+    latestVocabIdRef.current = vocab?.vocab_id
     setShowDefinitions(false)
     setCurrentExampleIndex(0)
     
@@ -102,8 +104,13 @@ const VocabReviewCard = ({
     if (vocab && (!vocab.examples || !Array.isArray(vocab.examples) || vocab.examples.length === 0)) {
       const vocabId = vocab.vocab_id
       if (vocabId) {
+        const requestedVocabId = vocabId
         apiService.getVocabById(vocabId)
           .then(response => {
+            // 🔧 防止异步请求晚到覆盖了“下一个 vocab”的显示
+            if (latestVocabIdRef.current !== requestedVocabId) {
+              return
+            }
             const detailData = response?.data?.data || response?.data || response
             if (detailData && detailData.examples && Array.isArray(detailData.examples) && detailData.examples.length > 0) {
               setVocabWithExamples({ ...vocab, ...detailData })
@@ -112,6 +119,10 @@ const VocabReviewCard = ({
             }
           })
           .catch(error => {
+            // 🔧 同样丢弃过期失败回调
+            if (latestVocabIdRef.current !== vocabId) {
+              return
+            }
             console.warn('⚠️ [VocabReviewCard] Failed to load vocab detail:', error)
             setVocabWithExamples(vocab)
           })

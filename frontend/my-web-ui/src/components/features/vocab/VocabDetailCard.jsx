@@ -664,18 +664,19 @@ const VocabDetailCard = ({
         <div className="space-y-6">
           {/* 词汇标题区域 */}
           <div className="flex flex-col items-center gap-2">
-            <div className="flex items-center gap-3">
+            {/* 预留左右空间，避免与左上返回/右上翻页控件重叠 */}
+            <div className="w-full px-20 flex justify-center">
+              {/* 标题 + 朗读按钮作为一个居中内容块，朗读按钮紧贴标题右侧 */}
+              <div className="inline-flex items-center gap-2 max-w-full">
               <h1 
-                className="text-center break-words"
+                className="text-center truncate"
                 style={{
                   fontSize: componentTokens.grammarVocabTitle.fontSize,
                   fontWeight: componentTokens.grammarVocabTitle.fontWeight,
                   color: componentTokens.grammarVocabTitle.color,
                   lineHeight: componentTokens.grammarVocabTitle.lineHeight,
-                  maxWidth: componentTokens.grammarVocabTitle.maxWidth,
                   textAlign: componentTokens.grammarVocabTitle.textAlign,
-                  wordWrap: componentTokens.grammarVocabTitle.wordWrap,
-                  overflowWrap: componentTokens.grammarVocabTitle.overflowWrap,
+                  maxWidth: '100%',
                 }}
               >
                 {vocabBody}
@@ -683,7 +684,7 @@ const VocabDetailCard = ({
               {/* 🔧 朗读图标按钮 */}
               <button
                 onClick={handleSpeakVocab}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
                 aria-label={isSpeakingVocab ? '停止朗读' : '朗读'}
                 title={isSpeakingVocab ? '停止朗读' : '朗读'}
               >
@@ -701,6 +702,7 @@ const VocabDetailCard = ({
                   </svg>
                 )}
               </button>
+              </div>
             </div>
             {partOfSpeech && (
               <span className="text-sm" style={{ color: colors.semantic.text.secondary }}>

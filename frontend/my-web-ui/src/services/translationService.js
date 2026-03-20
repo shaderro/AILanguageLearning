@@ -654,6 +654,7 @@ const LANGUAGE_CODE_MAP = {
   'pt': 'pt',  // 葡萄牙语
   'ru': 'ru',  // 俄语
   'ar': 'ar',  // 阿拉伯语
+  'ko': 'ko',  // 韩语
 }
 
 /**
@@ -940,6 +941,7 @@ const queryLibreTranslateAPI = async (word, sourceLang, targetLang) => {
       'pt': 'pt',
       'ru': 'ru',
       'ar': 'ar',
+      'ko': 'ko',
     }
     
     const normalizedSource = libreLangMap[sourceLang] || sourceLang
@@ -1133,11 +1135,39 @@ export const getQuickTranslation = async (
     isWord = normalizedWord.length < 50 && !normalizedWord.includes(' ')
   }
 
-  // 🔧 对语言码做更宽松的normalize（避免 de-DE / zh-CN 等影响缓存与规则判断）
+  // 🔧 先将可能的中文语言名映射为标准代码（与 LanguageContext/backend 一致）
+  const uiLangNameToCode = {
+    '中文': 'zh',
+    '英文': 'en',
+    '英语': 'en',
+    '德文': 'de',
+    '德语': 'de',
+    '西班牙语': 'es',
+    '法语': 'fr',
+    '日语': 'ja',
+    '日文': 'ja',
+    '韩语': 'ko',
+    '阿拉伯语': 'ar',
+    '俄语': 'ru',
+  }
+  const mapNameToCode = (v) => uiLangNameToCode[v] || v
+  sourceLang = mapNameToCode(sourceLang)
+  targetLang = mapNameToCode(targetLang)
+
+  // 🔧 对语言码做更宽松的 normalize（避免 de-DE / zh-CN 等影响缓存与规则判断）
   const normalizedSourceLang = String(sourceLang || '').toLowerCase().split(/[-_]/)[0] || sourceLang
   const normalizedTargetLang = String(targetLang || '').toLowerCase().split(/[-_]/)[0] || targetLang
   sourceLang = normalizedSourceLang
   targetLang = normalizedTargetLang
+
+  // 🔧 调试：查看当前翻译请求的语言方向与类型
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[TranslationService] 调试 getQuickTranslation', {
+      sourceLang,
+      targetLang,
+      isWord,
+    })
+  }
 
   // 🔧 单词查询：先尝试内置小词表（修复 MyMemory 在高频短词上的典型错译，如 eine->consent）
   if (isWord) {

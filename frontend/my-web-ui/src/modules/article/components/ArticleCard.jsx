@@ -24,9 +24,24 @@ const ArticleCard = ({
       case '中文':
         return 'bg-red-100 text-red-800'
       case '英文':
+      case '英语':
         return 'bg-blue-100 text-blue-800'
       case '德文':
+      case '德语':
         return 'bg-yellow-100 text-yellow-800'
+      case '日语':
+      case '日文':
+        return 'bg-purple-100 text-purple-800'
+      case '韩语':
+        return 'bg-indigo-100 text-indigo-800'
+      case '法语':
+        return 'bg-pink-100 text-pink-800'
+      case '西班牙语':
+        return 'bg-orange-100 text-orange-800'
+      case '阿拉伯语':
+        return 'bg-emerald-100 text-emerald-800'
+      case '俄语':
+        return 'bg-cyan-100 text-cyan-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }

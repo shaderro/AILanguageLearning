@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .non_space_segmentation import (
     Chinese_sentence_segmentation,
+    Japanese_sentence_segmentation,
     convert_segments_to_word_tokens,
 )
 
@@ -36,10 +37,14 @@ def word_segmentation(
             - token_word_mapping: {sentence_token_id: word_token_id}
             - next_word_token_id: 更新后的全局 word_token_id
     """
-    if language_code != "zh":
+    if language_code not in ("zh", "ja"):
         return [], {}, next_word_token_id
 
-    segments = Chinese_sentence_segmentation(sentence_text)
+    if language_code == "zh":
+        segments = Chinese_sentence_segmentation(sentence_text)
+    else:
+        segments = Japanese_sentence_segmentation(sentence_text)
+
     if not segments:
         return [], {}, next_word_token_id
 
