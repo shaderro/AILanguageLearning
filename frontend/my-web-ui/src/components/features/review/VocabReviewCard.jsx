@@ -4,6 +4,11 @@ import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import {
+  pickExampleSentenceText,
+  hasAnyHydratedExampleSentence,
+  unwrapVocabDetailResponse,
+} from '../../../utils/vocabExamples'
 
 // 解析和格式化解释文本（从 ReviewCard 复制）
 const parseExplanation = (text) => {
@@ -88,50 +93,44 @@ const VocabReviewCard = ({
   const [vocabWithExamples, setVocabWithExamples] = useState(vocab)
   const latestVocabIdRef = useRef(vocab?.vocab_id)
 
-  // 🔧 加载完整的 vocab 详情（包含 examples）- 优化：如果已有完整数据则跳过请求
+  // 🔧 加载完整的 vocab 详情（包含带 original_sentence 的 examples）
   useEffect(() => {
     latestVocabIdRef.current = vocab?.vocab_id
     setShowDefinitions(false)
     setCurrentExampleIndex(0)
-    
-    // 🔧 如果传入的 vocab 已经包含 examples，直接使用，无需请求
-    if (vocab && vocab.examples && Array.isArray(vocab.examples) && vocab.examples.length > 0) {
+
+    if (!vocab) {
       setVocabWithExamples(vocab)
       return
     }
-    
-    // 🔧 如果没有 examples，才请求详情（但通常预加载已经完成）
-    if (vocab && (!vocab.examples || !Array.isArray(vocab.examples) || vocab.examples.length === 0)) {
-      const vocabId = vocab.vocab_id
-      if (vocabId) {
-        const requestedVocabId = vocabId
-        apiService.getVocabById(vocabId)
-          .then(response => {
-            // 🔧 防止异步请求晚到覆盖了“下一个 vocab”的显示
-            if (latestVocabIdRef.current !== requestedVocabId) {
-              return
-            }
-            const detailData = response?.data?.data || response?.data || response
-            if (detailData && detailData.examples && Array.isArray(detailData.examples) && detailData.examples.length > 0) {
-              setVocabWithExamples({ ...vocab, ...detailData })
-            } else {
-              setVocabWithExamples(vocab)
-            }
-          })
-          .catch(error => {
-            // 🔧 同样丢弃过期失败回调
-            if (latestVocabIdRef.current !== vocabId) {
-              return
-            }
-            console.warn('⚠️ [VocabReviewCard] Failed to load vocab detail:', error)
-            setVocabWithExamples(vocab)
-          })
-      } else {
-        setVocabWithExamples(vocab)
-      }
-    } else {
+
+    const vocabId = vocab.vocab_id
+    if (!vocabId) {
       setVocabWithExamples(vocab)
+      return
     }
+
+    if (hasAnyHydratedExampleSentence(vocab)) {
+      setVocabWithExamples(vocab)
+      return
+    }
+
+    const requestedVocabId = vocabId
+    apiService.getVocabById(vocabId)
+      .then((response) => {
+        if (latestVocabIdRef.current !== requestedVocabId) return
+        const detailData = unwrapVocabDetailResponse(response)
+        if (detailData && Array.isArray(detailData.examples) && detailData.examples.length > 0) {
+          setVocabWithExamples({ ...vocab, ...detailData })
+        } else {
+          setVocabWithExamples(vocab)
+        }
+      })
+      .catch((error) => {
+        if (latestVocabIdRef.current !== vocabId) return
+        console.warn('⚠️ [VocabReviewCard] Failed to load vocab detail:', error)
+        setVocabWithExamples(vocab)
+      })
   }, [vocab])
 
   // 提取例句和例句解释
@@ -141,11 +140,26 @@ const VocabReviewCard = ({
       return []
     }
     return currentVocab.examples
-      .map(ex => ({
-        sentence: ex.original_sentence,
-        explanation: ex.context_explanation || ex.explanation_context || ex.explanation || null
-      }))
-      .filter(ex => ex.sentence)
+      .map((ex) => {
+        const explanationRaw =
+          ex.context_explanation || ex.explanation_context || ex.explanation || null
+        let sentence = pickExampleSentenceText(ex)
+        let explanation = explanationRaw
+
+        if (!sentence && explanationRaw && String(explanationRaw).trim()) {
+          sentence = String(explanationRaw).trim()
+          explanation = null
+        } else if (
+          sentence &&
+          explanationRaw &&
+          String(explanationRaw).trim() === sentence
+        ) {
+          explanation = null
+        }
+
+        return { sentence, explanation }
+      })
+      .filter((ex) => ex.sentence)
   }, [vocabWithExamples, vocab])
   
   const exampleSentences = exampleData.map(ex => ex.sentence)

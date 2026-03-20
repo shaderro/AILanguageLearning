@@ -11,6 +11,7 @@ import VocabReviewCard from '../../components/features/review/VocabReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import { useUIText } from '../../i18n/useUIText'
 import VocabDetailCard from '../../components/features/vocab/VocabDetailCard'
+import { hasAnyHydratedExampleSentence, unwrapVocabDetailResponse } from '../../utils/vocabExamples'
 
 function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
@@ -224,8 +225,8 @@ function WordDemo() {
     // 🔧 预加载所有词汇的详情（包含 examples）
     const newCache = new Map()
     const loadPromises = sortedList.map(async (vocab) => {
-      // 如果列表数据中已经有 examples，直接使用
-      if (vocab.examples && Array.isArray(vocab.examples) && vocab.examples.length > 0) {
+      // 列表可能带 examples 元数据但没有 original_sentence，仍需拉详情补齐
+      if (hasAnyHydratedExampleSentence(vocab)) {
         newCache.set(vocab.vocab_id, vocab)
         return
       }
@@ -233,7 +234,7 @@ function WordDemo() {
       // 否则，异步加载详情
       try {
         const response = await apiService.getVocabById(vocab.vocab_id)
-        const detailData = response?.data?.data || response?.data || response
+        const detailData = unwrapVocabDetailResponse(response)
         if (detailData) {
           newCache.set(vocab.vocab_id, { ...vocab, ...detailData })
         } else {
