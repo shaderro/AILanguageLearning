@@ -11,6 +11,7 @@ from typing import Optional
 # 导入数据库管理器（按环境缓存单例）
 from database_system.database_manager import get_database_manager
 from database_system.business_logic.models import User
+from backend.api.db_deps import get_db_session
 
 # 导入认证工具
 from backend.utils.auth import (
@@ -24,30 +25,7 @@ from backend.utils.auth import (
 
 
 # ==================== 依赖注入 ====================
-
-def get_db_session():
-    """获取数据库 Session"""
-    # 从环境变量读取环境配置
-    try:
-        from backend.config import ENV
-        environment = ENV
-    except ImportError:
-        # 如果导入失败，直接从环境变量读取（向后兼容）
-        import os
-        environment = os.getenv("ENV", "development")
-    
-    # 使用按环境缓存的 DatabaseManager 单例，复用同一个 engine/连接池
-    db_manager = get_database_manager(environment)
-    session = db_manager.get_session()
-    try:
-        yield session
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
-
+# get_db_session 见 backend.api.db_deps（全项目共用，保证与路由层同请求只开一个 Session）
 
 # SessionLocal 用于临时调试接口
 def _get_session_local():

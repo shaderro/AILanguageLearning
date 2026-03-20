@@ -9,8 +9,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 import logging
 
-# 导入数据库管理器
-from database_system.database_manager import DatabaseManager
+from backend.api.db_deps import get_db_session
 
 # 导入详细日志版本的 VocabManager
 from backend.data_managers.vocab_manager_db_verbose import VocabManager as VocabManagerDB
@@ -24,35 +23,6 @@ from backend.data_managers.data_classes_new import (
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
-
-
-# ==================== 依赖注入 ====================
-
-def get_db_session():
-    """依赖注入：提供数据库 Session（带日志）"""
-    logger.info("\n" + "🔵" * 35)
-    logger.info("[FastAPI] 新的API请求进入")
-    logger.info("🔵" * 35)
-    logger.info("[FastAPI] 创建数据库 Session...")
-    
-    db_manager = DatabaseManager('development')
-    session = db_manager.get_session()
-    
-    logger.info(f"[FastAPI] Session 创建成功: {type(session).__name__}")
-    
-    try:
-        yield session
-        logger.info("[FastAPI] 请求成功，提交事务...")
-        session.commit()
-        logger.info("[FastAPI] 事务已提交")
-    except Exception as e:
-        logger.error(f"[FastAPI] 请求失败，回滚事务: {e}")
-        session.rollback()
-        raise e
-    finally:
-        logger.info("[FastAPI] 关闭 Session")
-        session.close()
-        logger.info("🔵" * 35 + "\n")
 
 
 # ==================== Pydantic 模型 ====================

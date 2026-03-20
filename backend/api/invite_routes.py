@@ -12,7 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from backend.api.auth_routes import get_db_session, get_current_user
+from backend.api.auth_routes import get_current_user
+from backend.api.db_deps import get_db_session
 from database_system.business_logic.models import User, InviteCode, TokenLedger
 
 

@@ -8,36 +8,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel, Field
 
-# 导入数据库管理器（按环境缓存单例）
-from database_system.database_manager import get_database_manager
-
 # 导入数据库版本的 UserManager
 from backend.data_managers.user_manager_db import UserManagerDB
-
-
-# ==================== 依赖注入：数据库 Session ====================
-
-def get_db_session():
-    """
-    依赖注入：提供数据库 Session
-    
-    特点：
-    - 每个请求获取一个新的 Session
-    - 成功时自动 commit
-    - 失败时自动 rollback
-    - 请求结束时自动 close
-    """
-    # 始终使用按环境缓存的 DatabaseManager（默认 development）
-    db_manager = get_database_manager('development')
-    session = db_manager.get_session()
-    try:
-        yield session
-        session.commit()  # 成功时提交事务
-    except Exception as e:
-        session.rollback()  # 失败时回滚事务
-        raise e
-    finally:
-        session.close()  # 总是关闭 Session
+from backend.api.db_deps import get_db_session
 
 
 # ==================== Pydantic 模型（请求/响应） ====================

@@ -13,29 +13,8 @@ from sqlalchemy.orm import Session
 from backend.data_managers.unified_notation_manager import get_unified_notation_manager
 from database_system.database_manager import get_database_manager
 from backend.api.auth_routes import get_current_user
+from backend.api.db_deps import get_db_session
 from database_system.business_logic.models import User
-
-# 依赖注入：数据库Session
-def get_db_session():
-    """提供数据库Session"""
-    # 从环境变量读取环境配置（与其他 v2 路由保持一致）
-    try:
-        from backend.config import ENV
-        environment = ENV
-    except ImportError:
-        import os
-        environment = os.getenv("ENV", "development")
-    # 使用按环境缓存的 DatabaseManager 单例
-    db_manager = get_database_manager(environment)
-    session = db_manager.get_session()
-    try:
-        yield session
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
 
 router = APIRouter(prefix="/api/v2/notations", tags=["notations"])
 
