@@ -39,19 +39,47 @@ sys.path.insert(0, CURRENT_DIR)
 from models import ApiResponse
 from services import data_service
 from utils import create_success_response, create_error_response
+from database_system.database_manager import get_database_manager
 
-# 导入预处理模块
-try:
-    from backend.preprocessing.article_processor import process_article, save_structured_data
-    from backend.preprocessing.html_extractor import extract_main_text_from_url
-    from backend.preprocessing.pdf_extractor import extract_text_from_pdf_bytes
-    print("[OK] 使用简单文章处理器 (无AI依赖)")
-except ImportError as e:
-    print(f"Warning: Could not import article_processor: {e}")
-    process_article = None
-    save_structured_data = None
-    extract_main_text_from_url = None
-    extract_text_from_pdf_bytes = None
+# 文章预处理（延迟加载；避免在 import 阶段加载 jieba/janome，降低小内存实例 OOM 风险）
+process_article = None
+save_structured_data = None
+extract_main_text_from_url = None
+extract_text_from_pdf_bytes = None
+_article_preprocess_status = None  # None | "ok" | "fail"
+
+
+def ensure_article_preprocess_loaded() -> None:
+    """首次上传/处理文章时再加载预处理链（含 jieba、janome 等）。"""
+    global process_article, save_structured_data, extract_main_text_from_url, extract_text_from_pdf_bytes
+    global _article_preprocess_status
+    if _article_preprocess_status is not None:
+        return
+    try:
+        from backend.preprocessing.article_processor import process_article as _pa, save_structured_data as _ssd
+        from backend.preprocessing.html_extractor import extract_main_text_from_url as _url
+        from backend.preprocessing.pdf_extractor import extract_text_from_pdf_bytes as _pdf
+
+        process_article = _pa
+        save_structured_data = _ssd
+        extract_main_text_from_url = _url
+        extract_text_from_pdf_bytes = _pdf
+        _article_preprocess_status = "ok"
+        print("[OK] 延迟加载文章处理器成功 (无AI依赖)")
+    except ImportError as e:
+        process_article = None
+        save_structured_data = None
+        extract_main_text_from_url = None
+        extract_text_from_pdf_bytes = None
+        _article_preprocess_status = "fail"
+        print(f"Warning: Could not import article_processor: {e}")
+    except Exception as e:
+        process_article = None
+        save_structured_data = None
+        extract_main_text_from_url = None
+        extract_text_from_pdf_bytes = None
+        _article_preprocess_status = "fail"
+        print(f"Warning: Could not load article preprocess: {e}")
 
 # 导入 asked tokens manager
 from backend.data_managers.asked_tokens_manager import get_asked_tokens_manager
@@ -386,7 +414,6 @@ except ImportError as e:
 async def startup_event():
     """应用启动时自动初始化数据库表结构"""
     try:
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import Base
         from backend.config import ENV
         
@@ -395,7 +422,7 @@ async def startup_event():
         print("="*60)
         
         # 获取数据库管理器
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         engine = db_manager.get_engine()
         
         # 检查是否是 PostgreSQL
@@ -546,11 +573,10 @@ async def health_check():
 @app.get("/api/debug/db-info")
 async def debug_db_info():
     """调试端点：显示数据库连接信息"""
-    from database_system.database_manager import DatabaseManager
     import sqlite3
     import os
     
-    db_manager = DatabaseManager(ENV)
+    db_manager = get_database_manager(ENV)
     engine = db_manager.get_engine()
     db_url = str(engine.url)
     
@@ -583,10 +609,9 @@ async def debug_db_info():
 @app.get("/api/db-test")
 async def db_test():
     """数据库连接测试接口"""
-    from database_system.database_manager import DatabaseManager
     from sqlalchemy import text
     
-    db_manager = DatabaseManager(ENV)
+    db_manager = get_database_manager(ENV)
     session = db_manager.get_session()
     try:
         result = session.execute(text("SELECT 1")).fetchone()
@@ -687,10 +712,9 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
     # 正式用户模式：保存到数据库
     try:
         # 验证用户是否存在
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import User
         
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -921,9 +945,8 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
         traceback.print_exc()
         # 如果是在外层异常，尝试更新状态
         try:
-            from database_system.database_manager import DatabaseManager
             from database_system.business_logic.models import OriginalText
-            db_manager = DatabaseManager(ENV)
+            db_manager = get_database_manager(ENV)
             session = db_manager.get_session()
             try:
                 text_model = session.query(OriginalText).filter(
@@ -1119,10 +1142,9 @@ def _sync_to_database(user_id: int = None, session_state_instance: SessionState 
     state = session_state_instance if session_state_instance is not None else session_state
     
     try:
-        from database_system.database_manager import DatabaseManager
         from backend.data_managers import GrammarRuleManagerDB, VocabManagerDB
         
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -1423,14 +1445,13 @@ async def chat_with_assistant(
         print("🧹 [Chat] 使用独立的 SessionState 副本处理本轮请求")
 
         # 🔧 获取数据库 session（用于 token 记录和扣减以及检查token是否不足）
-        from database_system.database_manager import DatabaseManager
         try:
             from backend.config import ENV
             environment = ENV
         except ImportError:
             import os
             environment = os.getenv("ENV", "development")
-        db_manager = DatabaseManager(environment)
+        db_manager = get_database_manager(environment)
         db_session = db_manager.get_session()
         
         # 🔧 检查token是否不足（只在当前没有main assistant流程时判断）
@@ -1530,14 +1551,13 @@ async def chat_with_assistant(
             from backend.assistants import main_assistant as _ma_mod
             prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
             # 🔧 为后台任务创建新的数据库 session（用于 token 记录）
-            from database_system.database_manager import DatabaseManager
             try:
                 from backend.config import ENV
                 environment = ENV
             except ImportError:
                 import os
                 environment = os.getenv("ENV", "development")
-            bg_db_manager = DatabaseManager(environment)
+            bg_db_manager = get_database_manager(environment)
             bg_db_session = bg_db_manager.get_session()
             try:
                 print("🧠 [Background] 执行 handle_grammar_vocab_function...")
@@ -1604,9 +1624,8 @@ async def chat_with_assistant(
                         
                         # 从数据库查询新创建的词汇
                         try:
-                            from database_system.database_manager import DatabaseManager
                             from database_system.business_logic.models import VocabExpression
-                            db_manager = DatabaseManager(ENV)
+                            db_manager = get_database_manager(ENV)
                             session = db_manager.get_session()
                             try:
                                 vocab_model = session.query(VocabExpression).filter(
@@ -1933,11 +1952,10 @@ async def get_vocab_example_by_location(
         print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
         
         # 🔧 修复：从数据库查询，而不是从 global_dc（文件系统管理器）查询
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import VocabExpressionExample, OriginalText
         from backend.adapters import VocabExampleAdapter
         
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -2061,8 +2079,7 @@ async def get_vocab_list(current_user: User = Depends(get_current_user)):
     """获取词汇列表（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
         from database_system.business_logic.models import VocabExpression
-        from database_system.database_manager import DatabaseManager
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             vocabs = session.query(VocabExpression).filter(VocabExpression.user_id == current_user.user_id).all()
@@ -2096,8 +2113,7 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
     """获取词汇详情（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
         from database_system.business_logic.models import VocabExpression
-        from database_system.database_manager import DatabaseManager
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             vocab = session.query(VocabExpression).filter(
@@ -2133,8 +2149,7 @@ async def get_grammar_list(current_user: User = Depends(get_current_user)):
     """获取语法规则列表（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
         from database_system.business_logic.models import GrammarRule
-        from database_system.database_manager import DatabaseManager
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             rules = session.query(GrammarRule).filter(GrammarRule.user_id == current_user.user_id).all()
@@ -2168,8 +2183,7 @@ async def get_grammar_detail(rule_id: int, current_user: User = Depends(get_curr
     """获取单个语法规则详情（兼容端点：重定向到 v2 API）"""
     try:
         from database_system.business_logic.models import GrammarRule, Sentence
-        from database_system.database_manager import DatabaseManager
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             # 查询语法规则（确保属于当前用户）
@@ -2269,11 +2283,10 @@ async def list_articles(current_user: User = Depends(get_current_user)):
         print(f"⚠️ [API] /api/articles 被调用（用户 {current_user.user_id}），重定向到数据库查询")
         
         # 🔧 从数据库查询，确保用户隔离
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
         from backend.config import ENV
         
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -2338,11 +2351,10 @@ async def get_article_detail(
         print(f"🔍 [API] /api/articles/{article_id} 被调用 - user_id: {current_user.user_id}")
         
         # 🔧 从数据库查询，确保用户隔离
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
         from backend.config import ENV
         
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         
         try:
@@ -2502,6 +2514,7 @@ async def upload_file(
             # 尽量不因编码问题失败
             text_content = content.decode("utf-8", errors="replace")
         elif filename.endswith(".pdf"):
+            ensure_article_preprocess_loaded()
             if not extract_text_from_pdf_bytes:
                 return create_error_response("PDF 提取器未初始化（extract_text_from_pdf_bytes 不可用）")
             print("🔍 [Upload] 使用 PDF 提取器从文件提取正文...")
@@ -2528,9 +2541,8 @@ async def upload_file(
         article_id = int(datetime.now().timestamp())
         
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             # 创建文章记录（状态为"processing"）
@@ -2551,6 +2563,7 @@ async def upload_file(
             session.close()
         
         # 使用简单文章处理器处理文章
+        ensure_article_preprocess_loaded()
         if process_article:
             print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id}, 语言: {language})")
             result = process_article(text_content, article_id, title, language=language)
@@ -2623,6 +2636,7 @@ async def upload_url(
             return create_error_response("语言参数无效，请选择正确的学习语言")
         
         # 🔧 使用 HTML 提取器从 URL 获取正文
+        ensure_article_preprocess_loaded()
         if extract_main_text_from_url:
             print(f"🔍 [Upload] 使用 HTML 提取器从 URL 提取正文...")
             text_content = extract_main_text_from_url(url)
@@ -2658,9 +2672,8 @@ async def upload_url(
         article_id = int(datetime.now().timestamp())
         
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             # 创建文章记录（状态为"processing"）
@@ -2681,6 +2694,7 @@ async def upload_url(
             session.close()
         
         # 使用简单文章处理器处理文章
+        ensure_article_preprocess_loaded()
         if process_article:
             print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id}, 语言: {language})")
             result = process_article(text_content, article_id, title, language=language)
@@ -2845,9 +2859,8 @@ async def upload_text(
         article_id = int(datetime.now().timestamp())
         
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
-        from database_system.database_manager import DatabaseManager
         from database_system.business_logic.models import OriginalText
-        db_manager = DatabaseManager(ENV)
+        db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
             # 创建文章记录（状态为"processing"）
@@ -2868,6 +2881,7 @@ async def upload_text(
             session.close()
         
         # 使用简单文章处理器处理文章
+        ensure_article_preprocess_loaded()
         if process_article:
             print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id}, 语言: {language})")
             result = process_article(text, article_id, title, language=language)
