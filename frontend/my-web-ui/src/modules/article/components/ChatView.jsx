@@ -1985,7 +1985,7 @@ function ChatView({
                     maxWidth: `${chatWidth - 64}px` // chatWidth - 左右padding(32px) - 消息间距(32px)
                   }}
                 >
-                  {message.quote && (
+                  {message.isUser && message.quote && (
                     <div 
                       className={`mb-2 p-2 rounded text-xs ${
                         message.isUser 
@@ -1998,7 +1998,18 @@ function ChatView({
                       } : {}}
                     >
                       <div className="font-medium mb-1">{t('引用')}</div>
-                      <div className="italic">"{message.quote}"</div>
+                      <div
+                        className="italic"
+                        style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        "{message.quote}"
+                      </div>
                     </div>
                   )}
                   
@@ -2039,7 +2050,7 @@ function ChatView({
                 style={{
                   ...(!hasSelectedSentence ? { color: colors.primary[800] } : {}),
                   display: '-webkit-box',
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: 3,
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                   wordBreak: 'break-word'
