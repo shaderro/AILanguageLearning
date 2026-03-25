@@ -1904,6 +1904,30 @@ function ChatView({
     if (isNaN(dateObj.getTime())) return ''
     return dateObj.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   }
+
+  const handleMessageAreaBlankClickCapture = useCallback((e) => {
+    // Only clear quote when user clicks non-interactive blank areas in messages area.
+    const target = e.target
+    if (!(target instanceof Element)) return
+
+    const interactiveSelector = [
+      '[data-chat-message-bubble]',
+      'button',
+      'input',
+      'textarea',
+      'a',
+      '[role="button"]',
+      '[data-keep-quote]',
+    ].join(', ')
+
+    if (target.closest(interactiveSelector)) {
+      return
+    }
+
+    if (quotedText && onClearQuote) {
+      onClearQuote()
+    }
+  }, [quotedText, onClearQuote])
   
   // ⚠️ Language detection: Presentation-only, does NOT affect data fetching
   // Using useTranslate() hook which uses UI language context (same as header)
@@ -1964,6 +1988,7 @@ function ChatView({
         <div
           ref={scrollContainerRef}
           className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 chat-scrollbar"
+          onClickCapture={handleMessageAreaBlankClickCapture}
         >
           {messages.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
@@ -1976,6 +2001,7 @@ function ChatView({
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
+                  data-chat-message-bubble
                   className={`px-3 py-2 rounded-lg ${
                     message.isUser
                       ? 'bg-white text-gray-900 border border-gray-300 rounded-br-none'
