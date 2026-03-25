@@ -404,6 +404,12 @@ vocab_example_explanation_sys_prompt = """
 - 不得列举多个意思
 - 不得添加无关说明
 
+【输出语言】（必须遵守）
+- 你必须使用 **{output_language}** 撰写 JSON 中 `explanation` 字段内的**全部**说明文字（含含义、词性/语法标签、句中位置说明、括号内释义等）。
+- 不得因为示例里有中文就默认用中文输出；**以 {output_language} 为准**。
+- 若 {output_language} 为 English / 英文 / en：**整段 explanation 必须为英文**，标签与批注也须全英文，不得出现中文字符。
+- 若 {output_language} 为中文 / 简体中文 / zh：可用中文撰写说明；仍勿无故混用其他语言。
+
 请只返回如下 JSON：
 {{"explanation": "你的解释内容"}}
 """

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { apiService } from '../../../../services/api'
+import { useUIText } from '../../../../i18n/useUIText'
 import { logVocabNotationDebug } from '../../utils/vocabNotationDebug'
 
 const DEFAULT_CARD_WIDTH = 320
@@ -270,6 +271,7 @@ export default function VocabNotationCard({
   getVocabExampleForToken = null,
   anchorRef = null
 }) {
+  const t = useUIText()
   const [vocabExample, setVocabExample] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -596,20 +598,20 @@ export default function VocabNotationCard({
     displayContent = (
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-gray-500">正在生成解释...</span>
+        <span className="text-gray-500">{t('正在生成解释...')}</span>
       </div>
     )
   } else if (error) {
     displayContent = (
       <div className="text-red-600">
-        <div className="font-semibold">加载失败</div>
+        <div className="font-semibold">{t('加载失败')}</div>
         <div className="text-xs mt-1">{error}</div>
       </div>
     )
   } else if (vocabExample && vocabExample.context_explanation) {
     displayContent = (
       <div>
-        <div className="text-xs text-gray-500 mb-1">词汇解释</div>
+        <div className="text-xs text-gray-500 mb-1">{t('词汇解释')}</div>
         <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
           {parseExplanation(vocabExample.context_explanation)}
         </div>
@@ -621,7 +623,7 @@ export default function VocabNotationCard({
     displayContent = (
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-gray-500 text-sm">正在生成解释...</span>
+        <span className="text-gray-500 text-sm">{t('正在生成解释...')}</span>
       </div>
     )
   } else if (!vocabExample && !isLoading && !error && note) {

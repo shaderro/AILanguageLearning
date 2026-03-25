@@ -38,7 +38,7 @@ class VocabExampleExplanationAssistant(SubAssistant):
         original_sys_prompt = self.sys_prompt
         formatted_language = language or "中文"
         self.sys_prompt = vocab_example_explanation_sys_prompt.format(
-            language=formatted_language
+            output_language=formatted_language
         )
         
         # 🔍 打印完整的 system prompt 用于调试
