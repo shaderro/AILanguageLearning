@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import WordDemo from './modules/word-demo/WordDemo'
 import GrammarDemo from './modules/grammar-demo/GrammarDemo'
+import GrammarReviewSandbox from './modules/grammar-demo/GrammarReviewSandbox'
 import ArticleSelection from './modules/article/ArticleSelection'
 import ArticleChatView from './modules/article/ArticleChatView'
 import LoginButton from './modules/auth/components/LoginButton'
@@ -581,6 +582,7 @@ function AppContent() {
           {currentPage === 'wordDemo' && <WordDemo />}
 
           {currentPage === 'grammarDemo' && <GrammarDemo />}
+          {currentPage === 'grammarReviewSandbox' && <GrammarReviewSandbox />}
 
           {currentPage === 'article' && (
             selectedArticleId ? (
