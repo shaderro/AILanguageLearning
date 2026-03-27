@@ -7,7 +7,7 @@ import { BaseCard } from '../../components/base'
 import { useGrammarList, useToggleGrammarStar, useRefreshData, useArticles } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
-import { useLanguage } from '../../contexts/LanguageContext'
+import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../contexts/LanguageContext'
 import { useUIText } from '../../i18n/useUIText'
 
 /**
@@ -161,6 +161,7 @@ const GrammarReviewSandbox = () => {
   const [reviewItems, setReviewItems] = useState([]) // ReviewExample[]
   const [currentIndex, setCurrentIndex] = useState(0) // index in reviewItems
   const [showExplanations, setShowExplanations] = useState(false)
+  const [isSpeakingSentence, setIsSpeakingSentence] = useState(false)
   // 🔧 缓存预加载的语法详情
   const [grammarDetailCache, setGrammarDetailCache] = useState(new Map())
 
@@ -423,6 +424,58 @@ const GrammarReviewSandbox = () => {
     }
   }
 
+  // 例句朗读（对齐 vocab review 的交互：再次点击停止）
+  const handleSpeakSentence = async (sentence) => {
+    if (!sentence) return
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+
+    // 如果正在朗读，点击则停止
+    if (isSpeakingSentence) {
+      window.speechSynthesis.cancel()
+      setIsSpeakingSentence(false)
+      return
+    }
+
+    // 先取消任何正在进行的朗读
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel()
+      await new Promise((r) => setTimeout(r, 80))
+    }
+
+    const langCode = languageNameToCode(selectedLanguage)
+    const utterance = new SpeechSynthesisUtterance(sentence)
+    utterance.lang = languageCodeToBCP47(langCode) || 'de-DE'
+    utterance.rate = 0.9
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+
+    utterance.onstart = () => setIsSpeakingSentence(true)
+    utterance.onend = () => setIsSpeakingSentence(false)
+    utterance.onerror = (event) => {
+      // interrupted 多为正常中断
+      if (event?.error === 'interrupted') {
+        setIsSpeakingSentence(false)
+        return
+      }
+      setIsSpeakingSentence(false)
+    }
+
+    window.speechSynthesis.speak(utterance)
+  }
+
+  // 卸载时清理朗读
+  useEffect(() => {
+    return () => {
+      try {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.cancel()
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [])
+
   const handlePrev = () => {
     if (currentIndex > 0) {
       setCurrentIndex((v) => v - 1)
@@ -512,8 +565,30 @@ const GrammarReviewSandbox = () => {
                 {/* 句子区域 */}
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="text-center text-xl font-normal leading-relaxed text-gray-900">
-                      {item.sentence}
+                    {/* 例句 + 朗读 icon（对齐 vocab review：句子末尾 + 空格 + icon） */}
+                    <div className="flex items-start gap-2 w-full">
+                      <p className="text-lg text-gray-800 text-center flex-1 whitespace-normal break-words">
+                        {item.sentence}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleSpeakSentence(item.sentence)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                        aria-label={isSpeakingSentence ? (t('停止朗读') || '停止朗读') : (t('朗读') || '朗读')}
+                        title={isSpeakingSentence ? (t('停止朗读') || '停止朗读') : (t('朗读') || '朗读')}
+                      >
+                        {isSpeakingSentence ? (
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <rect x="9" y="9" width="6" height="6" rx="1" />
+                            <circle cx="12" cy="12" r="10" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                          </svg>
+                        )}
+                      </button>
                     </div>
 
                     {Array.isArray(item.entries) && item.entries.length > 0 && (

@@ -163,12 +163,68 @@ function ChatView({
   const scrollContainerRef = useRef(null)
   const messageIdCounterRef = useRef(0)
   const pollPendingKnowledgeRef = useRef(null)  // 🔧 存储轮询定时器引用，用于清理
+  const messagesRef = useRef([])
   const generateMessageId = () => {
     messageIdCounterRef.current += 1
     return Date.now() + Math.random() + messageIdCounterRef.current
   }
   
   const normalizedArticleId = articleId ? String(articleId) : 'default'
+
+  const normalizeTextForSignature = (text) => String(text || '').replace(/\s+/g, ' ').trim()
+  const isWelcomeMessageText = (text) => {
+    const normalized = normalizeTextForSignature(text)
+    return (
+      normalized === normalizeTextForSignature("选择有疑问的句子或词汇，向我提问吧！") ||
+      normalized === normalizeTextForSignature("你好！我是聊天助手，有什么可以帮助你的吗？")
+    )
+  }
+  const getMessageSignature = (msg) => {
+    const role = msg?.isUser ? 'user' : 'ai'
+    const text = normalizeTextForSignature(msg?.text)
+    const quote = normalizeTextForSignature(msg?.quote)
+    return `${role}|${text}|${quote}`
+  }
+  const getMessageSignatureLoose = (msg) => {
+    // 不包含 quote：用于识别“同一条问答被后端/前端以不同引用文本记录”的重复
+    const role = msg?.isUser ? 'user' : 'ai'
+    const text = normalizeTextForSignature(msg?.text)
+    return `${role}|${text}`
+  }
+  const getMessageTimeMs = (msg) => {
+    if (!msg?.timestamp) return 0
+    const d = msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
+    return Number.isNaN(d.getTime()) ? 0 : d.getTime()
+  }
+  const isLikelyDuplicateMessage = (a, b, timeWindowMs = 20000) => {
+    if (!a || !b) return false
+    const strictSame = getMessageSignature(a) === getMessageSignature(b)
+    const looseSame = getMessageSignatureLoose(a) === getMessageSignatureLoose(b)
+    if (!strictSame && !looseSame) return false
+    const ta = getMessageTimeMs(a)
+    const tb = getMessageTimeMs(b)
+    // 允许前后 20 秒偏差，覆盖“本地立即插入 + 后端落库返回时间稍后”的重复场景
+    return ta > 0 && tb > 0 ? Math.abs(ta - tb) <= timeWindowMs : true
+  }
+  const isLikelyDuplicateUserMessage = (a, b, timeWindowMs = 3000) => {
+    if (!a || !b) return false
+    if (!a.isUser || !b.isUser) return false
+    // 用户消息去重必须带引用一起判断，避免“同样问题模板 + 不同引用”被误吞
+    if (getMessageSignature(a) !== getMessageSignature(b)) return false
+    const ta = getMessageTimeMs(a)
+    const tb = getMessageTimeMs(b)
+    // 仅用于防双击/重复触发，时间窗口缩短到 3 秒
+    return ta > 0 && tb > 0 ? Math.abs(ta - tb) <= timeWindowMs : true
+  }
+  const sortMessagesStable = (arr) => {
+    return [...arr].sort((a, b) => {
+      const t = getMessageTimeMs(a) - getMessageTimeMs(b)
+      if (t !== 0) return t
+      const aId = String(a?.id ?? '')
+      const bId = String(b?.id ?? '')
+      return aId.localeCompare(bId)
+    })
+  }
   
   // Helper function to get translated text without hook (for initialization)
   const getTranslatedText = (key) => {
@@ -274,6 +330,7 @@ function ChatView({
   // 🔧 同步全局 ref
   useEffect(() => {
     window.chatViewMessagesRef[normalizedArticleId] = messages
+    messagesRef.current = messages
   }, [messages, normalizedArticleId])
   
   // 🔧 自动滚动到底部
@@ -320,7 +377,7 @@ function ChatView({
             isUser: item.is_user,
             timestamp: new Date(item.created_at),
             quote: item.quote_text || null
-          })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          }))
           
           console.log('💬 [ChatView] 映射后的 historyMessages:', {
             count: historyMessages.length,
@@ -339,29 +396,21 @@ function ChatView({
               prev.length === 1 &&
               !prev[0].isUser &&
               typeof prev[0].text === 'string' &&
-              (prev[0].text === defaultWelcome || prev[0].text === "选择有疑问的句子或词汇，向我提问吧！" || prev[0].text === "你好！我是聊天助手，有什么可以帮助你的吗？")
+              (prev[0].text === defaultWelcome || isWelcomeMessageText(prev[0].text))
 
             if (isOnlyWelcome) {
               // 直接用历史记录替换欢迎语
-              window.chatViewMessagesRef[normalizedArticleId] = historyMessages
+              const historySorted = sortMessagesStable(historyMessages)
+              window.chatViewMessagesRef[normalizedArticleId] = historySorted
               console.log('💬 [ChatView] 检测到仅欢迎语，直接用历史记录替换:', {
-                replacedCount: historyMessages.length,
+                replacedCount: historySorted.length,
               })
-              return historyMessages
+              return historySorted
             }
 
             // 否则合并去重
-            // 🔧 改进去重逻辑：不仅检查ID，还要检查内容和时间戳（防止ID不一致导致的重复）
+            // 先按 ID 去重，再按“角色+文本+引用+时间窗口”去重，避免线上重复展示同一轮问答
             const existingIds = new Set(prev.map(m => m.id))
-            const existingContentSet = new Set(
-              prev.map(m => {
-                // 使用内容和时间戳（精确到秒）作为唯一标识
-                const timeKey = m.timestamp instanceof Date 
-                  ? Math.floor(m.timestamp.getTime() / 1000)
-                  : Math.floor(new Date(m.timestamp).getTime() / 1000)
-                return `${m.isUser ? 'user' : 'ai'}:${m.text?.substring(0, 100)}:${timeKey}`
-              })
-            )
             
             const newMessages = historyMessages.filter(m => {
               // 检查ID是否已存在
@@ -369,18 +418,13 @@ function ChatView({
                 return false
               }
               
-              // 检查内容和时间戳是否已存在（防止ID不一致导致的重复）
-              const timeKey = m.timestamp instanceof Date 
-                ? Math.floor(m.timestamp.getTime() / 1000)
-                : Math.floor(new Date(m.timestamp).getTime() / 1000)
-              const contentKey = `${m.isUser ? 'user' : 'ai'}:${m.text?.substring(0, 100)}:${timeKey}`
-              
-              if (existingContentSet.has(contentKey)) {
+              // 检查“同一条消息的不同来源副本”（本地 optimistic 与后端历史）
+              const hasDuplicateByContent = prev.some(existing => isLikelyDuplicateMessage(existing, m))
+              if (hasDuplicateByContent) {
                 console.warn('⚠️ [ChatView] 历史记录中发现重复内容（不同ID），跳过:', {
                   historyId: m.id,
                   historyText: m.text?.substring(0, 50),
-                  historyTimestamp: m.timestamp,
-                  existingIds: Array.from(existingIds).slice(0, 5)
+                  historyTimestamp: m.timestamp
                 })
                 return false
               }
@@ -388,10 +432,16 @@ function ChatView({
               return true
             })
             
-            const merged = [...prev, ...newMessages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            // 有真实历史时，清理欢迎语，避免欢迎语插入到会话中间造成顺序错乱观感
+            const prevWithoutWelcome =
+              historyMessages.length > 0
+                ? prev.filter(m => !(m && !m.isUser && isWelcomeMessageText(m.text)))
+                : prev
+
+            const merged = sortMessagesStable([...prevWithoutWelcome, ...newMessages])
             window.chatViewMessagesRef[normalizedArticleId] = merged
             console.log('💬 [ChatView] 合并历史记录:', {
-              existingCount: prev.length,
+              existingCount: prevWithoutWelcome.length,
               newMessagesCount: newMessages.length,
               mergedCount: merged.length,
               skippedByContent: historyMessages.length - newMessages.length - (historyMessages.length - historyMessages.filter(m => !existingIds.has(m.id)).length)
@@ -453,22 +503,31 @@ function ChatView({
           return prev
         }
         
-        // 🔍 诊断日志：检查是否有相同内容但不同ID的消息
-        const duplicateContent = prev.find(m => 
-          m.text === newMessage.text && 
-          m.isUser === newMessage.isUser &&
-          Math.abs(new Date(m.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 1000
-        )
+        // 检查是否有相同内容但不同 ID 的消息（重复触发/并发返回）
+        const duplicateContent = newMessage.isUser
+          ? prev.find(m => isLikelyDuplicateUserMessage(m, newMessage))
+          : prev.find(m => isLikelyDuplicateMessage(m, newMessage))
         if (duplicateContent) {
+          const bothAI = !duplicateContent.isUser && !newMessage.isUser
+          // AI 回答宁可偶发重复，也不能误杀导致“只显示提问不显示回答”
+          if (bothAI) {
+            console.warn('⚠️ [ChatView] addMessage - 检测到 AI 可能重复，保留本次消息以避免漏显示回答:', {
+              existingId: duplicateContent.id,
+              newId: newMessage.id,
+              text: newMessage.text?.substring(0, 50)
+            })
+          } else {
           console.warn('⚠️ [ChatView] addMessage - 检测到重复内容（不同ID）:', {
             existingId: duplicateContent.id,
             newId: newMessage.id,
             text: newMessage.text?.substring(0, 50),
             timeDiff: Math.abs(new Date(duplicateContent.timestamp).getTime() - new Date(newMessage.timestamp).getTime())
           })
+          return prev
+          }
         }
         
-        const updated = [...prev, newMessage].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        const updated = sortMessagesStable([...prev, newMessage])
         window.chatViewMessagesRef[normalizedArticleId] = updated
         
         console.log('✅ [ChatView] addMessage - 消息已添加:', {
@@ -602,6 +661,7 @@ function ChatView({
         
         // 🔧 传递 UI 语言参数，用于控制 AI 输出的语言
         const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
+        const requestStartedAt = Date.now()
         const response = await apiService.sendChat({ 
           user_question: questionText,
           ui_language: uiLanguageForBackend
@@ -610,18 +670,8 @@ function ChatView({
         console.log(`🔍 [ChatView] sendPendingMessage - response.grammar_to_add:`, response?.grammar_to_add)
         console.log(`🔍 [ChatView] sendPendingMessage - response.vocab_to_add:`, response?.vocab_to_add)
         
-        // 🔧 添加 AI 回答
-        if (response?.ai_response) {
-          const parsedResponse = parseAIResponse(response.ai_response)
-          const aiMessage = {
-            id: generateMessageId(),
-            text: parsedResponse || response.ai_response,
-            isUser: false,
-            timestamp: new Date(),
-            articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
-          }
-          addMessage(aiMessage)
-        }
+        // 🔧 添加 AI 回答（字段兼容 + history 兜底）
+        await appendAiReplyWithHistoryFallback({ response, apiService, requestStartedAt })
         
         // 🔧 处理 notations（与 handleSendMessage 相同）
         // 🔍 诊断日志：追踪 notation 添加
@@ -1022,6 +1072,115 @@ function ChatView({
     
     return String(responseText)
   }
+
+  const normalizeAiDisplayText = (text) => {
+    const raw = String(text ?? '')
+    return raw.trim()
+  }
+
+  const renderSimpleMarkdown = (text) => {
+    const source = String(text ?? '')
+    // 仅支持常用且安全的行内格式：**bold** 与 `inline code`
+    const parts = source.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
+    return parts.map((part, idx) => {
+      if (!part) return null
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        return <strong key={`md-b-${idx}`}>{part.slice(2, -2)}</strong>
+      }
+      if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+        return (
+          <code key={`md-c-${idx}`} className="rounded bg-gray-200 px-1 py-0.5 text-[0.95em]">
+            {part.slice(1, -1)}
+          </code>
+        )
+      }
+      return <span key={`md-t-${idx}`}>{part}</span>
+    })
+  }
+
+  const extractAiReplyFromSendChatResponse = (response) => {
+    if (!response) return ''
+    const candidates = [
+      response?.ai_response,
+      response?.answer,
+      response?.assistant_response,
+      response?.response,
+      response?.message,
+      response?.data?.ai_response,
+      response?.data?.answer,
+      response?.data?.assistant_response,
+      response?.data?.response,
+      response?.data?.message
+    ]
+    for (const item of candidates) {
+      if (item == null) continue
+      const parsed = parseAIResponse(item)
+      if (typeof parsed === 'string' && parsed.trim()) return normalizeAiDisplayText(parsed)
+    }
+    return ''
+  }
+
+  const appendAiReplyWithHistoryFallback = async ({ response, apiService, requestStartedAt = Date.now() }) => {
+    // 1) 优先使用 sendChat 直接返回
+    const directReply = extractAiReplyFromSendChatResponse(response)
+    if (directReply) {
+      addMessage({
+        id: generateMessageId(),
+        text: directReply,
+        isUser: false,
+        timestamp: new Date(),
+        articleId: articleId ? String(articleId) : undefined
+      })
+      return
+    }
+
+    // 2) 兜底：从 history 轮询最近 AI 回答（后端已成功写入但本次响应字段不一致/稍晚写入时）
+    if (!articleId) return
+    try {
+      const maxAttempts = 6
+      const retryDelayMs = 450
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        const historyResp = await apiService.getChatHistory({ textId: articleId, limit: 50 })
+        const items = historyResp?.items || []
+        if (Array.isArray(items) && items.length > 0) {
+          const current = Array.isArray(messagesRef.current) ? messagesRef.current : []
+          const existingAiIds = new Set(
+            current.filter(m => !m?.isUser && m?.id != null).map(m => String(m.id))
+          )
+          const existingAiTextSet = new Set(
+            current.filter(m => !m?.isUser).map(m => normalizeTextForSignature(m?.text))
+          )
+          const targetAi = [...items]
+            .filter(item => item && item.is_user === false && typeof item.text === 'string' && item.text.trim())
+            .filter(item => {
+              const createdAt = item.created_at ? new Date(item.created_at).getTime() : 0
+              // 允许服务端时间轻微漂移，向前放宽 2 秒
+              return createdAt >= (requestStartedAt - 2000)
+            })
+            .filter(item => !existingAiIds.has(String(item.id)))
+            .filter(item => !existingAiTextSet.has(normalizeTextForSignature(item.text)))
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0]
+
+          if (targetAi) {
+            addMessage({
+              id: targetAi.id || generateMessageId(),
+        text: normalizeAiDisplayText(targetAi.text),
+              isUser: false,
+              timestamp: targetAi.created_at ? new Date(targetAi.created_at) : new Date(),
+              articleId: articleId ? String(articleId) : undefined
+            })
+            return
+          }
+        }
+
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, retryDelayMs))
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ [ChatView] AI 回答兜底加载失败:', e)
+    }
+  }
   
   // 🔧 发送消息
   const handleSendMessage = async () => {
@@ -1126,6 +1285,7 @@ function ChatView({
       
       // 🔧 传递 UI 语言参数，用于控制 AI 输出的语言
       const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
+      const requestStartedAt = Date.now()
       const response = await apiService.sendChat({ 
         user_question: questionText,
         ui_language: uiLanguageForBackend
@@ -1134,17 +1294,8 @@ function ChatView({
       console.log(`🔍 [ChatView] response.grammar_to_add:`, response?.grammar_to_add)
       console.log(`🔍 [ChatView] response.vocab_to_add:`, response?.vocab_to_add)
       
-      // 🔧 添加 AI 回答
-      if (response?.ai_response) {
-        const parsedResponse = parseAIResponse(response.ai_response)
-        const aiMessage = {
-          id: generateMessageId(),
-          text: parsedResponse || response.ai_response,
-          isUser: false,
-          timestamp: new Date()
-        }
-        addMessage(aiMessage)
-      }
+      // 🔧 添加 AI 回答（字段兼容 + history 兜底）
+      await appendAiReplyWithHistoryFallback({ response, apiService, requestStartedAt })
       
       // 🔧 处理 notations
       // 🔍 诊断日志：追踪 notation 添加
@@ -1576,6 +1727,7 @@ function ChatView({
       
       // 🔧 传递 UI 语言参数，用于控制 AI 输出的语言
       const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
+      const requestStartedAt = Date.now()
       const response = await apiService.sendChat({ 
         user_question: question,
         ui_language: uiLanguageForBackend
@@ -1584,18 +1736,8 @@ function ChatView({
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - response.grammar_to_add:`, response?.grammar_to_add)
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - response.vocab_to_add:`, response?.vocab_to_add)
       
-      // 🔧 添加 AI 回答
-      if (response?.ai_response) {
-        const parsedResponse = parseAIResponse(response.ai_response)
-        const aiMessage = {
-          id: generateMessageId(),
-          text: parsedResponse || response.ai_response,
-          isUser: false,
-          timestamp: new Date(),
-          articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
-        }
-        addMessage(aiMessage)
-      }
+      // 🔧 添加 AI 回答（字段兼容 + history 兜底）
+      await appendAiReplyWithHistoryFallback({ response, apiService, requestStartedAt })
       
       // 🔧 处理 notations（与 handleSendMessage 相同）
       // 🔍 诊断日志：追踪 notation 添加
@@ -2042,7 +2184,9 @@ function ChatView({
                   <p className="text-sm">
                     {(!message.isUser && (message.text === '选择有疑问的句子或词汇，向我提问吧！' || message.text === '你好！我是聊天助手，有什么可以帮助你的吗？'))
                       ? t('选择有疑问的句子或词汇，向我提问吧！')
-                      : message.text}
+                      : (!message.isUser
+                          ? renderSimpleMarkdown(message.text)
+                          : message.text)}
                   </p>
                   <p className="text-xs mt-1 text-gray-500">
                     {formatTime(message.timestamp)}
