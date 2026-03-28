@@ -18,6 +18,7 @@ from backend.api.db_deps import get_db_session
 
 # 导入数据库版本的 OriginalTextManager
 from backend.data_managers import OriginalTextManagerDB
+from backend.data_managers.preset_articles import get_preset_difficulty_for_text
 from backend.preprocessing.language_classification import (
     get_language_code,
     is_non_whitespace_language,
@@ -166,6 +167,7 @@ async def get_all_texts(
                 "text_id": t.text_id,
                 "text_title": t.text_title,
                 "language": t.language,
+                "difficulty": get_preset_difficulty_for_text(t.language, t.text_title),
                 "processing_status": t.processing_status,  # 添加处理状态
                 "total_sentences": sentence_count,
                 "total_tokens": token_count,

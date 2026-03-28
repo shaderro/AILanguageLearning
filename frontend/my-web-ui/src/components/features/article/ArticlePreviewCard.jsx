@@ -5,8 +5,15 @@ import { useUIText } from '../../../i18n/useUIText';
 
 export function ArticlePreviewCard({
   title,
+  isEditing = false,
+  editingTitle = '',
+  onEditingTitleChange,
+  onEditSave,
+  onEditCancel,
+  isEditingBusy = false,
   wordCount = 0,
   noteCount = 0,
+  difficulty = null,
   preview = '',
   processingStatus = 'completed',
   onEdit,
@@ -23,6 +30,7 @@ export function ArticlePreviewCard({
   const widthValue = typeof width === 'number' ? `${width}px` : width;
   const heightValue = typeof height === 'number' ? `${height}px` : height;
   const titleRef = useRef(null);
+  const titleInputRef = useRef(null);
   const previewRef = useRef(null);
   const [titleOverflow, setTitleOverflow] = useState(false);
   const [overflowDistance, setOverflowDistance] = useState(0);
@@ -34,7 +42,33 @@ export function ArticlePreviewCard({
   const canvasRef = useRef(null);
   const isProcessing = processingStatus === 'processing';
   const isFailed = processingStatus === 'failed';
-  const canInteract = !(isProcessing || isFailed);
+  const canInteract = !(isProcessing || isFailed || isEditingBusy);
+  const normalizedDifficulty = typeof difficulty === 'string' ? difficulty.trim().toLowerCase() : '';
+
+  const difficultyConfig = {
+    beginner: {
+      label: t('beginner'),
+      className: 'bg-green-50 text-green-700 border-green-200',
+    },
+    intermediate: {
+      label: t('intermediate'),
+      className: 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+    advanced: {
+      label: t('advanced'),
+      className: 'bg-rose-50 text-rose-700 border-rose-200',
+    },
+  };
+  const difficultyBadge = difficultyConfig[normalizedDifficulty] || null;
+
+  useEffect(() => {
+    if (!isEditing || !titleInputRef.current) {
+      return;
+    }
+
+    titleInputRef.current.focus();
+    titleInputRef.current.select();
+  }, [isEditing]);
 
   useEffect(() => {
     const el = titleRef.current;
@@ -155,15 +189,41 @@ export function ArticlePreviewCard({
             onMouseEnter={() => titleOverflow && setIsTitleHover(true)}
             onMouseLeave={() => setIsTitleHover(false)}
           >
-            <h3
-              ref={titleRef}
-              className="pr-12 text-lg font-semibold text-gray-900 whitespace-nowrap"
-              style={titleAnimationStyle}
-            >
-              {title}
-            </h3>
+            {isEditing ? (
+              <input
+                ref={titleInputRef}
+                type="text"
+                value={editingTitle}
+                onChange={(e) => onEditingTitleChange?.(e.target.value)}
+                onBlur={() => {
+                  if (!isEditingBusy) {
+                    onEditSave?.()
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    e.currentTarget.blur()
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault()
+                    onEditCancel?.()
+                  }
+                }}
+                disabled={isEditingBusy}
+                className="w-full rounded-md border border-gray-300 px-2 py-1 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            ) : (
+              <h3
+                ref={titleRef}
+                className="pr-12 text-lg font-semibold text-gray-900 whitespace-nowrap"
+                style={titleAnimationStyle}
+              >
+                {title}
+              </h3>
+            )}
           </div>
-          {canInteract && showEditButton && onEdit && (
+          {!isEditing && canInteract && showEditButton && onEdit && (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-start justify-end">
               <button
                 type="button"
@@ -194,8 +254,13 @@ export function ArticlePreviewCard({
           lineHeight: componentTokens.text.cardNote.lineHeight,
           fontWeight: componentTokens.text.cardNote.fontWeight,
         }}>
-          <span>{wordCount} words</span>
-          <span>{noteCount} notes</span>
+          <span>{wordCount} {t('词')}</span>
+          <span>{noteCount} {t('条笔记')}</span>
+          {difficultyBadge && (
+            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${difficultyBadge.className}`}>
+              {difficultyBadge.label}
+            </span>
+          )}
         </div>
         {isProcessing && (
           <p className="text-xs font-medium text-yellow-600">{t('处理中...')}</p>
@@ -259,7 +324,7 @@ export function ArticlePreviewCard({
               disabled={!canInteract}
               className="w-full justify-center px-4"
             >
-              {isProcessing ? t('处理中...') : isFailed ? t('处理失败') : 'read'}
+              {isEditingBusy ? t('保存中...') : isProcessing ? t('处理中...') : isFailed ? t('处理失败') : t('Start Reading')}
             </BaseButton>
           </div>
         </div>

@@ -120,6 +120,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       s.snippet ||
       s.first_sentence ||
       fallbackPreview
+    const difficulty = s.difficulty || null
     
     return {
       id: textId,
@@ -128,7 +129,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
         ? t('处理中...') 
         : `Sentences: ${totalSentences} • Tokens: ${totalTokens}`,
       language: language, // 从后端获取语言字段，null表示未设置
-      difficulty: 'N/A',
+      difficulty,
       wordCount: totalTokens,
       noteCount,
       preview: previewText,
@@ -311,15 +312,17 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   }
   
   // 保存编辑
-  const handleSaveEdit = async () => {
-    if (!editingArticle || !editTitle.trim()) {
+  const handleSaveEdit = async (articleId = editingArticle) => {
+    const nextTitle = editTitle.trim()
+    if (!articleId || !nextTitle) {
+      handleCancelEdit()
       return
     }
     
     setIsProcessing(true)
     try {
-      console.log('🔄 [ArticleSelection] 开始更新文章:', editingArticle, '新名称:', editTitle.trim())
-      const response = await apiService.updateArticle(editingArticle, { text_title: editTitle.trim() })
+      console.log('🔄 [ArticleSelection] 开始更新文章:', articleId, '新名称:', nextTitle)
+      const response = await apiService.updateArticle(articleId, { text_title: nextTitle })
       console.log('✅ [ArticleSelection] 文章名称已更新，响应:', response)
       // 刷新文章列表
       queryClient.invalidateQueries({ queryKey: ['articles'] })
@@ -420,6 +423,12 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                     articles={enrichedArticles}
                     onArticleSelect={handleArticleSelect}
                     onArticleEdit={handleEdit}
+                    editingArticleId={editingArticle}
+                    editingTitle={editTitle}
+                    onEditingTitleChange={setEditTitle}
+                    onArticleEditSave={handleSaveEdit}
+                    onArticleEditCancel={handleCancelEdit}
+                    isEditingBusy={isProcessing}
                     onArticleDelete={handleDelete}
                   />
                 ) : (
@@ -430,47 +439,6 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                 )}
               </>
             )}
-            
-            {/* 编辑对话框 */}
-            {editingArticle && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                  <h2 className="text-xl font-bold mb-4">{t('编辑文章名称')}</h2>
-                  <input
-                    type="text"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t('输入新名称')}
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSaveEdit()
-                      } else if (e.key === 'Escape') {
-                        handleCancelEdit()
-                      }
-                    }}
-                  />
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={isProcessing}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
-                    >
-                      {t('取消')}
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={isProcessing || !editTitle.trim()}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isProcessing ? t('保存中...') : t('保存')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            
             {/* 删除确认对话框 */}
             {deletingArticle && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

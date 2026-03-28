@@ -37,6 +37,7 @@ const normalizeArticle = (article, fallbackPreview) => {
   const textId = article.text_id || article.article_id || article.id
   const textTitle = article.text_title || article.title || `Article ${textId}`
   const wordCount = article.total_tokens || article.wordCount || article.token_count || 0
+  const difficulty = article.difficulty || null
   const noteCount =
     article.note_count ??
     article.notes_count ??
@@ -57,6 +58,7 @@ const normalizeArticle = (article, fallbackPreview) => {
     id: textId,
     title: textTitle,
     wordCount,
+    difficulty,
     noteCount,
     preview,
   }
@@ -691,6 +693,7 @@ const LandingPage = ({
                       title={article.title}
                       wordCount={article.wordCount}
                       noteCount={article.noteCount}
+                      difficulty={article.difficulty}
                       preview={article.preview}
                       processingStatus="completed"
                       onRead={() => onArticleSelect?.(article.id)}

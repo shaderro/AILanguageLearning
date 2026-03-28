@@ -4,6 +4,12 @@ const ArticleList = ({
   articles = [], 
   onArticleSelect,
   onArticleEdit,
+  editingArticleId = null,
+  editingTitle = '',
+  onEditingTitleChange,
+  onArticleEditSave,
+  onArticleEditCancel,
+  isEditingBusy = false,
   onArticleDelete,
   className = ""
 }) => {
@@ -27,8 +33,19 @@ const ArticleList = ({
         <ArticlePreviewCard
           key={article.id}
           title={article.title}
+          isEditing={editingArticleId === article.id}
+          editingTitle={editingArticleId === article.id ? editingTitle : article.title}
+          onEditingTitleChange={onEditingTitleChange}
+          onEditSave={
+            onArticleEditSave
+              ? () => onArticleEditSave(article.id)
+              : undefined
+          }
+          onEditCancel={onArticleEditCancel}
+          isEditingBusy={isEditingBusy && editingArticleId === article.id}
           wordCount={article.wordCount}
           noteCount={article.noteCount}
+          difficulty={article.difficulty}
           preview={article.preview}
           processingStatus={article.processingStatus}
           width="100%"

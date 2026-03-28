@@ -7,9 +7,10 @@
 
 import os
 import json
-from typing import List, Dict, Any
+from functools import lru_cache
+from typing import List, Dict, Any, Optional, Tuple
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from database_system.business_logic.models import (
@@ -76,6 +77,31 @@ def load_preset_files(languages: List[str]) -> List[Dict[str, Any]]:
                 continue
 
     return presets
+
+
+@lru_cache(maxsize=1)
+def _build_preset_difficulty_map() -> Dict[Tuple[str, str], str]:
+    mapping: Dict[Tuple[str, str], str] = {}
+    for preset in load_preset_files([]):
+        lang_code = str(preset.get('language_code') or '').strip()
+        title = str(preset.get('title') or '').strip()
+        difficulty = str(preset.get('difficulty') or '').strip().lower()
+        if not lang_code or not title or not difficulty:
+            continue
+        mapping[(lang_code, title)] = difficulty
+    return mapping
+
+
+def get_preset_difficulty_for_text(language_name: Optional[str], title: Optional[str]) -> Optional[str]:
+    if not language_name or not title:
+        return None
+
+    reverse_lang_map = {name: code for code, name in LANG_CODE_TO_NAME.items()}
+    lang_code = reverse_lang_map.get(str(language_name).strip())
+    if not lang_code:
+        return None
+
+    return _build_preset_difficulty_map().get((lang_code, str(title).strip()))
 
 
 def seed_presets_for_user(
@@ -245,10 +271,11 @@ def _generate_tokens_for_text(
         return
 
     global_token_id = 0
-    # `word_token_id` is a global primary key in DB, so we must continue from
-    # the current max instead of restarting from 1 for every imported article.
-    current_max_word_token_id = session.query(func.max(WordToken.word_token_id)).scalar() or 0
-    global_word_token_id = current_max_word_token_id + 1
+
+    # Historical seeds inserted explicit word_token_id values. In PostgreSQL,
+    # that may leave the sequence behind the actual max, so align it before
+    # relying on DB-generated IDs.
+    _sync_word_token_sequence_if_needed(session)
 
     for sentence in sentences:
         sentence_text = sentence.sentence_body or ""
@@ -267,17 +294,27 @@ def _generate_tokens_for_text(
         sentence_word_tokens: list[dict] = []
         token_word_mapping: dict[int, int] = {}
         if language_code == "zh":
-            sentence_word_tokens, token_word_mapping, global_word_token_id = word_segmentation(
+            sentence_word_tokens, token_word_mapping, _ = word_segmentation(
                 language_code,
                 sentence_text,
                 tokens_with_id,
-                global_word_token_id,
+                1,
             )
-            if sentence_word_tokens:
+
+            real_word_token_mapping = _create_word_tokens_and_get_mapping(
+                session=session,
+                text_id=text_id,
+                sentence_id=sentence.sentence_id,
+                sentence_word_tokens=sentence_word_tokens,
+            )
+
+            if real_word_token_mapping:
                 for t in tokens_with_id:
-                    mapped_id = token_word_mapping.get(t["sentence_token_id"])
-                    if mapped_id is not None:
-                        t["word_token_id"] = mapped_id
+                    temp_word_token_id = token_word_mapping.get(t["sentence_token_id"])
+                    if temp_word_token_id is not None:
+                        real_word_token_id = real_word_token_mapping.get(temp_word_token_id)
+                        if real_word_token_id is not None:
+                            t["word_token_id"] = real_word_token_id
 
         # 3) 写入 Token 表
         for t in tokens_with_id:
@@ -303,16 +340,64 @@ def _generate_tokens_for_text(
             )
             session.add(token)
 
-        # 4) 写入 WordToken 表（仅中文等非空格语言）
-        for wt in sentence_word_tokens:
-            word_token = WordToken(
-                word_token_id=wt.get("word_token_id"),
-                text_id=text_id,
-                sentence_id=sentence.sentence_id,
-                word_body=wt.get("word_body", ""),
-                token_ids=wt.get("token_ids") or [],
-                pos_tag=wt.get("pos_tag"),
-                lemma=wt.get("lemma"),
-                linked_vocab_id=wt.get("linked_vocab_id"),
+def _create_word_tokens_and_get_mapping(
+    session: Session,
+    text_id: int,
+    sentence_id: int,
+    sentence_word_tokens: List[Dict[str, Any]],
+) -> Dict[int, int]:
+    """
+    Insert word tokens using database-generated primary keys, then return a
+    mapping from temporary IDs (used during segmentation) to persisted IDs.
+    """
+    if not sentence_word_tokens:
+        return {}
+
+    temp_to_model: Dict[int, WordToken] = {}
+
+    for wt in sentence_word_tokens:
+        temp_word_token_id = wt.get("word_token_id")
+        if temp_word_token_id is None:
+            continue
+
+        word_token = WordToken(
+            text_id=text_id,
+            sentence_id=sentence_id,
+            word_body=wt.get("word_body", ""),
+            token_ids=wt.get("token_ids") or [],
+            pos_tag=wt.get("pos_tag"),
+            lemma=wt.get("lemma"),
+            linked_vocab_id=wt.get("linked_vocab_id"),
+        )
+        session.add(word_token)
+        temp_to_model[int(temp_word_token_id)] = word_token
+
+    session.flush()
+
+    return {
+        temp_id: model.word_token_id
+        for temp_id, model in temp_to_model.items()
+        if model.word_token_id is not None
+    }
+
+
+def _sync_word_token_sequence_if_needed(session: Session) -> None:
+    """
+    Keep PostgreSQL sequence in sync with historical explicit inserts so
+    autoincremented word_token_id values remain collision-free.
+    """
+    bind = session.get_bind()
+    if bind is None or bind.dialect.name != "postgresql":
+        return
+
+    session.execute(
+        text(
+            """
+            SELECT setval(
+                pg_get_serial_sequence('word_tokens', 'word_token_id'),
+                COALESCE((SELECT MAX(word_token_id) FROM word_tokens), 1),
+                true
             )
-            session.add(word_token)
+            """
+        )
+    )
