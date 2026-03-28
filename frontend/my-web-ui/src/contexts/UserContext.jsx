@@ -8,7 +8,7 @@
  * - 自动从 localStorage 恢复登录状态
  * - 游客模式和数据迁移
  */
-import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import authService from '../modules/auth/services/authService'
 import guestDataManager from '../utils/guestDataManager'
 
@@ -57,6 +57,33 @@ export function UserProvider({ children }) {
   const [pendingGuestId, setPendingGuestId] = useState(null) // 待迁移的游客ID
   const [showMigrationDialog, setShowMigrationDialog] = useState(false) // 是否显示迁移对话框
   const isInitializedRef = useRef(false) // 🔧 使用 ref 标记是否已经初始化，避免重复初始化
+  const lastUserInfoFetchAtRef = useRef(0)
+
+  const refreshUserInfo = useCallback(async (overrideToken = token, options = {}) => {
+    const { clearOnMissingToken = true, clearOnError = false } = options
+
+    if (!overrideToken) {
+      if (clearOnMissingToken) {
+        setUserInfo(null)
+      }
+      return null
+    }
+
+    try {
+      const info = await authService.getCurrentUser(overrideToken)
+      setUserInfo(info)
+      if (info?.email) {
+        setEmail(info.email)
+      }
+      lastUserInfoFetchAtRef.current = Date.now()
+      return info
+    } catch (error) {
+      if (clearOnError) {
+        setUserInfo(null)
+      }
+      throw error
+    }
+  }, [token])
 
   // 初始化：从 localStorage 恢复登录状态或创建游客ID
   // 🔧 用于标记用户是否主动登录，以便忽略自动登录的结果
@@ -78,7 +105,7 @@ export function UserProvider({ children }) {
         try {
           // 验证 token 是否有效（添加超时处理，增加超时时间避免预处理过程中被登出）
           const user = await Promise.race([
-            authService.getCurrentUser(savedToken),
+            refreshUserInfo(savedToken, { clearOnMissingToken: false }),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('验证超时')), 120000) // 增加到2分钟
             )
@@ -165,7 +192,38 @@ export function UserProvider({ children }) {
     }
     
     initAuth()
-  }, [])
+  }, [refreshUserInfo])
+
+  useEffect(() => {
+    if (!token || !isAuthenticated) {
+      return
+    }
+
+    let cancelled = false
+
+    const syncUserInfo = async () => {
+      try {
+        const info = await refreshUserInfo(token, { clearOnMissingToken: false })
+        if (cancelled || !info) {
+          return
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('⚠️ [UserContext] 刷新用户信息失败:', error?.message || error)
+        }
+      }
+    }
+
+    if (!userInfo || Date.now() - lastUserInfoFetchAtRef.current > 15000) {
+      syncUserInfo()
+    }
+
+    const interval = setInterval(syncUserInfo, 30000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [token, isAuthenticated, userInfo, refreshUserInfo])
 
   /**
    * 登录
@@ -194,6 +252,7 @@ export function UserProvider({ children }) {
       // 更新状态（从游客模式切换到登录模式）
       setUserId(result.user_id)
       setToken(result.access_token)
+      setUserInfo(null)
       setPassword(inputPassword)
       setIsAuthenticated(true)
       setIsGuest(false)  // 不再是游客
@@ -226,6 +285,7 @@ export function UserProvider({ children }) {
           setUserId(savedAuth.userId)
           setToken(savedAuth.token)
           setEmail(null) // 🔧 超时恢复时无法获取 email，设为 null
+      setUserInfo(null)
           setPassword(inputPassword)
           setIsAuthenticated(true)
           setIsGuest(false)
@@ -327,6 +387,7 @@ export function UserProvider({ children }) {
     setToken(null)
     setEmail(null) // 🔧 清除 email
     setUserInfo(null)
+    lastUserInfoFetchAtRef.current = 0
     setPassword(null)
     setIsAuthenticated(false)
     setIsGuest(true)
@@ -341,6 +402,7 @@ export function UserProvider({ children }) {
     isAuthenticated,
     isGuest,  // 是否为游客模式
     isLoading,
+    refreshUserInfo,
     login,
     register,
     logout,

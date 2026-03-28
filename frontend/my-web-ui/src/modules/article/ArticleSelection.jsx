@@ -6,43 +6,12 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { apiService } from '../../services/api'
 import { useUIText } from '../../i18n/useUIText'
-
-const PREVIEW_CACHE_KEY = 'articlePreviewCache'
-const previewCache = new Map()
-let previewCacheLoaded = false
-
-const ensurePreviewCacheLoaded = () => {
-  if (previewCacheLoaded || typeof window === 'undefined') {
-    return
-  }
-  try {
-    const raw = window.localStorage.getItem(PREVIEW_CACHE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      Object.entries(parsed).forEach(([id, value]) => {
-        if (typeof value === 'string' && value.trim()) {
-          previewCache.set(id, value)
-        }
-      })
-    }
-  } catch (err) {
-    console.warn('⚠️ [ArticleSelection] 读取摘要缓存失败:', err)
-  } finally {
-    previewCacheLoaded = true
-  }
-}
-
-const persistPreviewCache = () => {
-  if (typeof window === 'undefined') {
-    return
-  }
-  try {
-    const serialized = JSON.stringify(Object.fromEntries(previewCache))
-    window.localStorage.setItem(PREVIEW_CACHE_KEY, serialized)
-  } catch (err) {
-    console.warn('⚠️ [ArticleSelection] 保存摘要缓存失败:', err)
-  }
-}
+import {
+  ensureArticlePreviewCacheLoaded,
+  getCachedArticlePreview,
+  hydrateArticlePreviewCache,
+  fetchArticlePreview,
+} from '../../utils/articlePreviewCache'
 
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   const { userId, isGuest } = useUser()
@@ -128,7 +97,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   
   const fallbackPreview = t('暂无摘要')
 
-  ensurePreviewCacheLoaded()
+  ensureArticlePreviewCacheLoaded()
 
   // 将后端摘要映射为列表卡片需要的结构
   // 注意：language过滤已经在API层面完成（登录模式）或本地完成（游客模式），这里只需要映射数据
@@ -233,21 +202,46 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   const [previewOverrides, setPreviewOverrides] = useState(() => {
     const initial = {}
     mappedArticles.forEach((article) => {
-      if (previewCache.has(article.id)) {
-        initial[article.id] = previewCache.get(article.id)
+      const cachedPreview = getCachedArticlePreview(article.id)
+      if (cachedPreview) {
+        initial[article.id] = cachedPreview
       }
     })
     return initial
   })
 
   useEffect(() => {
+    hydrateArticlePreviewCache(
+      mappedArticles
+        .filter((article) => article.preview && article.preview !== fallbackPreview)
+        .map((article) => ({ id: article.id, preview: article.preview })),
+    )
+
+    setPreviewOverrides((prev) => {
+      const next = { ...prev }
+      let changed = false
+
+      mappedArticles.forEach((article) => {
+        const cachedPreview = getCachedArticlePreview(article.id)
+        if (cachedPreview && next[article.id] !== cachedPreview) {
+          next[article.id] = cachedPreview
+          changed = true
+        }
+      })
+
+      return changed ? next : prev
+    })
+  }, [mappedArticles, fallbackPreview])
+
+  useEffect(() => {
     let cancelled = false
-    const CONCURRENCY = 3
+    const CONCURRENCY = 2
+    let timeoutId = null
     const fetchMissingPreviews = async () => {
       const pending = filteredArticles.filter(
         (article) =>
           (!article.preview || article.preview === fallbackPreview) &&
-          !previewCache.has(article.id),
+          !getCachedArticlePreview(article.id),
       )
       if (pending.length === 0) {
         return
@@ -258,19 +252,8 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
         await Promise.all(
           batch.map(async (article) => {
             try {
-              const resp = await apiService.getArticleSentences(article.id, { limit: 1 })
-              const sentences =
-                resp?.data?.data?.sentences ||
-                resp?.data?.sentences ||
-                resp?.data ||
-                resp?.sentences ||
-                []
-              const firstSentence = Array.isArray(sentences) && sentences.length > 0
-                ? sentences[0]?.sentence_body || sentences[0]?.text || sentences[0]?.sentence
-                : null
+              const firstSentence = await fetchArticlePreview(article.id)
               if (firstSentence && !cancelled) {
-                previewCache.set(article.id, firstSentence)
-                persistPreviewCache()
                 setPreviewOverrides((prev) => {
                   if (prev[article.id] === firstSentence) {
                     return prev
@@ -289,10 +272,13 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       }
     }
 
-    fetchMissingPreviews()
+    timeoutId = window.setTimeout(fetchMissingPreviews, 250)
 
     return () => {
       cancelled = true
+      if (timeoutId) {
+        window.clearTimeout(timeoutId)
+      }
     }
   }, [filteredArticles, fallbackPreview])
 
@@ -300,7 +286,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     () =>
       filteredArticles.map((article) => ({
         ...article,
-        preview: previewOverrides[article.id] ?? previewCache.get(article.id) ?? article.preview,
+        preview: previewOverrides[article.id] ?? getCachedArticlePreview(article.id) ?? article.preview,
       })),
     [filteredArticles, previewOverrides],
   )

@@ -14,7 +14,6 @@ import { useChatEvent } from './contexts/ChatEventContext'
 import { useTranslationDebug } from '../../contexts/TranslationDebugContext'
 import { useUser } from '../../contexts/UserContext'
 import { isTokenInsufficient } from '../../utils/tokenUtils'
-import authService from '../auth/services/authService'
 import { useAskedTokens } from './hooks/useAskedTokens'
 import { useTokenNotations } from './hooks/useTokenNotations'
 import { useNotationCache } from './hooks/useNotationCache'
@@ -483,31 +482,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   // 🔧 新增：处理 AI 详细解释请求（内部组件，可以使用 useChatEvent）
   const ArticleChatViewInner = () => {
     const { sendMessageToChat } = useChatEvent()
-    const { token: userToken } = useUser()
-    const [userInfo, setUserInfo] = useState(null)
-    
-    // 🔧 获取用户信息
-    useEffect(() => {
-      const fetchUserInfo = async () => {
-        if (!userToken) {
-          setUserInfo(null)
-          return
-        }
-        
-        try {
-          const info = await authService.getCurrentUser(userToken)
-          setUserInfo(info)
-        } catch (err) {
-          console.error('获取用户信息失败:', err)
-          setUserInfo(null)
-        }
-      }
-      
-      fetchUserInfo()
-      // 定期刷新用户信息（每30秒）
-      const interval = setInterval(fetchUserInfo, 30000)
-      return () => clearInterval(interval)
-    }, [userToken])
+    const { token: userToken, userInfo } = useUser()
     
     const handleAskAI = useCallback(async (token, sentenceIndex) => {
       if (!token || sentenceIndex == null) {
@@ -524,19 +499,6 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
         if (insufficient) {
           console.log(`⚠️ [ArticleChatView] Token不足，无法使用AI详细解释功能`)
           return
-        }
-      } else if (userToken) {
-        // 如果userInfo还未加载，尝试获取
-        try {
-          const info = await authService.getCurrentUser(userToken)
-          setUserInfo(info)
-          const insufficient = isTokenInsufficient(info?.token_balance, info?.role)
-          if (insufficient) {
-            console.log(`⚠️ [ArticleChatView] Token不足，无法使用AI详细解释功能`)
-            return
-          }
-        } catch (err) {
-          console.error('获取用户信息失败:', err)
         }
       }
       

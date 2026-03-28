@@ -31,7 +31,6 @@ import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { colors } from '../../../design-tokens'
 import { useUser } from '../../../contexts/UserContext'
 import { isTokenInsufficient } from '../../../utils/tokenUtils'
-import authService from '../../auth/services/authService'
 import { useTranslate } from '../../../i18n/useTranslate'
 import { useUIText } from '../../../i18n/useUIText'
 
@@ -93,10 +92,9 @@ function ChatView({
   const { pendingMessage, clearPendingMessage, pendingContext, clearPendingContext, pendingToast, clearPendingToast } = useChatEvent()
   const { refreshGrammar, refreshVocab } = useRefreshData()
   const { addLog } = useTranslationDebug()
-  const { token } = useUser()
+  const { token, userInfo } = useUser()
   
   // 🔧 Token不足检查相关状态
-  const [userInfo, setUserInfo] = useState(null)
   const [tokenInsufficient, setTokenInsufficient] = useState(false)
   
   // 🔧 可调整宽度功能
@@ -270,43 +268,18 @@ function ChatView({
   const [inputText, setInputText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   
-  // 🔧 获取用户信息并检查token是否不足
+  // 🔧 Token不足检查：统一复用 UserContext 中的 /auth/me 结果
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (!token) {
-        setUserInfo(null)
-        setTokenInsufficient(false)
-        return
-      }
-      
-      try {
-        const info = await authService.getCurrentUser(token)
-        setUserInfo(info)
-        // 检查token是否不足（只在没有main assistant流程时判断）
-        if (!isProcessing) {
-          const insufficient = isTokenInsufficient(info?.token_balance, info?.role)
-          setTokenInsufficient(insufficient)
-        }
-      } catch (err) {
-        console.error('获取用户信息失败:', err)
-        setUserInfo(null)
-        setTokenInsufficient(false)
-      }
+    if (!token || !userInfo) {
+      setTokenInsufficient(false)
+      return
     }
-    
-    fetchUserInfo()
-    // 定期刷新用户信息（每30秒）
-    const interval = setInterval(fetchUserInfo, 30000)
-    return () => clearInterval(interval)
-  }, [token, isProcessing])
-  
-  // 🔧 当isProcessing状态变化时，重新检查token是否不足
-  useEffect(() => {
-    if (!isProcessing && userInfo) {
+
+    if (!isProcessing) {
       const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
       setTokenInsufficient(insufficient)
     }
-  }, [isProcessing, userInfo])
+  }, [token, isProcessing, userInfo])
   
   // 🔧 Toast 管理
   if (!window.chatViewToastsRef) {

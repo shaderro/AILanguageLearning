@@ -9,6 +9,7 @@ import os
 import json
 from typing import List, Dict, Any
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database_system.business_logic.models import (
@@ -34,6 +35,12 @@ LANG_CODE_TO_NAME = {
     'zh': '中文',
     'en': '英文',
     'de': '德文',
+    'es': '西班牙语',
+    'fr': '法语',
+    'ja': '日语',
+    'ko': '韩语',
+    'ar': '阿拉伯语',
+    'ru': '俄语',
 }
 
 
@@ -114,6 +121,11 @@ def seed_presets_for_user(
             .first()
         )
         if existing:
+            _repair_existing_preset_text_if_needed(
+                session=session,
+                text=existing,
+                language_code=lang_code,
+            )
             continue
 
         text_dto = text_manager.add_text(
@@ -170,6 +182,34 @@ def seed_presets_for_user(
         session.commit()
 
 
+def _repair_existing_preset_text_if_needed(
+    session: Session,
+    text: OriginalText,
+    language_code: str | None,
+) -> None:
+    """
+    Retry token generation for preset texts that already exist but were left in an
+    incomplete state by a previous failed seed run.
+    """
+    if text.processing_status == 'completed':
+        return
+
+    existing_token_count = session.query(Token).filter(Token.text_id == text.text_id).count()
+    if existing_token_count > 0:
+        text.processing_status = 'completed'
+        return
+
+    try:
+        _generate_tokens_for_text(
+            session=session,
+            text_id=text.text_id,
+            language_code=language_code,
+        )
+        text.processing_status = 'completed'
+    except Exception:
+        text.processing_status = 'failed'
+
+
 def _generate_tokens_for_text(
     session: Session,
     text_id: int,
@@ -199,7 +239,10 @@ def _generate_tokens_for_text(
         return
 
     global_token_id = 0
-    global_word_token_id = 1
+    # `word_token_id` is a global primary key in DB, so we must continue from
+    # the current max instead of restarting from 1 for every imported article.
+    current_max_word_token_id = session.query(func.max(WordToken.word_token_id)).scalar() or 0
+    global_word_token_id = current_max_word_token_id + 1
 
     for sentence in sentences:
         sentence_text = sentence.sentence_body or ""

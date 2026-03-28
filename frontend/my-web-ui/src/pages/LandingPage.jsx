@@ -4,47 +4,15 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { useUiLanguage } from '../contexts/UiLanguageContext'
 import { useArticles, useVocabList, useGrammarList } from '../hooks/useApi'
 import { useUIText } from '../i18n/useUIText'
-import { apiService } from '../services/api'
 import { colors, radius, shadow, transition } from '../design-tokens'
 import ArticlePreviewCardLanding from '../components/features/article/ArticlePreviewCardLanding'
 import QuickReviewCard from '../components/features/review/QuickReviewCard'
-
-const PREVIEW_CACHE_KEY = 'articlePreviewCache'
-const previewCache = new Map()
-let previewCacheLoaded = false
-
-const ensurePreviewCacheLoaded = () => {
-  if (previewCacheLoaded || typeof window === 'undefined') {
-    return
-  }
-  try {
-    const raw = window.localStorage.getItem(PREVIEW_CACHE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      Object.entries(parsed).forEach(([id, value]) => {
-        if (typeof value === 'string' && value.trim()) {
-          previewCache.set(id, value)
-        }
-      })
-    }
-  } catch (err) {
-    console.warn('⚠️ [LandingPage] 读取摘要缓存失败:', err)
-  } finally {
-    previewCacheLoaded = true
-  }
-}
-
-const persistPreviewCache = () => {
-  if (typeof window === 'undefined') {
-    return
-  }
-  try {
-    const serialized = JSON.stringify(Object.fromEntries(previewCache))
-    window.localStorage.setItem(PREVIEW_CACHE_KEY, serialized)
-  } catch (err) {
-    console.warn('⚠️ [LandingPage] 保存摘要缓存失败:', err)
-  }
-}
+import {
+  ensureArticlePreviewCacheLoaded,
+  getCachedArticlePreview,
+  hydrateArticlePreviewCache,
+  fetchArticlePreview,
+} from '../utils/articlePreviewCache'
 
 const extractArray = (response) => {
   if (!response) {
@@ -116,7 +84,7 @@ const LandingPage = ({
 
   const fallbackPreview = t('暂无摘要')
   
-  ensurePreviewCacheLoaded()
+  ensureArticlePreviewCacheLoaded()
 
   const articles = useMemo(() => {
     if (!isAuthenticated) {
@@ -125,35 +93,59 @@ const LandingPage = ({
     const normalized = extractArray(articleResponse)
     return normalized.map((article) => {
       const normalized = normalizeArticle(article, fallbackPreview)
-      // 如果缓存中有预览，使用缓存的预览
-      const cachedPreview = previewCache.get(normalized.id)
+      const cachedPreview = getCachedArticlePreview(normalized.id)
       return {
         ...normalized,
         preview: cachedPreview || normalized.preview,
       }
     })
-  }, [articleResponse, isAuthenticated, t, fallbackPreview])
+  }, [articleResponse, isAuthenticated, fallbackPreview])
 
   const [previewOverrides, setPreviewOverrides] = useState(() => {
     const initial = {}
     articles.forEach((article) => {
-      if (previewCache.has(article.id)) {
-        initial[article.id] = previewCache.get(article.id)
+      const cachedPreview = getCachedArticlePreview(article.id)
+      if (cachedPreview) {
+        initial[article.id] = cachedPreview
       }
     })
     return initial
   })
 
+  useEffect(() => {
+    hydrateArticlePreviewCache(
+      articles
+        .filter((article) => article.preview && article.preview !== fallbackPreview)
+        .map((article) => ({ id: article.id, preview: article.preview })),
+    )
+
+    setPreviewOverrides((prev) => {
+      const next = { ...prev }
+      let changed = false
+
+      articles.forEach((article) => {
+        const cachedPreview = getCachedArticlePreview(article.id)
+        if (cachedPreview && next[article.id] !== cachedPreview) {
+          next[article.id] = cachedPreview
+          changed = true
+        }
+      })
+
+      return changed ? next : prev
+    })
+  }, [articles, fallbackPreview])
+
   // 异步加载缺失的预览
   useEffect(() => {
     let cancelled = false
-    const CONCURRENCY = 3
+    const CONCURRENCY = 2
+    let timeoutId = null
     
     const fetchMissingPreviews = async () => {
       const pending = articles.filter(
         (article) =>
           (!article.preview || article.preview === fallbackPreview) &&
-          !previewCache.has(article.id),
+          !getCachedArticlePreview(article.id),
       )
       if (pending.length === 0) {
         return
@@ -164,19 +156,8 @@ const LandingPage = ({
         await Promise.all(
           batch.map(async (article) => {
             try {
-              const resp = await apiService.getArticleSentences(article.id, { limit: 1 })
-              const sentences =
-                resp?.data?.data?.sentences ||
-                resp?.data?.sentences ||
-                resp?.data ||
-                resp?.sentences ||
-                []
-              const firstSentence = Array.isArray(sentences) && sentences.length > 0
-                ? sentences[0]?.sentence_body || sentences[0]?.text || sentences[0]?.sentence
-                : null
+              const firstSentence = await fetchArticlePreview(article.id)
               if (firstSentence && !cancelled) {
-                previewCache.set(article.id, firstSentence)
-                persistPreviewCache()
                 setPreviewOverrides((prev) => {
                   if (prev[article.id] === firstSentence) {
                     return prev
@@ -195,10 +176,13 @@ const LandingPage = ({
       }
     }
 
-    fetchMissingPreviews()
+    timeoutId = window.setTimeout(fetchMissingPreviews, 250)
 
     return () => {
       cancelled = true
+      if (timeoutId) {
+        window.clearTimeout(timeoutId)
+      }
     }
   }, [articles, fallbackPreview])
 
@@ -206,7 +190,7 @@ const LandingPage = ({
     () =>
       articles.map((article) => ({
         ...article,
-        preview: previewOverrides[article.id] ?? previewCache.get(article.id) ?? article.preview,
+        preview: previewOverrides[article.id] ?? getCachedArticlePreview(article.id) ?? article.preview,
       })),
     [articles, previewOverrides],
   )

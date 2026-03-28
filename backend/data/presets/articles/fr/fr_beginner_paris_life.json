@@ -1,0 +1,14 @@
+{
+  "preset_id": "fr_beginner_paris_life",
+  "language_code": "fr",
+  "title": "La vie à Paris",
+  "difficulty": "beginner",
+  "sentences": [
+    "Paris est la capitale de la France et une des villes les plus visitées au monde.",
+    "La Tour Eiffel est le monument le plus célèbre de Paris, construite pour l'Exposition universelle de 1889.",
+    "Les Parisiens aiment se promener le long de la Seine ou s'asseoir dans les cafés pour regarder les gens passer.",
+    "Les boulangeries ouvrent tôt le matin pour vendre des baguettes fraîches et des croissants chauds.",
+    "Le métro parisien est un moyen pratique pour se déplacer dans la ville, avec ses 16 lignes.",
+    "Le Louvre est le plus grand musée d'art du monde, où on peut voir la Joconde de Léonard de Vinci."
+  ]
+}

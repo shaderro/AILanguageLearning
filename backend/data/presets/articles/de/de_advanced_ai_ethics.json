@@ -1,0 +1,16 @@
+{
+  "preset_id": "de_advanced_ai_ethics",
+  "language_code": "de",
+  "title": "Ethische Herausforderungen künstlicher Intelligenz",
+  "difficulty": "advanced",
+  "sentences": [
+    "Die rasante Entwicklung künstlicher Intelligenz wirft fundamentale ethische Fragen auf, die unsere Gesellschaft vor bisher unbekannte Herausforderungen stellen.",
+    "Algorithmische Entscheidungssysteme, die in Bereichen wie Kreditvergabe, Personalauswahl oder Strafjustiz eingesetzt werden, können unbeabsichtigte Diskriminierung reproduzieren.",
+    "Die Transparenz von KI-Systemen bleibt ein zentrales Problem, da viele neuronale Netze als 'Black Boxes' fungieren, deren Entscheidungsprozesse selbst für ihre Entwickler undurchsichtig sind.",
+    "Datenschutzbedenken verschärfen sich angesichts der Fähigkeit moderner KI, aus scheinbar harmlosen Daten sensible persönliche Informationen abzuleiten.",
+    "Die Automatisierung durch KI bedroht nicht nur repetitive Tätigkeiten, sondern zunehmend auch komplexe kognitive Aufgaben, was tiefgreifende sozioökonomische Folgen haben könnte.",
+    "Autonome Waffensysteme stellen eine besondere ethische Herausforderung dar, da sie die Entscheidung über Leben und Tod an algorithmische Prozesse delegieren.",
+    "Die Entwicklung einer robusten KI-Governance erfordert internationale Zusammenarbeit, um regulatorische Fragmentierung zu vermeiden und globale Standards zu etablieren.",
+    "Letztendlich geht es nicht nur um technische Lösungen, sondern um eine gesellschaftliche Debatte darüber, welche Zukunft wir mit KI gestalten wollen."
+  ]
+}
