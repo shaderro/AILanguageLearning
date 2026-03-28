@@ -55,7 +55,7 @@ class TextCRUD:
         return query.all()
     
     def create_sentence(self, text_id: int, sentence_id: int, sentence_body: str,
-                       difficulty_level: Optional[str] = None) -> Sentence:
+                       difficulty_level: Optional[str] = None, auto_commit: bool = True) -> Sentence:
         """创建句子"""
         sentence = Sentence(
             text_id=text_id,
@@ -64,7 +64,10 @@ class TextCRUD:
             sentence_difficulty_level=difficulty_level
         )
         self.session.add(sentence)
-        self.session.commit()
+        if auto_commit:
+            self.session.commit()
+        else:
+            self.session.flush()
         return sentence
     
     def get_sentences_by_text(self, text_id: int) -> List[Sentence]:

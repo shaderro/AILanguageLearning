@@ -165,7 +165,9 @@ class OriginalTextManager:
         return TextAdapter.models_to_dtos(text_models, include_sentences=False)
     
     def add_sentence_to_text(self, text_id: int, sentence_text: str,
-                            difficulty_level: Optional[str] = None) -> SentenceDTO:
+                            difficulty_level: Optional[str] = None,
+                            sentence_id: Optional[int] = None,
+                            auto_commit: bool = True) -> SentenceDTO:
         """
         为文章添加句子
         
@@ -185,7 +187,8 @@ class OriginalTextManager:
             )
         """
         # 获取下一个句子ID
-        sentence_id = self.get_next_sentence_id(text_id)
+        if sentence_id is None:
+            sentence_id = self.get_next_sentence_id(text_id)
         
         # 将difficulty_level转换为大写（数据库枚举需要大写）
         if difficulty_level:
@@ -196,10 +199,37 @@ class OriginalTextManager:
             text_id=text_id,
             sentence_id=sentence_id,
             sentence_body=sentence_text,
-            difficulty_level=difficulty_level
+            difficulty_level=difficulty_level,
+            auto_commit=auto_commit,
         )
         
         return SentenceAdapter.model_to_dto(sentence_model)
+
+    def add_sentences_to_text(self, text_id: int, sentences: List[dict]) -> List[SentenceDTO]:
+        """
+        批量为文章添加句子，统一在最后一次 commit。
+        sentences: [{"sentence_text": str, "difficulty_level": Optional[str]}, ...]
+        """
+        next_sentence_id = self.get_next_sentence_id(text_id)
+        created_sentences: List[SentenceDTO] = []
+
+        for offset, entry in enumerate(sentences):
+            sentence_text = (entry.get("sentence_text") or "").strip()
+            if not sentence_text:
+                continue
+
+            created_sentences.append(
+                self.add_sentence_to_text(
+                    text_id=text_id,
+                    sentence_text=sentence_text,
+                    difficulty_level=entry.get("difficulty_level"),
+                    sentence_id=next_sentence_id + offset,
+                    auto_commit=False,
+                )
+            )
+
+        self.session.commit()
+        return created_sentences
     
     def get_next_sentence_id(self, text_id: int) -> int:
         """

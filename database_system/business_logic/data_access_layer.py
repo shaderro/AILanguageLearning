@@ -180,6 +180,7 @@ class TextDataAccessLayer:
         sentence_id: int,
         sentence_body: str,
         difficulty_level: Optional[str] = None,
+        auto_commit: bool = True,
     ):
         """创建句子"""
         return self._crud.create_sentence(
@@ -187,6 +188,7 @@ class TextDataAccessLayer:
             sentence_id,
             sentence_body,
             difficulty_level=difficulty_level,
+            auto_commit=auto_commit,
         )
     
     def get_sentences_by_text(self, text_id: int):

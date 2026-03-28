@@ -136,6 +136,7 @@ def seed_presets_for_user(
             processing_status='processing',
         )
 
+        sentence_entries: List[Dict[str, Any]] = []
         for raw in sentences:
             if isinstance(raw, dict):
                 sentence_body = raw.get('sentence') or raw.get('text') or raw.get('sentence_body')
@@ -147,10 +148,15 @@ def seed_presets_for_user(
             if not sentence_body or not sentence_body.strip():
                 continue
 
-            text_manager.add_sentence_to_text(
+            sentence_entries.append({
+                "sentence_text": sentence_body.strip(),
+                "difficulty_level": difficulty,
+            })
+
+        if sentence_entries:
+            text_manager.add_sentences_to_text(
                 text_id=text_dto.text_id,
-                sentence_text=sentence_body.strip(),
-                difficulty_level=difficulty,
+                sentences=sentence_entries,
             )
 
         # 为该文章生成 Token / WordToken（包含中文分字）

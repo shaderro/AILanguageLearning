@@ -36,6 +36,7 @@ class TextManager:
         sentence_id: int,
         sentence_body: str,
         difficulty_level: Optional[str] = None,
+        auto_commit: bool = True,
     ) -> Sentence:
         """
         创建句子
@@ -45,6 +46,7 @@ class TextManager:
             sentence_id,
             sentence_body,
             difficulty_level=difficulty_level,
+            auto_commit=auto_commit,
         )
     
     def get_sentences(self, text_id: int) -> List[Sentence]:
