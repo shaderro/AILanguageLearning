@@ -77,6 +77,22 @@ class ApiResponse(BaseModel):
     error: Optional[str] = None
 
 
+def _dedupe_grammar_examples(examples):
+    """按 rule_id + text_id + sentence_id 去重，兼容历史重复数据。"""
+    deduped = {}
+    for ex in examples or []:
+        key = (ex.rule_id, ex.text_id, ex.sentence_id)
+        existing = deduped.get(key)
+        if existing is None:
+            deduped[key] = ex
+            continue
+
+        if not getattr(existing, "explanation_context", None) and getattr(ex, "explanation_context", None):
+            deduped[key] = ex
+
+    return list(deduped.values())
+
+
 # ==================== 创建路由器 ====================
 
 router = APIRouter(
@@ -223,7 +239,7 @@ async def get_grammar_rule(
         # 为每个 example 尝试查找原句
         examples_data = []
         if include_examples and grammar_model.examples:
-            for ex in grammar_model.examples:
+            for ex in _dedupe_grammar_examples(grammar_model.examples):
                 original_sentence = None
                 try:
                     if ex.text_id is not None and ex.sentence_id is not None:

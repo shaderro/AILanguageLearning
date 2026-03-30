@@ -138,8 +138,11 @@ answer_question_sys_prompt = """
 你需要根据用户引用的句子和用户的提问，给出一个简洁明了的回答。
 
 请注意：
-- 优先使用 UI language 进行回复。
-- 仅当用户提问使用的语言与 UI language 不一致时，使用用户提问的语言进行回复。
+- 你必须严格服从用户消息中给出的 `TARGET_OUTPUT_LANGUAGE`。
+- `TARGET_OUTPUT_LANGUAGE` 是这轮回答唯一允许使用的解释语言，优先级高于其它默认偏好。
+- 如果 `TARGET_OUTPUT_LANGUAGE = English`，则 `answer` 字段中的解释内容必须使用英文，不得输出中文解释。
+- 如果 `TARGET_OUTPUT_LANGUAGE = Simplified Chinese`，则 `answer` 字段中的解释内容必须使用简体中文，不得输出英文解释句。
+- 允许保留用户引用的原文词语或句子本身，例如德语原词、英文原句；但解释语言必须服从 `TARGET_OUTPUT_LANGUAGE`。
 - 你的回答要直接回答用户的问题。
 - **重要**：如果"用户引用并提问的部分"中已经明确指出了具体文本（如单词、短语或字符），说明用户已经选择了这个文本，你应该直接回答关于这个文本的问题，而不是要求用户再次指出。
 - 如果问题涉及指代、语法结构或词汇用法，请简要解释相关语法点或语言现象，语言简单易懂，不过度展开。
@@ -151,43 +154,31 @@ answer_question_sys_prompt = """
 
 请只返回如下 JSON 格式：
 {{"answer": "你的回答内容"}}
-
-下面是几个例子供你参考：
-
-示例1：
-
-用户引用并提问的部分：
-"after Mackenzie accused them of corruption"
-引用句子：
-"In York, Upper Canada, members of the Family Compact destroyed William Lyon Mackenzie's printing press in the Types Riot after Mackenzie accused them of corruption."
-
-用户问题：
-them指代谁？"
-
-回答：
-{"answer": "这里的them指的是前文提到的the Family Compact（家族协定成员）。代词如them通常指代前文出现的复数名词，这里指的是那群人。"}
-
-示例2：
-用户引用并提问的部分：
-"He was forced to resign after the scandal."
-引用句子：
-"He was forced to resign after the scandal."
-
-用户问题：
-"我看不太懂。"
-
-回答：
-{"answer": "意思是：因为丑闻，他被迫辞职了。你是想问‘resign’这个词，还是‘was forced to’这个被动结构？"}
 """
 
 answer_question_template = """
-这是用户引用并提问的部分：
+TASK:
+Answer the user's language-learning question about the quoted text.
+
+TARGET_OUTPUT_LANGUAGE: {target_output_language}
+UI_LANGUAGE: {ui_language}
+QUESTION_LANGUAGE: {question_language}
+
+LANGUAGE_RULES:
+1. The explanation in `answer` must be written only in {target_output_language}.
+2. Do not switch to another explanation language.
+3. You may keep the original quoted word or sentence in its original language when necessary.
+
+QUOTED_PART:
 {quoted_part}
-这是用户的提问：
+
+USER_QUESTION:
 {user_question}
-这是用户引用的完整句子：
+
+FULL_SENTENCE:
 {full_sentence}
-这是对话前文信息：
+
+CONTEXT:
 {context_info}
 """
 

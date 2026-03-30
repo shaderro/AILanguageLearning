@@ -1384,7 +1384,13 @@ async def chat_with_assistant(
             print(f"ℹ️ [Chat #{request_id}] 未提供认证 token，使用默认用户: {user_id}")
         
         # 🔧 从 payload 获取 UI 语言（用于控制 AI 输出语言）
-        ui_language = payload.get('ui_language', '中文')  # 默认为中文
+        raw_ui_language = payload.get('ui_language', '中文')
+        if raw_ui_language in ('en', '英文', 'English', 'english'):
+            ui_language = '英文'
+        elif raw_ui_language in ('zh', '中文', 'Chinese', 'chinese'):
+            ui_language = '中文'
+        else:
+            ui_language = str(raw_ui_language or '中文')
         print("\n" + "="*80)
         print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")
         print(f"📥 [Chat #{request_id}] Payload: {payload}")
@@ -1480,6 +1486,8 @@ async def chat_with_assistant(
         )
         # 🔧 设置 user_id 和 session（用于 token 记录）
         main_assistant.set_user_context(user_id=user_id, session=db_session)
+        # 🔧 主回答阶段也必须同步 UI 语言，否则首条回答会退回默认语言
+        main_assistant.ui_language = ui_language
         
         print(f"🚀 [Chat] 调用 MainAssistant...")
         

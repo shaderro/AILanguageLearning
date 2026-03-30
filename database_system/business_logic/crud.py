@@ -181,8 +181,21 @@ def get_or_create_grammar_rule(session: Session, rule_name: str, rule_summary: s
 
 def create_grammar_example(session: Session, *, rule_id: int, text_id: int,
                            sentence_id: int, explanation_context: Optional[str] = None):
-    """创建语法例句记录"""
+    """创建语法例句记录（带查重逻辑，避免重复创建）"""
     from .models import GrammarExample
+
+    existing = session.query(GrammarExample).filter(
+        GrammarExample.rule_id == rule_id,
+        GrammarExample.text_id == text_id,
+        GrammarExample.sentence_id == sentence_id,
+    ).first()
+    if existing:
+        if explanation_context and not existing.explanation_context:
+            existing.explanation_context = explanation_context
+            session.commit()
+            session.refresh(existing)
+        return existing
+
     example = GrammarExample(
         rule_id=rule_id,
         text_id=text_id,

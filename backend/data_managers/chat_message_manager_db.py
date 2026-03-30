@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import threading
 from dataclasses import asdict, is_dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
@@ -128,7 +128,7 @@ class ChatMessageManagerDB:
     selected_token:
       - 可以是 dict / dataclass / 其他对象（将被 json.dumps）。
     """
-    created_at = datetime.utcnow().isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
 
     if selected_token is None:
       selected_token_json = None

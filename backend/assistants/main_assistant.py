@@ -487,6 +487,7 @@ class MainAssistant:
                 full_sentence=full_sentence,
                 user_question=user_question,
                 quoted_part=quoted_part,
+                ui_language=self.ui_language,
                 user_id=self._user_id,
                 session=self._db_session
             )
@@ -496,6 +497,7 @@ class MainAssistant:
             ai_response = self.answer_question_assistant.run(
                 full_sentence=full_sentence,
                 user_question=user_question,
+                ui_language=self.ui_language,
                 user_id=self._user_id,
                 session=self._db_session
             )

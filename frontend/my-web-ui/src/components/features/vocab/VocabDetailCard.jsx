@@ -166,6 +166,20 @@ const parseExplanation = (text) => {
   return cleanText
 }
 
+const renderInlineMarkdown = (text) => {
+  const content = String(text || '')
+  if (!content) return null
+
+  const parts = content.split(/(\*\*[^*]+\*\*)/g)
+  return parts.filter(Boolean).map((part, index) => {
+    const boldMatch = part.match(/^\*\*([^*]+)\*\*$/)
+    if (boldMatch) {
+      return <strong key={index}>{boldMatch[1]}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
 // 从 explanation 中尝试分离“释义”和“语法说明”段落
 const extractSections = (rawExplanation = '') => {
   const text = parseExplanation(rawExplanation)
@@ -173,21 +187,35 @@ const extractSections = (rawExplanation = '') => {
 
   // 尝试匹配中英文小标题
   const defLabels = ['释义', '定义', 'definition', 'definitions']
-  const grammarLabels = ['语法说明', '语法', 'grammar', 'grammar notes', 'grammar explanation']
+  const grammarLabels = ['grammar explanation', 'grammar notes', 'grammar note', '语法说明', 'definition note', 'grammar']
 
-  const toRegex = (labels) => labels.map((l) => l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
-  const defRegex = new RegExp(`(?:${toRegex(defLabels)})[:：]?`, 'i')
-  const grammarRegex = new RegExp(`(?:${toRegex(grammarLabels)})[:：]?`, 'i')
+  const toRegex = (labels) => labels
+    .slice()
+    .sort((a, b) => b.length - a.length)
+    .map((l) => l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|')
+  const defPattern = `\\*\\*?\\s*(?:${toRegex(defLabels)})\\s*\\*\\*?[:：]?`
+  const grammarPattern = `\\*\\*?\\s*(?:${toRegex(grammarLabels)})\\s*\\*\\*?[:：]?`
+  const defRegex = new RegExp(defPattern, 'i')
+  const grammarRegex = new RegExp(grammarPattern, 'i')
 
   // 如果同时存在两个小标题，按顺序截取
   const combinedRegex = new RegExp(
-    `(?:${toRegex(defLabels)})[:：]?\\s*([\\s\\S]*?)(?=${toRegex(grammarLabels)}[:：]?|$)`,
+    `${defPattern}\\s*([\\s\\S]*?)(?=${grammarPattern}|$)`,
     'i'
   )
   const defMatch = text.match(combinedRegex)
-  const grammarMatch = text.match(new RegExp(`(?:${toRegex(grammarLabels)})[:：]?\\s*([\\s\\S]*)`, 'i'))
+  const grammarMatch = text.match(new RegExp(`${grammarPattern}\\s*([\\s\\S]*)`, 'i'))
 
-  const definitionText = defMatch?.[1]?.trim() || text // 若未提取到释义，则全部作为释义
+  let definitionText = ''
+  if (defMatch?.[1]?.trim()) {
+    definitionText = defMatch[1].trim()
+  } else if (grammarMatch?.index !== undefined && grammarMatch.index > 0) {
+    definitionText = text.slice(0, grammarMatch.index).trim()
+  } else {
+    definitionText = text
+  }
+
   const grammarText = grammarMatch?.[1]?.trim() || ''
 
   return { definitionText, grammarText }
@@ -537,7 +565,10 @@ const VocabDetailCard = ({
     if (!rawGrammar) return []
     const parsed = parseExplanation(rawGrammar)
     const lines = parsed.split('\n').filter(line => line.trim())
-    return lines.map(line => line.trim())
+    return lines
+      .map(line => line.trim())
+      .map(line => line.replace(/^[-*•]\s*/, ''))
+      .filter(line => line && !/^note:\*{0,2}$/i.test(line))
   }, [grammarText, vocabWithDetails])
 
   // 提取例句
@@ -735,7 +766,7 @@ const VocabDetailCard = ({
                         className="leading-relaxed whitespace-pre-wrap flex-1"
                         style={{ color: colors.semantic.text.primary }}
                       >
-                        {def}
+                        {renderInlineMarkdown(def)}
                       </div>
                     </div>
                   ))}
@@ -755,7 +786,7 @@ const VocabDetailCard = ({
                           className="leading-relaxed whitespace-pre-wrap flex-1"
                           style={{ color: colors.semantic.text.primary }}
                         >
-                          {point}
+                          {renderInlineMarkdown(point)}
                         </span>
                       </li>
                     ))}
@@ -848,7 +879,7 @@ const VocabDetailCard = ({
                         color: colors.semantic.text.secondary,
                       borderColor: colors.gray[200]
                     }}>
-                      {parseExplanation(example.explanation)}
+                      {renderInlineMarkdown(parseExplanation(example.explanation))}
                     </div>
                   )}
                 </div>

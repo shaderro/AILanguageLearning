@@ -194,6 +194,18 @@ function ChatView({
     const d = msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
     return Number.isNaN(d.getTime()) ? 0 : d.getTime()
   }
+  const parseServerTimestamp = (value) => {
+    if (!value) return new Date()
+    if (value instanceof Date) return value
+
+    const raw = String(value).trim()
+    if (!raw) return new Date()
+
+    const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(raw)
+    const normalized = hasTimezone ? raw : `${raw}Z`
+    const parsed = new Date(normalized)
+    return Number.isNaN(parsed.getTime()) ? new Date(raw) : parsed
+  }
   const isLikelyDuplicateMessage = (a, b, timeWindowMs = 20000) => {
     if (!a || !b) return false
     const strictSame = getMessageSignature(a) === getMessageSignature(b)
@@ -222,6 +234,39 @@ function ChatView({
       const bId = String(b?.id ?? '')
       return aId.localeCompare(bId)
     })
+  }
+  const dedupeMessagesStable = (arr) => {
+    const sorted = sortMessagesStable(arr)
+    const deduped = []
+    for (const msg of sorted) {
+      const existsById = deduped.some(existing => String(existing?.id) === String(msg?.id))
+      if (existsById) continue
+
+      const duplicateByContent = msg?.isUser
+        ? deduped.some(existing => isLikelyDuplicateUserMessage(existing, msg))
+        : deduped.some(existing => isLikelyDuplicateMessage(existing, msg))
+      if (duplicateByContent) continue
+
+      deduped.push(msg)
+    }
+    return deduped
+  }
+  const mergeMessagesPreservingWelcome = (arr) => {
+    const welcomeMessages = []
+    const nonWelcomeMessages = []
+
+    for (const msg of arr) {
+      if (msg && !msg.isUser && isWelcomeMessageText(msg.text)) {
+        const alreadyHasWelcome = welcomeMessages.some(existing => getMessageSignatureLoose(existing) === getMessageSignatureLoose(msg))
+        if (!alreadyHasWelcome) {
+          welcomeMessages.push(msg)
+        }
+      } else {
+        nonWelcomeMessages.push(msg)
+      }
+    }
+
+    return [...welcomeMessages.slice(0, 1), ...dedupeMessagesStable(nonWelcomeMessages)]
   }
   
   // Helper function to get translated text without hook (for initialization)
@@ -344,17 +389,26 @@ function ChatView({
           // 🔧 与后端 /api/chat/history 的返回字段对齐：
           // backend 返回字段为 text / quote_text / is_user / created_at
           const defaultWelcome = getTranslatedText("选择有疑问的句子或词汇，向我提问吧！")
-          const historyMessages = items.map(item => ({
-            id: item.id,
-            text: item.text, // 修复：使用后端返回的 text 字段，而不是不存在的 message
-            isUser: item.is_user,
-            timestamp: new Date(item.created_at),
-            quote: item.quote_text || null
-          }))
+          const historyMessages = items.map(item => {
+            const selectedTokenText = item?.selected_token?.token_text
+            const normalizedQuoteText = typeof item?.quote_text === 'string' ? item.quote_text.trim() : ''
+            const normalizedSelectedTokenText = typeof selectedTokenText === 'string' ? selectedTokenText.trim() : ''
+            const quote = normalizedSelectedTokenText || normalizedQuoteText || null
+
+            return {
+              id: item.id,
+              text: item.text, // 修复：使用后端返回的 text 字段，而不是不存在的 message
+              isUser: item.is_user,
+              timestamp: parseServerTimestamp(item.created_at),
+              quote
+            }
+          })
+          const dedupedHistoryMessages = dedupeMessagesStable(historyMessages)
           
           console.log('💬 [ChatView] 映射后的 historyMessages:', {
             count: historyMessages.length,
-            first: historyMessages[0] || null,
+            dedupedCount: dedupedHistoryMessages.length,
+            first: dedupedHistoryMessages[0] || null,
           })
           
           // 🔧 有历史记录时的策略：
@@ -372,20 +426,20 @@ function ChatView({
               (prev[0].text === defaultWelcome || isWelcomeMessageText(prev[0].text))
 
             if (isOnlyWelcome) {
-              // 直接用历史记录替换欢迎语
-              const historySorted = sortMessagesStable(historyMessages)
-              window.chatViewMessagesRef[normalizedArticleId] = historySorted
-              console.log('💬 [ChatView] 检测到仅欢迎语，直接用历史记录替换:', {
-                replacedCount: historySorted.length,
+              // 保留欢迎语置顶，历史记录显示在其下方
+              const mergedWithWelcome = mergeMessagesPreservingWelcome([...prev, ...dedupedHistoryMessages])
+              window.chatViewMessagesRef[normalizedArticleId] = mergedWithWelcome
+              console.log('💬 [ChatView] 检测到仅欢迎语，保留欢迎语并追加历史记录:', {
+                mergedCount: mergedWithWelcome.length,
               })
-              return historySorted
+              return mergedWithWelcome
             }
 
             // 否则合并去重
             // 先按 ID 去重，再按“角色+文本+引用+时间窗口”去重，避免线上重复展示同一轮问答
             const existingIds = new Set(prev.map(m => m.id))
             
-            const newMessages = historyMessages.filter(m => {
+            const newMessages = dedupedHistoryMessages.filter(m => {
               // 检查ID是否已存在
               if (existingIds.has(m.id)) {
                 return false
@@ -405,19 +459,13 @@ function ChatView({
               return true
             })
             
-            // 有真实历史时，清理欢迎语，避免欢迎语插入到会话中间造成顺序错乱观感
-            const prevWithoutWelcome =
-              historyMessages.length > 0
-                ? prev.filter(m => !(m && !m.isUser && isWelcomeMessageText(m.text)))
-                : prev
-
-            const merged = sortMessagesStable([...prevWithoutWelcome, ...newMessages])
+            const merged = mergeMessagesPreservingWelcome([...prev, ...newMessages])
             window.chatViewMessagesRef[normalizedArticleId] = merged
             console.log('💬 [ChatView] 合并历史记录:', {
-              existingCount: prevWithoutWelcome.length,
+              existingCount: prev.length,
               newMessagesCount: newMessages.length,
               mergedCount: merged.length,
-              skippedByContent: historyMessages.length - newMessages.length - (historyMessages.length - historyMessages.filter(m => !existingIds.has(m.id)).length)
+              skippedByContent: dedupedHistoryMessages.length - newMessages.length
             })
             return merged
           })
@@ -481,15 +529,6 @@ function ChatView({
           ? prev.find(m => isLikelyDuplicateUserMessage(m, newMessage))
           : prev.find(m => isLikelyDuplicateMessage(m, newMessage))
         if (duplicateContent) {
-          const bothAI = !duplicateContent.isUser && !newMessage.isUser
-          // AI 回答宁可偶发重复，也不能误杀导致“只显示提问不显示回答”
-          if (bothAI) {
-            console.warn('⚠️ [ChatView] addMessage - 检测到 AI 可能重复，保留本次消息以避免漏显示回答:', {
-              existingId: duplicateContent.id,
-              newId: newMessage.id,
-              text: newMessage.text?.substring(0, 50)
-            })
-          } else {
           console.warn('⚠️ [ChatView] addMessage - 检测到重复内容（不同ID）:', {
             existingId: duplicateContent.id,
             newId: newMessage.id,
@@ -497,10 +536,9 @@ function ChatView({
             timeDiff: Math.abs(new Date(duplicateContent.timestamp).getTime() - new Date(newMessage.timestamp).getTime())
           })
           return prev
-          }
         }
         
-        const updated = sortMessagesStable([...prev, newMessage])
+        const updated = dedupeMessagesStable([...prev, newMessage])
         window.chatViewMessagesRef[normalizedArticleId] = updated
         
         console.log('✅ [ChatView] addMessage - 消息已添加:', {
@@ -1139,7 +1177,7 @@ function ChatView({
               id: targetAi.id || generateMessageId(),
         text: normalizeAiDisplayText(targetAi.text),
               isUser: false,
-              timestamp: targetAi.created_at ? new Date(targetAi.created_at) : new Date(),
+              timestamp: targetAi.created_at ? parseServerTimestamp(targetAi.created_at) : new Date(),
               articleId: articleId ? String(articleId) : undefined
             })
             return

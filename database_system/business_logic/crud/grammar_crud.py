@@ -204,7 +204,23 @@ class GrammarCRUD:
     
     def create_example(self, *, rule_id: int, text_id: int,
                       sentence_id: int, explanation_context: Optional[str] = None) -> GrammarExample:
-        """创建语法例句"""
+        """创建语法例句（带查重逻辑，避免重复创建）"""
+        existing = self.session.query(GrammarExample).filter(
+            GrammarExample.rule_id == rule_id,
+            GrammarExample.text_id == text_id,
+            GrammarExample.sentence_id == sentence_id,
+        ).first()
+        if existing:
+            if explanation_context and not existing.explanation_context:
+                existing.explanation_context = explanation_context
+                self.session.commit()
+                self.session.refresh(existing)
+            print(
+                f"🔍 [GrammarCRUD] 发现已存在的 example: "
+                f"rule_id={rule_id}, text_id={text_id}, sentence_id={sentence_id}"
+            )
+            return existing
+
         example = GrammarExample(
             rule_id=rule_id,
             text_id=text_id,
@@ -214,4 +230,8 @@ class GrammarCRUD:
         self.session.add(example)
         self.session.commit()
         self.session.refresh(example)
+        print(
+            f"✅ [GrammarCRUD] 创建新 example: "
+            f"rule_id={rule_id}, text_id={text_id}, sentence_id={sentence_id}"
+        )
         return example

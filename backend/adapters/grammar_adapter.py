@@ -59,6 +59,22 @@ class GrammarExampleAdapter:
 
 class GrammarAdapter:
     """语法规则适配器"""
+
+    @staticmethod
+    def _dedupe_examples(examples: List[GrammarExampleModel]) -> List[GrammarExampleModel]:
+        """按 rule_id + text_id + sentence_id 去重，避免同一句例句重复显示。"""
+        deduped = {}
+        for example in examples or []:
+            key = (example.rule_id, example.text_id, example.sentence_id)
+            existing = deduped.get(key)
+            if existing is None:
+                deduped[key] = example
+                continue
+
+            if not existing.explanation_context and example.explanation_context:
+                deduped[key] = example
+
+        return list(deduped.values())
     
     @staticmethod
     def _convert_source_to_dto(model_source: ModelSourceType) -> str:
@@ -125,7 +141,7 @@ class GrammarAdapter:
         if include_examples and model.examples:
             examples = [
                 GrammarExampleAdapter.model_to_dto(ex)
-                for ex in model.examples
+                for ex in GrammarAdapter._dedupe_examples(model.examples)
             ]
         
         return GrammarDTO(

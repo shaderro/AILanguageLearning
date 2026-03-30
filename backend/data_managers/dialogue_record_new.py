@@ -37,6 +37,13 @@ class DialogueRecordBySentenceNew:
         
         self.records[key].append(message_record)
 
+        selected_token_dict = selected_token.to_dict() if selected_token else None
+        quote_text = sentence.sentence_body
+        if selected_token and getattr(selected_token, "token_text", None):
+            token_text = str(selected_token.token_text).strip()
+            if token_text and token_text != sentence.sentence_body.strip():
+                quote_text = token_text
+
         # 同步写入数据库（用户消息）
         try:
             # 🔧 确保 user_id 是字符串类型（数据库要求）
@@ -48,8 +55,8 @@ class DialogueRecordBySentenceNew:
                 is_user=True,
                 content=user_input,
                 quote_sentence_id=sentence.sentence_id,
-                quote_text=sentence.sentence_body,
-                selected_token=selected_token.to_dict() if selected_token else None,
+                quote_text=quote_text,
+                selected_token=selected_token_dict,
             )
             print(f"✅ [DB] Chat message added: User=True, user_id={user_id_str}, Text='{user_input[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
         except Exception as e:
@@ -59,11 +66,18 @@ class DialogueRecordBySentenceNew:
 
     def add_ai_response(self, sentence: SentenceType, ai_response: str, user_id: Optional[str] = None):
         key = (sentence.text_id, sentence.sentence_id)
+        selected_token_dict = None
+        quote_text = sentence.sentence_body
         if key in self.records and self.records[key]:
             # 补充到最近一条没有 AI 回复的记录中
             for turn in reversed(self.records[key]):
                 if isinstance(turn, dict) and turn.get("ai_response") is None:
                     turn["ai_response"] = ai_response
+                    selected_token_dict = turn.get("selected_token")
+                    if isinstance(selected_token_dict, dict):
+                        token_text = str(selected_token_dict.get("token_text") or "").strip()
+                        if token_text and token_text != sentence.sentence_body.strip():
+                            quote_text = token_text
                     break
         else:
             # 如果没有找到，就直接加一个完整条目
@@ -84,8 +98,8 @@ class DialogueRecordBySentenceNew:
                 is_user=False,
                 content=ai_response,
                 quote_sentence_id=sentence.sentence_id,
-                quote_text=sentence.sentence_body,
-                selected_token=None,
+                quote_text=quote_text,
+                selected_token=selected_token_dict,
             )
             print(f"✅ [DB] Chat message added: User=False, user_id={user_id_str}, Text='{ai_response[:30]}...', text_id={sentence.text_id}, sentence_id={sentence.sentence_id}")
         except Exception as e:
