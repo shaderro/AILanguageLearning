@@ -1953,11 +1953,12 @@ async def get_vocab_example_by_location(
     text_id: int = Query(..., description="文章ID"),
     sentence_id: Optional[int] = Query(None, description="句子ID"),
     token_index: Optional[int] = Query(None, description="Token索引"),
+    vocab_id: Optional[int] = Query(None, description="词汇ID"),
     current_user: User = Depends(get_current_user),
 ):
     """按位置查找词汇例句"""
     try:
-        print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
+        print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}, vocab_id={vocab_id}")
         
         # 🔧 修复：从数据库查询，而不是从 global_dc（文件系统管理器）查询
         from database_system.business_logic.models import VocabExpressionExample, OriginalText
@@ -1988,7 +1989,7 @@ async def get_vocab_example_by_location(
             # 1. 首先按 text_id 和 sentence_id 查找，并通过 vocab_id 关联到 VocabExpression 来过滤 user_id
             from database_system.business_logic.models import VocabExpression
             
-            print(f"🔍 [VocabExample] Query params: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}, user_id={user_id}")
+            print(f"🔍 [VocabExample] Query params: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}, vocab_id={vocab_id}, user_id={user_id}")
             
             query = session.query(VocabExpressionExample).join(
                 VocabExpression,
@@ -2009,6 +2010,10 @@ async def get_vocab_example_by_location(
             if sentence_id is not None:
                 query = query.filter(VocabExpressionExample.sentence_id == sentence_id)
                 print(f"🔍 [VocabExample] Filtering by sentence_id={sentence_id}")
+
+            if vocab_id is not None:
+                query = query.filter(VocabExpressionExample.vocab_id == vocab_id)
+                print(f"🔍 [VocabExample] Filtering by vocab_id={vocab_id}")
             
             examples = query.all()
             print(f"🔍 [VocabExample] Found {len(examples)} example(s) before token_index filtering (user_id={user_id})")
@@ -2036,12 +2041,13 @@ async def get_vocab_example_by_location(
                         matching_examples.append(ex)
                         print(f"✅ [VocabExample] Match found: vocab_id={ex.vocab_id}")
                     else:
-                        # 🔧 修复：即使 token_index 不匹配，但如果 example 存在，也应该返回
-                        # 因为 example 已经存在，说明这个句子和词汇有关联，只是可能使用了不同的 token_index
-                        print(f"⚠️ [VocabExample] Token index mismatch, but example exists: token_index={token_index} not in token_indices={token_indices}, but returning example anyway")
-                        matching_examples.append(ex)
-                        print(f"✅ [VocabExample] Match found (despite token_index mismatch): vocab_id={ex.vocab_id}")
-                examples = matching_examples
+                        print(f"⚠️ [VocabExample] Token index mismatch: token_index={token_index} not in token_indices={token_indices}, skipping example vocab_id={ex.vocab_id}")
+                if matching_examples:
+                    examples = matching_examples
+                elif len(examples) == 1:
+                    print("⚠️ [VocabExample] No token-level match, but only one example exists for this vocab+sentence; using it as fallback")
+                else:
+                    examples = []
                 print(f"🔍 [VocabExample] After token_index filtering: {len(examples)} example(s)")
             
             if examples:

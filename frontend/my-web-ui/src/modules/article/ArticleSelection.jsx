@@ -390,11 +390,11 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
 
             {/* Loading / Error */}
             {isLoading && (
-              <div className="text-center text-gray-600 py-8">{t('文章加载中...')}</div>
+              <div className="text-center text-gray-600 py-8">{t('Loading articles...')}</div>
             )}
             {isError && (
               <div className="text-center text-red-600 py-8">
-                <p>{t('加载文章失败：')}{String(error)}</p>
+                <p>{t('Error loading articles:')} {String(error)}</p>
                 <button 
                   onClick={() => refetch()} 
                   className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

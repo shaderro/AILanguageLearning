@@ -24,6 +24,7 @@ export default function TokenSpan({
   token,
   tokenIdx,
   sentenceIdx,
+  sentenceId = null,
   articleId,
   selectedTokenIds,
   activeSentenceIndex,
@@ -389,8 +390,8 @@ export default function TokenSpan({
   }, [clearTranslationTimer])
   
   // 检查token是否已被提问
-  // sentence_id 从 sentenceIdx 计算得出 (sentenceIdx + 1)
-  const tokenSentenceId = sentenceIdx + 1
+  // 优先使用真实 sentence_id，只有缺失时才回退到 sentenceIdx + 1
+  const tokenSentenceId = sentenceId ?? (sentenceIdx + 1)
   const tokenSentenceTokenId = token?.sentence_token_id
   // Selection hook（模块化选择行为）
   const { className: selectionTokenClass, onMouseEnter: selOnEnter, onMouseLeave: selOnLeave, onClick: selOnClick } = useTokenSelectable({
@@ -408,8 +409,7 @@ export default function TokenSpan({
   // 调试日志已关闭以提升性能
 
   // 检查是否有grammar notation
-  const sentenceId = sentenceIdx + 1
-  const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(sentenceId) : []
+  const grammarNotations = getGrammarNotationsForSentence ? getGrammarNotationsForSentence(tokenSentenceId) : []
   const hasGrammar = grammarNotations.length > 0
   
   // 检查当前token是否在grammar notation的marked_token_ids中
@@ -421,7 +421,7 @@ export default function TokenSpan({
   // vocab notation是数据源，asked tokens只是兼容层
   // 🔧 移除 useMemo，直接调用函数，确保每次渲染都能获取最新数据
   const vocabNotationsForSentence = typeof getVocabNotationsForSentence === 'function'
-    ? getVocabNotationsForSentence(sentenceId)
+    ? getVocabNotationsForSentence(tokenSentenceId)
     : []
   
   // 🔧 获取当前 token 的 word_token_id（如果存在）
@@ -930,9 +930,10 @@ export default function TokenSpan({
       {hasVocabVisual && (
         <VocabNotationCard 
           isVisible={showNotation}
-          note={notationContent || "This is a test note"}
+          note={notationContent || ""}
           textId={articleId}
           sentenceId={tokenSentenceId}
+          matchedNotation={matchedNotation}
           // 🔧 修复：如果匹配到了 notation，使用该 notation 的 token_id（确保显示正确的 vocab example）
           tokenIndex={matchedNotation?.token_id ?? tokenSentenceTokenId}
           onMouseEnter={handleNotationMouseEnter}

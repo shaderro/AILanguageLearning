@@ -136,6 +136,7 @@ function AppContent() {
   
   // 从 LanguageContext 获取语言选择
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
+  const prevSelectedLanguageRef = useRef(selectedLanguage)
   // 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
   const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
 
@@ -163,6 +164,19 @@ function AppContent() {
   }
 
   const headerLanguages = resolveHeaderLanguages()
+
+  useEffect(() => {
+    const prevLanguage = prevSelectedLanguageRef.current
+    if (prevLanguage === selectedLanguage) {
+      return
+    }
+    prevSelectedLanguageRef.current = selectedLanguage
+
+    if (currentPage === 'article' && selectedArticleId) {
+      setIsUploadMode(false)
+      setSelectedArticleId(null)
+    }
+  }, [selectedLanguage, currentPage, selectedArticleId])
 
   // 点击窗口其它位置时，自动关闭“正在学习”下拉
   useEffect(() => {

@@ -131,6 +131,56 @@ async def get_vocab_notations(
                 "word_token_id": n.word_token_id,  # 新增：word_token_id（用于非空格语言的完整词标注）
                 "created_at": n.created_at.isoformat() if n.created_at else None
             }
+
+            # 为当前 notation 预填充该句该词对应的 example explanation，避免前端再次二次猜测
+            try:
+                from database_system.business_logic.models import VocabExpressionExample
+
+                example_query = session.query(VocabExpressionExample).filter(
+                    VocabExpressionExample.vocab_id == n.vocab_id,
+                    VocabExpressionExample.text_id == n.text_id,
+                    VocabExpressionExample.sentence_id == n.sentence_id,
+                )
+                notation_examples = example_query.all()
+                matched_example = None
+
+                def _normalized_token_indices(example):
+                    raw = example.token_indices if isinstance(example.token_indices, list) else []
+                    normalized = []
+                    for token in raw:
+                        try:
+                            normalized.append(int(token))
+                        except Exception:
+                            continue
+                    return normalized
+
+                target_token_id = int(n.token_id) if n.token_id is not None else None
+                if target_token_id is not None:
+                    for ex in notation_examples:
+                        token_indices = _normalized_token_indices(ex)
+                        if token_indices and target_token_id in token_indices:
+                            matched_example = ex
+                            break
+
+                if matched_example is None:
+                    if len(notation_examples) == 1:
+                        # 只有唯一 example 时，允许作为该 vocab 在该句中的上下文解释
+                        matched_example = notation_examples[0]
+                    else:
+                        empty_token_examples = [
+                            ex for ex in notation_examples
+                            if len(_normalized_token_indices(ex)) == 0
+                        ]
+                        if len(empty_token_examples) == 1:
+                            # 仅当唯一 sentence-level example 存在时才兜底；避免错误落到“该句第一个词”
+                            matched_example = empty_token_examples[0]
+
+                if matched_example and getattr(matched_example, "context_explanation", None):
+                    notation_data["context_explanation"] = matched_example.context_explanation
+                    if getattr(matched_example, "token_indices", None):
+                        notation_data["token_indices"] = matched_example.token_indices
+            except Exception as ex_lookup_error:
+                print(f"[API] ⚠️ 获取 notation 对应的 example explanation 失败: notation_id={n.id}, error={ex_lookup_error}")
             
             # 🔧 如果存在word_token_id，查询该word_token的所有token_ids，以便前端显示完整下划线
             print(f"[API] 检查 notation {n.id}: word_token_id={n.word_token_id}, text_id={n.text_id}, sentence_id={n.sentence_id}")

@@ -805,11 +805,12 @@ export const apiService = {
   },
 
   // 按位置查找词汇例句
-  getVocabExampleByLocation: (textId, sentenceId = null, tokenIndex = null) => {
-    console.log('🔍 [Frontend] Getting vocab example by location:', { textId, sentenceId, tokenIndex });
+  getVocabExampleByLocation: (textId, sentenceId = null, tokenIndex = null, vocabId = null) => {
+    console.log('🔍 [Frontend] Getting vocab example by location:', { textId, sentenceId, tokenIndex, vocabId });
     const params = { text_id: textId };
     if (sentenceId !== null) params.sentence_id = sentenceId;
     if (tokenIndex !== null) params.token_index = tokenIndex;
+    if (vocabId !== null) params.vocab_id = vocabId;
     return api.get("/api/vocab-example-by-location", { params });
   },
 

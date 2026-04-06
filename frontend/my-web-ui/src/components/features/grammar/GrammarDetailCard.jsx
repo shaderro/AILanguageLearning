@@ -89,6 +89,20 @@ const parseExplanation = (text) => {
   return cleanText
 }
 
+const renderInlineMarkdown = (text) => {
+  const content = String(text || '')
+  if (!content) return null
+
+  const parts = content.split(/(\*\*[^*]+\*\*)/g)
+  return parts.filter(Boolean).map((part, index) => {
+    const boldMatch = part.match(/^\*\*([^*]+)\*\*$/)
+    if (boldMatch) {
+      return <strong key={index}>{boldMatch[1]}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
 const GrammarDetailCard = ({
   grammar,
   onPrevious,
@@ -437,7 +451,7 @@ const GrammarDetailCard = ({
                           className="leading-relaxed whitespace-pre-wrap flex-1"
                           style={{ color: colors.semantic.text.primary }}
                         >
-                          {point}
+                          {renderInlineMarkdown(point)}
                         </span>
                       </li>
                     ))}
@@ -529,7 +543,7 @@ const GrammarDetailCard = ({
                         color: colors.semantic.text.secondary,
                         borderColor: colors.gray[200]
                       }}>
-                        {parseExplanation(example.explanation)}
+                        {renderInlineMarkdown(parseExplanation(example.explanation))}
                       </div>
                     )}
                   </div>

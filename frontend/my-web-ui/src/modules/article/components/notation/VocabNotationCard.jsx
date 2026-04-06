@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { apiService } from '../../../../services/api'
+import { colors } from '../../../../design-tokens'
 import { useUIText } from '../../../../i18n/useUIText'
 import { logVocabNotationDebug } from '../../utils/vocabNotationDebug'
 
@@ -248,6 +249,16 @@ const parseExplanation = (text) => {
   return cleanText
 }
 
+const getExplanationText = (record) => {
+  if (!record || typeof record !== 'object') return ''
+  return String(
+    record.context_explanation ||
+    record.explanation_context ||
+    record.explanation ||
+    ''
+  ).trim()
+}
+
 /**
  * VocabNotationCard - 显示词汇注释卡片（由原 TokenNotation 重命名）
  * 
@@ -261,11 +272,12 @@ const parseExplanation = (text) => {
  */
 export default function VocabNotationCard({ 
   isVisible = false, 
-  note = "This is a test note", 
+  note = "", 
   position = null,
   textId = null,
   sentenceId = null,
   tokenIndex = null,
+  matchedNotation = null,
   onMouseEnter = null,
   onMouseLeave = null,
   getVocabExampleForToken = null,
@@ -286,6 +298,44 @@ export default function VocabNotationCard({
   // 🔧 修复：使用 ref 跟踪是否已加载，避免重复加载
   const hasLoadedRef = useRef(false)
   const loadingKeyRef = useRef(null)
+
+  const resolveExampleFromMatchedNotation = useCallback(async () => {
+    if (!matchedNotation?.vocab_id) {
+      return null
+    }
+
+    if (getExplanationText(matchedNotation)) {
+      const vocabResponse = await apiService.getVocabById(matchedNotation.vocab_id)
+      const vocabData = vocabResponse?.data?.data ?? vocabResponse?.data ?? vocabResponse
+      return {
+        vocab_id: vocabData?.vocab_id ?? matchedNotation.vocab_id,
+        vocab_body: vocabData?.vocab_body || vocabData?.vocab || '',
+        text_id: matchedNotation?.text_id ?? textId,
+        sentence_id: matchedNotation?.sentence_id ?? sentenceId,
+        token_index: Number(tokenIndex),
+        context_explanation: getExplanationText(matchedNotation),
+        token_indices: matchedNotation?.token_indices || [],
+      }
+    }
+
+    const [exampleResponse, vocabResponse] = await Promise.all([
+      apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex, matchedNotation.vocab_id),
+      apiService.getVocabById(matchedNotation.vocab_id),
+    ])
+
+    const examplePayload = exampleResponse?.data?.data ?? exampleResponse?.data ?? exampleResponse
+    const vocabData = vocabResponse?.data?.data ?? vocabResponse?.data ?? vocabResponse
+
+    return {
+      vocab_id: vocabData?.vocab_id ?? matchedNotation.vocab_id,
+      vocab_body: vocabData?.vocab_body || vocabData?.vocab || '',
+      text_id: examplePayload?.text_id ?? textId,
+      sentence_id: examplePayload?.sentence_id ?? sentenceId,
+      token_index: Number(tokenIndex),
+      context_explanation: getExplanationText(examplePayload),
+      token_indices: examplePayload?.token_indices || [],
+    }
+  }, [matchedNotation, sentenceId, textId, tokenIndex])
   
   useEffect(() => {
     if (!isVisible) {
@@ -301,15 +351,25 @@ export default function VocabNotationCard({
 
     // 🔧 生成当前加载的 key，用于检测参数是否变化
     const currentKey = `${textId}:${sentenceId}:${tokenIndex}`
+    const keyChanged = loadingKeyRef.current !== currentKey
     
     // 🔧 如果 key 变化了，重置加载状态
-    if (loadingKeyRef.current !== currentKey) {
+    if (keyChanged) {
       hasLoadedRef.current = false
       loadingKeyRef.current = currentKey
-      // 🔧 key 变化时，清除旧数据（可选，也可以保留）
-      // setVocabExample(null)
-      // setError(null)
+      if (isLoading) {
+        setIsLoading(false)
+      }
+      // 新 hover 的 token 必须清空旧数据，否则会继续显示上一个词的卡片内容
+      if (vocabExample !== null) {
+        setVocabExample(null)
+      }
+      if (error !== null) {
+        setError(null)
+      }
     }
+
+    let cancelled = false
 
     // 🔧 如果已经加载过相同 key 的数据，且数据存在，不再重新加载
     if (hasLoadedRef.current && loadingKeyRef.current === currentKey && vocabExample !== null) {
@@ -323,7 +383,7 @@ export default function VocabNotationCard({
     }
 
     // 🔧 如果正在加载中，不重复加载
-    if (isLoading) {
+    if (isLoading && !keyChanged) {
       logVocabNotationDebug('⏭️ [VocabNotationCard] skip reload (already loading)', {
         textId,
         sentenceId,
@@ -343,8 +403,43 @@ export default function VocabNotationCard({
     }
 
     // 🔧 只有在没有数据且没有错误时才加载
-    if (!vocabExample && !error) {
-      if (getVocabExampleForToken) {
+    if ((keyChanged || !vocabExample) && !error) {
+      if (matchedNotation?.vocab_id) {
+        logVocabNotationDebug('⏳ [VocabNotationCard] fetch example (via matchedNotation)', {
+          textId,
+          sentenceId,
+          tokenIndex,
+          vocabId: matchedNotation.vocab_id,
+        })
+        setIsLoading(true)
+        setError(null)
+        resolveExampleFromMatchedNotation()
+          .then(example => {
+            if (cancelled || loadingKeyRef.current !== currentKey) {
+              return
+            }
+            setVocabExample(example || null)
+            setIsLoading(false)
+            hasLoadedRef.current = true
+            logVocabNotationDebug('✅ [VocabNotationCard] example resolved (by matchedNotation)', {
+              textId,
+              sentenceId,
+              tokenIndex,
+              vocabId: matchedNotation.vocab_id,
+              hasExplanation: Boolean(example?.context_explanation),
+            })
+          })
+          .catch(error => {
+            if (cancelled || loadingKeyRef.current !== currentKey) {
+              return
+            }
+            console.error('❌ [VocabNotationCard] Error fetching vocab example by matchedNotation:', error)
+            setError(error.message || 'Failed to load vocab example')
+            setVocabExample(null)
+            setIsLoading(false)
+            hasLoadedRef.current = false
+          })
+      } else if (getVocabExampleForToken) {
         logVocabNotationDebug('⏳ [VocabNotationCard] fetch example (via getVocabExampleForToken)', {
           textId,
           sentenceId,
@@ -354,6 +449,9 @@ export default function VocabNotationCard({
         setError(null)
         getVocabExampleForToken(textId, sentenceId, tokenIndex)
           .then(example => {
+            if (cancelled || loadingKeyRef.current !== currentKey) {
+              return
+            }
             setVocabExample(example || null)
             setIsLoading(false)
             hasLoadedRef.current = true
@@ -365,6 +463,9 @@ export default function VocabNotationCard({
             })
           })
           .catch(error => {
+            if (cancelled || loadingKeyRef.current !== currentKey) {
+              return
+            }
             console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
             setError(error.message || 'Failed to load vocab example')
             setVocabExample(null)
@@ -387,6 +488,9 @@ export default function VocabNotationCard({
         setError(null)
         apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
           .then(response => {
+            if (cancelled || loadingKeyRef.current !== currentKey) {
+              return
+            }
             if (response && response.vocab_id) {
               setVocabExample(response)
             } else {
@@ -402,6 +506,9 @@ export default function VocabNotationCard({
             })
           })
           .catch(error => {
+            if (cancelled || loadingKeyRef.current !== currentKey) {
+              return
+            }
             console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
             setError(error.message || 'Failed to load vocab example')
             setIsLoading(false)
@@ -418,7 +525,11 @@ export default function VocabNotationCard({
       // 🔧 如果已有数据，标记为已加载
       hasLoadedRef.current = true
     }
-  }, [isVisible, textId, sentenceId, tokenIndex, getVocabExampleForToken])
+
+    return () => {
+      cancelled = true
+    }
+  }, [isVisible, textId, sentenceId, tokenIndex, matchedNotation, getVocabExampleForToken, resolveExampleFromMatchedNotation])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -434,6 +545,39 @@ export default function VocabNotationCard({
       portalContainerRef.current = container
     }
   }, [])
+
+  useEffect(() => {
+    if (!isVisible || !vocabExample?.vocab_id || vocabExample?.vocab_body) {
+      return
+    }
+
+    let cancelled = false
+
+    apiService.getVocabById(vocabExample.vocab_id)
+      .then((response) => {
+        if (cancelled) return
+        const vocabData = response?.data?.data || response?.data || response
+        const vocabBody = vocabData?.vocab_body || vocabData?.vocab || ''
+        if (vocabBody) {
+          setVocabExample((prev) => {
+            if (!prev || prev.vocab_id !== vocabExample.vocab_id || prev.vocab_body) {
+              return prev
+            }
+            return {
+              ...prev,
+              vocab_body: vocabBody,
+            }
+          })
+        }
+      })
+      .catch((fetchError) => {
+        console.warn('⚠️ [VocabNotationCard] Failed to load vocab title:', fetchError)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isVisible, vocabExample?.vocab_id, vocabExample?.vocab_body])
 
   const updatePosition = useCallback(() => {
     if (!anchorRef?.current || !portalContainerRef.current) {
@@ -591,6 +735,22 @@ export default function VocabNotationCard({
   }
 
   let displayContent = note
+  const vocabId = vocabExample?.vocab_id || null
+  const vocabBody = vocabExample?.vocab_body || null
+  const detailUrl = vocabId
+    ? `${window.location.origin}${window.location.pathname}?page=wordDemo&vocabId=${vocabId}`
+    : null
+
+  const handleTitleClick = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!detailUrl) {
+      return
+    }
+
+    window.open(detailUrl, '_blank', 'noopener,noreferrer')
+  }
 
   // 🔧 优化显示逻辑：避免重复显示"正在生成解释"
   if (isLoading) {
@@ -611,9 +771,80 @@ export default function VocabNotationCard({
   } else if (vocabExample && vocabExample.context_explanation) {
     displayContent = (
       <div>
-        <div className="text-xs text-gray-500 mb-1">{t('词汇解释')}</div>
-        <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+        <button
+          onClick={handleTitleClick}
+          disabled={!detailUrl}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            margin: '0 0 8px 0',
+            cursor: detailUrl ? 'pointer' : 'default',
+            textAlign: 'left',
+            fontWeight: '600',
+            color: colors.primary[600],
+            fontSize: '16px',
+            textDecoration: 'underline',
+            textDecorationColor: '#10b981',
+            textDecorationThickness: '2px',
+            textUnderlineOffset: '4px',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(event) => {
+            if (detailUrl) {
+              event.target.style.color = colors.primary[700]
+              event.target.style.textDecorationColor = '#059669'
+            }
+          }}
+          onMouseLeave={(event) => {
+            if (detailUrl) {
+              event.target.style.color = colors.primary[600]
+              event.target.style.textDecorationColor = '#10b981'
+            }
+          }}
+        >
+          {vocabBody || t('词汇')}
+        </button>
+        <div
+          className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap"
+          style={{
+            marginTop: '8px',
+            paddingLeft: '8px',
+            borderLeft: '2px solid #dcfce7',
+            padding: '4px 0 4px 8px',
+            lineHeight: '1.6',
+          }}
+        >
           {parseExplanation(vocabExample.context_explanation)}
+        </div>
+      </div>
+    )
+  } else if (vocabExample && !vocabExample.context_explanation) {
+    displayContent = (
+      <div>
+        <button
+          onClick={handleTitleClick}
+          disabled={!detailUrl}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            margin: '0 0 8px 0',
+            cursor: detailUrl ? 'pointer' : 'default',
+            textAlign: 'left',
+            fontWeight: '600',
+            color: colors.primary[600],
+            fontSize: '16px',
+            textDecoration: 'underline',
+            textDecorationColor: '#10b981',
+            textDecorationThickness: '2px',
+            textUnderlineOffset: '4px',
+          }}
+        >
+          {vocabBody || t('词汇')}
+        </button>
+        <div className="text-sm text-gray-500 leading-relaxed">
+          {t('暂无词汇解释')}
         </div>
       </div>
     )

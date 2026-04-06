@@ -181,19 +181,28 @@ async def get_vocab_example_by_location(request: Request):
         text_id = int(query_params.get('text_id', 0))
         sentence_id = query_params.get('sentence_id')
         token_index = query_params.get('token_index')
+        vocab_id = query_params.get('vocab_id')
         
         # 转换可选参数
         if sentence_id is not None:
             sentence_id = int(sentence_id)
         if token_index is not None:
             token_index = int(token_index)
+        if vocab_id is not None:
+            vocab_id = int(vocab_id)
             
-        print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}")
+        print(f"🔍 [VocabExample] Searching by location: text_id={text_id}, sentence_id={sentence_id}, token_index={token_index}, vocab_id={vocab_id}")
         
         # 使用全局 DataController 查找例句
         example = global_dc.vocab_manager.get_vocab_example_by_location(text_id, sentence_id, token_index)
         
         if example:
+            if vocab_id is not None and int(example.vocab_id) != vocab_id:
+                return {
+                    'success': False,
+                    'data': None,
+                    'message': f'No vocab example found for requested vocab_id={vocab_id}'
+                }
             print(f"✅ [VocabExample] Found example: {example}")
             
             # 转换为字典格式返回

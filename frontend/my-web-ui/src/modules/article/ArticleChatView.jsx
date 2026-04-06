@@ -808,13 +808,13 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     console.error('❌ [ArticleChatView] 错误堆栈:', err.stack)
     return (
       <div className="h-full flex flex-col items-center justify-center p-8">
-        <div className="text-red-600 text-lg font-semibold mb-4">页面渲染出错</div>
+        <div className="text-red-600 text-lg font-semibold mb-4">{t('页面渲染出错')}</div>
         <div className="text-gray-600 mb-4">{String(err.message || err)}</div>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          刷新页面
+          {t('刷新页面')}
         </button>
       </div>
     )

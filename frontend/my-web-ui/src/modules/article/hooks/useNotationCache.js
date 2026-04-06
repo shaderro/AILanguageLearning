@@ -106,6 +106,8 @@ export function useNotationCache(articleId) {
           vocab_id: notation.vocab_id,
           word_token_id: notation.word_token_id, // 🔧 新增：word_token_id（用于非空格语言的完整词标注）
           word_token_token_ids: notation.word_token_token_ids || null, // 🔧 新增：word_token的所有token_ids（用于显示完整下划线）
+          context_explanation: notation.context_explanation || '',
+          token_indices: notation.token_indices || [],
           created_at: notation.created_at
         }))
         
@@ -151,6 +153,8 @@ export function useNotationCache(articleId) {
           vocab_id: notation.vocab_id,
           word_token_id: notation.word_token_id, // 🔧 新增：word_token_id（用于非空格语言的完整词标注）
           word_token_token_ids: notation.word_token_token_ids || null, // 🔧 新增：word_token的所有token_ids（用于显示完整下划线）
+          context_explanation: notation.context_explanation || '',
+          token_indices: notation.token_indices || [],
           created_at: notation.created_at
         }))
         logVocabNotationDebug('📦 [useNotationCache] vocab notations loaded (legacy format)', {
@@ -321,27 +325,35 @@ export function useNotationCache(articleId) {
 
       if (matchedNotation && matchedNotation.vocab_id) {
         const { apiService } = await import('../../../services/api')
-        logVocabNotationDebug('🌐 [getVocabExampleForToken] fetching vocab by id', {
+        logVocabNotationDebug('🌐 [getVocabExampleForToken] fetching vocab example by location + vocab id', {
           key,
           vocab_id: matchedNotation.vocab_id,
         })
-        // 通过 vocab_id 获取词汇详情（包含所有 examples）
-        const vocabResp = await apiService.getVocabById(matchedNotation.vocab_id)
-        const vocabData = vocabResp?.data || vocabResp
+        const getExplanationText = (record) => {
+          if (!record || typeof record !== 'object') return ''
+          return String(
+            record.context_explanation ||
+            record.explanation_context ||
+            record.explanation ||
+            ''
+          ).trim()
+        }
 
-        // 在该 vocab 的例句中，找到同一篇文章、同一句子的例句
-        const examples = Array.isArray(vocabData?.examples) ? vocabData.examples : []
-        const matchedExample = examples.find(ex => 
-          Number(ex.text_id) === Number(textId) && Number(ex.sentence_id) === sid
-        ) || examples[0]  // 退而求其次，取第一条
+        const [exampleResp, vocabResp] = await Promise.all([
+          apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex, matchedNotation.vocab_id),
+          apiService.getVocabById(matchedNotation.vocab_id),
+        ])
+        const matchedExample = exampleResp?.data?.data ?? exampleResp?.data ?? exampleResp
+        const vocabData = vocabResp?.data?.data ?? vocabResp?.data ?? vocabResp
 
         if (matchedExample) {
           const normalized = {
             vocab_id: vocabData.vocab_id,
+            vocab_body: vocabData.vocab_body || vocabData.vocab || '',
             text_id: matchedExample.text_id,
             sentence_id: matchedExample.sentence_id,
             token_index: tid,
-            context_explanation: matchedExample.context_explanation,
+            context_explanation: getExplanationText(matchedExample),
             token_indices: matchedExample.token_indices || []
           }
           setVocabExamplesCache(prev => {
@@ -378,6 +390,7 @@ export function useNotationCache(articleId) {
         // 标准化：确保有 token_index 供缓存 key 使用
         const normalized = {
           vocab_id: payload.vocab_id,
+          vocab_body: payload.vocab_body || payload.vocab || '',
           text_id: payload.text_id,
           sentence_id: payload.sentence_id,
           token_index: payload.token_index ?? tokenIndex,

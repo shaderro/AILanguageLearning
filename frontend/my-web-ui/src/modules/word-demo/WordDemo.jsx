@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useVocabList, useWordInfo, useToggleVocabStar, useRefreshData, useArticles } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
 import { useUser } from '../../contexts/UserContext'
@@ -14,8 +14,14 @@ import VocabDetailCard from '../../components/features/vocab/VocabDetailCard'
 import { hasAnyHydratedExampleSentence, unwrapVocabDetailResponse } from '../../utils/vocabExamples'
 
 function WordDemo() {
+  const getVocabIdFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    const vocabId = params.get('vocabId')
+    return vocabId ? parseInt(vocabId) : null
+  }
+
   const [selectedWord, setSelectedWord] = useState(null)
-  const [selectedWordId, setSelectedWordId] = useState(null)
+  const [selectedWordId, setSelectedWordId] = useState(() => getVocabIdFromURL())
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   // 🔧 缓存详情页面的词汇数据，避免切换时重新加载
   const [detailPageCache, setDetailPageCache] = useState(new Map())
@@ -35,6 +41,7 @@ function WordDemo() {
   
   // 从 LanguageContext 获取选择的语言
   const { selectedLanguage } = useLanguage()
+  const prevSelectedLanguageRef = useRef(selectedLanguage)
   const t = useUIText()
 
   // 学习状态过滤
@@ -177,6 +184,35 @@ function WordDemo() {
       setShowLoadingUI(false)
     }
   }, [selectedWordId, vocabData, detailPageCache, selectedWord])
+
+  useEffect(() => {
+    const urlVocabId = getVocabIdFromURL()
+    if (urlVocabId && urlVocabId !== selectedWordId) {
+      setSelectedWordId(urlVocabId)
+    }
+  }, [])
+
+  useEffect(() => {
+    const prevLanguage = prevSelectedLanguageRef.current
+    if (prevLanguage === selectedLanguage) {
+      return
+    }
+    prevSelectedLanguageRef.current = selectedLanguage
+
+    if (!selectedWordId) {
+      return
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    params.delete('vocabId')
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
+    window.history.replaceState({}, '', newUrl)
+
+    setSelectedWord(null)
+    setSelectedWordId(null)
+    setPreviousWord(null)
+    setShowLoadingUI(false)
+  }, [selectedLanguage, selectedWordId])
 
   const handleWordSelect = (word) => {
     // 🔧 修改：设置 ID 触发详情加载，而不是直接使用列表数据

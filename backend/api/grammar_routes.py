@@ -5,7 +5,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import cast, String
+from sqlalchemy import cast, String, func
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -102,6 +102,74 @@ router = APIRouter(
 )
 
 
+def _normalize_language_key(language: Optional[str]) -> Optional[str]:
+    if not language:
+        return None
+    value = str(language).strip().lower().replace("_", "-")
+    alias_to_key = {
+        "zh": "zh",
+        "zh-cn": "zh",
+        "zh-hans": "zh",
+        "中文": "zh",
+        "chinese": "zh",
+        "en": "en",
+        "en-us": "en",
+        "英文": "en",
+        "英语": "en",
+        "english": "en",
+        "de": "de",
+        "de-de": "de",
+        "德文": "de",
+        "德语": "de",
+        "german": "de",
+        "es": "es",
+        "es-es": "es",
+        "西班牙语": "es",
+        "spanish": "es",
+        "fr": "fr",
+        "fr-fr": "fr",
+        "法语": "fr",
+        "french": "fr",
+        "ja": "ja",
+        "ja-jp": "ja",
+        "日语": "ja",
+        "日文": "ja",
+        "日本語": "ja",
+        "japanese": "ja",
+        "ko": "ko",
+        "ko-kr": "ko",
+        "韩语": "ko",
+        "korean": "ko",
+        "ar": "ar",
+        "ar-sa": "ar",
+        "阿拉伯语": "ar",
+        "arabic": "ar",
+        "ru": "ru",
+        "ru-ru": "ru",
+        "俄语": "ru",
+        "russian": "ru",
+    }
+    return alias_to_key.get(value, value)
+
+
+def _language_variants(language: Optional[str]) -> List[str]:
+    key = _normalize_language_key(language)
+    if not key or key == "all":
+        return []
+    variants = {
+        "zh": ["zh", "zh-cn", "zh-hans", "中文", "chinese"],
+        "en": ["en", "en-us", "英文", "英语", "english"],
+        "de": ["de", "de-de", "德文", "德语", "german"],
+        "es": ["es", "es-es", "西班牙语", "spanish"],
+        "fr": ["fr", "fr-fr", "法语", "french"],
+        "ja": ["ja", "ja-jp", "日语", "日文", "日本語", "japanese"],
+        "ko": ["ko", "ko-kr", "韩语", "korean"],
+        "ar": ["ar", "ar-sa", "阿拉伯语", "arabic"],
+        "ru": ["ru", "ru-ru", "俄语", "russian"],
+    }
+    return [v.lower() for v in variants.get(key, [str(language).strip()])]
+
+
 # ==================== API 端点 ====================
 
 @router.get("/", summary="获取所有语法规则")
@@ -139,8 +207,12 @@ async def get_all_grammar_rules(
         
         # 语言过滤
         if language and language != 'all':
-            query = query.filter(GrammarRule.language == language)
-            print(f"🔍 [GrammarAPI] 应用语言过滤: {language}")
+            variants = _language_variants(language)
+            if variants:
+                query = query.filter(func.lower(GrammarRule.language).in_(variants))
+            else:
+                query = query.filter(func.lower(GrammarRule.language) == str(language).strip().lower())
+            print(f"🔍 [GrammarAPI] 应用语言过滤: {language} -> {variants or [str(language).strip().lower()]}")
         
         # 学习状态过滤
         # 🔧 修复：SQLite 中 Enum 存储为字符串，使用枚举对象进行比较

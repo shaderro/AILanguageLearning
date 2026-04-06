@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
 import LearnCard from '../shared/components/LearnCard'
 // 注意：Sandbox 允许你自由重构，这里保留最小依赖，避免影响正式 GrammarDemo
@@ -164,6 +164,13 @@ const GrammarReviewSandbox = () => {
   const [isSpeakingSentence, setIsSpeakingSentence] = useState(false)
   // 🔧 缓存预加载的语法详情
   const [grammarDetailCache, setGrammarDetailCache] = useState(new Map())
+  const prevSelectedLanguageRef = useRef(null)
+
+  useEffect(() => {
+    if (prevSelectedLanguageRef.current == null) {
+      prevSelectedLanguageRef.current = selectedLanguage
+    }
+  }, [selectedLanguage])
 
   // 🔧 从 URL 参数初始化 selectedGrammarId（用于新标签页打开）
   // 🔧 修复问题1：只在URL中明确包含grammarId时才设置（用于新标签页打开），而不是每次组件挂载都设置
@@ -204,6 +211,29 @@ const GrammarReviewSandbox = () => {
       }
     }
   }, [allGrammar, selectedGrammarIndex, selectedGrammarId])
+
+  useEffect(() => {
+    const prevLanguage = prevSelectedLanguageRef.current
+    if (prevLanguage === selectedLanguage) {
+      return
+    }
+    prevSelectedLanguageRef.current = selectedLanguage
+
+    if (!selectedGrammarId) {
+      return
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    params.delete('grammarId')
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
+    window.history.replaceState({}, '', newUrl)
+
+    setSelectedGrammar(null)
+    setSelectedGrammarId(null)
+    setSelectedGrammarIndex(-1)
+    setPreviousGrammar(null)
+    setShowLoadingUI(false)
+  }, [selectedLanguage, selectedGrammarId])
 
   // 🔧 新增：当选中语法时，获取完整的语法详情（包含examples）- 优化：延迟加载UI显示
   useEffect(() => {

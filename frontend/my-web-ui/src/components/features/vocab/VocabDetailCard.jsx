@@ -180,45 +180,107 @@ const renderInlineMarkdown = (text) => {
   })
 }
 
-// 从 explanation 中尝试分离“释义”和“语法说明”段落
+const normalizeExplanationLayout = (rawText = '') => {
+  if (!rawText) return ''
+
+  const text = String(rawText)
+    .replace(/\r\n/g, '\n')
+    .replace(/\u00a0/g, ' ')
+
+  const normalizedLines = text.split('\n').map((line) => {
+    const trimmed = line.trim()
+    if (!trimmed) return ''
+
+    return line
+      .replace(/^[ \t]{2,}/, '')
+      .replace(/^\((?:if applicable)\)\s*collocations\s*:/i, 'Collocations:')
+      .replace(/^\((?:if applicable)\)\s*grammar notes?\s*:/i, 'Grammar notes:')
+      .replace(/^\((?:if applicable)\)\s*rare sense\s*:/i, 'Rare sense:')
+      .replace(/^（如适用）\s*搭配\s*：?/, '搭配：')
+      .replace(/^（如适用）\s*语法说明\s*：?/, '语法说明：')
+      .replace(/^（如有）\s*少见义\s*：?/, '少见义：')
+      .replace(/^grammar note\s*:/i, 'Grammar notes:')
+      .replace(/^grammar notes\s*:/i, 'Grammar notes:')
+      .replace(/^collocations?\s*:/i, 'Collocations:')
+      .replace(/^rare sense\s*:/i, 'Rare sense:')
+      .replace(/^[ \t]+(-\s+)/, '$1')
+  })
+
+  return normalizedLines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+const isSectionHeading = (line, labels) => {
+  const normalized = String(line || '')
+    .trim()
+    .replace(/^\*\*/, '')
+    .replace(/\*\*$/, '')
+    .replace(/[:：]\s*$/, '')
+    .trim()
+    .toLowerCase()
+
+  return labels.some((label) => normalized === String(label).trim().toLowerCase())
+}
+
+// 从 explanation 中尝试分离“释义 / 少见义 / 搭配 / 语法说明”段落
 const extractSections = (rawExplanation = '') => {
-  const text = parseExplanation(rawExplanation)
-  if (!text) return { definitionText: '', grammarText: '' }
-
-  // 尝试匹配中英文小标题
-  const defLabels = ['释义', '定义', 'definition', 'definitions']
-  const grammarLabels = ['grammar explanation', 'grammar notes', 'grammar note', '语法说明', 'definition note', 'grammar']
-
-  const toRegex = (labels) => labels
-    .slice()
-    .sort((a, b) => b.length - a.length)
-    .map((l) => l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('|')
-  const defPattern = `\\*\\*?\\s*(?:${toRegex(defLabels)})\\s*\\*\\*?[:：]?`
-  const grammarPattern = `\\*\\*?\\s*(?:${toRegex(grammarLabels)})\\s*\\*\\*?[:：]?`
-  const defRegex = new RegExp(defPattern, 'i')
-  const grammarRegex = new RegExp(grammarPattern, 'i')
-
-  // 如果同时存在两个小标题，按顺序截取
-  const combinedRegex = new RegExp(
-    `${defPattern}\\s*([\\s\\S]*?)(?=${grammarPattern}|$)`,
-    'i'
-  )
-  const defMatch = text.match(combinedRegex)
-  const grammarMatch = text.match(new RegExp(`${grammarPattern}\\s*([\\s\\S]*)`, 'i'))
-
-  let definitionText = ''
-  if (defMatch?.[1]?.trim()) {
-    definitionText = defMatch[1].trim()
-  } else if (grammarMatch?.index !== undefined && grammarMatch.index > 0) {
-    definitionText = text.slice(0, grammarMatch.index).trim()
-  } else {
-    definitionText = text
+  const text = normalizeExplanationLayout(parseExplanation(rawExplanation))
+  if (!text) {
+    return { definitionText: '', rareSenseText: '', collocationsText: '', grammarText: '' }
   }
 
-  const grammarText = grammarMatch?.[1]?.trim() || ''
+  const defLabels = ['释义', '定义', 'definition', 'definitions']
+  const rareSenseLabels = ['rare sense', 'rare senses', '少见义']
+  const collocationLabels = ['collocations', 'collocation', '搭配']
+  const grammarLabels = ['grammar explanation', 'grammar notes', 'grammar note', '语法说明', 'definition note', 'grammar']
 
-  return { definitionText, grammarText }
+  const sections = {
+    definition: [],
+    rareSense: [],
+    collocations: [],
+    grammar: [],
+  }
+
+  let currentSection = 'definition'
+  text.split('\n').forEach((line) => {
+    const trimmed = line.trim()
+    if (!trimmed) {
+      if (sections[currentSection].length > 0) {
+        sections[currentSection].push('')
+      }
+      return
+    }
+
+    if (isSectionHeading(trimmed, defLabels)) {
+      currentSection = 'definition'
+      return
+    }
+    if (isSectionHeading(trimmed, rareSenseLabels)) {
+      currentSection = 'rareSense'
+      return
+    }
+    if (isSectionHeading(trimmed, collocationLabels)) {
+      currentSection = 'collocations'
+      return
+    }
+    if (isSectionHeading(trimmed, grammarLabels)) {
+      currentSection = 'grammar'
+      return
+    }
+
+    sections[currentSection].push(trimmed)
+  })
+
+  const joinSection = (lines) => lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+
+  return {
+    definitionText: joinSection(sections.definition),
+    rareSenseText: joinSection(sections.rareSense),
+    collocationsText: joinSection(sections.collocations),
+    grammarText: joinSection(sections.grammar),
+  }
 }
 
 const VocabDetailCard = ({
@@ -299,9 +361,9 @@ const VocabDetailCard = ({
   }, [vocabWithDetails?.examples, articleTitles])
 
   const vocabBody = vocabWithDetails?.vocab_body || ''
-  // 提取释义与语法说明文本（如果能拆分则拆分，否则释义包含全部）
-  const { definitionText, grammarText } = extractSections(vocabWithDetails?.explanation || '')
-  const explanation = parseExplanation(vocabWithDetails?.explanation || '')
+  // 提取释义 / 搭配 / 语法说明文本（如果能拆分则拆分，否则释义包含全部）
+  const { definitionText, rareSenseText, collocationsText, grammarText } = extractSections(vocabWithDetails?.explanation || '')
+  const explanation = normalizeExplanationLayout(parseExplanation(vocabWithDetails?.explanation || ''))
   
   // 🔧 朗读功能
   const [isSpeakingVocab, setIsSpeakingVocab] = useState(false)
@@ -559,9 +621,28 @@ const VocabDetailCard = ({
     return [base]
   }, [definitionText, explanation])
 
+  const collocationPoints = useMemo(() => {
+    if (!collocationsText) return []
+    return normalizeExplanationLayout(collocationsText)
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => line.trim())
+      .map(line => line.replace(/^[-*•]\s*/, ''))
+      .filter(Boolean)
+  }, [collocationsText])
+
+  const rareSensePoints = useMemo(() => {
+    if (!rareSenseText) return []
+    return normalizeExplanationLayout(rareSenseText)
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => line.trim())
+      .filter(Boolean)
+  }, [rareSenseText])
+
   // 解析语法说明，提取要点
   const grammarPoints = useMemo(() => {
-    const rawGrammar = grammarText || vocabWithDetails?.grammar_notes || ''
+    const rawGrammar = normalizeExplanationLayout(grammarText || vocabWithDetails?.grammar_notes || '')
     if (!rawGrammar) return []
     const parsed = parseExplanation(rawGrammar)
     const lines = parsed.split('\n').filter(line => line.trim())
@@ -742,8 +823,8 @@ const VocabDetailCard = ({
             )}
           </div>
 
-        {/* 释义 + 语法说明 合并为单卡片，使用 Primary-50 背景 */}
-        {(definitions.length > 0 || grammarPoints.length > 0) && (
+        {/* 释义 + 搭配 + 语法说明 合并为单卡片，使用 Primary-50 背景 */}
+        {(definitions.length > 0 || rareSensePoints.length > 0 || collocationPoints.length > 0 || grammarPoints.length > 0) && (
           <section>
             <div
               className="p-4 rounded-lg border space-y-4"
@@ -770,6 +851,46 @@ const VocabDetailCard = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {rareSensePoints.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
+                    {t('少见义')}
+                  </h2>
+                  <div className="space-y-2">
+                    {rareSensePoints.map((point, index) => (
+                      <div
+                        key={index}
+                        className="leading-relaxed whitespace-pre-wrap"
+                        style={{ color: colors.semantic.text.primary }}
+                      >
+                        {renderInlineMarkdown(point)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {collocationPoints.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
+                    {t('搭配')}
+                  </h2>
+                  <ul className="space-y-2">
+                    {collocationPoints.map((point, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
+                        <span
+                          className="leading-relaxed whitespace-pre-wrap flex-1"
+                          style={{ color: colors.semantic.text.primary }}
+                        >
+                          {renderInlineMarkdown(point)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 

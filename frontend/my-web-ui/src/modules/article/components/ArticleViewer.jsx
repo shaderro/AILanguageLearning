@@ -1306,7 +1306,7 @@ function ArticleViewer({
     console.log('⏸️ [ArticleViewer] 提前返回：isLoading = true')
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-gray-500">Loading article...</div>
+        <div className="text-gray-500">{t('Loading article...')}</div>
       </div>
     )
   }
@@ -1315,7 +1315,7 @@ function ArticleViewer({
     console.log('❌ [ArticleViewer] 提前返回：isError = true', error)
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-red-500">Failed to load: {String(error?.message || error)}</div>
+        <div className="text-red-500">{t('加载失败')}: {String(error?.message || error)}</div>
       </div>
     )
   }
@@ -1325,7 +1325,7 @@ function ArticleViewer({
     console.log('⚠️ [ArticleViewer] 提前返回：没有数据')
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-gray-500">No article data available</div>
+        <div className="text-gray-500">{t('No article data available')}</div>
       </div>
     )
   }
@@ -1493,13 +1493,13 @@ function ArticleViewer({
     return (
       <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
         <div className="text-red-500">
-          <div className="font-semibold mb-2">渲染出错</div>
+          <div className="font-semibold mb-2">{t('页面渲染出错')}</div>
           <div className="text-sm">{String(err.message || err)}</div>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            刷新页面
+            {t('刷新页面')}
           </button>
         </div>
       </div>

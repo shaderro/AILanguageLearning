@@ -507,6 +507,7 @@ function SentenceContainer({
               token={token}
               tokenIdx={tokenIndex}
               sentenceIdx={sentenceIndex}
+              sentenceId={sentenceId}
               articleId={articleId}
               selectedTokenIds={selectedTokenIds}
               activeSentenceIndex={activeSentenceIndex}
