@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { apiService } from '../../../../services/api'
 import { colors } from '../../../../design-tokens'
 import { useUIText } from '../../../../i18n/useUIText'
+import { useLanguage } from '../../../../contexts/LanguageContext'
 import { logVocabNotationDebug } from '../../utils/vocabNotationDebug'
 
 const DEFAULT_CARD_WIDTH = 320
@@ -284,6 +285,7 @@ export default function VocabNotationCard({
   anchorRef = null
 }) {
   const t = useUIText()
+  const { selectedLanguage } = useLanguage()
   const [vocabExample, setVocabExample] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -735,10 +737,10 @@ export default function VocabNotationCard({
   }
 
   let displayContent = note
-  const vocabId = vocabExample?.vocab_id || null
-  const vocabBody = vocabExample?.vocab_body || null
+  const vocabId = vocabExample?.vocab_id || matchedNotation?.vocab_id || null
+  const vocabBody = vocabExample?.vocab_body || matchedNotation?.vocab_body || null
   const detailUrl = vocabId
-    ? `${window.location.origin}${window.location.pathname}?page=wordDemo&vocabId=${vocabId}`
+    ? `${window.location.origin}${window.location.pathname}?page=wordDemo&vocabId=${vocabId}${selectedLanguage ? `&lang=${encodeURIComponent(selectedLanguage)}` : ''}`
     : null
 
   const handleTitleClick = async (e) => {

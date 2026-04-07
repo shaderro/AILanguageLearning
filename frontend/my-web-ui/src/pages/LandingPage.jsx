@@ -550,7 +550,7 @@ const LandingPage = ({
                   </span>
                 </h1>
 
-                <p className="mt-5 text-base sm:text-lg text-gray-600 leading-relaxed max-w-3xl">
+                <p className="mt-5 text-base sm:text-lg text-gray-600 leading-relaxed max-w-4xl">
                   <span className="font-semibold text-gray-900">LinkText</span>{' '}
                   {t(
                     'helps you understand vocabulary and grammar directly from real articles — and automatically builds your personal knowledge system as you learn.',

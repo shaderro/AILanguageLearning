@@ -20,6 +20,11 @@ function WordDemo() {
     return vocabId ? parseInt(vocabId) : null
   }
 
+  const getLanguageFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('lang') || null
+  }
+
   const [selectedWord, setSelectedWord] = useState(null)
   const [selectedWordId, setSelectedWordId] = useState(() => getVocabIdFromURL())
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
@@ -35,13 +40,78 @@ function WordDemo() {
   const [reviewResults, setReviewResults] = useState([])
   // 🔧 缓存预加载的词汇详情
   const [vocabDetailCache, setVocabDetailCache] = useState(new Map())
+  const detailFetchInFlightRef = useRef(new Set())
   
   // 从 UserContext 获取当前用户
   const { userId, isGuest } = useUser()
   
   // 从 LanguageContext 获取选择的语言
-  const { selectedLanguage } = useLanguage()
+  const { selectedLanguage, setSelectedLanguage } = useLanguage()
   const prevSelectedLanguageRef = useRef(selectedLanguage)
+  const initialUrlVocabIdRef = useRef(getVocabIdFromURL())
+  const initialUrlLanguageRef = useRef(getLanguageFromURL())
+  const hasCompletedDirectOpenLanguageSyncRef = useRef(
+    !(initialUrlVocabIdRef.current && initialUrlLanguageRef.current)
+  )
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlLanguage = params.get('lang') || initialUrlLanguageRef.current
+    const urlVocabId = params.get('vocabId') || initialUrlVocabIdRef.current
+    if (!urlLanguage || !urlVocabId) {
+      hasCompletedDirectOpenLanguageSyncRef.current = true
+      return
+    }
+
+    if (selectedLanguage === urlLanguage) {
+      prevSelectedLanguageRef.current = selectedLanguage
+      hasCompletedDirectOpenLanguageSyncRef.current = true
+      return
+    }
+
+    // 直达详情页时，先把内容语言同步到 URL 指定语言，再允许后续“语言变化返回列表”的逻辑生效。
+    prevSelectedLanguageRef.current = urlLanguage
+    setSelectedLanguage(urlLanguage)
+  }, [selectedLanguage, setSelectedLanguage])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const pinnedUrlLanguage = params.get('lang')
+    const pinnedUrlVocabId = params.get('vocabId')
+    if (pinnedUrlLanguage && pinnedUrlVocabId && Number(pinnedUrlVocabId) === selectedWordId) {
+      prevSelectedLanguageRef.current = selectedLanguage
+      return
+    }
+
+    const urlLanguage = initialUrlLanguageRef.current
+    const urlVocabId = initialUrlVocabIdRef.current
+    if (urlLanguage && urlVocabId && !hasCompletedDirectOpenLanguageSyncRef.current) {
+      prevSelectedLanguageRef.current = selectedLanguage
+      return
+    }
+
+    const prevLanguage = prevSelectedLanguageRef.current
+    if (prevLanguage === selectedLanguage) {
+      return
+    }
+    prevSelectedLanguageRef.current = selectedLanguage
+
+    if (!selectedWordId) {
+      return
+    }
+
+    const nextParams = new URLSearchParams(window.location.search)
+    nextParams.delete('vocabId')
+    nextParams.delete('lang')
+    const newUrl = `${window.location.pathname}${nextParams.toString() ? `?${nextParams.toString()}` : ''}`
+    window.history.replaceState({}, '', newUrl)
+
+    setSelectedWord(null)
+    setSelectedWordId(null)
+    setPreviousWord(null)
+    setShowLoadingUI(false)
+  }, [selectedLanguage, selectedWordId])
+
   const t = useUIText()
 
   // 学习状态过滤
@@ -127,13 +197,17 @@ function WordDemo() {
       // 🔧 如果缓存中没有，先尝试从列表数据中获取
       const allVocabs = vocabData?.data || []
       const listItem = allVocabs.find(w => w.vocab_id === selectedWordId)
-      if (listItem && listItem.examples && Array.isArray(listItem.examples) && listItem.examples.length > 0) {
-        // 列表数据中已有完整数据，直接使用并缓存
+      if (listItem) {
+        // 先用列表项占位展示；若例句未 hydrate，交给 VocabDetailCard 自己补详情，避免这里重复打详情接口。
         setSelectedWord(listItem)
         setIsLoadingDetail(false)
         setShowLoadingUI(false)
         setPreviousWord(listItem)
         setDetailPageCache(prev => new Map(prev).set(selectedWordId, listItem))
+        return
+      }
+
+      if (detailFetchInFlightRef.current.has(selectedWordId)) {
         return
       }
       
@@ -148,18 +222,19 @@ function WordDemo() {
       }, 500)
       
       console.log(`🔍 [WordDemo] Fetching vocab detail for ID: ${selectedWordId}`)
+      detailFetchInFlightRef.current.add(selectedWordId)
       
       apiService.getVocabById(selectedWordId)
         .then(response => {
           console.log(`✅ [WordDemo] Vocab detail fetched:`, response)
-          // 处理API响应格式
-          const vocabData = response?.data || response
-          setSelectedWord(vocabData)
+          const detailData = unwrapVocabDetailResponse(response)
+          setSelectedWord(detailData)
           setIsLoadingDetail(false)
           setShowLoadingUI(false)
-          setPreviousWord(vocabData)
+          setPreviousWord(detailData)
           // 🔧 缓存数据
-          setDetailPageCache(prev => new Map(prev).set(selectedWordId, vocabData))
+          setDetailPageCache(prev => new Map(prev).set(selectedWordId, detailData))
+          detailFetchInFlightRef.current.delete(selectedWordId)
           clearTimeout(loadingUITimer)
         })
         .catch(error => {
@@ -170,6 +245,7 @@ function WordDemo() {
             setPreviousWord(listItem)
             setDetailPageCache(prev => new Map(prev).set(selectedWordId, listItem))
           }
+          detailFetchInFlightRef.current.delete(selectedWordId)
           setIsLoadingDetail(false)
           setShowLoadingUI(false)
           clearTimeout(loadingUITimer)
@@ -183,7 +259,7 @@ function WordDemo() {
       setPreviousWord(null)
       setShowLoadingUI(false)
     }
-  }, [selectedWordId, vocabData, detailPageCache, selectedWord])
+  }, [selectedWordId, vocabData, detailPageCache])
 
   useEffect(() => {
     const urlVocabId = getVocabIdFromURL()
@@ -191,28 +267,6 @@ function WordDemo() {
       setSelectedWordId(urlVocabId)
     }
   }, [])
-
-  useEffect(() => {
-    const prevLanguage = prevSelectedLanguageRef.current
-    if (prevLanguage === selectedLanguage) {
-      return
-    }
-    prevSelectedLanguageRef.current = selectedLanguage
-
-    if (!selectedWordId) {
-      return
-    }
-
-    const params = new URLSearchParams(window.location.search)
-    params.delete('vocabId')
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
-    window.history.replaceState({}, '', newUrl)
-
-    setSelectedWord(null)
-    setSelectedWordId(null)
-    setPreviousWord(null)
-    setShowLoadingUI(false)
-  }, [selectedLanguage, selectedWordId])
 
   const handleWordSelect = (word) => {
     // 🔧 修改：设置 ID 触发详情加载，而不是直接使用列表数据

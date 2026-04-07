@@ -216,6 +216,7 @@
   "词汇注释 (vocab-notation)": "词汇注释 (vocab-notation)",
   "词汇解释": "词汇解释",
   "Definition": "释义",
+  "词汇特征": "词汇特征",
   "搭配": "搭配",
   "少见义": "少见义",
   "语法说明": "语法说明",
@@ -473,5 +474,10 @@
   "Function": "功能",
   "modifies a noun": "修饰名词",
   "Examples": "例句",
-  "5 examples collected": "已收集 5 个例句"
+  "5 examples collected": "已收集 5 个例句",
+  "The book that I bought yesterday...": "我昨天买的那本书……",
+  "The man who lives next door...": "住在隔壁的那个人……",
+  "The book that I bought...": "我买的那本书……",
+  "The car which was parked...": "那辆停着的车……",
+  "The city where I grew up...": "我长大的那座城市……"
 }

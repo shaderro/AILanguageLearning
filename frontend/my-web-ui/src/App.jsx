@@ -43,6 +43,11 @@ function AppContent() {
     return { page, articleId }
   }
 
+  const getLanguageFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('lang') || null
+  }
+
   const initialState = getInitialStateFromURL()
   const [currentPage, setCurrentPage] = useState(initialState.page)
   const [selectedArticleId, setSelectedArticleId] = useState(initialState.articleId)
@@ -137,6 +142,14 @@ function AppContent() {
   // 从 LanguageContext 获取语言选择
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
   const prevSelectedLanguageRef = useRef(selectedLanguage)
+  const initializedUserLanguageRef = useRef(null)
+  const suppressNextArticleResetRef = useRef(false)
+  const initialUrlPageRef = useRef(initialState.page)
+  const initialUrlArticleIdRef = useRef(initialState.articleId)
+  const initialUrlLanguageRef = useRef(getLanguageFromURL())
+  const hasCompletedDirectOpenArticleLanguageSyncRef = useRef(
+    !(initialUrlPageRef.current === 'article' && initialUrlArticleIdRef.current && initialUrlLanguageRef.current)
+  )
   // 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
   const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
 
@@ -165,12 +178,53 @@ function AppContent() {
 
   const headerLanguages = resolveHeaderLanguages()
 
+  const setSelectedLanguageWithoutArticleReset = (language) => {
+    suppressNextArticleResetRef.current = true
+    setSelectedLanguage(language)
+  }
+
+  useEffect(() => {
+    const urlPage = initialUrlPageRef.current
+    const urlArticleId = initialUrlArticleIdRef.current
+    const urlLanguage = initialUrlLanguageRef.current
+    if (urlPage !== 'article' || !urlArticleId || !urlLanguage) {
+      hasCompletedDirectOpenArticleLanguageSyncRef.current = true
+      return
+    }
+
+    if (selectedLanguage === urlLanguage) {
+      prevSelectedLanguageRef.current = selectedLanguage
+      hasCompletedDirectOpenArticleLanguageSyncRef.current = true
+      return
+    }
+
+    prevSelectedLanguageRef.current = urlLanguage
+    setSelectedLanguageWithoutArticleReset(urlLanguage)
+  }, [selectedLanguage, setSelectedLanguage])
+
   useEffect(() => {
     const prevLanguage = prevSelectedLanguageRef.current
     if (prevLanguage === selectedLanguage) {
       return
     }
     prevSelectedLanguageRef.current = selectedLanguage
+
+    if (suppressNextArticleResetRef.current) {
+      suppressNextArticleResetRef.current = false
+      return
+    }
+
+    const urlPage = initialUrlPageRef.current
+    const urlArticleId = initialUrlArticleIdRef.current
+    const urlLanguage = initialUrlLanguageRef.current
+    if (
+      urlPage === 'article' &&
+      urlArticleId &&
+      urlLanguage &&
+      !hasCompletedDirectOpenArticleLanguageSyncRef.current
+    ) {
+      return
+    }
 
     if (currentPage === 'article' && selectedArticleId) {
       setIsUploadMode(false)
@@ -199,6 +253,7 @@ function AppContent() {
   // 登录后从全局 userInfo 初始化 UI 语言和内容语言（跨设备）
   useEffect(() => {
     if (!isAuthenticated || !currentUserId || !userInfo) return
+    if (initializedUserLanguageRef.current === currentUserId) return
 
     try {
       const info = userInfo
@@ -222,11 +277,11 @@ function AppContent() {
       }
 
       if (info.content_language && codeToName[info.content_language]) {
-        setSelectedLanguage(codeToName[info.content_language])
+        setSelectedLanguageWithoutArticleReset(codeToName[info.content_language])
       } else if (Array.isArray(info.languages_list) && info.languages_list.length > 0) {
         const first = info.languages_list[0]
         if (codeToName[first]) {
-          setSelectedLanguage(codeToName[first])
+          setSelectedLanguageWithoutArticleReset(codeToName[first])
         }
       }
 
@@ -244,10 +299,16 @@ function AppContent() {
           }
         }
       }
+      initializedUserLanguageRef.current = currentUserId
     } catch (e) {
       console.warn('⚠️ [App] 初始化用户语言偏好失败:', e)
     }
   }, [isAuthenticated, currentUserId, userInfo])
+
+  useEffect(() => {
+    if (isAuthenticated) return
+    initializedUserLanguageRef.current = null
+  }, [isAuthenticated])
 
   // 处理登出 - 使用 UserContext
   const handleLogout = () => {
@@ -624,7 +685,7 @@ function AppContent() {
                     // 🔧 若上传语言与上边栏语言不同，自动覆盖上边栏语言（用户体验：上传什么语言就看什么语言）
                     if (uploadLanguage && uploadLanguage !== selectedLanguage) {
                       console.log('🌐 [App] 覆盖上边栏语言:', selectedLanguage, '->', uploadLanguage)
-                      setSelectedLanguage(uploadLanguage)
+                      setSelectedLanguageWithoutArticleReset(uploadLanguage)
                     }
                     // 🔧 直接跳转到新文章，不返回列表
                     setIsUploadMode(false)

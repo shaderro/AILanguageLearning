@@ -2126,7 +2126,7 @@ async def get_vocab_list(current_user: User = Depends(get_current_user)):
 async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_current_user)):
     """获取词汇详情（兼容端点：强制按当前用户过滤，避免数据泄露）"""
     try:
-        from database_system.business_logic.models import VocabExpression
+        from database_system.business_logic.models import VocabExpression, Sentence
         db_manager = get_database_manager(ENV)
         session = db_manager.get_session()
         try:
@@ -2136,6 +2136,34 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
             ).first()
             if not vocab:
                 return create_error_response(f"词汇不存在或无权限访问: {vocab_id}")
+
+            examples_data = []
+            if getattr(vocab, "examples", None):
+                for ex in vocab.examples:
+                    original_sentence = None
+                    try:
+                        if ex.text_id is not None and ex.sentence_id is not None:
+                            sentence_obj = session.query(Sentence).filter(
+                                Sentence.text_id == ex.text_id,
+                                Sentence.sentence_id == ex.sentence_id
+                            ).first()
+                            if sentence_obj:
+                                original_sentence = sentence_obj.sentence_body
+                    except Exception as se:
+                        print(
+                            f"⚠️ [VocabAPI Compatibility] 获取例句原句失败: "
+                            f"text_id={ex.text_id}, sentence_id={ex.sentence_id}, error={se}"
+                        )
+
+                    examples_data.append({
+                        "vocab_id": ex.vocab_id,
+                        "text_id": ex.text_id,
+                        "sentence_id": ex.sentence_id,
+                        "original_sentence": original_sentence,
+                        "context_explanation": ex.context_explanation,
+                        "token_indices": ex.token_indices,
+                    })
+
             data = {
                 "vocab_id": vocab.vocab_id,
                 "user_id": vocab.user_id,
@@ -2147,6 +2175,7 @@ async def get_vocab_detail(vocab_id: int, current_user: User = Depends(get_curre
                 "learn_status": getattr(vocab.learn_status, "value", vocab.learn_status),
                 "created_at": vocab.created_at.isoformat() if vocab.created_at else None,
                 "updated_at": vocab.updated_at.isoformat() if vocab.updated_at else None,
+                "examples": examples_data,
             }
         finally:
             session.close()

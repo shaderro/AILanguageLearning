@@ -92,6 +92,134 @@ const parseExplanation = (text) => {
   return cleanText
 }
 
+const renderInlineMarkdown = (text) => {
+  const content = String(text || '')
+  if (!content) return null
+
+  const parts = content.split(/(\*\*[^*]+\*\*)/g)
+  return parts.filter(Boolean).map((part, index) => {
+    const boldMatch = part.match(/^\*\*([^*]+)\*\*$/)
+    if (boldMatch) {
+      return <strong key={index}>{boldMatch[1]}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
+const normalizeExplanationLayout = (rawText = '') => {
+  if (!rawText) return ''
+
+  const text = String(rawText)
+    .replace(/\r\n/g, '\n')
+    .replace(/\u00a0/g, ' ')
+
+  const normalizedLines = text.split('\n').map((line) => {
+    const trimmed = line.trim()
+    if (!trimmed) return ''
+
+    return line
+      .replace(/^[ \t]{2,}/, '')
+      .replace(/^\((?:if applicable)\)\s*collocations\s*:/i, 'Collocations:')
+      .replace(/^\((?:if applicable)\)\s*grammar notes?\s*:/i, 'Grammar notes:')
+      .replace(/^\((?:if applicable)\)\s*rare sense\s*:/i, 'Rare sense:')
+      .replace(/^（如适用）\s*搭配\s*：?/, '搭配：')
+      .replace(/^（如适用）\s*语法说明\s*：?/, '语法说明：')
+      .replace(/^（如有）\s*少见义\s*：?/, '少见义：')
+      .replace(/^grammar note\s*:/i, 'Grammar notes:')
+      .replace(/^grammar notes\s*:/i, 'Grammar notes:')
+      .replace(/^collocations?\s*:/i, 'Collocations:')
+      .replace(/^rare sense\s*:/i, 'Rare sense:')
+      .replace(/^[ \t]+(-\s+)/, '$1')
+  })
+
+  return normalizedLines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+const normalizeHeadingKey = (line) => String(line || '')
+  .trim()
+  .replace(/^\*\*/, '')
+  .replace(/\*\*$/, '')
+  .replace(/[:：]\s*$/, '')
+  .trim()
+  .toLowerCase()
+
+const PART_OF_SPEECH_HEADINGS = new Set([
+  'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction',
+  'interjection', 'article', 'determiner', 'numeral', 'particle',
+  '名词', '动词', '形容词', '副词', '代词', '介词', '连词', '感叹词', '冠词', '限定词', '数词', '助词',
+])
+
+const SECTION_HEADINGS = new Set([
+  'definition', 'definitions', '释义', '定义',
+  'collocations', 'collocation', '搭配',
+  'rare sense', 'rare senses', '少见义',
+  'grammar notes', 'grammar note', 'grammar explanation', '语法说明',
+])
+
+const isDisplayHeading = (line) => {
+  const key = normalizeHeadingKey(line)
+  return PART_OF_SPEECH_HEADINGS.has(key) || SECTION_HEADINGS.has(key)
+}
+
+const renderStructuredExplanation = (rawText) => {
+  const text = normalizeExplanationLayout(parseExplanation(rawText))
+  if (!text) return null
+
+  return text.split('\n').map((line, index) => {
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      return <div key={`space-${index}`} className="h-2" />
+    }
+
+    if (isDisplayHeading(trimmed)) {
+      return (
+        <div
+          key={`heading-${index}`}
+          className="font-semibold pt-1"
+          style={{ color: colors.semantic.text.secondary }}
+        >
+          {renderInlineMarkdown(trimmed)}
+        </div>
+      )
+    }
+
+    const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)$/)
+    if (orderedMatch) {
+      return (
+        <div key={`ordered-${index}`} className="flex items-start gap-2">
+          <span
+            className="font-medium min-w-[24px]"
+            style={{ color: colors.semantic.text.secondary }}
+          >
+            {orderedMatch[1]}.
+          </span>
+          <span className="flex-1">{renderInlineMarkdown(orderedMatch[2])}</span>
+        </div>
+      )
+    }
+
+    const bulletMatch = trimmed.match(/^[-*•]\s+(.*)$/)
+    if (bulletMatch) {
+      return (
+        <div key={`bullet-${index}`} className="flex items-start gap-2 pl-2">
+          <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
+          <span className="flex-1">{renderInlineMarkdown(bulletMatch[1])}</span>
+        </div>
+      )
+    }
+
+    return (
+      <div key={`text-${index}`}>
+        {renderInlineMarkdown(trimmed)}
+      </div>
+    )
+  })
+}
+
 const GrammarReviewCard = ({
   // Grammar data
   grammar,
@@ -169,7 +297,7 @@ const GrammarReviewCard = ({
   // 获取解释文本
   const explanation = useMemo(() => {
     const currentGrammar = grammarWithExamples || grammar
-    return parseExplanation(currentGrammar?.rule_summary || currentGrammar?.explanation || '暂无解释')
+    return currentGrammar?.rule_summary || currentGrammar?.explanation || '暂无解释'
   }, [grammarWithExamples, grammar])
   
   // 🔧 朗读功能
@@ -562,8 +690,8 @@ const GrammarReviewCard = ({
           {/* Definitions Section */}
           {showDefinitions && (
             <div className="pt-4 border-t border-gray-200">
-              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                {explanation}
+              <div className="text-gray-800 leading-relaxed">
+                {renderStructuredExplanation(explanation)}
               </div>
             </div>
           )}

@@ -4,6 +4,7 @@ import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import { hasAnyHydratedExampleSentence, pickExampleSentenceText, unwrapVocabDetailResponse } from '../../../utils/vocabExamples'
 
 // 解析和格式化解释文本（与 VocabNotationCard 保持一致）
 const parseExplanation = (text) => {
@@ -193,12 +194,21 @@ const normalizeExplanationLayout = (rawText = '') => {
 
     return line
       .replace(/^[ \t]{2,}/, '')
+      .replace(/^\((?:if applicable)\)\s*word features\s*:/i, 'Word features:')
       .replace(/^\((?:if applicable)\)\s*collocations\s*:/i, 'Collocations:')
       .replace(/^\((?:if applicable)\)\s*grammar notes?\s*:/i, 'Grammar notes:')
       .replace(/^\((?:if applicable)\)\s*rare sense\s*:/i, 'Rare sense:')
+      .replace(/^（如适用）\s*词汇特征\s*：?/, '词汇特征：')
+      .replace(/^（如适用）\s*词法特征\s*：?/, '词汇特征：')
+      .replace(/^（如适用）\s*词形特征\s*：?/, '词汇特征：')
       .replace(/^（如适用）\s*搭配\s*：?/, '搭配：')
       .replace(/^（如适用）\s*语法说明\s*：?/, '语法说明：')
       .replace(/^（如有）\s*少见义\s*：?/, '少见义：')
+      .replace(/^word features\s*:/i, 'Word features:')
+      .replace(/^lexical features\s*:/i, 'Word features:')
+      .replace(/^morpholog(?:y|ical features?)\s*:/i, 'Word features:')
+      .replace(/^词法特征\s*：?/, '词汇特征：')
+      .replace(/^词形特征\s*：?/, '词汇特征：')
       .replace(/^grammar note\s*:/i, 'Grammar notes:')
       .replace(/^grammar notes\s*:/i, 'Grammar notes:')
       .replace(/^collocations?\s*:/i, 'Collocations:')
@@ -228,16 +238,18 @@ const isSectionHeading = (line, labels) => {
 const extractSections = (rawExplanation = '') => {
   const text = normalizeExplanationLayout(parseExplanation(rawExplanation))
   if (!text) {
-    return { definitionText: '', rareSenseText: '', collocationsText: '', grammarText: '' }
+    return { definitionText: '', wordFeaturesText: '', rareSenseText: '', collocationsText: '', grammarText: '' }
   }
 
   const defLabels = ['释义', '定义', 'definition', 'definitions']
+  const wordFeatureLabels = ['word features', 'lexical features', 'morphology', 'morphological features', '词汇特征', '词法特征', '词形特征']
   const rareSenseLabels = ['rare sense', 'rare senses', '少见义']
   const collocationLabels = ['collocations', 'collocation', '搭配']
   const grammarLabels = ['grammar explanation', 'grammar notes', 'grammar note', '语法说明', 'definition note', 'grammar']
 
   const sections = {
     definition: [],
+    wordFeatures: [],
     rareSense: [],
     collocations: [],
     grammar: [],
@@ -255,6 +267,10 @@ const extractSections = (rawExplanation = '') => {
 
     if (isSectionHeading(trimmed, defLabels)) {
       currentSection = 'definition'
+      return
+    }
+    if (isSectionHeading(trimmed, wordFeatureLabels)) {
+      currentSection = 'wordFeatures'
       return
     }
     if (isSectionHeading(trimmed, rareSenseLabels)) {
@@ -277,6 +293,7 @@ const extractSections = (rawExplanation = '') => {
 
   return {
     definitionText: joinSection(sections.definition),
+    wordFeaturesText: joinSection(sections.wordFeatures),
     rareSenseText: joinSection(sections.rareSense),
     collocationsText: joinSection(sections.collocations),
     grammarText: joinSection(sections.grammar),
@@ -296,15 +313,16 @@ const VocabDetailCard = ({
   const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
   const [vocabWithDetails, setVocabWithDetails] = useState(vocab)
   const [articleTitles, setArticleTitles] = useState({}) // text_id -> title 映射
+  const [exampleSentenceMap, setExampleSentenceMap] = useState({}) // text_id:sentence_id -> sentence
 
   // 加载完整的 vocab 详情（包含 examples）
   useEffect(() => {
-    if (vocab && (!vocab.examples || !Array.isArray(vocab.examples) || vocab.examples.length === 0)) {
+    if (vocab && !hasAnyHydratedExampleSentence(vocab)) {
       const vocabId = vocab.vocab_id
       if (vocabId) {
         apiService.getVocabById(vocabId)
           .then(response => {
-            const detailData = response?.data?.data || response?.data || response
+            const detailData = unwrapVocabDetailResponse(response)
             if (detailData) {
               setVocabWithDetails({ ...vocab, ...detailData })
             } else {
@@ -360,9 +378,73 @@ const VocabDetailCard = ({
     })
   }, [vocabWithDetails?.examples, articleTitles])
 
+  // 如果例句缺少 original_sentence，则按 text_id + sentence_id 从文章详情兜底补齐
+  useEffect(() => {
+    const examples = vocabWithDetails?.examples || []
+    if (examples.length === 0) return
+
+    const missingByText = new Map()
+    examples.forEach((ex) => {
+      const existingSentence = pickExampleSentenceText(ex)
+      const textId = ex?.text_id || ex?.article_id || null
+      const sentenceId = ex?.sentence_id || null
+      const key = textId && sentenceId ? `${textId}:${sentenceId}` : null
+
+      if (!existingSentence && textId && sentenceId && key && !exampleSentenceMap[key]) {
+        if (!missingByText.has(textId)) {
+          missingByText.set(textId, new Set())
+        }
+        missingByText.get(textId).add(sentenceId)
+      }
+    })
+
+    if (missingByText.size === 0) return
+
+    let cancelled = false
+
+    Promise.all(
+      Array.from(missingByText.entries()).map(async ([textId, sentenceIds]) => {
+        try {
+          const response = await apiService.getArticleById(textId)
+          const articleData = response?.data?.data || response?.data || response
+          const sentences = articleData?.sentences || articleData?.sentence_list || []
+          const resolvedEntries = []
+
+          sentenceIds.forEach((sentenceId) => {
+            const sentenceObj = Array.isArray(sentences)
+              ? sentences.find((item) => {
+                  const currentSentenceId = item?.sentence_id ?? item?.id ?? null
+                  return Number(currentSentenceId) === Number(sentenceId)
+                })
+              : null
+
+            const sentenceText = sentenceObj?.sentence_body || sentenceObj?.text || sentenceObj?.sentence || ''
+            if (sentenceText) {
+              resolvedEntries.push([`${textId}:${sentenceId}`, sentenceText])
+            }
+          })
+
+          return resolvedEntries
+        } catch (error) {
+          console.warn(`⚠️ [VocabDetailCard] Failed to hydrate example sentences for article ${textId}:`, error)
+          return []
+        }
+      }),
+    ).then((resultSets) => {
+      if (cancelled) return
+      const nextEntries = Object.fromEntries(resultSets.flat())
+      if (Object.keys(nextEntries).length === 0) return
+      setExampleSentenceMap((prev) => ({ ...prev, ...nextEntries }))
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [vocabWithDetails?.examples, exampleSentenceMap])
+
   const vocabBody = vocabWithDetails?.vocab_body || ''
   // 提取释义 / 搭配 / 语法说明文本（如果能拆分则拆分，否则释义包含全部）
-  const { definitionText, rareSenseText, collocationsText, grammarText } = extractSections(vocabWithDetails?.explanation || '')
+  const { definitionText, wordFeaturesText, rareSenseText, collocationsText, grammarText } = extractSections(vocabWithDetails?.explanation || '')
   const explanation = normalizeExplanationLayout(parseExplanation(vocabWithDetails?.explanation || ''))
   
   // 🔧 朗读功能
@@ -621,6 +703,16 @@ const VocabDetailCard = ({
     return [base]
   }, [definitionText, explanation])
 
+  const wordFeaturePoints = useMemo(() => {
+    if (!wordFeaturesText) return []
+    return normalizeExplanationLayout(wordFeaturesText)
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => line.trim())
+      .map(line => line.replace(/^[-*•]\s*/, ''))
+      .filter(Boolean)
+  }, [wordFeaturesText])
+
   const collocationPoints = useMemo(() => {
     if (!collocationsText) return []
     return normalizeExplanationLayout(collocationsText)
@@ -658,19 +750,26 @@ const VocabDetailCard = ({
       return []
     }
     return vocabWithDetails.examples
-      .filter(ex => ex.original_sentence)
+      .map(ex => {
+        const textId = ex.text_id || ex.article_id || null
+        const sentenceId = ex.sentence_id || null
+        const sentenceKey = textId && sentenceId ? `${textId}:${sentenceId}` : null
+        const sentence = pickExampleSentenceText(ex) || (sentenceKey ? exampleSentenceMap[sentenceKey] : '')
+        return { ...ex, __resolvedSentence: sentence }
+      })
+      .filter(ex => ex.__resolvedSentence)
       .map(ex => {
         const textId = ex.text_id || ex.article_id || null
         const title = articleTitles[textId] || ex.text_title || ex.source || null
         return {
-          sentence: ex.original_sentence,
+          sentence: ex.__resolvedSentence,
           explanation: ex.context_explanation || ex.explanation_context || ex.explanation || null,
           source: title,
           text_id: textId,
           sentence_id: ex.sentence_id || null,
         }
       })
-  }, [vocabWithDetails, articleTitles])
+  }, [vocabWithDetails, articleTitles, exampleSentenceMap])
 
   // 提取词性
   const partOfSpeech = vocabWithDetails?.part_of_speech || vocabWithDetails?.pos || ''
@@ -824,7 +923,7 @@ const VocabDetailCard = ({
           </div>
 
         {/* 释义 + 搭配 + 语法说明 合并为单卡片，使用 Primary-50 背景 */}
-        {(definitions.length > 0 || rareSensePoints.length > 0 || collocationPoints.length > 0 || grammarPoints.length > 0) && (
+        {(definitions.length > 0 || wordFeaturePoints.length > 0 || rareSensePoints.length > 0 || collocationPoints.length > 0 || grammarPoints.length > 0) && (
           <section>
             <div
               className="p-4 rounded-lg border space-y-4"
@@ -833,6 +932,27 @@ const VocabDetailCard = ({
                 borderColor: colors.primary[100],
               }}
             >
+              {wordFeaturePoints.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
+                    {t('词汇特征')}
+                  </h2>
+                  <ul className="space-y-2">
+                    {wordFeaturePoints.map((point, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
+                        <span
+                          className="leading-relaxed whitespace-pre-wrap flex-1"
+                          style={{ color: colors.semantic.text.primary }}
+                        >
+                          {renderInlineMarkdown(point)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {definitions.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
@@ -966,7 +1086,7 @@ const VocabDetailCard = ({
                         type="button"
                         onClick={() => {
                           if (example.text_id) {
-                            const url = `${window.location.origin}${window.location.pathname}?page=article&articleId=${example.text_id}${example.sentence_id ? `&sentenceId=${example.sentence_id}` : ''}`
+                            const url = `${window.location.origin}${window.location.pathname}?page=article&articleId=${example.text_id}${example.sentence_id ? `&sentenceId=${example.sentence_id}` : ''}${selectedLanguage ? `&lang=${encodeURIComponent(selectedLanguage)}` : ''}`
                             window.open(url, '_blank')
                           }
                         }}

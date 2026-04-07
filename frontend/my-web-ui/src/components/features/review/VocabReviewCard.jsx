@@ -73,6 +73,144 @@ const parseExplanation = (text) => {
   return cleanText
 }
 
+const renderInlineMarkdown = (text) => {
+  const content = String(text || '')
+  if (!content) return null
+
+  const parts = content.split(/(\*\*[^*]+\*\*)/g)
+  return parts.filter(Boolean).map((part, index) => {
+    const boldMatch = part.match(/^\*\*([^*]+)\*\*$/)
+    if (boldMatch) {
+      return <strong key={index}>{boldMatch[1]}</strong>
+    }
+    return <span key={index}>{part}</span>
+  })
+}
+
+const normalizeExplanationLayout = (rawText = '') => {
+  if (!rawText) return ''
+
+  const text = String(rawText)
+    .replace(/\r\n/g, '\n')
+    .replace(/\u00a0/g, ' ')
+
+  const normalizedLines = text.split('\n').map((line) => {
+    const trimmed = line.trim()
+    if (!trimmed) return ''
+
+    return line
+      .replace(/^[ \t]{2,}/, '')
+      .replace(/^\((?:if applicable)\)\s*word features\s*:/i, 'Word features:')
+      .replace(/^\((?:if applicable)\)\s*collocations\s*:/i, 'Collocations:')
+      .replace(/^\((?:if applicable)\)\s*grammar notes?\s*:/i, 'Grammar notes:')
+      .replace(/^\((?:if applicable)\)\s*rare sense\s*:/i, 'Rare sense:')
+      .replace(/^（如适用）\s*词汇特征\s*：?/, '词汇特征：')
+      .replace(/^（如适用）\s*词法特征\s*：?/, '词汇特征：')
+      .replace(/^（如适用）\s*词形特征\s*：?/, '词汇特征：')
+      .replace(/^（如适用）\s*搭配\s*：?/, '搭配：')
+      .replace(/^（如适用）\s*语法说明\s*：?/, '语法说明：')
+      .replace(/^（如有）\s*少见义\s*：?/, '少见义：')
+      .replace(/^word features\s*:/i, 'Word features:')
+      .replace(/^lexical features\s*:/i, 'Word features:')
+      .replace(/^morpholog(?:y|ical features?)\s*:/i, 'Word features:')
+      .replace(/^词法特征\s*：?/, '词汇特征：')
+      .replace(/^词形特征\s*：?/, '词汇特征：')
+      .replace(/^grammar note\s*:/i, 'Grammar notes:')
+      .replace(/^grammar notes\s*:/i, 'Grammar notes:')
+      .replace(/^collocations?\s*:/i, 'Collocations:')
+      .replace(/^rare sense\s*:/i, 'Rare sense:')
+      .replace(/^[ \t]+(-\s+)/, '$1')
+  })
+
+  return normalizedLines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+const normalizeHeadingKey = (line) => String(line || '')
+  .trim()
+  .replace(/^\*\*/, '')
+  .replace(/\*\*$/, '')
+  .replace(/[:：]\s*$/, '')
+  .trim()
+  .toLowerCase()
+
+const PART_OF_SPEECH_HEADINGS = new Set([
+  'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction',
+  'interjection', 'article', 'determiner', 'numeral', 'particle',
+  '名词', '动词', '形容词', '副词', '代词', '介词', '连词', '感叹词', '冠词', '限定词', '数词', '助词',
+])
+
+const SECTION_HEADINGS = new Set([
+  'definition', 'definitions', '释义', '定义',
+  'word features', 'lexical features', 'morphology', 'morphological features', '词汇特征', '词法特征', '词形特征',
+  'collocations', 'collocation', '搭配',
+  'rare sense', 'rare senses', '少见义',
+  'grammar notes', 'grammar note', 'grammar explanation', '语法说明',
+])
+
+const isDisplayHeading = (line) => {
+  const key = normalizeHeadingKey(line)
+  return PART_OF_SPEECH_HEADINGS.has(key) || SECTION_HEADINGS.has(key)
+}
+
+const renderStructuredExplanation = (rawText) => {
+  const text = normalizeExplanationLayout(parseExplanation(rawText))
+  if (!text) return null
+
+  return text.split('\n').map((line, index) => {
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      return <div key={`space-${index}`} className="h-2" />
+    }
+
+    if (isDisplayHeading(trimmed)) {
+      return (
+        <div
+          key={`heading-${index}`}
+          className="font-semibold pt-1"
+          style={{ color: colors.semantic.text.secondary }}
+        >
+          {renderInlineMarkdown(trimmed)}
+        </div>
+      )
+    }
+
+    const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)$/)
+    if (orderedMatch) {
+      return (
+        <div key={`ordered-${index}`} className="flex items-start gap-2">
+          <span
+            className="font-medium min-w-[24px]"
+            style={{ color: colors.semantic.text.secondary }}
+          >
+            {orderedMatch[1]}.
+          </span>
+          <span className="flex-1">{renderInlineMarkdown(orderedMatch[2])}</span>
+        </div>
+      )
+    }
+
+    const bulletMatch = trimmed.match(/^[-*•]\s+(.*)$/)
+    if (bulletMatch) {
+      return (
+        <div key={`bullet-${index}`} className="flex items-start gap-2 pl-2">
+          <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
+          <span className="flex-1">{renderInlineMarkdown(bulletMatch[1])}</span>
+        </div>
+      )
+    }
+
+    return (
+      <div key={`text-${index}`}>
+        {renderInlineMarkdown(trimmed)}
+      </div>
+    )
+  })
+}
+
 const VocabReviewCard = ({
   // Vocab data
   vocab,
@@ -91,6 +229,7 @@ const VocabReviewCard = ({
   const [showDefinitions, setShowDefinitions] = useState(false)
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const [vocabWithExamples, setVocabWithExamples] = useState(vocab)
+  const [exampleSentenceMap, setExampleSentenceMap] = useState({})
   const latestVocabIdRef = useRef(vocab?.vocab_id)
 
   // 🔧 加载完整的 vocab 详情（包含带 original_sentence 的 examples）
@@ -133,6 +272,70 @@ const VocabReviewCard = ({
       })
   }, [vocab])
 
+  useEffect(() => {
+    const currentVocab = vocabWithExamples || vocab
+    const examples = currentVocab?.examples || []
+    if (!Array.isArray(examples) || examples.length === 0) return
+
+    const missingByText = new Map()
+    examples.forEach((ex) => {
+      const existingSentence = pickExampleSentenceText(ex)
+      const textId = ex?.text_id || ex?.article_id || null
+      const sentenceId = ex?.sentence_id || null
+      const key = textId && sentenceId ? `${textId}:${sentenceId}` : null
+
+      if (!existingSentence && textId && sentenceId && key && !exampleSentenceMap[key]) {
+        if (!missingByText.has(textId)) {
+          missingByText.set(textId, new Set())
+        }
+        missingByText.get(textId).add(sentenceId)
+      }
+    })
+
+    if (missingByText.size === 0) return
+
+    let cancelled = false
+
+    Promise.all(
+      Array.from(missingByText.entries()).map(async ([textId, sentenceIds]) => {
+        try {
+          const response = await apiService.getArticleById(textId)
+          const articleData = response?.data?.data || response?.data || response
+          const sentences = articleData?.sentences || articleData?.sentence_list || []
+          const resolvedEntries = []
+
+          sentenceIds.forEach((sentenceId) => {
+            const sentenceObj = Array.isArray(sentences)
+              ? sentences.find((item) => {
+                  const currentSentenceId = item?.sentence_id ?? item?.id ?? null
+                  return Number(currentSentenceId) === Number(sentenceId)
+                })
+              : null
+
+            const sentenceText = sentenceObj?.sentence_body || sentenceObj?.text || sentenceObj?.sentence || ''
+            if (sentenceText) {
+              resolvedEntries.push([`${textId}:${sentenceId}`, sentenceText])
+            }
+          })
+
+          return resolvedEntries
+        } catch (error) {
+          console.warn(`⚠️ [VocabReviewCard] Failed to hydrate example sentences for article ${textId}:`, error)
+          return []
+        }
+      }),
+    ).then((resultSets) => {
+      if (cancelled) return
+      const nextEntries = Object.fromEntries(resultSets.flat())
+      if (Object.keys(nextEntries).length === 0) return
+      setExampleSentenceMap((prev) => ({ ...prev, ...nextEntries }))
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [vocabWithExamples, vocab, exampleSentenceMap])
+
   // 提取例句和例句解释
   const exampleData = useMemo(() => {
     const currentVocab = vocabWithExamples || vocab
@@ -143,7 +346,10 @@ const VocabReviewCard = ({
       .map((ex) => {
         const explanationRaw =
           ex.context_explanation || ex.explanation_context || ex.explanation || null
-        let sentence = pickExampleSentenceText(ex)
+        const textId = ex.text_id || ex.article_id || null
+        const sentenceId = ex.sentence_id || null
+        const sentenceKey = textId && sentenceId ? `${textId}:${sentenceId}` : null
+        let sentence = pickExampleSentenceText(ex) || (sentenceKey ? exampleSentenceMap[sentenceKey] : '')
         let explanation = explanationRaw
 
         if (!sentence && explanationRaw && String(explanationRaw).trim()) {
@@ -160,7 +366,7 @@ const VocabReviewCard = ({
         return { sentence, explanation }
       })
       .filter((ex) => ex.sentence)
-  }, [vocabWithExamples, vocab])
+  }, [vocabWithExamples, vocab, exampleSentenceMap])
   
   const exampleSentences = exampleData.map(ex => ex.sentence)
 
@@ -170,7 +376,7 @@ const VocabReviewCard = ({
   // 获取解释文本
   const explanation = useMemo(() => {
     const currentVocab = vocabWithExamples || vocab
-    return parseExplanation(currentVocab?.explanation || '暂无定义')
+    return currentVocab?.explanation || '暂无定义'
   }, [vocabWithExamples, vocab])
   
   // 🔧 朗读功能
@@ -714,8 +920,8 @@ const VocabReviewCard = ({
           {/* Definitions Section */}
           {showDefinitions && (
             <div className="pt-4 border-t border-gray-200">
-              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                {explanation}
+              <div className="text-gray-800 leading-relaxed">
+                {renderStructuredExplanation(explanation)}
               </div>
             </div>
           )}

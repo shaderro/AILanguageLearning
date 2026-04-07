@@ -34,6 +34,7 @@ function SentenceContainer({
   onSentenceMouseEnter,
   onSentenceMouseLeave,
   onSentenceClick,
+  getSentenceBackgroundStyle = null,
   interactionClassName = '',
   isInteracting = false,
   currentReadingToken = null, // 当前正在朗读的 token {sentenceIndex, tokenIndex}
@@ -101,7 +102,9 @@ function SentenceContainer({
     onSentenceClick(sentenceIndex)
   }
 
-  const backgroundStyle = interactionClassName
+  const backgroundStyle = typeof getSentenceBackgroundStyle === 'function'
+    ? (getSentenceBackgroundStyle(sentenceIndex) || interactionClassName)
+    : interactionClassName
   const hoverStyle = backgroundStyle ? '' : 'hover:bg-gray-100 hover:rounded-md'
   
   // 🔧 获取 sentence_id 用于标识（优先使用数据中的 sentence_id，否则使用索引+1）

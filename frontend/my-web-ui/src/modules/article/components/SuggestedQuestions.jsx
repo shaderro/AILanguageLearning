@@ -19,9 +19,92 @@
  * - Data fetching dependencies
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { colors } from '../../../design-tokens'
 import { useTranslate } from '../../../i18n/useTranslate'
+import { useUiLanguage } from '../../../contexts/UiLanguageContext'
+
+const SelectionType = Object.freeze({
+  WORD: 'WORD',
+  PHRASE: 'PHRASE',
+  SENTENCE: 'SENTENCE',
+  LONG_SPAN: 'LONG_SPAN',
+})
+
+const WORD_PROMPTS = [
+  { zh: '这个词在这里是什么意思？', en: 'What does this word mean here?' },
+  { zh: '这部分在句子里起什么作用？', en: 'What role does this part play in the sentence?' },
+]
+
+const PHRASE_PROMPTS = [
+  { zh: '这部分在句子里起什么作用？', en: 'What role does this part play in the sentence?' },
+  { zh: '这部分在这里是什么意思？', en: 'What does this part mean here?' },
+]
+
+const SENTENCE_PROMPTS = [
+  { zh: '这句话是什么意思？', en: 'What does this sentence mean?' },
+  { zh: '你能拆解一下这句话吗？', en: 'Can you break down this sentence?' },
+]
+
+const LONG_SPAN_PROMPTS = [
+  { zh: '你能拆解一下这部分吗？', en: 'Can you break down this part?' },
+  { zh: '这部分的结构是什么？', en: 'What is the structure of this part?' },
+]
+
+const promptPoolByType = {
+  [SelectionType.WORD]: WORD_PROMPTS,
+  [SelectionType.PHRASE]: PHRASE_PROMPTS,
+  [SelectionType.SENTENCE]: SENTENCE_PROMPTS,
+  [SelectionType.LONG_SPAN]: LONG_SPAN_PROMPTS,
+}
+
+const hashString = (value = '') => {
+  let hash = 0
+  const text = String(value)
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+const diversify = (pool, seed = '') => {
+  const shuffled = [...pool]
+  if (shuffled.length <= 1) {
+    return shuffled
+  }
+
+  let currentSeed = hashString(seed || shuffled.map((item) => `${item.zh}|${item.en}`).join('||'))
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    currentSeed = (currentSeed * 1664525 + 1013904223) % 4294967296
+    const j = currentSeed % (i + 1)
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+
+  return shuffled
+}
+
+const detectSelectionType = (ctx) => {
+  if (ctx.hasSelectedSentence) {
+    return SelectionType.SENTENCE
+  }
+  if (ctx.tokenCount === 1) {
+    return SelectionType.WORD
+  }
+  if (ctx.tokenCount <= 8) {
+    return SelectionType.PHRASE
+  }
+  return SelectionType.LONG_SPAN
+}
+
+const getLocalizedPrompt = (prompt, uiLanguage) => (uiLanguage === 'en' ? prompt.en : prompt.zh)
+
+const getSuggestedQuestions = (ctx, uiLanguage) => {
+  const type = detectSelectionType(ctx)
+  const pool = promptPoolByType[type] || SENTENCE_PROMPTS
+  const promptSeed = `${type}|${ctx.selectedText}|${ctx.fullSentence}|${ctx.tokenCount}|${ctx.hasSelectedSentence}`
+
+  return diversify(pool, promptSeed).map((prompt) => getLocalizedPrompt(prompt, uiLanguage))
+}
 
 const SuggestedQuestions = ({ 
   quotedText, 
@@ -31,52 +114,27 @@ const SuggestedQuestions = ({
   onQuestionClick,
   tokenCount = 1,  // 新增：选中的token数量，默认为1
   hasSelectedSentence = false,  // 新增：是否选择了整句
+  fullSentence = '',
   disabled = false  // 🔧 新增：是否禁用（main assistant 正在处理时）
 }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null)
   const t = useTranslate()
+  const { uiLanguage } = useUiLanguage()
   
   // ⚠️ Language detection: Presentation-only, does NOT affect data fetching or component lifecycle
   // Using useTranslate() hook which uses UI language context (same as header)
 
-  // 单个token的建议问题
-  const singleTokenQuestions = [
-    t("这个词是什么意思？"),
-    t("这个词有什么词根词缀吗？")
-  ]
+  const context = useMemo(() => ({
+    selectedText: quotedText || '',
+    fullSentence: fullSentence || (hasSelectedSentence ? quotedText || '' : ''),
+    tokenCount,
+    hasSelectedSentence,
+  }), [quotedText, fullSentence, tokenCount, hasSelectedSentence])
 
-  // 多个token（短语）的建议问题
-  const multipleTokensQuestions = [
-    t("这些词是什么意思？"),
-    t("这部分的语法结构是什么？")
-  ]
-
-  // 整句话的建议问题
-  const sentenceQuestions = [
-    t("这句话是什么意思？"),
-    t("这句话的语法结构是什么？")
-  ]
-
-  // 根据选择类型和token数量选择对应的问题列表
-  const getSuggestedQuestions = () => {
-    // 如果选择了整句，优先使用句子问题
-    if (hasSelectedSentence) {
-      return sentenceQuestions
-    }
-    
-    // 否则根据token数量选择
-    if (tokenCount === 1) {
-      return singleTokenQuestions
-    } else if (tokenCount > 1 && tokenCount < 10) {
-      // 假设小于10个token为短语
-      return multipleTokensQuestions
-    } else {
-      // 10个及以上token
-      return sentenceQuestions
-    }
-  }
-
-  const suggestedQuestions = getSuggestedQuestions()
+  const suggestedQuestions = useMemo(
+    () => getSuggestedQuestions(context, uiLanguage),
+    [context, uiLanguage],
+  )
 
   // 当组件显示时，重置选中状态
   useEffect(() => {
