@@ -24,27 +24,62 @@ const OnboardingReadingIntro = ({ onStartReading, onUploadOwn }) => {
     return []
   }, [data])
 
-  // 只展示前 3 篇，作为推荐阅读入口
+  const difficultyConfig = useMemo(
+    () => ({
+      beginner: {
+        rank: 0,
+        label: t('beginner'),
+        className: 'bg-green-50 text-green-700 border-green-200',
+      },
+      intermediate: {
+        rank: 1,
+        label: t('intermediate'),
+        className: 'bg-amber-50 text-amber-700 border-amber-200',
+      },
+      advanced: {
+        rank: 2,
+        label: t('advanced'),
+        className: 'bg-rose-50 text-rose-700 border-rose-200',
+      },
+    }),
+    [t],
+  )
+
+  // 预置文章按难度从简单到难排序，仅展示前 3 篇
   const presets = useMemo(
     () =>
-      articles.slice(0, 3).map((a) => {
-        const id = a.text_id || a.article_id || a.id
-        const title = a.text_title || a.title || `Article ${id}`
-        const preview =
-          a.preview_text ||
-          a.preview ||
-          a.summary ||
-          a.description ||
-          a.snippet ||
-          a.first_sentence ||
-          ''
-        return {
-          id,
-          title,
-          preview,
-        }
-      }),
-    [articles],
+      [...articles]
+        .map((a, index) => {
+          const id = a.text_id || a.article_id || a.id
+          const title = a.text_title || a.title || `Article ${id}`
+          const preview =
+            a.preview_text ||
+            a.preview ||
+            a.summary ||
+            a.description ||
+            a.snippet ||
+            a.first_sentence ||
+            ''
+          const normalizedDifficulty = String(a.difficulty || a.difficulty_level || '').trim().toLowerCase()
+          const difficultyBadge = difficultyConfig[normalizedDifficulty] || null
+
+          return {
+            id,
+            title,
+            preview,
+            difficultyBadge,
+            difficultyRank: difficultyBadge?.rank ?? Number.MAX_SAFE_INTEGER,
+            originalIndex: index,
+          }
+        })
+        .sort((a, b) => {
+          if (a.difficultyRank !== b.difficultyRank) {
+            return a.difficultyRank - b.difficultyRank
+          }
+          return a.originalIndex - b.originalIndex
+        })
+        .slice(0, 3),
+    [articles, difficultyConfig],
   )
 
   const handlePresetClick = (articleId) => {
@@ -90,6 +125,11 @@ const OnboardingReadingIntro = ({ onStartReading, onUploadOwn }) => {
                   <h2 className="text-base sm:text-lg font-semibold text-gray-900">
                     {article.title}
                   </h2>
+                  {article.difficultyBadge && (
+                    <BaseBadge className={article.difficultyBadge.className}>
+                      {article.difficultyBadge.label}
+                    </BaseBadge>
+                  )}
                   {article.preview && (
                     <p className="text-sm text-gray-500 line-clamp-2">
                       {article.preview}

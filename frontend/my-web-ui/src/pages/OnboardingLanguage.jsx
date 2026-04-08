@@ -21,56 +21,47 @@ const languageOptions = [
   {
     code: 'zh',
     countryCode: 'CN',
-    name: '中文',
-    nameEn: 'Chinese',
+    nativeName: '中文',
   },
   {
     code: 'en',
     countryCode: 'GB',
-    name: 'English',
-    nameEn: 'English',
+    nativeName: 'English',
   },
   {
     code: 'es',
     countryCode: 'ES',
-    name: '西班牙语',
-    nameEn: 'Spanish',
+    nativeName: 'Español',
   },
   {
     code: 'fr',
     countryCode: 'FR',
-    name: '法语',
-    nameEn: 'French',
+    nativeName: 'Français',
   },
   {
     code: 'ja',
     countryCode: 'JP',
-    name: '日语',
-    nameEn: 'Japanese',
+    nativeName: '日本語',
   },
   {
     code: 'ko',
     countryCode: 'KR',
-    name: '韩语',
-    nameEn: 'Korean',
+    nativeName: '한국어',
   },
   {
     code: 'de',
     countryCode: 'DE',
-    name: 'Deutsch',
-    nameEn: 'German',
+    nativeName: 'Deutsch',
   },
   {
     code: 'ar',
     countryCode: 'AE',
-    name: '阿拉伯语',
-    nameEn: 'Arabic',
+    nativeName: 'العربية',
   },
   {
     code: 'ru',
     countryCode: 'RU',
-    name: '俄语',
-    nameEn: 'Russian',
+    nativeName: 'Русский',
   },
 ]
 
@@ -139,6 +130,7 @@ const OnboardingLanguage = ({ onContinue }) => {
           <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
             {languageOptions.map((option) => {
               const isActive = selectedCode === option.code
+              const displayName = t(LANGUAGE_CODE_TO_NAME[option.code] || option.nativeName)
               return (
                 <button
                   key={option.code}
@@ -161,10 +153,10 @@ const OnboardingLanguage = ({ onContinue }) => {
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="text-base sm:text-lg font-semibold text-gray-900">
-                        {option.name}
+                        {displayName}
                       </span>
                       <span className="text-xs sm:text-sm text-gray-500">
-                        {option.nameEn}
+                        {option.nativeName}
                       </span>
                     </div>
                   </div>

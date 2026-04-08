@@ -652,7 +652,6 @@ const LandingPage = ({
   const vocabCount = vocabList.length
   const grammarCount = grammarList.length
   const noReviewData = vocabCount === 0 && grammarCount === 0
-  const hideContent = !hasArticles || noReviewData
 
   const recentArticles = enrichedArticles.slice(0, 3)
 
@@ -664,75 +663,75 @@ const LandingPage = ({
           <p className="text-gray-600">{t('继续你的语言学习旅程')}</p>
         </div>
 
-        {!hideContent && (
+        <>
+          {hasArticles && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">{t('最近文章')}</h2>
+                  <p className="text-sm text-gray-500">
+                    {t('共显示 {count} 篇文章').replace('{count}', String(articles.length))}
+                  </p>
+                </div>
+                {onNavigateToArticles && (
+                  <button
+                    type="button"
+                    onClick={onNavigateToArticles}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    {t('查看全部')} →
+                  </button>
+                )}
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                {recentArticles.map((article) => (
+                  <ArticlePreviewCardLanding
+                    key={article.id}
+                    title={article.title}
+                    wordCount={article.wordCount}
+                    noteCount={article.noteCount}
+                    difficulty={article.difficulty}
+                    preview={article.preview}
+                    processingStatus="completed"
+                    onRead={() => onArticleSelect?.(article.id)}
+                    width="100%"
+                    height="auto"
+                    className="h-full"
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {!noReviewData && (
           <>
-            {hasArticles && (
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-gray-900">{t('最近文章')}</h2>
-                    <p className="text-sm text-gray-500">
-                      {t('共显示 {count} 篇文章').replace('{count}', String(articles.length))}
-                    </p>
-                  </div>
-                  {onNavigateToArticles && (
-                    <button
-                      type="button"
-                      onClick={onNavigateToArticles}
-                      className="text-sm font-medium text-primary-600 hover:text-primary-700"
-                    >
-                      {t('查看全部')} →
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-3">
-                  {recentArticles.map((article) => (
-                    <ArticlePreviewCardLanding
-                      key={article.id}
-                      title={article.title}
-                      wordCount={article.wordCount}
-                      noteCount={article.noteCount}
-                      difficulty={article.difficulty}
-                      preview={article.preview}
-                      processingStatus="completed"
-                      onRead={() => onArticleSelect?.(article.id)}
-                      width="100%"
-                      height="auto"
-                      className="h-full"
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {!noReviewData && (
-              <section className="space-y-4">
-                <h2 className="text-2xl font-semibold text-gray-900">{t('快速复习')}</h2>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {vocabCount > 0 && (
-                    <QuickReviewCard
-                      title={t('词汇复习')}
-                      count={vocabCount}
-                      description={t('复习你保存的词汇')}
-                      buttonLabel={t('开始复习')}
-                      onAction={onStartVocabReview}
-                    />
-                  )}
-                  {grammarCount > 0 && (
-                    <QuickReviewCard
-                      title={t('语法复习')}
-                      count={grammarCount}
-                      description={t('练习你掌握的语法')}
-                      buttonLabel={t('开始复习')}
-                      onAction={onStartGrammarReview}
-                    />
-                  )}
-                </div>
-              </section>
-            )}
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-900">{t('快速复习')}</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {vocabCount > 0 && (
+                  <QuickReviewCard
+                    title={t('词汇复习')}
+                    count={vocabCount}
+                    description={t('复习你保存的词汇')}
+                    buttonLabel={t('开始复习')}
+                    onAction={onStartVocabReview}
+                  />
+                )}
+                {grammarCount > 0 && (
+                  <QuickReviewCard
+                    title={t('语法复习')}
+                    count={grammarCount}
+                    description={t('练习你掌握的语法')}
+                    buttonLabel={t('开始复习')}
+                    onAction={onStartGrammarReview}
+                  />
+                )}
+              </div>
+            </section>
           </>
-        )}
+          )}
+        </>
       </div>
     </div>
   )

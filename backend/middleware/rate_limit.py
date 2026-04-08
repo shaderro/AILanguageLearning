@@ -20,9 +20,9 @@ _MAX_HISTORY_SIZE = 50  # 每个用户最多记录50条请求历史
 
 # Rate limit 配置
 RATE_LIMIT_CONFIG = {
-    # AI 接口：每个用户每分钟最多 20 次
+    # AI 接口：每个用户每分钟最多 10 次
     "/api/chat": {
-        "max_requests": 20,
+        "max_requests": 10,
         "window_seconds": 60,  # 1 分钟
     },
     # 默认配置：每个用户每分钟最多 300 次（普通接口，不需要太严格）
@@ -168,8 +168,8 @@ async def rate_limit_middleware(request: Request, call_next):
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail={
-                    "error": "Rate limit exceeded",
-                    "message": f"请求过于频繁，请 {reset_in} 秒后再试",
+                    "error": "rate_limit_exceeded",
+                    "message": "提问过快，请过一分钟后再试",
                     "retry_after": reset_in
                 },
                 headers={

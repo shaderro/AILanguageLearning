@@ -125,6 +125,7 @@
   "截取失败：内容长度仍然超过限制": "Trim failed: content still too long",
   "所有用户列表": "All users",
   "搜索": "Search",
+  "搜索...": "Search...",
   "文章ID: 1": "Article ID: 1",
   "文章已成功处理，正在跳转到阅读页面...": "Article processed, redirecting...",
   "文章长度为": "Article length:",
@@ -150,6 +151,7 @@
   "正确率": "Accuracy",
   "没有找到语法规则": "No grammar rules found",
   "注册": "Register",
+  "注册中...": "Registering...",
   "注册成功！": "Registration succeeded!",
   "测试交互优先级": "Test interaction priority",
   "测试说明": "Test instructions",
@@ -200,7 +202,9 @@
   "认识": "Know it",
   "设置": "Settings",
   "词汇": "Vocabulary",
+  "单词": "Words",
   "词汇列表": "Vocabulary list",
+  "Insights": "Insights",
   "词汇注释 (vocab-notation)": "Vocabulary annotation",
   "词汇解释": "Vocabulary explanation",
   "该句子暂无语法注释": "No grammar note for this sentence",
@@ -435,5 +439,10 @@
   "The man who lives next door...": "The man who lives next door...",
   "The book that I bought...": "The book that I bought...",
   "The car which was parked...": "The car which was parked...",
-  "The city where I grew up...": "The city where I grew up..."
+  "The city where I grew up...": "The city where I grew up...",
+  "请先登录后使用 AI 聊天": "Please sign in to use AI chat",
+  "问题不能超过 300 个字符": "Questions must be 300 characters or fewer",
+  "选中文本不能超过 500 个字符": "Selected text must be 500 characters or fewer",
+  "提问过快，请过一分钟后再试": "You're asking too quickly. Please try again in one minute.",
+  "已达到文章数量上限：每位用户最多 50 篇文章（所有语言合计）": "Article limit reached: each user can upload up to 50 articles total across all languages."
 }

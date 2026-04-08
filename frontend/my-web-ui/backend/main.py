@@ -7,6 +7,7 @@ import json
 import requests
 import uuid
 from datetime import datetime, timedelta
+from threading import Lock
 
 # 首先设置路径
 import os
@@ -93,6 +94,96 @@ except ImportError:
 
 # 文章长度限制（字符数）
 MAX_ARTICLE_LENGTH = 12000
+MAX_ARTICLES_PER_USER = 50
+MAX_CHAT_QUESTION_LENGTH = 300
+MAX_CHAT_SELECTION_LENGTH = 500
+MAX_CHAT_KNOWLEDGE_ITEMS = 3
+# 开放内测保护阈值：1 小时 30k tokens 足够正常试用，同时能拦住异常高频/超长请求。
+MAX_CHAT_TOKENS_PER_HOUR = 30000
+
+_active_chat_users = set()
+_active_chat_users_lock = Lock()
+
+
+def _chat_error_response(status_code: int, error: str, message: str, **extra):
+    detail = {"error": error, "message": message}
+    if extra:
+        detail.update(extra)
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "success": False,
+            "error": message,
+            "detail": detail,
+        }
+    )
+
+
+def _check_user_article_limit(user_id: int):
+    from database_system.business_logic.models import OriginalText
+
+    db_manager = get_database_manager(ENV)
+    session = db_manager.get_session()
+    try:
+        current_count = (
+            session.query(OriginalText)
+            .filter(
+                OriginalText.user_id == user_id,
+                OriginalText.processing_status.in_(["processing", "completed"]),
+            )
+            .count()
+        )
+        if current_count >= MAX_ARTICLES_PER_USER:
+            return create_error_response(
+                f"已达到文章数量上限：每位用户最多 {MAX_ARTICLES_PER_USER} 篇文章（所有语言合计）",
+                data={
+                    "error_code": "ARTICLE_LIMIT_EXCEEDED",
+                    "max_articles": MAX_ARTICLES_PER_USER,
+                    "current_count": current_count,
+                }
+            )
+        return None
+    finally:
+        session.close()
+
+
+def _acquire_chat_slot(user_id: int) -> bool:
+    with _active_chat_users_lock:
+        if user_id in _active_chat_users:
+            return False
+        _active_chat_users.add(user_id)
+        return True
+
+
+def _release_chat_slot(user_id: Optional[int]):
+    if user_id is None:
+        return
+    with _active_chat_users_lock:
+        _active_chat_users.discard(user_id)
+
+
+def _get_user_hourly_token_usage(session, user_id: int, window_minutes: int = 60) -> int:
+    from sqlalchemy import func
+    from database_system.business_logic.models import TokenLog
+
+    window_start = datetime.utcnow() - timedelta(minutes=window_minutes)
+    total_tokens = (
+        session.query(func.sum(TokenLog.total_tokens))
+        .filter(
+            TokenLog.user_id == user_id,
+            TokenLog.created_at >= window_start,
+        )
+        .scalar()
+    )
+    return int(total_tokens or 0)
+
+
+def _limit_knowledge_lists(grammar_items: list, vocab_items: list, max_items: int = MAX_CHAT_KNOWLEDGE_ITEMS):
+    merged_items = [("grammar", item) for item in grammar_items] + [("vocab", item) for item in vocab_items]
+    limited_items = merged_items[:max_items]
+    limited_grammar = [item for item_type, item in limited_items if item_type == "grammar"]
+    limited_vocab = [item for item_type, item in limited_items if item_type == "vocab"]
+    return limited_grammar, limited_vocab
 
 # 导入新的标注API路由
 try:
@@ -1362,26 +1453,30 @@ async def chat_with_assistant(
 ):
     """聊天功能（完整 MainAssistant 集成）"""
     import traceback
+    user_id = None
+    chat_slot_acquired = False
+    release_chat_slot_in_endpoint = True
     try:
         import time
         request_id = int(time.time() * 1000) % 10000
         # 🔧 记录本轮请求的开始时间（用于后续汇总 token 使用）
         request_start_time = datetime.utcnow()
         
-        # 🔧 支持可选认证：如果有 token 则使用认证用户，否则使用默认用户
-        user_id = 2  # 默认用户 ID
-        if authorization and authorization.startswith("Bearer "):
-            try:
-                token = authorization.replace("Bearer ", "")
-                from backend.utils.auth import decode_access_token
-                payload_data = decode_access_token(token)
-                if payload_data and "sub" in payload_data:
-                    user_id = int(payload_data["sub"])
-                    print(f"✅ [Chat #{request_id}] 使用认证用户: {user_id}")
-            except Exception as e:
-                print(f"⚠️ [Chat #{request_id}] Token 解析失败，使用默认用户: {e}")
-        else:
-            print(f"ℹ️ [Chat #{request_id}] 未提供认证 token，使用默认用户: {user_id}")
+        # 开放内测：未登录用户禁止使用 AI Chat
+        if not authorization or not authorization.startswith("Bearer "):
+            return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
+
+        try:
+            token = authorization.replace("Bearer ", "")
+            from backend.utils.auth import decode_access_token
+            payload_data = decode_access_token(token)
+            if not payload_data or "sub" not in payload_data:
+                return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
+            user_id = int(payload_data["sub"])
+            print(f"✅ [Chat #{request_id}] 使用认证用户: {user_id}")
+        except Exception as e:
+            print(f"⚠️ [Chat #{request_id}] Token 解析失败: {e}")
+            return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
         
         # 🔧 从 payload 获取 UI 语言（用于控制 AI 输出语言）
         raw_ui_language = payload.get('ui_language', '中文')
@@ -1427,7 +1522,15 @@ async def chat_with_assistant(
                     'success': False,
                     'error': 'No user question provided'
                 }
-            session_state.set_current_input(current_input)
+        current_input = str(current_input or '').strip()
+        if len(current_input) > MAX_CHAT_QUESTION_LENGTH:
+            return _chat_error_response(
+                400,
+                "question_too_long",
+                f"问题不能超过 {MAX_CHAT_QUESTION_LENGTH} 个字符",
+                max_length=MAX_CHAT_QUESTION_LENGTH,
+            )
+        session_state.set_current_input(current_input)
         
         # 准备 selected_text
         selected_text = None
@@ -1438,6 +1541,15 @@ async def chat_with_assistant(
                 selected_text = None
             else:
                 selected_text = current_selected_token.token_text
+
+        selected_text_for_limit = (selected_text or current_sentence.sentence_body or '').strip()
+        if len(selected_text_for_limit) > MAX_CHAT_SELECTION_LENGTH:
+            return _chat_error_response(
+                400,
+                "selection_too_long",
+                f"选中文本不能超过 {MAX_CHAT_SELECTION_LENGTH} 个字符",
+                max_length=MAX_CHAT_SELECTION_LENGTH,
+            )
         
         # 为本次请求创建一个独立的 SessionState 副本，避免并发请求互相干扰
         from backend.assistants.chat_info.session_state import SessionState as _SessionState
@@ -1469,14 +1581,26 @@ async def chat_with_assistant(
                 # 非admin用户且token不足1000（积分不足0.1）
                 if user.role != 'admin' and (user.token_balance is None or user.token_balance < 1000):
                     db_session.close()
-                    return {
-                        'success': False,
-                        'error': '积分不足',
-                        'ai_response': None
-                    }
+                    return _chat_error_response(403, "insufficient_tokens", "积分不足")
+                if user.role != 'admin':
+                    hourly_token_usage = _get_user_hourly_token_usage(db_session, user_id)
+                    if hourly_token_usage >= MAX_CHAT_TOKENS_PER_HOUR:
+                        db_session.close()
+                        return _chat_error_response(
+                            429,
+                            "token_budget_exceeded",
+                            "当前 1 小时 AI 使用量已达上限，请稍后再试",
+                            limit=MAX_CHAT_TOKENS_PER_HOUR,
+                            window_minutes=60,
+                        )
         except Exception as e:
             print(f"⚠️ [Chat #{request_id}] 检查token不足时出错: {e}")
             # 如果检查失败，继续执行（避免影响正常流程）
+
+        if not _acquire_chat_slot(user_id):
+            db_session.close()
+            return _chat_error_response(409, "chat_already_in_progress", "当前有一条提问正在处理中，请稍候再试")
+        chat_slot_acquired = True
         
         # 创建 MainAssistant 实例（绑定本轮独立的 session_state）
         from backend.assistants.main_assistant import MainAssistant
@@ -1683,6 +1807,11 @@ async def chat_with_assistant(
                 # 🔧 合并新知识点和已有知识点的列表
                 all_grammar_list = grammar_to_add_list + existing_grammar_list
                 all_vocab_list = vocab_to_add_list + existing_vocab_list
+                all_grammar_list, all_vocab_list = _limit_knowledge_lists(
+                    all_grammar_list,
+                    all_vocab_list,
+                    max_items=MAX_CHAT_KNOWLEDGE_ITEMS,
+                )
                 
                 print(f"🔍 [Background] ========== 知识点汇总 ==========")
                 print(f"🔍 [Background] 新语法知识点: {len(grammar_to_add_list)} 个")
@@ -1864,15 +1993,19 @@ async def chat_with_assistant(
                     bg_db_session.close()
                 except Exception as e:
                     print(f"⚠️ [Background] 关闭 session 时出错: {e}")
+                _release_chat_slot(user_id)
         
         # 启动后台任务
         background_tasks.add_task(_run_grammar_vocab_background)
+        release_chat_slot_in_endpoint = False
         
         # 🔧 立即返回主回答，不等待后续流程
         print(f"📋 [Chat] 立即返回主回答给前端（后续流程在后台执行）")
         
         return initial_response
     except Exception as e:
+        if chat_slot_acquired and release_chat_slot_in_endpoint:
+            _release_chat_slot(user_id)
         print(f"❌ [Chat] Error: {e}")
         print(traceback.format_exc())
         return {
@@ -2547,6 +2680,10 @@ async def upload_file(
         allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
         if not language or language not in allowed_languages:
             return create_error_response("语言参数无效，请选择正确的学习语言")
+
+        article_limit_error = _check_user_article_limit(user_id)
+        if article_limit_error:
+            return article_limit_error
         
         # 读取文件内容
         content = await file.read()
@@ -2677,6 +2814,10 @@ async def upload_url(
         allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
         if not language or language not in allowed_languages:
             return create_error_response("语言参数无效，请选择正确的学习语言")
+
+        article_limit_error = _check_user_article_limit(user_id)
+        if article_limit_error:
+            return article_limit_error
         
         # 🔧 使用 HTML 提取器从 URL 获取正文
         ensure_article_preprocess_loaded()
@@ -2875,6 +3016,10 @@ async def upload_text(
         allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
         if not language or language not in allowed_languages:
             return create_error_response("语言参数无效，请选择正确的学习语言")
+
+        article_limit_error = _check_user_article_limit(user_id)
+        if article_limit_error:
+            return article_limit_error
         
         if not text.strip():
             return create_error_response("文字内容不能为空")

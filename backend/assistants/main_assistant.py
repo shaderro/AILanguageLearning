@@ -37,6 +37,8 @@ from backend.preprocessing.language_classification import (
     is_non_whitespace_language
 )
 
+MAX_KNOWLEDGE_ITEMS_PER_CHAT = 3
+
 # 定义联合类型，支持新旧两种 Sentence 类型
 from typing import Union, Optional, Tuple
 SentenceType = Union[Sentence, NewSentence] if NEW_STRUCTURE_AVAILABLE else Sentence
@@ -1170,6 +1172,9 @@ class MainAssistant:
         
         # 将新语法添加到 grammar_to_add（只有查重通过的新语法才会到这里）
         if not DISABLE_GRAMMAR_FEATURES:
+            if len(new_grammar_summaries) > MAX_KNOWLEDGE_ITEMS_PER_CHAT:
+                print(f"⚠️ [MainAssistant] 新语法候选过多，仅保留前 {MAX_KNOWLEDGE_ITEMS_PER_CHAT} 个")
+                new_grammar_summaries = new_grammar_summaries[:MAX_KNOWLEDGE_ITEMS_PER_CHAT]
             for grammar in new_grammar_summaries:
                 if isinstance(grammar, GrammarSummary):
                     # 新格式：从 GrammarSummary 和临时存储中提取数据
@@ -1604,6 +1609,10 @@ class MainAssistant:
                 print(f"🔍 [DEBUG] 跳过非VocabSummary结果: {type(result)}")
         
         print("新单词列表：", new_vocab) 
+        remaining_vocab_slots = max(0, MAX_KNOWLEDGE_ITEMS_PER_CHAT - len(self.session_state.grammar_to_add))
+        if len(new_vocab) > remaining_vocab_slots:
+            print(f"⚠️ [MainAssistant] 新词汇候选过多，仅保留前 {remaining_vocab_slots} 个")
+            new_vocab = new_vocab[:remaining_vocab_slots]
         for vocab in new_vocab:
             print(f"🔍 [DEBUG] 添加新词汇到vocab_to_add: {vocab.vocab}")
             self.session_state.add_vocab_to_add(vocab=vocab.vocab)

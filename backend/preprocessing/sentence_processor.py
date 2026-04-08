@@ -314,6 +314,30 @@ def _post_merge(sentences: List[str]) -> List[str]:
 
 # ==================== 主流程 ====================
 
+def _split_by_newlines(
+    text: str,
+    splitter,
+) -> List[str]:
+    """
+    先按换行分块，再对每一块继续使用原有分句逻辑。
+
+    这样可以兼容歌词、诗歌等“每行一句”的文本，同时保留行内标点分句能力。
+    连续换行和单行换行都会被视为句边界；空行会被自动忽略。
+    """
+    if not text:
+        return []
+
+    normalized = text.replace('\r\n', '\n').replace('\r', '\n')
+    chunks = [chunk.strip() for chunk in normalized.split('\n')]
+    sentences: List[str] = []
+
+    for chunk in chunks:
+        if not chunk:
+            continue
+        sentences.extend(splitter(chunk))
+
+    return sentences
+
 def _split_chinese_sentences(text: str) -> List[str]:
     """
     按照中文标点符号（。！？，问号、感叹号、以及“……”省略号等）进行分句
@@ -416,7 +440,7 @@ def split_sentences(text: str, language_code: Optional[str] = None) -> List[str]
             language_code = "en"
     
     if language_code in ("zh", "ja"):
-        sentences = _split_chinese_sentences(text)
+        sentences = _split_by_newlines(text, _split_chinese_sentences)
         if language_code == "ja":
             _debug_print_ja_sentence_split(text, sentences)
         return sentences
@@ -424,7 +448,10 @@ def split_sentences(text: str, language_code: Optional[str] = None) -> List[str]
     # 空格语言（英文/德语等）使用统一实现
     # 注意：即使 language_code 为 None，也会使用英文分句逻辑（包含缩写保护）
     is_german = (language_code == "de")
-    return _split_whitespace_sentences(text, is_german=is_german)
+    return _split_by_newlines(
+        text,
+        lambda chunk: _split_whitespace_sentences(chunk, is_german=is_german),
+    )
 
 
 def _debug_print_ja_sentence_split(text: str, sentences: List[str]) -> None:

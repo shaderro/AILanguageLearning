@@ -36,6 +36,55 @@ import { useUIText } from '../../../i18n/useUIText'
 
 // 🔧 本地持久化
 const LS_KEY_CHAT_MESSAGES_ALL = 'chat_messages_all'
+const LEGACY_WELCOME_MESSAGE_ZH = '选择有疑问的句子或词汇，向我提问吧！'
+const LEGACY_WELCOME_MESSAGE_EN = 'Select a sentence or word you have questions about, and ask me!'
+const LEGACY_WELCOME_MESSAGE_ALT = '你好！我是聊天助手，有什么可以帮助你的吗？'
+const WELCOME_MESSAGE_EN = `👋 **Welcome! Let’s learn by doing**
+
+Start by **selecting any sentence** in the article — or even just a **word or phrase** you’re curious about.
+
+💡 Then you can:
+- Choose a **suggested prompt** for quick help
+- Or **ask your own question** in the chat
+
+🤖 I’ll help you:
+- Explain **grammar patterns**
+- Break down **vocabulary & usage**
+- Give you **clear examples**
+
+🧠 Meanwhile, everything we discuss will be:
+- **Automatically organized** into structured knowledge
+- Saved into your **personal learning database**
+- Reflected back into the reading interface as **highlighted insights**
+
+✨ Over time, your reading turns into a **growing knowledge system**
+
+👉 Go ahead — select something and ask!`
+const WELCOME_MESSAGE_ZH = `👋 **欢迎！我们直接开始吧**
+
+从文章中**选择任意一句话**，或者你感兴趣的**某个单词 / 短语**。
+
+💡 接下来你可以：
+- 选择一个 **推荐问题（suggested prompt）** 快速提问
+- 或者直接输入你的**自定义问题**
+
+🤖 我会帮你：
+- 讲解**语法结构**
+- 拆解**词汇与用法**
+- 提供**清晰的例句**
+
+🧠 同时，你的每一次提问都会：
+- 被**自动整理为结构化知识**
+- 存入你的**个人学习库**
+- 并在阅读界面中形成**高亮标注与反馈**
+
+✨ 随着使用，你的阅读内容会逐渐变成一套**可积累的知识系统**
+
+👉 试试看：选一句话，问点什么`
+
+const getLocalizedWelcomeMessage = (language = 'zh') => (
+  language === 'en' ? WELCOME_MESSAGE_EN : WELCOME_MESSAGE_ZH
+)
 
 const reviveMessages = (raw) => {
   if (!Array.isArray(raw)) return []
@@ -172,10 +221,13 @@ function ChatView({
   const normalizeTextForSignature = (text) => String(text || '').replace(/\s+/g, ' ').trim()
   const isWelcomeMessageText = (text) => {
     const normalized = normalizeTextForSignature(text)
-    return (
-      normalized === normalizeTextForSignature("选择有疑问的句子或词汇，向我提问吧！") ||
-      normalized === normalizeTextForSignature("你好！我是聊天助手，有什么可以帮助你的吗？")
-    )
+    return [
+      WELCOME_MESSAGE_ZH,
+      WELCOME_MESSAGE_EN,
+      LEGACY_WELCOME_MESSAGE_ZH,
+      LEGACY_WELCOME_MESSAGE_EN,
+      LEGACY_WELCOME_MESSAGE_ALT
+    ].some((message) => normalized === normalizeTextForSignature(message))
   }
   const getMessageSignature = (msg) => {
     const role = msg?.isUser ? 'user' : 'ai'
@@ -269,15 +321,11 @@ function ChatView({
     return [...welcomeMessages.slice(0, 1), ...dedupeMessagesStable(nonWelcomeMessages)]
   }
   
-  // Helper function to get translated text without hook (for initialization)
-  const getTranslatedText = (key) => {
+  const getInitialUiLanguage = () => {
     try {
-      const { translateText } = require('../../../i18n/useUIText')
-      const savedLang = localStorage.getItem('ui_language') || 'zh'
-      return translateText(key, savedLang)
+      return localStorage.getItem('ui_language') || 'zh'
     } catch (e) {
-      // Fallback to Chinese if translation fails
-      return key
+      return 'zh'
     }
   }
 
@@ -299,7 +347,7 @@ function ChatView({
     // ⚠️ Language detection: Presentation-only, does NOT affect data fetching
     // Called at initialization time, NOT in render or hooks
     // Using translateText helper function (not hook) for initialization
-    const defaultMessage = getTranslatedText("选择有疑问的句子或词汇，向我提问吧！")
+    const defaultMessage = getLocalizedWelcomeMessage(getInitialUiLanguage())
     
     return fromLS.length > 0 ? fromLS : [
       { id: 1, text: defaultMessage, isUser: false, timestamp: new Date() }
@@ -312,6 +360,10 @@ function ChatView({
   const [messages, setMessages] = useState(getInitialMessages)
   const [inputText, setInputText] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const MAX_QUESTION_LENGTH = 300
+  const MAX_SELECTION_LENGTH = 500
+  const isLoginRequired = !token
+  const isQuestionTooLong = inputText.length > MAX_QUESTION_LENGTH
   
   // 🔧 Token不足检查：统一复用 UserContext 中的 /auth/me 结果
   useEffect(() => {
@@ -388,7 +440,7 @@ function ChatView({
         if (items.length > 0) {
           // 🔧 与后端 /api/chat/history 的返回字段对齐：
           // backend 返回字段为 text / quote_text / is_user / created_at
-          const defaultWelcome = getTranslatedText("选择有疑问的句子或词汇，向我提问吧！")
+          const defaultWelcome = getLocalizedWelcomeMessage(getInitialUiLanguage())
           const historyMessages = items.map(item => {
             const selectedTokenText = item?.selected_token?.token_text
             const normalizedQuoteText = typeof item?.quote_text === 'string' ? item.quote_text.trim() : ''
@@ -562,6 +614,75 @@ function ChatView({
     const trimmed = normalized.slice(0, 200)
     saveAllMessagesToLS(trimmed)
   }, [normalizedArticleId, messages.length])
+
+  const pushAssistantNotice = useCallback((text) => {
+    addMessage({
+      id: generateMessageId(),
+      text,
+      isUser: false,
+      timestamp: new Date(),
+      articleId: articleId ? String(articleId) : undefined,
+    })
+  }, [addMessage, articleId])
+
+  const getSelectionTextForValidation = useCallback((selectionCtx, fallbackQuotedText = quotedText) => {
+    if (selectionCtx?.tokens?.length > 0) {
+      const selectedTexts = Array.isArray(selectionCtx.selectedTexts) ? selectionCtx.selectedTexts.join(' ') : ''
+      if (selectedTexts.trim()) {
+        return selectedTexts.trim()
+      }
+
+      const tokenText = selectionCtx.tokens?.[0]?.token_body || selectionCtx.token?.token_text || ''
+      if (String(tokenText).trim()) {
+        return String(tokenText).trim()
+      }
+    }
+
+    if (typeof fallbackQuotedText === 'string' && fallbackQuotedText.trim()) {
+      return fallbackQuotedText.trim()
+    }
+
+    return String(selectionCtx?.sentence?.sentence_body || '').trim()
+  }, [quotedText])
+
+  const validateChatRequest = useCallback((questionText, selectionCtx, fallbackQuotedText = quotedText) => {
+    const trimmedQuestion = String(questionText || '').trim()
+
+    if (!token) {
+      return tUI('请先登录后使用 AI 聊天')
+    }
+    if (trimmedQuestion.length > MAX_QUESTION_LENGTH) {
+      return tUI('问题不能超过 300 个字符')
+    }
+
+    const selectionText = getSelectionTextForValidation(selectionCtx, fallbackQuotedText)
+    if (selectionText.length > MAX_SELECTION_LENGTH) {
+      return tUI('选中文本不能超过 500 个字符')
+    }
+
+    return null
+  }, [MAX_QUESTION_LENGTH, MAX_SELECTION_LENGTH, getSelectionTextForValidation, quotedText, tUI, token])
+
+  const getFriendlyChatErrorMessage = useCallback((error) => {
+    const status = error?.response?.status
+    const detail = error?.response?.data?.detail
+    const detailCode = detail && typeof detail === 'object' ? detail.error : null
+    const detailMessage = detail && typeof detail === 'object' ? detail.message : null
+
+    if (status === 429 && detailCode === 'rate_limit_exceeded') {
+      return tUI('提问过快，请过一分钟后再试')
+    }
+    if (typeof detailMessage === 'string' && detailMessage.trim()) {
+      return detailMessage
+    }
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail
+    }
+    if (typeof error?.response?.data?.error === 'string' && error.response.data.error.trim()) {
+      return error.response.data.error
+    }
+    return error?.message || t('未知错误')
+  }, [t, tUI])
   
   // 🔧 保存消息到 localStorage
   useEffect(() => {
@@ -621,9 +742,16 @@ function ChatView({
     
     // 🔧 自动发送消息
     const sendPendingMessage = async () => {
-      const questionText = pendingMessage.text
+      const questionText = String(pendingMessage.text || '').trim()
       const currentQuotedText = pendingMessage.quotedText || quotedText
       const currentSelectionContext = pendingContext || selectionContext
+
+      const validationMessage = validateChatRequest(questionText, currentSelectionContext, currentQuotedText)
+      if (validationMessage) {
+        pushAssistantNotice(validationMessage)
+        processingPendingMessageRef.current = false
+        return
+      }
       
       setIsProcessing(true)
       
@@ -1007,7 +1135,7 @@ function ChatView({
         // ⚠️ Language detection in error handler: Presentation-only, does NOT affect error handling logic
         const errorMsg = {
           id: generateMessageId(),
-          text: `${t("抱歉，处理您的问题时出现错误: ")}${error.message || t("未知错误")}`,
+          text: `${t("抱歉，处理您的问题时出现错误: ")}${getFriendlyChatErrorMessage(error)}`,
           isUser: false,
           timestamp: new Date(),
           articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
@@ -1089,9 +1217,8 @@ function ChatView({
     return raw.trim()
   }
 
-  const renderSimpleMarkdown = (text) => {
+  const renderSimpleMarkdownInline = (text) => {
     const source = String(text ?? '')
-    // 仅支持常用且安全的行内格式：**bold** 与 `inline code`
     const parts = source.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
     return parts.map((part, idx) => {
       if (!part) return null
@@ -1107,6 +1234,55 @@ function ChatView({
       }
       return <span key={`md-t-${idx}`}>{part}</span>
     })
+  }
+
+  const renderSimpleMarkdown = (text) => {
+    const lines = String(text ?? '').replace(/\r\n/g, '\n').split('\n')
+    const blocks = []
+    let paragraphLines = []
+    let listItems = []
+
+    const flushParagraph = () => {
+      if (!paragraphLines.length) return
+      blocks.push(
+        <p key={`md-p-${blocks.length}`} className="leading-6">
+          {renderSimpleMarkdownInline(paragraphLines.join(' '))}
+        </p>
+      )
+      paragraphLines = []
+    }
+
+    const flushList = () => {
+      if (!listItems.length) return
+      blocks.push(
+        <ul key={`md-ul-${blocks.length}`} className="list-disc pl-5 space-y-1">
+          {listItems.map((item, idx) => (
+            <li key={`md-li-${idx}`}>{renderSimpleMarkdownInline(item)}</li>
+          ))}
+        </ul>
+      )
+      listItems = []
+    }
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (!line) {
+        flushParagraph()
+        flushList()
+        continue
+      }
+      if (line.startsWith('- ')) {
+        flushParagraph()
+        listItems.push(line.slice(2).trim())
+        continue
+      }
+      flushList()
+      paragraphLines.push(line)
+    }
+
+    flushParagraph()
+    flushList()
+    return blocks
   }
 
   const extractAiReplyFromSendChatResponse = (response) => {
@@ -1244,8 +1420,15 @@ function ChatView({
       return
     }
     
+    const questionText = inputText.trim()
+    const validationMessage = validateChatRequest(questionText, selectionContext, quotedText)
+    if (validationMessage) {
+      pushAssistantNotice(validationMessage)
+      sendingRef.current = false
+      return
+    }
+
     setIsProcessing(true)
-    const questionText = inputText
     console.log(`🔍 [ChatView] handleSendMessage 开始处理: questionText="${questionText}"`)
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
@@ -1648,7 +1831,7 @@ function ChatView({
       // ⚠️ Language detection in error handler: Presentation-only, does NOT affect error handling logic
       const errorMsg = {
         id: generateMessageId(),
-        text: `${t("抱歉，处理您的问题时出现错误: ")}${error.message || t("未知错误")}`,
+        text: `${t("抱歉，处理您的问题时出现错误: ")}${getFriendlyChatErrorMessage(error)}`,
         isUser: false,
         timestamp: new Date(),
         articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
@@ -1688,15 +1871,23 @@ function ChatView({
       return
     }
     
+    const normalizedQuestion = String(question || '').trim()
+    const validationMessage = validateChatRequest(normalizedQuestion, selectionContext, quotedText)
+    if (validationMessage) {
+      pushAssistantNotice(validationMessage)
+      sendingRef.current = false
+      return
+    }
+
     setIsProcessing(true)
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
-    console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 开始处理: question="${question}"`)
+    console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 开始处理: question="${normalizedQuestion}"`)
     
     // 🔧 立即添加用户消息
     const userMessage = {
       id: generateMessageId(),
-      text: question,
+      text: normalizedQuestion,
       isUser: true,
       timestamp: new Date(),
       quote: currentQuotedText || null,
@@ -1709,7 +1900,7 @@ function ChatView({
       const { apiService } = await import('../../../services/api')
       
       // 🔧 合并 session 更新：将句子上下文和 current_input 合并到一次调用
-      const sessionUpdatePayload = { current_input: question }
+      const sessionUpdatePayload = { current_input: normalizedQuestion }
       
       if (currentSelectionContext?.sentence) {
         sessionUpdatePayload.sentence = currentSelectionContext.sentence
@@ -1740,7 +1931,7 @@ function ChatView({
       const uiLanguageForBackend = uiLanguage === 'en' ? '英文' : '中文'
       const requestStartedAt = Date.now()
       const response = await apiService.sendChat({ 
-        user_question: question,
+        user_question: normalizedQuestion,
         ui_language: uiLanguageForBackend
       })
       console.log(`🔍 [ChatView] handleSuggestedQuestionSelect - sendChat 响应:`, response)
@@ -2032,7 +2223,7 @@ function ChatView({
       // ⚠️ Language detection in error handler: Presentation-only, does NOT affect error handling logic
       const errorMsg = {
         id: generateMessageId(),
-        text: `${t("抱歉，处理您的问题时出现错误: ")}${error.message || t("未知错误")}`,
+        text: `${t("抱歉，处理您的问题时出现错误: ")}${getFriendlyChatErrorMessage(error)}`,
         isUser: false,
         timestamp: new Date(),
         articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
@@ -2192,13 +2383,11 @@ function ChatView({
                     </div>
                   )}
                   
-                  <p className="text-sm">
-                    {(!message.isUser && (message.text === '选择有疑问的句子或词汇，向我提问吧！' || message.text === '你好！我是聊天助手，有什么可以帮助你的吗？'))
-                      ? t('选择有疑问的句子或词汇，向我提问吧！')
-                      : (!message.isUser
-                          ? renderSimpleMarkdown(message.text)
-                          : message.text)}
-                  </p>
+                  <div className="text-sm space-y-2">
+                    {!message.isUser
+                      ? renderSimpleMarkdown(isWelcomeMessageText(message.text) ? getLocalizedWelcomeMessage(uiLanguage) : message.text)
+                      : message.text}
+                  </div>
                   <p className="text-xs mt-1 text-gray-500">
                     {formatTime(message.timestamp)}
                   </p>
@@ -2253,13 +2442,18 @@ function ChatView({
         onQuestionClick={() => {}}
         tokenCount={selectedTokenCount}
         hasSelectedSentence={hasSelectedSentence}
-        disabled={isProcessing}
+        disabled={isProcessing || isLoginRequired}
       />
 
       {/* Input Area */}
       <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
+        {isLoginRequired && !isProcessing && (
+          <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+            {tUI('请先登录后使用 AI 聊天')}
+          </div>
+        )}
         {/* 🔧 Token不足提示 */}
-        {tokenInsufficient && !isProcessing && (
+        {tokenInsufficient && !isProcessing && !isLoginRequired && (
           <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
             {t('积分不足')}
           </div>
@@ -2268,13 +2462,16 @@ function ChatView({
           <input
             type="text"
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => setInputText(e.target.value.slice(0, MAX_QUESTION_LENGTH))}
             onKeyPress={handleKeyPress}
+            maxLength={MAX_QUESTION_LENGTH}
             placeholder={
               disabled 
                 ? t("聊天暂时不可用")
                 : isProcessing 
                   ? t("AI 正在处理中，请稍候...")
+                  : isLoginRequired
+                    ? tUI("请先登录后使用 AI 聊天")
                   : tokenInsufficient 
                     ? t("积分不足，无法使用AI聊天功能")
                     : (!hasSelectedToken && !hasSelectedSentence) 
@@ -2292,19 +2489,21 @@ function ChatView({
             onBlur={(e) => {
               e.currentTarget.style.boxShadow = ''
             }}
-            disabled={disabled || isProcessing || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
+            disabled={disabled || isProcessing || isLoginRequired || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
           />
           <button
             type="button"
             onClick={handleSendMessage}
-            disabled={inputText.trim() === '' || disabled || isProcessing || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
+            disabled={inputText.trim() === '' || isQuestionTooLong || disabled || isProcessing || isLoginRequired || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
             className="px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:brightness-95 active:brightness-90"
             style={{
               backgroundColor: colors.primary[600],
               '--tw-ring-color': colors.primary[300],
             }}
             title={
-              tokenInsufficient 
+              isLoginRequired
+                ? tUI("请先登录后使用 AI 聊天")
+                : tokenInsufficient 
                 ? t("积分不足")
                 : (!hasSelectedToken && !hasSelectedSentence) 
                   ? t("请先选择文章中的词汇或句子")

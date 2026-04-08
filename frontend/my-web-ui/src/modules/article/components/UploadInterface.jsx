@@ -1,18 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { apiService } from '../../../services/api'
 import { useUser } from '../../../contexts/UserContext'
 import { useLanguage } from '../../../contexts/LanguageContext'
+import { useArticles } from '../../../hooks/useApi'
 import guestDataManager from '../../../utils/guestDataManager'
 import { useUIText } from '../../../i18n/useUIText'
 import { BackButton } from '../../../components/base'
 
 // 文章长度限制（字符数）
 const MAX_ARTICLE_LENGTH = 12000
+const MAX_ARTICLES_PER_USER = 50
 
 const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, onBack }) => {
   const { userId, isGuest } = useUser()
   const { selectedLanguage } = useLanguage()
+  const { data: allArticlesResponse } = useArticles(userId, null, isGuest)
   const [dragActive, setDragActive] = useState(false)
   const [uploadMethod, setUploadMethod] = useState(null) // 'url', 'file', 'drop', 'text'
   const [showProgress, setShowProgress] = useState(false)
@@ -32,6 +35,26 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
   const pendingContentRef = useRef(null)
   const t = useUIText()
   const language = selectedLanguage || '德文' // 上传文章语言：默认使用当前正在学习的语言
+  const [articleLimitMessage, setArticleLimitMessage] = useState('')
+
+  const allArticles = useMemo(() => {
+    if (!allArticlesResponse) return []
+    if (Array.isArray(allArticlesResponse?.data)) return allArticlesResponse.data
+    if (Array.isArray(allArticlesResponse)) return allArticlesResponse
+    if (allArticlesResponse?.data && Array.isArray(allArticlesResponse.data.texts)) return allArticlesResponse.data.texts
+    if (Array.isArray(allArticlesResponse?.texts)) return allArticlesResponse.texts
+    return []
+  }, [allArticlesResponse])
+
+  const isArticleLimitReached = !isGuest && allArticles.length >= MAX_ARTICLES_PER_USER
+  const resolvedArticleLimitMessage =
+    articleLimitMessage || t('已达到文章数量上限：每位用户最多 50 篇文章（所有语言合计）')
+
+  useEffect(() => {
+    if (isArticleLimitReached && !articleLimitMessage) {
+      setArticleLimitMessage(t('已达到文章数量上限：每位用户最多 50 篇文章（所有语言合计）'))
+    }
+  }, [articleLimitMessage, isArticleLimitReached, t])
   
   // 调试：监听对话框状态变化
   useEffect(() => {
@@ -93,6 +116,12 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       console.warn('⚠️ [Upload] onUploadComplete 回调未提供')
     }
   }
+
+  const handleArticleLimitExceeded = useCallback((message = null) => {
+    setShowProgress(false)
+    onUploadStart && onUploadStart(false)
+    setArticleLimitMessage(message || t('已达到文章数量上限：每位用户最多 50 篇文章（所有语言合计）'))
+  }, [onUploadStart, t])
 
   // 检查内容长度并处理
   const checkAndHandleLength = async (content, type, file = null, title = '') => {
@@ -199,6 +228,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
 
   // 统一的文件上传入口：从 selectedFile 启动真正的上传流程
   const startFileUpload = async (file, sourceType = 'file') => {
+    if (isArticleLimitReached) {
+      handleArticleLimitExceeded()
+      return
+    }
     if (!file) {
       alert(t('请先选择或拖入文件'))
       return
@@ -286,6 +319,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         // 其他错误
         setShowProgress(false)
         const errorMessage = response.error || '未知错误'
+        if (response?.data?.error_code === 'ARTICLE_LIMIT_EXCEEDED') {
+          handleArticleLimitExceeded(errorMessage)
+          return
+        }
         alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
         return
       }
@@ -332,6 +369,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
 
       const errorMessage =
         error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+      if (error.response?.data?.data?.error_code === 'ARTICLE_LIMIT_EXCEEDED') {
+        handleArticleLimitExceeded(errorMessage)
+        return
+      }
       alert(t('文件上传失败: {error}').replace('{error}', errorMessage))
     }
   }
@@ -395,6 +436,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
 
   // 统一的文件上传按钮点击处理
   const handleFileUploadClick = async () => {
+    if (isArticleLimitReached) {
+      handleArticleLimitExceeded()
+      return
+    }
     if (!selectedFile) {
       alert(t('请先选择文件或拖拽上传文件'))
       return
@@ -404,6 +449,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
 
   const handleUrlSubmit = async (e) => {
     e.preventDefault()
+    if (isArticleLimitReached) {
+      handleArticleLimitExceeded()
+      return
+    }
     const url = e.target.url.value.trim()
     if (url) {
       console.log('🌐 [Upload] URL submitted:', url)
@@ -490,6 +539,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
           setShowProgress(false)
           onUploadStart && onUploadStart(false)
           const errorMessage = response.error || '未知错误'
+          if (response?.data?.error_code === 'ARTICLE_LIMIT_EXCEEDED') {
+            handleArticleLimitExceeded(errorMessage)
+            return
+          }
           alert(t('URL处理失败: {error}').replace('{error}', errorMessage))
           return // 🔧 确保在错误时直接返回
         }
@@ -527,6 +580,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         }
         
         const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+        if (error.response?.data?.data?.error_code === 'ARTICLE_LIMIT_EXCEEDED') {
+          handleArticleLimitExceeded(errorMessage)
+          return
+        }
         alert(t('URL处理失败: {error}').replace('{error}', errorMessage))
       }
     }
@@ -534,6 +591,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
 
   const handleTextSubmit = async (e) => {
     e.preventDefault()
+    if (isArticleLimitReached) {
+      handleArticleLimitExceeded()
+      return
+    }
     if (textContent.trim()) {
       // 检查语言是否已选择
       if (!language) {
@@ -581,6 +642,10 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
           // 其他错误
           setShowProgress(false)
           const errorMessage = response.error || '未知错误'
+          if (response?.data?.error_code === 'ARTICLE_LIMIT_EXCEEDED') {
+            handleArticleLimitExceeded(errorMessage)
+            return
+          }
           alert(t('文字处理失败: {error}').replace('{error}', errorMessage))
           return
         }
@@ -612,12 +677,19 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         }
         
         const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
+        if (error.response?.data?.data?.error_code === 'ARTICLE_LIMIT_EXCEEDED') {
+          handleArticleLimitExceeded(errorMessage)
+          return
+        }
         alert(t('文字处理失败: {error}').replace('{error}', errorMessage))
       }
     }
   }
 
   const triggerFileInput = () => {
+    if (isArticleLimitReached) {
+      return
+    }
     fileInputRef.current?.click()
   }
 
@@ -690,6 +762,11 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
           )}
           <h2 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-semibold text-gray-800">{t('上传新文章')}</h2>
         </div>
+        {isArticleLimitReached && (
+          <div className="mt-3 text-center text-sm text-red-600 font-medium">
+            {resolvedArticleLimitMessage}
+          </div>
+        )}
       
       <div className="flex-1 flex flex-col items-center justify-center space-y-8">
         {/* Upload URL */}
@@ -713,6 +790,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             />
             <button
               type="submit"
+              disabled={isArticleLimitReached}
               className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('从网址上传')}
@@ -742,15 +820,18 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             {/* 合并的拖拽和选择区域 */}
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                isArticleLimitReached
+                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                  :
                 dragActive 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-300 hover:border-gray-400'
               }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={triggerFileInput}
+              onDragEnter={isArticleLimitReached ? undefined : handleDrag}
+              onDragLeave={isArticleLimitReached ? undefined : handleDrag}
+              onDragOver={isArticleLimitReached ? undefined : handleDrag}
+              onDrop={isArticleLimitReached ? undefined : handleDrop}
+              onClick={isArticleLimitReached ? undefined : triggerFileInput}
             >
               <div className="space-y-2">
                 <svg 
@@ -795,9 +876,11 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             {/* 统一的文件上传按钮 */}
             <button
               onClick={handleFileUploadClick}
-              disabled={!selectedFile || !language}
+              disabled={isArticleLimitReached || !selectedFile || !language}
               title={
-                !language 
+                isArticleLimitReached
+                  ? resolvedArticleLimitMessage
+                  : !language 
                   ? t('请先选择上传文章的语言') 
                   : !selectedFile 
                     ? t('请先选择文件或拖拽上传文件') 
@@ -838,8 +921,14 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
             />
             <button
               type="submit"
-              disabled={!textContent.trim() || !language}
-              title={!language ? t('请先选择上传文章的语言') : (!textContent.trim() ? t('请输入文章内容') : '')}
+              disabled={isArticleLimitReached || !textContent.trim() || !language}
+              title={
+                isArticleLimitReached
+                  ? resolvedArticleLimitMessage
+                  : !language
+                    ? t('请先选择上传文章的语言')
+                    : (!textContent.trim() ? t('请输入文章内容') : '')
+              }
               className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {t('处理文本')}

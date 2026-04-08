@@ -485,6 +485,9 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
     const { token: userToken, userInfo } = useUser()
     
     const handleAskAI = useCallback(async (token, sentenceIndex) => {
+      if (!userToken) {
+        return
+      }
       if (!token || sentenceIndex == null) {
         return
       }
@@ -692,7 +695,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                     onSentenceSelect={handleSentenceSelect}
                     targetSentenceId={targetSentenceId}
                     onTargetSentenceScrolled={handleTargetSentenceScrolled}
-                    onAskAI={handleAskAI}
+                    onAskAI={userToken ? wrappedHandleAskAI : null}
                     autoTranslationEnabled={autoTranslationEnabled}
                   />
                 </ArticleCanvas>

@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Union, Optional, List
 from assistants.chat_info.selected_token import SelectedToken
 
+MAX_KNOWLEDGE_ITEMS_PER_CHAT = 3
+
 @dataclass
 class GrammarToAdd:
     canonical_category: str  # 规范化类别
@@ -133,6 +135,9 @@ class SessionState:
         rule_summary: str
     ):
         """添加要保存到数据库的语法规则（包含 canonical 字段和生成的 display_name、rule_summary）"""
+        if len(self.grammar_to_add) + len(self.vocab_to_add) >= MAX_KNOWLEDGE_ITEMS_PER_CHAT:
+            print(f"⚠️ [SessionState] 本轮新知识点已达到上限 {MAX_KNOWLEDGE_ITEMS_PER_CHAT}，跳过额外语法")
+            return
         self.grammar_to_add.append(GrammarToAdd(
             canonical_category=canonical_category,
             canonical_subtype=canonical_subtype,
@@ -143,6 +148,9 @@ class SessionState:
         ))
 
     def add_vocab_to_add(self, vocab: str):
+        if len(self.grammar_to_add) + len(self.vocab_to_add) >= MAX_KNOWLEDGE_ITEMS_PER_CHAT:
+            print(f"⚠️ [SessionState] 本轮新知识点已达到上限 {MAX_KNOWLEDGE_ITEMS_PER_CHAT}，跳过额外词汇")
+            return
         self.vocab_to_add.append(VocabToAdd(vocab=vocab))
 
     def reset(self):

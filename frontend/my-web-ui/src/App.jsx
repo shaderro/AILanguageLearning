@@ -26,6 +26,7 @@ import OnboardingLanguage from './pages/OnboardingLanguage'
 import OnboardingReadingIntro from './pages/OnboardingReadingIntro'
 import PrivacyPolicyAndTerms from './pages/PrivacyPolicyAndTerms'
 import { colors } from './design-tokens'
+import { recordRecentArticle } from './utils/pageStateManager'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -113,6 +114,13 @@ function AppContent() {
       window.history.replaceState({}, '', newUrl)
     }
   }, [currentPage, selectedArticleId])
+
+  useEffect(() => {
+    if (currentPage !== 'article' || !selectedArticleId || selectedArticleId === 'upload') {
+      return
+    }
+    recordRecentArticle(selectedArticleId)
+  }, [currentPage, selectedArticleId])
   
   // 模态框状态
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -122,7 +130,9 @@ function AppContent() {
   const [showPPTermsPage, setShowPPTermsPage] = useState(false)
   const [showHeaderLanguageMenu, setShowHeaderLanguageMenu] = useState(false)
   const [showHeaderAddLanguages, setShowHeaderAddLanguages] = useState(false)
+  const [showInsightsMenu, setShowInsightsMenu] = useState(false)
   const headerLanguageRef = useRef(null)
+  const insightsMenuRef = useRef(null)
   
   // 从 UserContext 获取用户信息和方法
   const { 
@@ -250,6 +260,22 @@ function AppContent() {
     }
   }, [showHeaderLanguageMenu])
 
+  useEffect(() => {
+    if (!showInsightsMenu) return
+    const handleClickOutside = (event) => {
+      if (!insightsMenuRef.current) return
+      if (!insightsMenuRef.current.contains(event.target)) {
+        setShowInsightsMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showInsightsMenu])
+
   // 登录后从全局 userInfo 初始化 UI 语言和内容语言（跨设备）
   useEffect(() => {
     if (!isAuthenticated || !currentUserId || !userInfo) return
@@ -319,20 +345,25 @@ function AppContent() {
     navigateToLanding()
   }
 
+  const navigateToPage = (id) => {
+    setCurrentPage(id)
+    const params = new URLSearchParams(window.location.search)
+    if (id === 'wordDemo') {
+      params.delete('vocabId')
+    }
+    if (id === 'grammarDemo') {
+      params.delete('grammarId')
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
+    window.history.replaceState({}, '', newUrl)
+    setShowInsightsMenu(false)
+  }
+
   const navButton = (id, label) => {
     const isActive = currentPage === id
     return (
       <button
-        onClick={() => {
-          setCurrentPage(id)
-          // 🔧 修复问题1：当点击语法按钮时，清除URL中的grammarId参数
-          if (id === 'grammarDemo') {
-            const params = new URLSearchParams(window.location.search)
-            params.delete('grammarId')
-            const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
-            window.history.replaceState({}, '', newUrl)
-          }
-        }}
+        onClick={() => navigateToPage(id)}
         className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
         style={{
           borderColor: isActive ? colors.primary[600] : 'transparent',
@@ -343,6 +374,13 @@ function AppContent() {
       </button>
     )
   }
+
+  const insightsSubLabel =
+    currentPage === 'wordDemo'
+      ? t('词汇')
+      : currentPage === 'grammarDemo'
+        ? t('语法')
+        : ''
 
   // 如果是重置密码页面，直接显示重置密码组件（Provider 已在 App 外层）
   if (isResetPasswordPage) {
@@ -385,16 +423,78 @@ function AppContent() {
                 <button
                   type="button"
                   onClick={navigateToLanding}
-                  className="text-xl font-bold text-gray-900 focus:outline-none focus-visible:ring-2 rounded"
+                  className="inline-flex items-center gap-2 text-xl font-bold leading-none text-gray-900 focus:outline-none focus-visible:ring-2 rounded"
                   style={{ '--tw-ring-color': colors.primary[300] }}
                 >
-                  {t('语言学习应用')}
+                  <img
+                    src="/linktext-header-ellipse.svg"
+                    alt="LinkText"
+                    className="h-8 w-8 shrink-0"
+                  />
+                  <span className="leading-none">{t('语言学习应用')}</span>
                 </button>
               </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navButton('wordDemo', t('词汇'))}
-                {navButton('grammarDemo', t('语法'))}
+              <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
                 {navButton('article', t('阅读'))}
+                <div className="h-5 w-px bg-gray-300" />
+                <div ref={insightsMenuRef} className="relative flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowInsightsMenu((prev) => !prev)}
+                    className="inline-flex items-center gap-1 px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
+                    style={{
+                      borderColor:
+                        currentPage === 'wordDemo' || currentPage === 'grammarDemo'
+                          ? colors.primary[600]
+                          : 'transparent',
+                      color:
+                        currentPage === 'wordDemo' || currentPage === 'grammarDemo'
+                          ? colors.semantic?.text?.primary ?? '#111827'
+                          : colors.semantic?.text?.secondary ?? '#6b7280',
+                    }}
+                  >
+                    <span>{t('Insights')}</span>
+                    {insightsSubLabel && (
+                      <span className="ml-2 text-sm font-normal text-gray-900">
+                        {insightsSubLabel}
+                      </span>
+                    )}
+                    <svg
+                      className={`h-4 w-4 transition-transform ${showInsightsMenu ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showInsightsMenu && (
+                    <div className="absolute left-0 top-full mt-2 min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg z-20">
+                      <button
+                        type="button"
+                        onClick={() => navigateToPage('wordDemo')}
+                        className={`block w-full px-4 py-2 text-left text-sm ${
+                          currentPage === 'wordDemo'
+                            ? 'bg-green-50 text-green-800'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {t('词汇')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigateToPage('grammarDemo')}
+                        className={`block w-full px-4 py-2 text-left text-sm ${
+                          currentPage === 'grammarDemo'
+                            ? 'bg-green-50 text-green-800'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {t('语法')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import LearnPageLayout from '../shared/components/LearnPageLayout'
+import { getRecentArticleOrder } from '../../utils/pageStateManager'
 import LearnCard from '../shared/components/LearnCard'
 // 注意：Sandbox 允许你自由重构，这里保留最小依赖，避免影响正式 GrammarDemo
 import GrammarDetailCard from '../../components/features/grammar/GrammarDetailCard'
@@ -37,7 +38,7 @@ const GrammarReviewSandbox = () => {
 
   console.log('🔍 [GrammarReviewSandbox] useArticles 返回:', articlesResponse, 'loading:', articlesLoading)
 
-  // 处理文章数据：提取数组并按字母顺序排序
+  // 处理文章数据：提取数组，保持原始顺序
   const articlesData = (() => {
     if (!articlesResponse) {
       console.log('⚠️ [GrammarReviewSandbox] articlesResponse 为空')
@@ -60,15 +61,9 @@ const GrammarReviewSandbox = () => {
       console.warn('⚠️ [GrammarReviewSandbox] 无法识别的 articlesResponse 格式:', articlesResponse)
     }
 
-    // 按标题字母顺序排序
     if (articles.length > 0) {
-      const sorted = articles.sort((a, b) => {
-        const titleA = (a.title || a.text_title || '').toLowerCase()
-        const titleB = (b.title || b.text_title || '').toLowerCase()
-        return titleA.localeCompare(titleB)
-      })
-      console.log('🔍 [GrammarReviewSandbox] 排序后的文章:', sorted.length, '篇')
-      return sorted
+      console.log('🔍 [GrammarReviewSandbox] 提取后的文章:', articles.length, '篇')
+      return [...articles]
     }
     console.log('⚠️ [GrammarReviewSandbox] 文章列表为空')
     return []
@@ -793,17 +788,30 @@ const GrammarReviewSandbox = () => {
   const articles = Array.isArray(articlesData) ? articlesData : []
   console.log('🔍 [GrammarReviewSandbox] 文章数据:', articles.length, '篇', articles.length > 0 ? articles[0] : '')
 
+  const recentArticleOrder = getRecentArticleOrder()
+  const articleOrderMap = new Map(recentArticleOrder.map((id, index) => [String(id), index]))
+  const sortedArticles = [...articles]
+    .filter((article) => article && (article.id || article.text_id))
+    .sort((a, b) => {
+      const aId = String(a.id || a.text_id)
+      const bId = String(b.id || b.text_id)
+      const aRank = articleOrderMap.has(aId) ? articleOrderMap.get(aId) : Number.MAX_SAFE_INTEGER
+      const bRank = articleOrderMap.has(bId) ? articleOrderMap.get(bId) : Number.MAX_SAFE_INTEGER
+      if (aRank !== bRank) {
+        return aRank - bRank
+      }
+      return 0
+    })
+
   const articleOptions = [
     { value: 'all', label: t('全部文章') },
-    ...articles
-      .filter((article) => article && (article.id || article.text_id)) // 过滤掉无效的文章
-      .map((article) => {
-        const fallbackLabel = `${t('文章')} ${article.id || article.text_id}`
-        return {
-          value: String(article.id || article.text_id),
-          label: article.title || article.text_title || fallbackLabel,
-        }
-      }),
+    ...sortedArticles.map((article) => {
+      const fallbackLabel = `${t('文章')} ${article.id || article.text_id}`
+      return {
+        value: String(article.id || article.text_id),
+        label: article.title || article.text_title || fallbackLabel,
+      }
+    }),
   ]
 
   console.log('🔍 [GrammarReviewSandbox] 文章选项:', articleOptions.length, '个', articleOptions.map((opt) => opt.label))

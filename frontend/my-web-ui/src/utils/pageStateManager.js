@@ -5,6 +5,8 @@
 
 const PAGE_STATE_PREFIX = 'page_state_'
 const LANGUAGE_KEY = 'last_language'
+const RECENT_ARTICLE_ORDER_KEY = 'recent_article_order'
+const MAX_RECENT_ARTICLES = 50
 
 /**
  * 保存页面的分页面状态
@@ -105,3 +107,27 @@ export const checkLanguageChange = (currentLanguage) => {
   saveCurrentLanguage(currentLanguage)
 }
 
+export const recordRecentArticle = (articleId) => {
+  try {
+    if (!articleId) return
+    const articleIdStr = String(articleId)
+    const current = getRecentArticleOrder()
+    const next = [articleIdStr, ...current.filter((id) => id !== articleIdStr)].slice(0, MAX_RECENT_ARTICLES)
+    localStorage.setItem(RECENT_ARTICLE_ORDER_KEY, JSON.stringify(next))
+    console.log(`✅ [PageState] 记录最近阅读文章顺序:`, next)
+  } catch (error) {
+    console.error(`❌ [PageState] 记录最近阅读文章失败:`, error)
+  }
+}
+
+export const getRecentArticleOrder = () => {
+  try {
+    const raw = localStorage.getItem(RECENT_ARTICLE_ORDER_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.map((id) => String(id)) : []
+  } catch (error) {
+    console.error(`❌ [PageState] 获取最近阅读文章顺序失败:`, error)
+    return []
+  }
+}
