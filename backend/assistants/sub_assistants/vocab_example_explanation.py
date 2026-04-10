@@ -41,12 +41,11 @@ class VocabExampleExplanationAssistant(SubAssistant):
             output_language=formatted_language
         )
         
-        # 🔍 打印完整的 system prompt 用于调试
-        print(f"🔍 [VocabExampleExplanation] ========== System Prompt ==========")
-        print(f"🔍 [VocabExampleExplanation] Language: {formatted_language}")
-        print(f"🔍 [VocabExampleExplanation] Vocab: {vocab}")
-        print(f"🔍 [VocabExampleExplanation] System Prompt:\n{self.sys_prompt}")
-        print(f"🔍 [VocabExampleExplanation] ====================================")
+        _sp_len = len(self.sys_prompt) if self.sys_prompt else 0
+        print(
+            f"🔍 [VocabExampleExplanation] language={formatted_language} vocab={vocab!r} "
+            f"sys_prompt_chars={_sp_len}"
+        )
         
         try:
             result = super().run(vocab=vocab, sentence=sentence, language=language, **kwargs)

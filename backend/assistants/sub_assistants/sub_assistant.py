@@ -7,6 +7,19 @@ from sqlalchemy.orm import Session
 #, Sentence, GrammarRule, GrammarExample, GrammarBundle, VocabExpression, VocabExpressionExample
 from backend.assistants.utility import parse_json_from_text
 
+
+def _log_text_preview(label: str, value, max_len: int = 220) -> None:
+    """Log a short preview only (avoid full prompts / long model output in server logs)."""
+    if value is None:
+        print(f"{label}: <None>")
+        return
+    s = str(value)
+    if len(s) <= max_len:
+        print(f"{label}: {s}")
+    else:
+        print(f"{label} (len={len(s)}): {s[:max_len]}…")
+
+
 class SubAssistant:
     def __init__(self, sys_prompt, max_tokens, parse_json):
         # 从统一配置模块导入 API Key
@@ -38,7 +51,7 @@ class SubAssistant:
     ) -> dict |list[dict] | str:
         user_prompt = self.build_prompt(*args, **kwargs)
         if verbose:
-            print("🧾 Prompt:\n", user_prompt)
+            _log_text_preview("🧾 [SubAssistant] user prompt", user_prompt, max_len=400)
     
         messages = [
             {"role": "system", "content": self.sys_prompt},
@@ -96,17 +109,18 @@ class SubAssistant:
                         # 回滚 token 相关的事务
                         session.rollback()
                 
-                # 🔧 详细记录原始响应
                 raw_content = response.choices[0].message.content
-                print(f"🔍 [SubAssistant] 原始响应内容（strip前）: {repr(raw_content)}")
-                print(f"🔍 [SubAssistant] 原始响应内容长度: {len(raw_content) if raw_content else 0}")
-                
+                _rc_len = len(raw_content) if raw_content else 0
+                _rc_prev = (raw_content or "")[:200]
+                print(
+                    f"🔍 [SubAssistant] 响应 len={_rc_len} "
+                    f"preview={repr(_rc_prev)}{'…' if _rc_len > 200 else ''}"
+                )
+
                 content = raw_content.strip() if raw_content else ""
-                print(f"🔍 [SubAssistant] strip后的内容: {repr(content)}")
-                print(f"🔍 [SubAssistant] strip后的内容长度: {len(content)}")
                 
                 if verbose:
-                    print("📬 Raw Response:\n", content)
+                    _log_text_preview("📬 [SubAssistant] raw response", content, max_len=400)
                 
                 # 🔧 检查返回内容是否为空
                 if not content:
@@ -119,21 +133,19 @@ class SubAssistant:
                         return content  # 返回空字符串
                 
                 if self.parse_json:
-                    print(f"🔍 [SubAssistant] 准备解析 JSON，内容: {repr(content[:200]) if content else '(空)'}")
-                    #print("📬 Parsing JSON from response...")
+                    _log_text_preview("🔍 [SubAssistant] JSON 输入", content, max_len=220)
                     parsed = parse_json_from_text(content)
-                    print(f"🔍 [SubAssistant] JSON 解析结果: {type(parsed)}, 值: {parsed}")
+                    _log_text_preview(f"🔍 [SubAssistant] JSON 解析结果 type={type(parsed)}", parsed, max_len=300)
                     if parsed is None:
                         # 🔧 JSON 解析失败，返回原始文本（而不是 None）
-                        print(f"⚠️ [SubAssistant] JSON 解析失败，原始内容: {content[:100] if content else '(空)'}")
+                        _log_text_preview("⚠️ [SubAssistant] JSON 解析失败，原始内容", content[:500] if content else "", max_len=120)
                         if not content:
                             # 如果是空内容且 JSON 解析失败，尝试重试
                             if attempt < self.max_retries:
                                 print(f"🔄 [SubAssistant] 内容为空且JSON解析失败，将进行第 {attempt + 1} 次重试...")
                                 continue
-                        print(f"🔍 [SubAssistant] 返回原始内容: {repr(content)}")
+                        _log_text_preview("🔍 [SubAssistant] 返回原始内容", content, max_len=300)
                         return content
-                    print(f"🔍 [SubAssistant] JSON 解析成功，返回: {type(parsed)}, 值: {parsed}")
                     return parsed
                 return content
             except (APIConnectionError, APITimeoutError, httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout) as error:

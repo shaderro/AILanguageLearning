@@ -104,6 +104,20 @@ MAX_CHAT_TOKENS_PER_HOUR = 30000
 _active_chat_users = set()
 _active_chat_users_lock = Lock()
 
+# 后台 grammar/vocab 处理串行锁（按 user_id）
+# 目的：允许下一轮 /api/chat 立即返回主回答，但避免同一用户的后台写入（JSON/DB）并发导致错乱/竞态。
+_background_user_locks: dict[int, Lock] = {}
+_background_user_locks_lock = Lock()
+
+
+def _get_background_user_lock(user_id: int) -> Lock:
+    with _background_user_locks_lock:
+        lock = _background_user_locks.get(user_id)
+        if lock is None:
+            lock = Lock()
+            _background_user_locks[user_id] = lock
+        return lock
+
 
 def _chat_error_response(status_code: int, error: str, message: str, **extra):
     detail = {"error": error, "message": message}
@@ -117,6 +131,12 @@ def _chat_error_response(status_code: int, error: str, message: str, **extra):
             "detail": detail,
         }
     )
+
+
+def _main_assistant_flow_log(user_id: Optional[int], request_id: Optional[int], message: str) -> None:
+    """Prefix MainAssistant /api/chat flow logs so operators can tie server output to a user during beta."""
+    rid = request_id if request_id is not None else "?"
+    print(f"[user_id={user_id}] [chat_req={rid}] {message}")
 
 
 def _check_user_article_limit(user_id: int):
@@ -582,6 +602,14 @@ async def log_requests(request, call_next):
         response = await call_next(request)
         print(f"📤 [Response] {request.method} {request.url.path} -> {response.status_code}")
         return response
+    except HTTPException as e:
+        # Ensure HTTPException (e.g. 429 rate limit) returns as-is, not as 500.
+        from fastapi.responses import JSONResponse
+        status_code = getattr(e, "status_code", 500) or 500
+        headers = getattr(e, "headers", None) or {}
+        detail = getattr(e, "detail", None)
+        print(f"📤 [Response] {request.method} {request.url.path} -> {status_code}")
+        return JSONResponse(status_code=status_code, content={"detail": detail}, headers=headers)
     except Exception as e:
         # 🔧 捕获并记录异常，然后重新抛出
         print(f"❌ [Request] 处理请求时发生异常: {e}")
@@ -1140,10 +1168,32 @@ async def update_session_context(payload: dict):
             
             tokens_payload = sentence_data.get('tokens', [])
             word_tokens_payload = sentence_data.get('word_tokens')
+            # Be tolerant to missing fields from different frontend payload shapes.
+            text_id = (
+                sentence_data.get("text_id")
+                or payload.get("text_id")
+                or payload.get("textId")
+            )
+            sentence_id = sentence_data.get("sentence_id") or payload.get("sentence_id") or payload.get("sentenceId")
+            sentence_body = sentence_data.get("sentence_body")
+            if text_id is None or sentence_id is None or not sentence_body:
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error": "invalid_session_context",
+                        "message": "Missing required fields for sentence context",
+                        "required": ["sentence.text_id", "sentence.sentence_id", "sentence.sentence_body"],
+                        "received": {
+                            "text_id": text_id,
+                            "sentence_id": sentence_id,
+                            "has_sentence_body": bool(sentence_body),
+                        },
+                    },
+                )
             current_sentence = NewSentence(
-                text_id=sentence_data['text_id'],
-                sentence_id=sentence_data['sentence_id'],
-                sentence_body=sentence_data['sentence_body'],
+                text_id=int(text_id),
+                sentence_id=int(sentence_id),
+                sentence_body=sentence_body,
                 sentence_difficulty_level=sentence_data.get('sentence_difficulty_level'),
                 tokens=_convert_tokens_from_payload(tokens_payload),
                 word_tokens=_convert_word_tokens_from_payload(word_tokens_payload)
@@ -1195,11 +1245,13 @@ async def update_session_context(payload: dict):
             'message': 'Session context updated',
             'updated_fields': updated_fields
         }
+    except HTTPException:
+        raise
     except Exception as e:
         import traceback
         print(f"[SessionState] Error updating context: {e}")
         print(f"[SessionState] Traceback:\n{traceback.format_exc()}")
-        return {'success': False, 'error': str(e)}
+        raise HTTPException(status_code=500, detail={"error": "session_update_failed", "message": str(e)})
 
 @app.post("/api/session/reset")
 async def reset_session_state(payload: dict):
@@ -1473,9 +1525,9 @@ async def chat_with_assistant(
             if not payload_data or "sub" not in payload_data:
                 return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
             user_id = int(payload_data["sub"])
-            print(f"✅ [Chat #{request_id}] 使用认证用户: {user_id}")
+            _main_assistant_flow_log(user_id, request_id, f"✅ [Chat] 使用认证用户: {user_id}")
         except Exception as e:
-            print(f"⚠️ [Chat #{request_id}] Token 解析失败: {e}")
+            _main_assistant_flow_log(None, request_id, f"⚠️ [Chat] Token 解析失败: {e}")
             return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
         
         # 🔧 从 payload 获取 UI 语言（用于控制 AI 输出语言）
@@ -1486,27 +1538,26 @@ async def chat_with_assistant(
             ui_language = '中文'
         else:
             ui_language = str(raw_ui_language or '中文')
-        print("\n" + "="*80)
-        print(f"💬 [Chat #{request_id}] ========== Chat endpoint called ==========")
-        print(f"📥 [Chat #{request_id}] Payload: {payload}")
-        print(f"👤 [Chat #{request_id}] User ID: {user_id}")
-        print(f"🌐 [Chat #{request_id}] UI Language: {ui_language}")
-        print("="*80)
+        _main_assistant_flow_log(user_id, request_id, "\n" + "=" * 80)
+        _main_assistant_flow_log(user_id, request_id, f"💬 [Chat] ========== Chat endpoint called ==========")
+        _main_assistant_flow_log(user_id, request_id, f"📥 [Chat] Payload: {payload}")
+        _main_assistant_flow_log(user_id, request_id, f"🌐 [Chat] UI Language: {ui_language}")
+        _main_assistant_flow_log(user_id, request_id, "=" * 80)
         
         # 从 session_state 获取上下文信息
         current_sentence = session_state.current_sentence
         current_selected_token = session_state.current_selected_token
         current_input = session_state.current_input
         
-        print(f"📋 [Chat #{request_id}] Session State Info:")
-        print(f"  - current_input: {current_input}")
-        print(f"  - current_sentence text_id: {current_sentence.text_id if current_sentence else 'None'}")
-        print(f"  - current_sentence sentence_id: {current_sentence.sentence_id if current_sentence else 'None'}")
-        print(f"  - current_sentence: {current_sentence.sentence_body[:50] if current_sentence else 'None'}...")
-        print(f"  - current_selected_token: {current_selected_token}")
+        _main_assistant_flow_log(user_id, request_id, f"📋 [Chat] Session State Info:")
+        _main_assistant_flow_log(user_id, request_id, f"  - current_input: {current_input}")
+        _main_assistant_flow_log(user_id, request_id, f"  - current_sentence text_id: {current_sentence.text_id if current_sentence else 'None'}")
+        _main_assistant_flow_log(user_id, request_id, f"  - current_sentence sentence_id: {current_sentence.sentence_id if current_sentence else 'None'}")
+        _main_assistant_flow_log(user_id, request_id, f"  - current_sentence: {current_sentence.sentence_body[:50] if current_sentence else 'None'}...")
+        _main_assistant_flow_log(user_id, request_id, f"  - current_selected_token: {current_selected_token}")
         if current_selected_token:
-            print(f"    - token_text: {current_selected_token.token_text}")
-            print(f"    - token_indices: {current_selected_token.token_indices if hasattr(current_selected_token, 'token_indices') else 'N/A'}")
+            _main_assistant_flow_log(user_id, request_id, f"    - token_text: {current_selected_token.token_text}")
+            _main_assistant_flow_log(user_id, request_id, f"    - token_indices: {current_selected_token.token_indices if hasattr(current_selected_token, 'token_indices') else 'N/A'}")
         
         # 验证必要的参数
         if not current_sentence:
@@ -1560,7 +1611,7 @@ async def chat_with_assistant(
             local_state.set_current_selected_token(current_selected_token)
         local_state.set_current_input(current_input)
         local_state.user_id = user_id
-        print("🧹 [Chat] 使用独立的 SessionState 副本处理本轮请求")
+        _main_assistant_flow_log(user_id, request_id, "🧹 [Chat] 使用独立的 SessionState 副本处理本轮请求")
 
         # 🔧 获取数据库 session（用于 token 记录和扣减以及检查token是否不足）
         try:
@@ -1594,7 +1645,7 @@ async def chat_with_assistant(
                             window_minutes=60,
                         )
         except Exception as e:
-            print(f"⚠️ [Chat #{request_id}] 检查token不足时出错: {e}")
+            _main_assistant_flow_log(user_id, request_id, f"⚠️ [Chat] 检查token不足时出错: {e}")
             # 如果检查失败，继续执行（避免影响正常流程）
 
         if not _acquire_chat_slot(user_id):
@@ -1613,11 +1664,11 @@ async def chat_with_assistant(
         # 🔧 主回答阶段也必须同步 UI 语言，否则首条回答会退回默认语言
         main_assistant.ui_language = ui_language
         
-        print(f"🚀 [Chat] 调用 MainAssistant...")
+        _main_assistant_flow_log(user_id, request_id, "🚀 [Chat] 调用 MainAssistant...")
         
         # 🔧 先快速生成主回答，立即返回给前端
         effective_sentence_body = selected_text if selected_text else current_sentence.sentence_body
-        print("🚀 [Chat] 生成主回答...")
+        _main_assistant_flow_log(user_id, request_id, "🚀 [Chat] 生成主回答...")
         try:
             # ✅ 关键修复：在生成回答前保存用户消息到 chat_messages（跨设备同步依赖它）
             try:
@@ -1634,9 +1685,9 @@ async def chat_with_assistant(
                     selected_token_for_save,
                     user_id=chat_user_id
                 )
-                print(f"✅ [Chat #{request_id}] 已保存用户消息到 chat_messages (user_id={chat_user_id})")
+                _main_assistant_flow_log(user_id, request_id, f"✅ [Chat] 已保存用户消息到 chat_messages (user_id={chat_user_id})")
             except Exception as e:
-                print(f"⚠️ [Chat #{request_id}] 保存用户消息失败（不影响回答生成）: {e}")
+                _main_assistant_flow_log(user_id, request_id, f"⚠️ [Chat] 保存用户消息失败（不影响回答生成）: {e}")
 
             ai_response = main_assistant.answer_question_function(
                 quoted_sentence=current_sentence,
@@ -1652,13 +1703,13 @@ async def chat_with_assistant(
                     ai_response,
                     user_id=chat_user_id
                 )
-                print(f"✅ [Chat #{request_id}] 已保存AI响应到 chat_messages (user_id={chat_user_id})")
+                _main_assistant_flow_log(user_id, request_id, f"✅ [Chat] 已保存AI响应到 chat_messages (user_id={chat_user_id})")
             except Exception as e:
-                print(f"⚠️ [Chat #{request_id}] 保存AI响应失败（不影响返回）: {e}")
+                _main_assistant_flow_log(user_id, request_id, f"⚠️ [Chat] 保存AI响应失败（不影响返回）: {e}")
         finally:
             # 确保 session 被正确关闭
             db_session.close()
-        print("✅ [Chat] 主回答就绪，立即返回给前端")
+        _main_assistant_flow_log(user_id, request_id, "✅ [Chat] 主回答就绪，立即返回给前端")
         
         # 🔧 先立即返回主回答，然后在后台处理 grammar/vocab 和创建 notations
         # 这样主回答能立即显示，toast 通过后台任务完成后返回的数据显示
@@ -1679,9 +1730,13 @@ async def chat_with_assistant(
         
         # 🔧 后台执行 grammar/vocab 处理和创建 notations
         def _run_grammar_vocab_background():
+            def _bg_log(msg: str) -> None:
+                _main_assistant_flow_log(user_id, request_id, msg)
+
             import traceback
             from backend.assistants import main_assistant as _ma_mod
             prev_disable_grammar = getattr(_ma_mod, 'DISABLE_GRAMMAR_FEATURES', True)
+            bg_user_lock = _get_background_user_lock(user_id)
             # 🔧 为后台任务创建新的数据库 session（用于 token 记录）
             try:
                 from backend.config import ENV
@@ -1692,13 +1747,15 @@ async def chat_with_assistant(
             bg_db_manager = get_database_manager(environment)
             bg_db_session = bg_db_manager.get_session()
             try:
-                print("🧠 [Background] 执行 handle_grammar_vocab_function...")
+                # 同一用户的后台任务串行化，避免并发写 asked_tokens/json/db 导致错乱
+                bg_user_lock.acquire()
+                _bg_log("🧠 [Background] 执行 handle_grammar_vocab_function...")
                 _ma_mod.DISABLE_GRAMMAR_FEATURES = False
                 # 🔧 为后台任务设置 user_id 和 session（用于 token 记录）
                 main_assistant.set_user_context(user_id=user_id, session=bg_db_session)
                 # 🔧 同步 UI 语言到 main_assistant（用于控制所有子助手输出语言）
                 main_assistant.ui_language = ui_language
-                print(f"🌐 [Background] 设置 UI 语言到 main_assistant: {ui_language}")
+                _bg_log(f"🌐 [Background] 设置 UI 语言到 main_assistant: {ui_language}")
                 main_assistant.handle_grammar_vocab_function(
                     quoted_sentence=current_sentence,
                     user_question=current_input,
@@ -1707,9 +1764,9 @@ async def chat_with_assistant(
                 )
                 
                 # 🔧 调用 add_new_to_data() 以创建新词汇和 notations
-                print("🧠 [Background] 执行 add_new_to_data()...")
+                _bg_log("🧠 [Background] 执行 add_new_to_data()...")
                 main_assistant.add_new_to_data()
-                print("✅ [Background] add_new_to_data() 完成")
+                _bg_log("✅ [Background] add_new_to_data() 完成")
                 
                 # 🔧 关键修复：在 add_new_to_data() 完成后，从 session_state 获取新创建的 vocab_to_add 和 grammar_to_add
                 # 以及已有知识点的 notation，供前端轮询获取并显示 toast
@@ -1720,7 +1777,7 @@ async def chat_with_assistant(
                 
                 # 🔧 从 session_state 获取 grammar_to_add（add_new_to_data() 会填充它）
                 if local_state.grammar_to_add:
-                    print(f"🔍 [Background] 从 session_state 获取 grammar_to_add: {len(local_state.grammar_to_add)} 个")
+                    _bg_log(f"🔍 [Background] 从 session_state 获取 grammar_to_add: {len(local_state.grammar_to_add)} 个")
                     for g in local_state.grammar_to_add:
                         # 🔧 使用新格式：display_name 和 rule_summary，标记为新知识点
                         grammar_to_add_list.append({
@@ -1730,26 +1787,26 @@ async def chat_with_assistant(
                         })
                 
                 # 🔧 从 session_state 获取已有语法知识点的 notation
-                print(f"🔍 [Background] 检查 existing_grammar_notations: hasattr={hasattr(local_state, 'existing_grammar_notations')}")
+                _bg_log(f"🔍 [Background] 检查 existing_grammar_notations: hasattr={hasattr(local_state, 'existing_grammar_notations')}")
                 if hasattr(local_state, 'existing_grammar_notations'):
-                    print(f"🔍 [Background] existing_grammar_notations 值: {local_state.existing_grammar_notations}")
-                    print(f"🔍 [Background] existing_grammar_notations 长度: {len(local_state.existing_grammar_notations) if local_state.existing_grammar_notations else 0}")
+                    _bg_log(f"🔍 [Background] existing_grammar_notations 值: {local_state.existing_grammar_notations}")
+                    _bg_log(f"🔍 [Background] existing_grammar_notations 长度: {len(local_state.existing_grammar_notations) if local_state.existing_grammar_notations else 0}")
                 if hasattr(local_state, 'existing_grammar_notations') and local_state.existing_grammar_notations:
-                    print(f"🔍 [Background] 从 session_state 获取 existing_grammar_notations: {len(local_state.existing_grammar_notations)} 个")
+                    _bg_log(f"🔍 [Background] 从 session_state 获取 existing_grammar_notations: {len(local_state.existing_grammar_notations)} 个")
                     for idx, g in enumerate(local_state.existing_grammar_notations):
-                        print(f"🔍 [Background] 处理 existing_grammar_notation[{idx}]: {g}")
+                        _bg_log(f"🔍 [Background] 处理 existing_grammar_notation[{idx}]: {g}")
                         existing_grammar_list.append({
                             'name': g.get('display_name', ''),
                             'grammar_id': g.get('grammar_id'),
                             'type': 'existing'  # 已有知识点
                         })
-                    print(f"🔍 [Background] existing_grammar_list 构建完成: {existing_grammar_list}")
+                    _bg_log(f"🔍 [Background] existing_grammar_list 构建完成: {existing_grammar_list}")
                 else:
-                    print(f"⚠️ [Background] existing_grammar_notations 为空或不存在")
+                    _bg_log(f"⚠️ [Background] existing_grammar_notations 为空或不存在")
                 
                 # 🔧 从 session_state 获取 vocab_to_add（add_new_to_data() 会填充它）
                 if local_state.vocab_to_add:
-                    print(f"🔍 [Background] 从 session_state 获取 vocab_to_add: {len(local_state.vocab_to_add)} 个词汇")
+                    _bg_log(f"🔍 [Background] 从 session_state 获取 vocab_to_add: {len(local_state.vocab_to_add)} 个词汇")
                     for v in local_state.vocab_to_add:
                         vocab_body = getattr(v, 'vocab', None)
                         vocab_id = None
@@ -1766,11 +1823,11 @@ async def chat_with_assistant(
                                 ).order_by(VocabExpression.vocab_id.desc()).first()
                                 if vocab_model:
                                     vocab_id = vocab_model.vocab_id
-                                    print(f"✅ [Background] 从数据库找到 vocab_id={vocab_id} for vocab='{vocab_body}'")
+                                    _bg_log(f"✅ [Background] 从数据库找到 vocab_id={vocab_id} for vocab='{vocab_body}'")
                             finally:
                                 session.close()
                         except Exception as db_err:
-                            print(f"⚠️ [Background] 从数据库查询 vocab_id 失败: {db_err}")
+                            _bg_log(f"⚠️ [Background] 从数据库查询 vocab_id 失败: {db_err}")
                         
                         if vocab_id:
                             vocab_to_add_list.append({
@@ -1778,7 +1835,7 @@ async def chat_with_assistant(
                                 'vocab_id': vocab_id,
                                 'type': 'new'  # 新知识点
                             })
-                            print(f"✅ [Background] 添加 vocab_to_add: vocab='{vocab_body}', vocab_id={vocab_id}")
+                            _bg_log(f"✅ [Background] 添加 vocab_to_add: vocab='{vocab_body}', vocab_id={vocab_id}")
                         else:
                             vocab_to_add_list.append({
                                 'vocab': vocab_body, 
@@ -1787,22 +1844,22 @@ async def chat_with_assistant(
                             })
                 
                 # 🔧 从 session_state 获取已有词汇知识点的 notation
-                print(f"🔍 [Background] 检查 existing_vocab_notations: hasattr={hasattr(local_state, 'existing_vocab_notations')}")
+                _bg_log(f"🔍 [Background] 检查 existing_vocab_notations: hasattr={hasattr(local_state, 'existing_vocab_notations')}")
                 if hasattr(local_state, 'existing_vocab_notations'):
-                    print(f"🔍 [Background] existing_vocab_notations 值: {local_state.existing_vocab_notations}")
-                    print(f"🔍 [Background] existing_vocab_notations 长度: {len(local_state.existing_vocab_notations) if local_state.existing_vocab_notations else 0}")
+                    _bg_log(f"🔍 [Background] existing_vocab_notations 值: {local_state.existing_vocab_notations}")
+                    _bg_log(f"🔍 [Background] existing_vocab_notations 长度: {len(local_state.existing_vocab_notations) if local_state.existing_vocab_notations else 0}")
                 if hasattr(local_state, 'existing_vocab_notations') and local_state.existing_vocab_notations:
-                    print(f"🔍 [Background] 从 session_state 获取 existing_vocab_notations: {len(local_state.existing_vocab_notations)} 个")
+                    _bg_log(f"🔍 [Background] 从 session_state 获取 existing_vocab_notations: {len(local_state.existing_vocab_notations)} 个")
                     for idx, v in enumerate(local_state.existing_vocab_notations):
-                        print(f"🔍 [Background] 处理 existing_vocab_notation[{idx}]: {v}")
+                        _bg_log(f"🔍 [Background] 处理 existing_vocab_notation[{idx}]: {v}")
                         existing_vocab_list.append({
                             'vocab': v.get('vocab_body', ''),
                             'vocab_id': v.get('vocab_id'),
                             'type': 'existing'  # 已有知识点
                         })
-                    print(f"🔍 [Background] existing_vocab_list 构建完成: {existing_vocab_list}")
+                    _bg_log(f"🔍 [Background] existing_vocab_list 构建完成: {existing_vocab_list}")
                 else:
-                    print(f"⚠️ [Background] existing_vocab_notations 为空或不存在")
+                    _bg_log(f"⚠️ [Background] existing_vocab_notations 为空或不存在")
                 
                 # 🔧 合并新知识点和已有知识点的列表
                 all_grammar_list = grammar_to_add_list + existing_grammar_list
@@ -1813,28 +1870,28 @@ async def chat_with_assistant(
                     max_items=MAX_CHAT_KNOWLEDGE_ITEMS,
                 )
                 
-                print(f"🔍 [Background] ========== 知识点汇总 ==========")
-                print(f"🔍 [Background] 新语法知识点: {len(grammar_to_add_list)} 个")
-                print(f"🔍 [Background] 已有语法知识点: {len(existing_grammar_list)} 个")
-                print(f"🔍 [Background] 新词汇知识点: {len(vocab_to_add_list)} 个")
-                print(f"🔍 [Background] 已有词汇知识点: {len(existing_vocab_list)} 个")
-                print(f"🔍 [Background] 合并后语法总数: {len(all_grammar_list)} 个")
-                print(f"🔍 [Background] 合并后词汇总数: {len(all_vocab_list)} 个")
-                print(f"🔍 [Background] all_grammar_list 详情: {all_grammar_list}")
-                print(f"🔍 [Background] all_vocab_list 详情: {all_vocab_list}")
+                _bg_log(f"🔍 [Background] ========== 知识点汇总 ==========")
+                _bg_log(f"🔍 [Background] 新语法知识点: {len(grammar_to_add_list)} 个")
+                _bg_log(f"🔍 [Background] 已有语法知识点: {len(existing_grammar_list)} 个")
+                _bg_log(f"🔍 [Background] 新词汇知识点: {len(vocab_to_add_list)} 个")
+                _bg_log(f"🔍 [Background] 已有词汇知识点: {len(existing_vocab_list)} 个")
+                _bg_log(f"🔍 [Background] 合并后语法总数: {len(all_grammar_list)} 个")
+                _bg_log(f"🔍 [Background] 合并后词汇总数: {len(all_vocab_list)} 个")
+                _bg_log(f"🔍 [Background] all_grammar_list 详情: {all_grammar_list}")
+                _bg_log(f"🔍 [Background] all_vocab_list 详情: {all_vocab_list}")
                 
                 # 存储到临时存储中，供前端轮询获取
-                print(f"🔍 [Background] 检查是否需要存储知识点: 新语法={len(grammar_to_add_list)}, 已有语法={len(existing_grammar_list)}, 新词汇={len(vocab_to_add_list)}, 已有词汇={len(existing_vocab_list)}")
+                _bg_log(f"🔍 [Background] 检查是否需要存储知识点: 新语法={len(grammar_to_add_list)}, 已有语法={len(existing_grammar_list)}, 新词汇={len(vocab_to_add_list)}, 已有词汇={len(existing_vocab_list)}")
                 if all_grammar_list or all_vocab_list:
-                    print(f"🔍 [Background] 有知识点需要存储，检查 current_sentence...")
-                    print(f"🔍 [Background] current_sentence 类型: {type(current_sentence)}")
-                    print(f"🔍 [Background] current_sentence 是否有 text_id 属性: {hasattr(current_sentence, 'text_id')}")
+                    _bg_log(f"🔍 [Background] 有知识点需要存储，检查 current_sentence...")
+                    _bg_log(f"🔍 [Background] current_sentence 类型: {type(current_sentence)}")
+                    _bg_log(f"🔍 [Background] current_sentence 是否有 text_id 属性: {hasattr(current_sentence, 'text_id')}")
                     text_id = current_sentence.text_id if hasattr(current_sentence, 'text_id') else None
-                    print(f"🔍 [Background] 提取的 text_id: {text_id} (type={type(text_id) if text_id else 'None'})")
+                    _bg_log(f"🔍 [Background] 提取的 text_id: {text_id} (type={type(text_id) if text_id else 'None'})")
                     if text_id:
                         # 🔧 确保 text_id 是整数类型（与前端一致）
                         text_id = int(text_id) if text_id else None
-                        print(f"🔍 [Background] 转换后的 text_id: {text_id} (type={type(text_id) if text_id else 'None'})")
+                        _bg_log(f"🔍 [Background] 转换后的 text_id: {text_id} (type={type(text_id) if text_id else 'None'})")
                         if text_id:
                             key = (user_id, text_id)
                             pending_knowledge_points[key] = {
@@ -1842,22 +1899,22 @@ async def chat_with_assistant(
                                 'vocab_to_add': all_vocab_list,  # 包含新知识点和已有知识点
                                 'timestamp': datetime.now().isoformat()
                             }
-                            print(f"✅ [Background] 存储知识点到临时存储: user_id={user_id}, text_id={text_id} (type={type(text_id).__name__}), 语法总数={len(all_grammar_list)} (新={len(grammar_to_add_list)}, 已有={len(existing_grammar_list)}), 词汇总数={len(all_vocab_list)} (新={len(vocab_to_add_list)}, 已有={len(existing_vocab_list)})")
-                            print(f"🔍 [Background] 存储的数据详情:")
-                            print(f"🔍 [Background]   grammar_to_add: {all_grammar_list}")
-                            print(f"🔍 [Background]   vocab_to_add: {all_vocab_list}")
-                            print(f"🔍 [Background] pending_knowledge_points[{key}] = {pending_knowledge_points[key]}")
-                            print(f"🔍 [Background] 临时存储的 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
+                            _bg_log(f"✅ [Background] 存储知识点到临时存储: user_id={user_id}, text_id={text_id} (type={type(text_id).__name__}), 语法总数={len(all_grammar_list)} (新={len(grammar_to_add_list)}, 已有={len(existing_grammar_list)}), 词汇总数={len(all_vocab_list)} (新={len(vocab_to_add_list)}, 已有={len(existing_vocab_list)})")
+                            _bg_log(f"🔍 [Background] 存储的数据详情:")
+                            _bg_log(f"🔍 [Background]   grammar_to_add: {all_grammar_list}")
+                            _bg_log(f"🔍 [Background]   vocab_to_add: {all_vocab_list}")
+                            _bg_log(f"🔍 [Background] pending_knowledge_points[{key}] = {pending_knowledge_points[key]}")
+                            _bg_log(f"🔍 [Background] 临时存储的 key: {key}, 当前所有 keys: {list(pending_knowledge_points.keys())}")
                         else:
-                            print(f"⚠️ [Background] text_id 转换失败，无法存储新知识点")
+                            _bg_log(f"⚠️ [Background] text_id 转换失败，无法存储新知识点")
                     else:
-                        print(f"⚠️ [Background] text_id 不存在，无法存储新知识点")
-                        print(f"🔍 [Background] current_sentence 详细信息: {current_sentence}")
+                        _bg_log(f"⚠️ [Background] text_id 不存在，无法存储新知识点")
+                        _bg_log(f"🔍 [Background] current_sentence 详细信息: {current_sentence}")
                 else:
-                    print(f"⚠️ [Background] 没有知识点需要存储（grammar_to_add_list 和 vocab_to_add_list 都为空）")
+                    _bg_log(f"⚠️ [Background] 没有知识点需要存储（grammar_to_add_list 和 vocab_to_add_list 都为空）")
                 
                 # 同步到数据库
-                print("💾 [Background] 同步数据到数据库...")
+                _bg_log("💾 [Background] 同步数据到数据库...")
                 _sync_to_database(user_id=user_id, session_state_instance=local_state)
                 
                 # 保存到 JSON 文件（保持兼容）
@@ -1869,7 +1926,7 @@ async def chat_with_assistant(
                     dialogue_record_path=DIALOGUE_RECORD_PATH,
                     dialogue_history_path=DIALOGUE_HISTORY_PATH
                 )
-                print("✅ [Background] 数据持久化完成")
+                _bg_log("✅ [Background] 数据持久化完成")
                 
                 # 🔧 汇总并显示本轮全部 token 使用量（详细版本）
                 try:
@@ -1939,49 +1996,49 @@ async def chat_with_assistant(
                         final_user = bg_db_session.query(User).filter(User.user_id == user_id).first()
                         final_balance = final_user.token_balance if final_user else 0
                         
-                        print("\n" + "="*80)
-                        print(f"📊 [Token Summary] 本轮 Chat API 调用 Token 使用汇总")
-                        print("="*80)
-                        print(f"  👤 用户 ID: {user_id}")
-                        print(f"  🔢 总 API 调用次数: {call_count}")
-                        print(f"  📝 总 Prompt Tokens: {total_prompt:,}")
-                        print(f"  ✍️  总 Completion Tokens: {total_completion:,}")
-                        print(f"  💰 总 Token 使用量: {total_tokens:,}")
-                        print(f"  💵 最终余额: {final_balance:,}")
-                        print("="*80)
+                        _bg_log("\n" + "="*80)
+                        _bg_log(f"📊 [Token Summary] 本轮 Chat API 调用 Token 使用汇总")
+                        _bg_log("="*80)
+                        _bg_log(f"  👤 用户 ID: {user_id}")
+                        _bg_log(f"  🔢 总 API 调用次数: {call_count}")
+                        _bg_log(f"  📝 总 Prompt Tokens: {total_prompt:,}")
+                        _bg_log(f"  ✍️  总 Completion Tokens: {total_completion:,}")
+                        _bg_log(f"  💰 总 Token 使用量: {total_tokens:,}")
+                        _bg_log(f"  💵 最终余额: {final_balance:,}")
+                        _bg_log("="*80)
                         
                         # 按 Assistant 分组统计
                         if assistant_stats:
-                            print(f"\n📋 按 SubAssistant 分组统计:")
-                            print("-" * 80)
+                            _bg_log(f"\n📋 按 SubAssistant 分组统计:")
+                            _bg_log("-" * 80)
                             for assistant_name, a_call_count, a_total, a_prompt, a_completion in assistant_stats:
                                 a_total_int = int(a_total) if a_total else 0
                                 a_prompt_int = int(a_prompt) if a_prompt else 0
                                 a_completion_int = int(a_completion) if a_completion else 0
                                 assistant_display = assistant_name or "Unknown"
-                                print(f"  • {assistant_display}:")
-                                print(f"     调用次数: {a_call_count}")
-                                print(f"     Prompt: {a_prompt_int:,} | Completion: {a_completion_int:,} | 总计: {a_total_int:,}")
+                                _bg_log(f"  • {assistant_display}:")
+                                _bg_log(f"     调用次数: {a_call_count}")
+                                _bg_log(f"     Prompt: {a_prompt_int:,} | Completion: {a_completion_int:,} | 总计: {a_total_int:,}")
                         
                         # 详细调用列表
                         if all_calls:
-                            print(f"\n📝 详细调用记录（按时间顺序）:")
-                            print("-" * 80)
+                            _bg_log(f"\n📝 详细调用记录（按时间顺序）:")
+                            _bg_log("-" * 80)
                             for idx, call in enumerate(all_calls, 1):
                                 assistant_display = call.assistant_name or "Unknown"
                                 call_time = call.created_at.strftime("%H:%M:%S.%f")[:-3] if call.created_at else "N/A"
-                                print(f"  {idx}. [{call_time}] {assistant_display}")
-                                print(f"     Prompt: {call.prompt_tokens:,} | Completion: {call.completion_tokens:,} | 总计: {call.total_tokens:,}")
+                                _bg_log(f"  {idx}. [{call_time}] {assistant_display}")
+                                _bg_log(f"     Prompt: {call.prompt_tokens:,} | Completion: {call.completion_tokens:,} | 总计: {call.total_tokens:,}")
                         
-                        print("="*80 + "\n")
+                        _bg_log("="*80 + "\n")
                     else:
-                        print("⚠️ [Token Summary] 未找到本轮 token 使用记录")
+                        _bg_log("⚠️ [Token Summary] 未找到本轮 token 使用记录")
                 except Exception as summary_error:
-                    print(f"⚠️ [Token Summary] 汇总 token 使用量时出错: {summary_error}")
+                    _bg_log(f"⚠️ [Token Summary] 汇总 token 使用量时出错: {summary_error}")
                     import traceback
                     traceback.print_exc()
             except Exception as bg_e:
-                print(f"❌ [Background] 后台流程失败: {bg_e}")
+                _bg_log(f"❌ [Background] 后台流程失败: {bg_e}")
                 traceback.print_exc()
             finally:
                 try:
@@ -1992,22 +2049,30 @@ async def chat_with_assistant(
                 try:
                     bg_db_session.close()
                 except Exception as e:
-                    print(f"⚠️ [Background] 关闭 session 时出错: {e}")
-                _release_chat_slot(user_id)
+                    _bg_log(f"⚠️ [Background] 关闭 session 时出错: {e}")
+                try:
+                    bg_user_lock.release()
+                except Exception:
+                    pass
         
         # 启动后台任务
         background_tasks.add_task(_run_grammar_vocab_background)
+        # ✅ 主回答已完成：释放 chat 锁，允许用户继续提问（后台任务仍会按 user 串行执行）
+        if chat_slot_acquired:
+            _release_chat_slot(user_id)
+            chat_slot_acquired = False
         release_chat_slot_in_endpoint = False
         
         # 🔧 立即返回主回答，不等待后续流程
-        print(f"📋 [Chat] 立即返回主回答给前端（后续流程在后台执行）")
+        _main_assistant_flow_log(user_id, request_id, "📋 [Chat] 立即返回主回答给前端（后续流程在后台执行）")
         
         return initial_response
     except Exception as e:
         if chat_slot_acquired and release_chat_slot_in_endpoint:
             _release_chat_slot(user_id)
-        print(f"❌ [Chat] Error: {e}")
-        print(traceback.format_exc())
+        _rid = locals().get("request_id")
+        _main_assistant_flow_log(user_id, _rid, f"❌ [Chat] Error: {e}")
+        _main_assistant_flow_log(user_id, _rid, traceback.format_exc())
         return {
             "success": False,
             "error": str(e),

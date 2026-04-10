@@ -1217,19 +1217,25 @@ function ChatView({
     return raw.trim()
   }
 
+  // 行内 code 优先于 **bold**，避免反引号内 ** 被当成加粗。
+  // 使用 **…** 非贪婪匹配，允许加粗内含单个 *（旧版 [^*]+ 会在遇到 * 时整段无法匹配）。
   const renderSimpleMarkdownInline = (text) => {
     const source = String(text ?? '')
-    const parts = source.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
+    const parts = source.split(/(`[^`]*`|\*\*[\s\S]+?\*\*)/g)
     return parts.map((part, idx) => {
       if (!part) return null
-      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-        return <strong key={`md-b-${idx}`}>{part.slice(2, -2)}</strong>
-      }
-      if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+      if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
         return (
           <code key={`md-c-${idx}`} className="rounded bg-gray-200 px-1 py-0.5 text-[0.95em]">
             {part.slice(1, -1)}
           </code>
+        )
+      }
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        return (
+          <strong key={`md-b-${idx}`} className="font-semibold">
+            {part.slice(2, -2)}
+          </strong>
         )
       }
       return <span key={`md-t-${idx}`}>{part}</span>

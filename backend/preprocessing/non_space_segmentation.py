@@ -7,7 +7,7 @@
 
 当前实现：
 - 中文分词：使用 jieba 库
-- 日文分词：待实现（可使用 mecab 或 janome）
+- 日文分词：janome（Tokenizer）
 - 其他非空格语言：待实现
 """
 
@@ -259,18 +259,15 @@ def convert_segments_to_word_tokens(
     return word_tokens, token_word_mapping, next_word_token_id
 
 
-# 日文分词功能（待实现）
 def Japanese_sentence_segmentation(sentence: str) -> List[Tuple[str, int, int]]:
     """
-    日文句子分词（待实现）
-    
-    可以使用 mecab 或 janome 库实现
-    
+    日文句子分词（janome）。
+
     Args:
         sentence: 输入的日文句子
-        
+
     Returns:
-        List[Tuple[str, int, int]]: 分词结果列表
+        List[Tuple[str, int, int]]: 分词结果列表 (word, start, end)
     """
     if not JANOME_AVAILABLE:
         raise ImportError("janome 库未安装，无法进行日文分词。请运行: pip install janome")

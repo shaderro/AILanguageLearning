@@ -2,7 +2,9 @@
 Rate Limit 中间件
 用于限制 API 调用频率，防止滥用（特别是 AI 接口）
 """
+import os
 from fastapi import Request, HTTPException, status
+from fastapi.responses import JSONResponse
 from typing import Dict, Tuple
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -115,6 +117,16 @@ async def rate_limit_middleware(request: Request, call_next):
     """
     # 🔧 修复：添加异常处理，避免请求中断时导致 500 错误
     try:
+        # Dev-only: allow sandbox stress tests to bypass rate limits.
+        # This keeps normal UI behavior intact while enabling high-RPS bursts.
+        env = os.getenv("ENV", "development").lower()
+        if (
+            env != "production"
+            and request.url.path == "/api/chat"
+            and request.headers.get("x-sandbox-test") == "1"
+        ):
+            return await call_next(request)
+
         # 跳过健康检查和文档接口
         if request.url.path in ["/", "/api/health", "/docs", "/openapi.json", "/redoc"]:
             return await call_next(request)
@@ -165,19 +177,24 @@ async def rate_limit_middleware(request: Request, call_next):
             for ts, path, method, _ in history[-10:]:
                 dt = datetime.fromtimestamp(ts).strftime("%H:%M:%S")
                 print(f"     {dt} {method} {path}")
-            raise HTTPException(
+            headers = {
+                "X-RateLimit-Limit": str(max_requests),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(int(time.time()) + reset_in),
+                "Retry-After": str(reset_in),
+            }
+            # IMPORTANT: return a proper 429 response instead of raising inside middleware.
+            # Raising here can be reported as 500 depending on middleware ordering/handlers.
+            return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail={
-                    "error": "rate_limit_exceeded",
-                    "message": "提问过快，请过一分钟后再试",
-                    "retry_after": reset_in
+                content={
+                    "detail": {
+                        "error": "rate_limit_exceeded",
+                        "message": "提问过快，请过一分钟后再试",
+                        "retry_after": reset_in,
+                    }
                 },
-                headers={
-                    "X-RateLimit-Limit": str(max_requests),
-                    "X-RateLimit-Remaining": "0",
-                    "X-RateLimit-Reset": str(int(time.time()) + reset_in),
-                    "Retry-After": str(reset_in)
-                }
+                headers=headers,
             )
         
         # 添加 rate limit 信息到响应头

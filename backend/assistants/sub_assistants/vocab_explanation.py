@@ -41,12 +41,11 @@ class VocabExplanationAssistant(SubAssistant):
             language=formatted_language
         )
         
-        # 🔍 打印完整的 system prompt 用于调试
-        print(f"🔍 [VocabExplanation] ========== System Prompt ==========")
-        print(f"🔍 [VocabExplanation] Language: {formatted_language}")
-        print(f"🔍 [VocabExplanation] Vocab: {vocab}")
-        print(f"🔍 [VocabExplanation] System Prompt:\n{self.sys_prompt}")
-        print(f"🔍 [VocabExplanation] ====================================")
+        _sp_len = len(self.sys_prompt) if self.sys_prompt else 0
+        print(
+            f"🔍 [VocabExplanation] language={formatted_language} vocab={vocab!r} "
+            f"sys_prompt_chars={_sp_len}"
+        )
         
         try:
             # vocab_explanation 使用关键字参数传递，确保 user_id 和 session 能正确传递

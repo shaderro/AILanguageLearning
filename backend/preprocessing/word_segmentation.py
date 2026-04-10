@@ -4,7 +4,7 @@
 """
 Word segmentation orchestrator.
 
-目前仅支持中文，会在未来扩展到其他非空格语言。
+支持中文（jieba）与日文（janome）；其他语言可扩展。
 """
 
 from typing import Any, Dict, List, Optional, Tuple
@@ -26,7 +26,7 @@ def word_segmentation(
     根据语言执行 word segmentation。
 
     Args:
-        language_code: 语言代码（如 "zh"）
+        language_code: 语言代码（"zh" / "ja"）
         sentence_text: 当前句子文本
         sentence_tokens: 已生成的字符级 token（含 sentence_token_id）
         next_word_token_id: 可用的全局 word_token_id

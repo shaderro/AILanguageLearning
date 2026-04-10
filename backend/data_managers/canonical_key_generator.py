@@ -36,16 +36,26 @@ def _normalize_language_name(language: str) -> str:
     
     language_lower = language.lower().strip()
     
-    # 语言名称映射表
+    # 语言名称映射表（需与前端文章语言选项、OriginalText.language 取值对齐）
     language_map = {
-        # 中文名称
+        # 中文名称（含与 UI 一致的别名）
         "中文": "chinese",
         "英文": "english",
+        "英语": "english",
         "德文": "german",
+        "德语": "german",
         "日文": "japanese",
+        "日语": "japanese",
         "法文": "french",
+        "法语": "french",
         "西班牙文": "spanish",
         "西班牙语": "spanish",
+        "韩语": "korean",
+        "朝鲜语": "korean",
+        "阿拉伯语": "arabic",
+        "俄语": "russian",
+        "意大利语": "italian",
+        "葡萄牙语": "portuguese",
         # 英文名称
         "chinese": "chinese",
         "english": "english",
@@ -54,6 +64,23 @@ def _normalize_language_name(language: str) -> str:
         "japanese": "japanese",
         "french": "french",
         "spanish": "spanish",
+        "korean": "korean",
+        "arabic": "arabic",
+        "russian": "russian",
+        "italian": "italian",
+        "portuguese": "portuguese",
+        # ISO 639-1（若数据库或接口传入两字母代码）
+        "zh": "chinese",
+        "en": "english",
+        "de": "german",
+        "ja": "japanese",
+        "fr": "french",
+        "es": "spanish",
+        "ko": "korean",
+        "ar": "arabic",
+        "ru": "russian",
+        "it": "italian",
+        "pt": "portuguese",
     }
     
     # 先尝试直接匹配

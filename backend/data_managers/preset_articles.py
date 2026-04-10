@@ -7,10 +7,12 @@
 
 import os
 import json
+import time
 from functools import lru_cache
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Set
 
 from sqlalchemy import func, text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from database_system.business_logic.models import (
@@ -31,6 +33,9 @@ from backend.preprocessing.token_processor import (
 )
 from backend.preprocessing.word_segmentation import word_segmentation
 
+
+# 远程 PostgreSQL 上单句 flush 过多行时，易触发大包 INSERT 被代理/服务端断开；分批落库。
+WORD_TOKEN_FLUSH_CHUNK_SIZE = 8
 
 LANG_CODE_TO_NAME = {
     'zh': '中文',
@@ -214,6 +219,22 @@ def seed_presets_for_user(
         session.commit()
 
 
+def _needs_word_token_backfill(session: Session, text_id: int) -> bool:
+    """True if the text has char tokens but no word-level rows (old seed without segmentation)."""
+    token_n = session.query(Token).filter(Token.text_id == text_id).count()
+    if token_n == 0:
+        return False
+    wt_n = session.query(WordToken).filter(WordToken.text_id == text_id).count()
+    return wt_n == 0
+
+
+def _clear_tokens_for_text(session: Session, text_id: int) -> None:
+    """Remove Token / WordToken rows so _generate_tokens_for_text can run again."""
+    session.query(WordToken).filter(WordToken.text_id == text_id).delete(synchronize_session=False)
+    session.query(Token).filter(Token.text_id == text_id).delete(synchronize_session=False)
+    session.flush()
+
+
 def _repair_existing_preset_text_if_needed(
     session: Session,
     text: OriginalText,
@@ -222,7 +243,25 @@ def _repair_existing_preset_text_if_needed(
     """
     Retry token generation for preset texts that already exist but were left in an
     incomplete state by a previous failed seed run.
+
+    Also backfills word segmentation for zh/ja when older imports only created char tokens.
     """
+    lc = (language_code or "").strip().lower()
+
+    # 中文/日文：旧版预置导入可能只有字符 Token、没有 WordToken —— 清空后重跑分词
+    if lc in ("zh", "ja") and _needs_word_token_backfill(session, text.text_id):
+        try:
+            _clear_tokens_for_text(session, text.text_id)
+            _generate_tokens_for_text(
+                session=session,
+                text_id=text.text_id,
+                language_code=lc,
+            )
+            text.processing_status = 'completed'
+        except Exception:
+            text.processing_status = 'failed'
+        return
+
     if text.processing_status == 'completed':
         return
 
@@ -235,7 +274,7 @@ def _repair_existing_preset_text_if_needed(
         _generate_tokens_for_text(
             session=session,
             text_id=text.text_id,
-            language_code=language_code,
+            language_code=lc or language_code,
         )
         text.processing_status = 'completed'
     except Exception:
@@ -250,16 +289,19 @@ def _generate_tokens_for_text(
     """
     为指定文章生成 Token / WordToken：
     - 空格语言（英文、德文）按单词分词
-    - 非空格语言（中文等）按字符 + 分词（生成 WordToken）
+    - 非空格语言（中文、日文等）按字符 + 分词（生成 WordToken；日文依赖 janome）
 
     仅在当前文章尚无 Token 时运行，避免重复生成。
+    （需要重跑时请先用 _clear_tokens_for_text）
     """
+    lc = (language_code or "").strip().lower()
+
     # 如果该文章已经有 Token，则不再重复生成（幂等保护）
     existing_token_count = session.query(Token).filter(Token.text_id == text_id).count()
     if existing_token_count:
         return
 
-    is_non_whitespace = is_non_whitespace_language(language_code) if language_code else False
+    is_non_whitespace = is_non_whitespace_language(lc) if lc else False
 
     sentences = (
         session.query(Sentence)
@@ -290,12 +332,12 @@ def _generate_tokens_for_text(
             tokens_with_id.append(token_with_id)
             global_token_id += 1
 
-        # 2) 中文等非空格语言：生成 WordToken，并回填到 char token 上
+        # 2) 中文、日文等非空格语言：生成 WordToken，并回填到 char token 上
         sentence_word_tokens: list[dict] = []
         token_word_mapping: dict[int, int] = {}
-        if language_code == "zh":
+        if lc in ("zh", "ja"):
             sentence_word_tokens, token_word_mapping, _ = word_segmentation(
-                language_code,
+                lc,
                 sentence_text,
                 tokens_with_id,
                 1,
@@ -353,26 +395,29 @@ def _create_word_tokens_and_get_mapping(
     if not sentence_word_tokens:
         return {}
 
-    temp_to_model: Dict[int, WordToken] = {}
-
+    entries: List[Tuple[int, Dict[str, Any]]] = []
     for wt in sentence_word_tokens:
         temp_word_token_id = wt.get("word_token_id")
         if temp_word_token_id is None:
             continue
+        entries.append((int(temp_word_token_id), wt))
 
-        word_token = WordToken(
-            text_id=text_id,
-            sentence_id=sentence_id,
-            word_body=wt.get("word_body", ""),
-            token_ids=wt.get("token_ids") or [],
-            pos_tag=wt.get("pos_tag"),
-            lemma=wt.get("lemma"),
-            linked_vocab_id=wt.get("linked_vocab_id"),
-        )
-        session.add(word_token)
-        temp_to_model[int(temp_word_token_id)] = word_token
-
-    session.flush()
+    temp_to_model: Dict[int, WordToken] = {}
+    chunk = max(1, WORD_TOKEN_FLUSH_CHUNK_SIZE)
+    for start in range(0, len(entries), chunk):
+        for temp_word_token_id, wt in entries[start : start + chunk]:
+            word_token = WordToken(
+                text_id=text_id,
+                sentence_id=sentence_id,
+                word_body=wt.get("word_body", ""),
+                token_ids=wt.get("token_ids") or [],
+                pos_tag=wt.get("pos_tag"),
+                lemma=wt.get("lemma"),
+                linked_vocab_id=wt.get("linked_vocab_id"),
+            )
+            session.add(word_token)
+            temp_to_model[temp_word_token_id] = word_token
+        session.flush()
 
     return {
         temp_id: model.word_token_id
@@ -401,3 +446,116 @@ def _sync_word_token_sequence_if_needed(session: Session) -> None:
             """
         )
     )
+
+
+def preset_title_language_pairs() -> Set[Tuple[str, str]]:
+    """
+    All (language_code, title) pairs defined under backend/data/presets/articles.
+    Used to match DB rows to preset articles only.
+    """
+    pairs: Set[Tuple[str, str]] = set()
+    for p in load_preset_files([]):
+        lc = (p.get("language_code") or "").strip().lower()
+        title = (p.get("title") or "").strip()
+        if lc and title:
+            pairs.add((lc, title))
+    return pairs
+
+
+def backfill_word_tokens_missing_word_level(
+    session: Session,
+    *,
+    only_preset_titles: bool = True,
+    language_codes: Tuple[str, ...] = ("zh", "ja"),
+    commit: bool = True,
+) -> Dict[str, Any]:
+    """
+    一次性修复：数据库里已有字符级 Token，但没有任何 WordToken 的中文/日文文章
+    （旧版预置导入或早期逻辑）。会删除该文下 Token/WordToken 后按当前逻辑重跑分词。
+
+    - only_preset_titles=True：只处理标题+语言与预置 JSON 一致的记录（推荐）。
+    - only_preset_titles=False：处理所有缺少 WordToken 的 zh/ja 文章（含用户上传的旧数据）。
+
+    需要本机已安装 jieba（中文）与 janome（日文）。
+
+    说明：对远程 PostgreSQL 使用「每篇文章单独 commit」，避免长事务 + 大批量 INSERT 导致连接被服务端断开；
+    单篇失败会 rollback，不影响已成功的文章，可安全重跑。
+    """
+    preset_pairs = preset_title_language_pairs() if only_preset_titles else None
+    stats: Dict[str, Any] = {
+        "scanned": 0,
+        "fixed": 0,
+        "skipped_has_word_tokens": 0,
+        "skipped_wrong_language": 0,
+        "skipped_not_preset": 0,
+        "errors": 0,
+        "error_details": [],
+    }
+
+    work_queue: List[Dict[str, Any]] = []
+    for text in session.query(OriginalText).all():
+        stats["scanned"] += 1
+        lang_name = (text.language or "").strip()
+        lc = get_language_code(lang_name) if lang_name else ""
+        if lc not in language_codes:
+            stats["skipped_wrong_language"] += 1
+            continue
+
+        if preset_pairs is not None:
+            key = (lc, (text.text_title or "").strip())
+            if key not in preset_pairs:
+                stats["skipped_not_preset"] += 1
+                continue
+
+        tid = text.text_id
+        title = (text.text_title or "").strip()
+        if not _needs_word_token_backfill(session, tid):
+            stats["skipped_has_word_tokens"] += 1
+            continue
+
+        work_queue.append({"text_id": tid, "lc": lc, "title": title, "language": lang_name})
+
+    for item in work_queue:
+        tid = item["text_id"]
+        lc = item["lc"]
+        title = item["title"]
+        last_err: Optional[Exception] = None
+        for attempt in range(2):
+            try:
+                _clear_tokens_for_text(session, tid)
+                _generate_tokens_for_text(session, tid, lc)
+                stats["fixed"] += 1
+                if commit:
+                    session.commit()
+                else:
+                    session.rollback()
+                last_err = None
+                break
+            except OperationalError as e:
+                last_err = e
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+                if attempt == 0:
+                    time.sleep(2.0)
+                    continue
+            except Exception as e:
+                last_err = e
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+                break
+        if last_err is not None:
+            stats["errors"] += 1
+            stats["error_details"].append(
+                {
+                    "text_id": tid,
+                    "title": title,
+                    "language": item.get("language"),
+                    "error": str(last_err),
+                }
+            )
+
+    return stats

@@ -753,7 +753,7 @@ export const apiService = {
   },
 
   // 聊天功能
-  sendChat: (payload = {}) => {
+  sendChat: (payload = {}, axiosConfig = undefined) => {
     console.log('💬 [Frontend] Sending chat request:', payload);
     // 测试开关：?fullFlow=1 或 localStorage.CHAT_FULL_FLOW = '1'
     const needFullFlow = (() => {
@@ -770,7 +770,7 @@ export const apiService = {
     })();
     const finalPayload = needFullFlow ? { ...payload, full_flow: true } : payload;
     if (needFullFlow) console.log('🔧 [Frontend] full_flow enabled for this request');
-    return api.post("/api/chat", finalPayload);
+    return api.post("/api/chat", finalPayload, axiosConfig);
   },
 
   // 获取聊天历史（跨设备）

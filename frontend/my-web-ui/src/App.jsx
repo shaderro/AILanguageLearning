@@ -25,6 +25,7 @@ import LandingPage from './pages/LandingPage'
 import OnboardingLanguage from './pages/OnboardingLanguage'
 import OnboardingReadingIntro from './pages/OnboardingReadingIntro'
 import PrivacyPolicyAndTerms from './pages/PrivacyPolicyAndTerms'
+import ChatConcurrencySandbox from './pages/ChatConcurrencySandbox'
 import { colors } from './design-tokens'
 import { recordRecentArticle } from './utils/pageStateManager'
 
@@ -830,6 +831,7 @@ function AppContent() {
 
           {currentPage === 'UIDemo' && <UIDemoPage />}
           {currentPage === 'testTranslationAPI' && <TestTranslationAPI />}
+          {currentPage === 'chatConcurrencySandbox' && <ChatConcurrencySandbox />}
         </div>
       </div>
     </div>

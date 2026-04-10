@@ -16,6 +16,9 @@
 
     # 指定环境（如 production），一般只在线上运维时使用
     python seed_preset_articles_for_all.py --env production
+
+    # 为所有用户导入后，再全库回填预置文中缺失的 WordToken（发版后推荐执行一次）
+    python seed_preset_articles_for_all.py --env production --backfill-word-tokens
 """
 
 import os
@@ -38,6 +41,7 @@ from database_system.database_manager import DatabaseManager  # type: ignore
 from database_system.business_logic.models import User  # type: ignore
 from backend.data_managers.preset_articles import (  # type: ignore
     LANG_CODE_TO_NAME,
+    backfill_word_tokens_missing_word_level,
     seed_presets_for_user,
 )
 
@@ -63,6 +67,11 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="DatabaseManager 环境名称（默认使用 backend.config.ENV 或 ENV 环境变量，缺省为 'development'）。",
+    )
+    parser.add_argument(
+        '--backfill-word-tokens',
+        action='store_true',
+        help="全部用户预置导入结束后，再执行一次全库预置文章分词回填（补全仅有字符 Token、无 WordToken 的中/日预置文）。线上推荐定期或在发版后执行一次。",
     )
     return parser.parse_args()
 
@@ -146,6 +155,23 @@ def main() -> None:
             session.close()
 
     print(f"\n[DONE] 已尝试为 {total_users} 个用户导入预置文章。")
+
+    if args.backfill_word_tokens:
+        print("\n[INFO] 开始全库预置文章 WordToken 回填（仅标题匹配预置 JSON 的 zh/ja）...")
+        session = db_manager.get_session()
+        try:
+            stats = backfill_word_tokens_missing_word_level(
+                session,
+                only_preset_titles=True,
+                commit=True,
+            )
+            print(f"[OK] 回填完成: {stats}")
+        except Exception as e:
+            session.rollback()
+            print(f"[ERROR] WordToken 回填失败: {e}")
+            raise
+        finally:
+            session.close()
 
 
 if __name__ == '__main__':

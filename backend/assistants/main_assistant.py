@@ -46,6 +46,17 @@ SentenceType = Union[Sentence, NewSentence] if NEW_STRUCTURE_AVAILABLE else Sent
 # 全局开关：临时关闭语法相关能力（对比/生成规则与例句）
 DISABLE_GRAMMAR_FEATURES = True
 
+
+def _preview_for_log(value, max_len: int = 240) -> str:
+    """Avoid dumping full model outputs / summaries into server logs."""
+    if value is None:
+        return ""
+    s = str(value)
+    if len(s) <= max_len:
+        return s
+    return f"{s[:max_len]}…(truncated len={len(s)})"
+
+
 class MainAssistant:
     
     def __init__(self, data_controller_instance=None, max_turns=100, session_state_instance=None):
@@ -96,6 +107,11 @@ class MainAssistant:
         """
         self._user_id = user_id
         self._db_session = session
+
+    def _ma_log(self, msg: str) -> None:
+        """Prefix assistant logs with user_id (matches /api/chat server logs during beta)."""
+        uid = self._user_id
+        print(f"[user_id={uid}] [MainAssistant] {msg}")
 
     def _detect_sentence_language(self, sentence: SentenceType) -> Tuple[Optional[str], Optional[str], bool]:
         """
@@ -426,8 +442,10 @@ class MainAssistant:
         """
         打印数据管理器中的数据，便于调试和验证。
         """
-        print("📚 Grammar Rules (by name):", self.data_controller.grammar_manager.get_all_rules_name())
-        print("📖 Vocab List:", self.data_controller.vocab_manager.get_all_vocab_body())
+        _names = self.data_controller.grammar_manager.get_all_rules_name()
+        _vocabs = self.data_controller.vocab_manager.get_all_vocab_body()
+        print(f"📚 Grammar Rules count={len(_names)} sample={_preview_for_log(_names[:15], 200)}")
+        print(f"📖 Vocab List count={len(_vocabs)} sample={_preview_for_log(_vocabs[:20], 200)}")
         
         # 显示规则的ID顺序
         self.data_controller.grammar_manager.print_rules_order()
@@ -483,8 +501,8 @@ class MainAssistant:
         if sentence_body != full_sentence:
             # 用户选择了特定文本（如单词或短语）
             quoted_part = sentence_body
-            print(f"🎯 [AnswerQuestion] 用户选择了特定文本: '{quoted_part}'")
-            print(f"📖 [AnswerQuestion] 完整句子: '{full_sentence}'")
+            self._ma_log(f"🎯 [AnswerQuestion] 用户选择了特定文本: '{_preview_for_log(quoted_part, 120)}'")
+            self._ma_log(f"📖 [AnswerQuestion] 完整句子: '{_preview_for_log(full_sentence, 160)}'")
             ai_response = self.answer_question_assistant.run(
                 full_sentence=full_sentence,
                 user_question=user_question,
@@ -495,7 +513,7 @@ class MainAssistant:
             )
         else:
             # 用户选择了整句话
-            print(f"📖 [AnswerQuestion] 用户选择了整句话: '{full_sentence}'")
+            self._ma_log(f"📖 [AnswerQuestion] 用户选择了整句话: '{_preview_for_log(full_sentence, 160)}'")
             ai_response = self.answer_question_assistant.run(
                 full_sentence=full_sentence,
                 user_question=user_question,
@@ -504,26 +522,28 @@ class MainAssistant:
                 session=self._db_session
             )
         
-        print("AI Response:", ai_response)
-        print("AI Response Type:", type(ai_response))
+        self._ma_log(
+            f"AI Response len={len(str(ai_response)) if ai_response is not None else 0} "
+            f"type={type(ai_response)}: {_preview_for_log(ai_response, 320)}"
+        )
         
         # 🔧 处理 JSON 解析结果
         if isinstance(ai_response, dict):
             # 如果返回的是字典，尝试提取 answer 字段
             if "answer" in ai_response:
                 ai_response = ai_response["answer"]
-                print("✅ 从字典中提取 answer 字段:", ai_response[:100] if len(str(ai_response)) > 100 else ai_response)
+                self._ma_log("✅ 从字典中提取 answer 字段: " + (str(ai_response)[:100] if len(str(ai_response)) > 100 else str(ai_response)))
             else:
                 # 如果没有 answer 字段，将整个字典转换为字符串（向后兼容）
-                print("⚠️ 字典中没有 answer 字段，转换为字符串")
+                self._ma_log("⚠️ 字典中没有 answer 字段，转换为字符串")
                 ai_response = str(ai_response)
         elif isinstance(ai_response, list):
             # 如果是列表，转换为字符串（向后兼容）
-            print("⚠️ 返回的是列表，转换为字符串")
+            self._ma_log("⚠️ 返回的是列表，转换为字符串")
             ai_response = str(ai_response)
         elif ai_response is None:
             # 解析失败（这种情况应该不会发生，因为 SubAssistant.run() 现在返回原始文本）
-            print("❌ AI 响应为 None，使用错误提示")
+            self._ma_log("❌ AI 响应为 None，使用错误提示")
             ai_response = "抱歉，AI响应解析失败，请重试。"
         # 如果已经是字符串，直接使用
         
@@ -560,27 +580,28 @@ class MainAssistant:
         """
         处理与语法和词汇相关的操作。
         """
+        self._ma_log("handle_grammar_vocab_function 开始")
         # 🌐 确保语言信息已检测（如果还没有检测，则现在检测）
         # 这很重要，因为 handle_grammar_vocab_function 可能被直接调用，绕过了 run() 方法
         if self.current_language_code is None:
-            print("🔍 [DEBUG] [handle_grammar_vocab_function] 语言信息未设置，执行语言检测...")
+            self._ma_log("🔍 [DEBUG] [handle_grammar_vocab_function] 语言信息未设置，执行语言检测...")
             language, language_code, is_non_whitespace = self._detect_sentence_language(quoted_sentence)
             self.current_language = language
             self.current_language_code = language_code
             self.current_is_non_whitespace = is_non_whitespace
             if language_code:
-                print(f"🌐 [MainAssistant] [handle_grammar_vocab_function] 检测到语言: {language} (代码: {language_code}, 非空格语言: {is_non_whitespace})")
+                self._ma_log(f"🌐 [handle_grammar_vocab_function] 检测到语言: {language} (代码: {language_code}, 非空格语言: {is_non_whitespace})")
             else:
-                print(f"🌐 [MainAssistant] [handle_grammar_vocab_function] 无法检测语言，使用默认处理（假设为空格语言，is_non_whitespace={is_non_whitespace}）")
+                self._ma_log(f"🌐 [handle_grammar_vocab_function] 无法检测语言，使用默认处理（假设为空格语言，is_non_whitespace={is_non_whitespace}）")
         else:
-            print(f"🌐 [MainAssistant] [handle_grammar_vocab_function] 使用已检测的语言信息: {self.current_language} (代码: {self.current_language_code}, 非空格语言: {self.current_is_non_whitespace})")
+            self._ma_log(f"🌐 [handle_grammar_vocab_function] 使用已检测的语言信息: {self.current_language} (代码: {self.current_language_code}, 非空格语言: {self.current_is_non_whitespace})")
         
         # 🔧 保存 selected_token 的引用（避免在后续处理中被清空）
         saved_selected_token = self.session_state.current_selected_token
-        print(f"🔍 [DEBUG] [handle_grammar_vocab_function] 保存 selected_token 引用: {saved_selected_token is not None}")
+        self._ma_log(f"🔍 [DEBUG] [handle_grammar_vocab_function] 保存 selected_token 引用: {saved_selected_token is not None}")
         if saved_selected_token:
-            print(f"🔍 [DEBUG] [handle_grammar_vocab_function] selected_token.token_text: '{getattr(saved_selected_token, 'token_text', None)}'")
-            print(f"🔍 [DEBUG] [handle_grammar_vocab_function] selected_token.token_indices: {getattr(saved_selected_token, 'token_indices', None)}")
+            self._ma_log(f"🔍 [DEBUG] [handle_grammar_vocab_function] selected_token.token_text: '{getattr(saved_selected_token, 'token_text', None)}'")
+            self._ma_log(f"🔍 [DEBUG] [handle_grammar_vocab_function] selected_token.token_indices: {getattr(saved_selected_token, 'token_indices', None)}")
         
         # 如果没有提供effective_sentence_body，使用完整句子
         if effective_sentence_body is None:
@@ -588,7 +609,7 @@ class MainAssistant:
             
         # 检查是否与语法相关
         if DISABLE_GRAMMAR_FEATURES:
-            print("⏸️ [MainAssistant] Grammar features are DISABLED (skip relevance/summarize/compare/generation)")
+            self._ma_log("⏸️ Grammar features are DISABLED (skip relevance/summarize/compare/generation)")
             grammar_relevant_response = {"is_grammar_relevant": False}
         else:
             grammar_relevant_response = self.check_if_grammar_relavent_assistant.run(
@@ -627,7 +648,7 @@ class MainAssistant:
                 language=output_language,
                 user_id=self._user_id, session=self._db_session
             )
-            print(f"✅ [DEBUG] summarize_grammar_rule 输出结果: {grammar_summary}")
+            print(f"✅ [DEBUG] summarize_grammar_rule 输出: {_preview_for_log(grammar_summary, 400)}")
             
             # 处理新的格式：display_name + canonical
             def process_new_format_grammar(grammar_dict: dict):
@@ -731,9 +752,9 @@ class MainAssistant:
                 if grammar_summary.strip() == "":
                     print(f"⚠️ [DEBUG] AI 返回空字符串，表示没有新的语法规则")
                 else:
-                    print(f"⚠️ [DEBUG] AI 返回字符串（非空）: {grammar_summary}")
+                    print(f"⚠️ [DEBUG] AI 返回字符串（非空）: {_preview_for_log(grammar_summary, 400)}")
             else:
-                print(f"⚠️ [DEBUG] grammar_summary 类型未知: {type(grammar_summary)}, 值: {grammar_summary}")
+                print(f"⚠️ [DEBUG] grammar_summary 类型未知: {type(grammar_summary)}, 值: {_preview_for_log(grammar_summary, 400)}")
             
             # 处理每个语法知识点
             for grammar_item in grammar_list:
@@ -750,7 +771,7 @@ class MainAssistant:
                         else:
                             print(f"⚠️ [DEBUG] 语法总结为空或无效: name={grammar_name}, explanation={grammar_explanation}")
                 else:
-                    print(f"⚠️ [DEBUG] 语法规则格式不支持: {type(grammar_item)}, 值: {grammar_item}")
+                    print(f"⚠️ [DEBUG] 语法规则格式不支持: {type(grammar_item)}, 值: {_preview_for_log(grammar_item, 400)}")
 
         # 检查是否与词汇相关
         if self.session_state.check_relevant_decision and self.session_state.check_relevant_decision.vocab:
@@ -1009,7 +1030,7 @@ class MainAssistant:
                                     language=output_language,
                                     user_id=self._user_id, session=self._db_session
                                 )
-                                print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
+                                print(f"🔍 [DEBUG] example_explanation原始结果: {_preview_for_log(example_explanation_raw, 360)}")
                                 
                                 # 🔧 解析 JSON 字符串，提取 explanation 字段
                                 example_explanation = None
@@ -1029,11 +1050,11 @@ class MainAssistant:
                                 else:
                                     example_explanation = str(example_explanation_raw) if example_explanation_raw else None
                                 
-                                print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
+                                print(f"🔍 [DEBUG] example_explanation解析后: {_preview_for_log(example_explanation, 360)}")
                                 
                                 try:
                                     print(f"🔍 [DEBUG] 尝试添加现有语法的grammar_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, rule_id={existing_rule_id}")
-                                    print(f"🔍 [DEBUG] explanation_context: {example_explanation}")
+                                    print(f"🔍 [DEBUG] explanation_context: {_preview_for_log(example_explanation, 360)}")
                                     
                                     # 🔧 为现有语法创建grammar notation（在add_grammar_example之前）
                                     print(f"🔍 [DEBUG] ========== 开始为现有语法创建grammar notation ==========")
@@ -1399,7 +1420,7 @@ class MainAssistant:
                             language=output_language,
                             user_id=self._user_id, session=self._db_session
                         )
-                        print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
+                        print(f"🔍 [DEBUG] example_explanation原始结果: {_preview_for_log(example_explanation_raw, 360)}")
                         
                         # 🔧 解析 JSON 字符串，提取 explanation 字段
                         example_explanation = None
@@ -1419,7 +1440,7 @@ class MainAssistant:
                         else:
                             example_explanation = str(example_explanation_raw) if example_explanation_raw else None
                         
-                        print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
+                        print(f"🔍 [DEBUG] example_explanation解析后: {_preview_for_log(example_explanation, 360)}")
                         
                         # 检查text_id是否存在，如果不存在则跳过添加example
                         try:
@@ -1623,16 +1644,16 @@ class MainAssistant:
         """
         将新语法和词汇添加到数据管理器中。
         """
-        print(f"🔍 [DEBUG] ========== 开始执行 add_new_to_data ==========")
-        print(f"🔍 [DEBUG] grammar_to_add 长度: {len(self.session_state.grammar_to_add) if self.session_state.grammar_to_add else 0}")
-        print(f"🔍 [DEBUG] vocab_to_add 长度: {len(self.session_state.vocab_to_add) if self.session_state.vocab_to_add else 0}")
+        self._ma_log("========== 开始执行 add_new_to_data ==========")
+        self._ma_log(f"🔍 [DEBUG] grammar_to_add 长度: {len(self.session_state.grammar_to_add) if self.session_state.grammar_to_add else 0}")
+        self._ma_log(f"🔍 [DEBUG] vocab_to_add 长度: {len(self.session_state.vocab_to_add) if self.session_state.vocab_to_add else 0}")
         
         # 🔧 保存 selected_token 的引用（避免在后续处理中被清空）
         saved_selected_token = self.session_state.current_selected_token
-        print(f"🔍 [DEBUG] 保存 selected_token 引用: {saved_selected_token is not None}")
+        self._ma_log(f"🔍 [DEBUG] 保存 selected_token 引用: {saved_selected_token is not None}")
         if saved_selected_token:
-            print(f"🔍 [DEBUG] selected_token.token_text: '{getattr(saved_selected_token, 'token_text', None)}'")
-            print(f"🔍 [DEBUG] selected_token.token_indices: {getattr(saved_selected_token, 'token_indices', None)}")
+            self._ma_log(f"🔍 [DEBUG] selected_token.token_text: '{getattr(saved_selected_token, 'token_text', None)}'")
+            self._ma_log(f"🔍 [DEBUG] selected_token.token_indices: {getattr(saved_selected_token, 'token_indices', None)}")
         
         # 🔧 获取当前文章的language字段
         current_sentence = self.session_state.current_sentence
@@ -1733,7 +1754,7 @@ class MainAssistant:
                         language=output_language,
                         user_id=self._user_id, session=self._db_session
                     )
-                    print(f"🔍 [DEBUG] grammar_example_explanation原始结果: {example_explanation_raw}")
+                    print(f"🔍 [DEBUG] grammar_example_explanation原始结果: {_preview_for_log(example_explanation_raw, 360)}")
                     
                     # 🔧 解析 JSON 字符串，提取 explanation 字段
                     example_explanation = None
@@ -1753,7 +1774,7 @@ class MainAssistant:
                     else:
                         example_explanation = str(example_explanation_raw) if example_explanation_raw else None
                     
-                    print(f"🔍 [DEBUG] grammar_example_explanation解析后: {example_explanation}")
+                    print(f"🔍 [DEBUG] grammar_example_explanation解析后: {_preview_for_log(example_explanation, 360)}")
                     
                     # 添加语法例句
                     try:
@@ -1989,7 +2010,7 @@ class MainAssistant:
                         vocab=vocab_for_context,
                         language=output_language
                     )
-                    print(f"🔍 [DEBUG] example_explanation原始结果: {example_explanation_raw}")
+                    print(f"🔍 [DEBUG] example_explanation原始结果: {_preview_for_log(example_explanation_raw, 360)}")
                     
                     # 🔧 解析 JSON 字符串，提取 explanation 字段
                     example_explanation = None
@@ -2009,7 +2030,7 @@ class MainAssistant:
                     else:
                         example_explanation = str(example_explanation_raw) if example_explanation_raw else None
                     
-                    print(f"🔍 [DEBUG] example_explanation解析后: {example_explanation}")
+                    print(f"🔍 [DEBUG] example_explanation解析后: {_preview_for_log(example_explanation, 360)}")
                     
                     # 检查text_id是否存在，如果不存在则跳过添加example
                     try:
