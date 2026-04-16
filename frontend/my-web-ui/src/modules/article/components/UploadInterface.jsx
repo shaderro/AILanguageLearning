@@ -11,6 +11,172 @@ import { BackButton } from '../../../components/base'
 // 文章长度限制（字符数）
 const MAX_ARTICLE_LENGTH = 12000
 const MAX_ARTICLES_PER_USER = 50
+const MAX_SEGMENT_CHARS = 2000
+const MAX_UPLOAD_TOTAL_CHARS = 30000
+const SEGMENT_JOB_KEY = 'article_segment_job_'
+const SEGMENT_RUNNING_KEY = 'article_segment_running_'
+const SPLIT_MODE_OPTIONS = [
+  { id: 'punctuation', labelKey: 'articleSplitModePunctuation' },
+  { id: 'line', labelKey: 'articleSplitModeLine' },
+]
+
+const isSentenceBoundaryChar = (ch) =>
+  ['.', '!', '?', ';', '。', '！', '？', '；', '…'].includes(ch)
+
+const splitArticleIntoSegmentsByMode = (text, splitMode = 'punctuation') => {
+  const t = String(text || '').trim()
+  if (!t) return []
+  if (t.length <= MAX_SEGMENT_CHARS) return [t]
+  const out = []
+  let start = 0
+  while (start < t.length) {
+    let end = Math.min(start + MAX_SEGMENT_CHARS, t.length)
+    if (end < t.length) {
+      const slice = t.slice(start, end)
+      let breakAt = -1
+      if ((splitMode || 'punctuation') === 'line') {
+        const para = slice.lastIndexOf('\n\n')
+        const line = slice.lastIndexOf('\n')
+        if (para >= Math.floor(slice.length * 0.5)) breakAt = para + 2
+        else if (line >= Math.floor(slice.length * 0.5)) breakAt = line + 1
+      } else {
+        for (let i = slice.length - 1; i >= 0; i -= 1) {
+          if (isSentenceBoundaryChar(slice[i])) {
+            breakAt = i + 1
+            break
+          }
+        }
+        if (breakAt < Math.floor(slice.length * 0.4)) {
+          const lastSpace = slice.lastIndexOf(' ')
+          if (lastSpace >= Math.floor(slice.length * 0.7)) breakAt = lastSpace + 1
+        }
+      }
+      if (breakAt > 0) end = start + breakAt
+    }
+    out.push(t.slice(start, end))
+    start = end
+  }
+  return out
+}
+
+const getTransportLength = (text) => String(text || '').replace(/\r?\n/g, '\r\n').length
+
+const runSegmentAppendLoop = async (articleId) => {
+  const key = `${SEGMENT_JOB_KEY}${articleId}`
+  const runningKey = `${SEGMENT_RUNNING_KEY}${articleId}`
+  if (localStorage.getItem(runningKey) === '1') return
+  localStorage.setItem(runningKey, '1')
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return
+    let job
+    try {
+      job = JSON.parse(raw)
+    } catch {
+      localStorage.removeItem(key)
+      return
+    }
+    let queue = Array.isArray(job.remaining) ? [...job.remaining] : []
+    let completed = Number(job.completedPages || 1)
+    let total = Number(job.totalPages || completed + queue.length)
+    while (queue.length > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 120))
+      const nextItem = queue[0]
+      const content = typeof nextItem === 'string' ? nextItem : nextItem?.content
+      const pageIndex = typeof nextItem === 'string' ? completed + 1 : Number(nextItem?.pageIndex || completed + 1)
+      if (!content) {
+        queue.shift()
+        continue
+      }
+      const safeContent = String(content)
+      if (getTransportLength(safeContent) > MAX_SEGMENT_CHARS) {
+        let parts = splitArticleIntoSegmentsByMode(safeContent, job.splitMode || 'punctuation')
+        if (parts.length <= 1) {
+          const pivot = Math.max(1, Math.floor(safeContent.length / 2))
+          parts = [safeContent.slice(0, pivot), safeContent.slice(pivot)].filter(Boolean)
+        }
+        const tail = queue.slice(1)
+        const replacement = parts.map((p, idx) => ({ content: p, pageIndex: pageIndex + idx }))
+        const delta = Math.max(0, replacement.length - 1)
+        const shiftedTail = tail.map((it, idx) => {
+          if (typeof it === 'string') {
+            return { content: it, pageIndex: pageIndex + replacement.length + idx }
+          }
+          return { ...it, pageIndex: Number(it.pageIndex || (pageIndex + replacement.length + idx)) + delta }
+        })
+        queue = [...replacement, ...shiftedTail]
+        total += delta
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            ...job,
+            remaining: queue,
+            completedPages: completed,
+            totalPages: total,
+          })
+        )
+        continue
+      }
+      const res = await apiService.appendArticleSegment(
+        safeContent,
+        articleId,
+        job.language,
+        pageIndex,
+        job.splitMode || 'punctuation'
+      )
+      const ok = res?.status === 'success'
+      if (!ok) {
+        const msg = String(res?.error || res?.message || '')
+        if (msg.includes('超出限制') && safeContent.length > 1) {
+          let parts = splitArticleIntoSegmentsByMode(safeContent, job.splitMode || 'punctuation')
+          if (parts.length <= 1) {
+            const pivot = Math.max(1, Math.floor(safeContent.length / 2))
+            parts = [safeContent.slice(0, pivot), safeContent.slice(pivot)].filter(Boolean)
+          }
+          const tail = queue.slice(1)
+          const replacement = parts.map((p, idx) => ({ content: p, pageIndex: pageIndex + idx }))
+          const delta = Math.max(0, replacement.length - 1)
+          const shiftedTail = tail.map((it, idx) => {
+            if (typeof it === 'string') {
+              return { content: it, pageIndex: pageIndex + replacement.length + idx }
+            }
+            return { ...it, pageIndex: Number(it.pageIndex || (pageIndex + replacement.length + idx)) + delta }
+          })
+          queue = [...replacement, ...shiftedTail]
+          total += delta
+          localStorage.setItem(
+            key,
+            JSON.stringify({
+              ...job,
+              remaining: queue,
+              completedPages: completed,
+              totalPages: total,
+            })
+          )
+          continue
+        }
+        break
+      }
+      queue.shift()
+      completed += 1
+      if (queue.length === 0) {
+        localStorage.removeItem(key)
+      } else {
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            ...job,
+            remaining: queue,
+            completedPages: completed,
+            totalPages: total,
+          })
+        )
+      }
+    }
+  } finally {
+    localStorage.removeItem(runningKey)
+  }
+}
 
 const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, onBack }) => {
   const { userId, isGuest } = useUser()
@@ -21,10 +187,12 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
   const [showProgress, setShowProgress] = useState(false)
   const [textContent, setTextContent] = useState('')
   const [textTitle, setTextTitle] = useState('')
-  const [customTitle, setCustomTitle] = useState('') // 自定义文章名（用于URL和文件上传）
+  const [urlArticleTitle, setUrlArticleTitle] = useState('') // 网址上传专用标题
+  const [fileArticleTitle, setFileArticleTitle] = useState('') // 文件上传专用标题
   const MAX_TITLE_LENGTH = 80 // 文章标题最大长度（前端限制）
   const [selectedFile, setSelectedFile] = useState(null) // 选中的文件（来自选择或拖拽）
   const [selectedFileSource, setSelectedFileSource] = useState(null) // 'file' | 'drop'
+  const [splitMode, setSplitMode] = useState('punctuation')
   const fileInputRef = useRef(null)
   
   // 长度超限对话框状态
@@ -117,6 +285,52 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
     }
   }
 
+  const uploadTextWithSegmentation = async (content, title = 'Text Article') => {
+    const normalized = String(content || '').trim()
+    if (!normalized) {
+      throw new Error(t('文章内容为空'))
+    }
+    const capped = normalized.length > MAX_UPLOAD_TOTAL_CHARS
+      ? normalized.slice(0, MAX_UPLOAD_TOTAL_CHARS)
+      : normalized
+    const segments = splitArticleIntoSegmentsByMode(capped, splitMode)
+    if (segments.length === 0) {
+      throw new Error(t('文章内容为空'))
+    }
+    const first = segments[0]
+    const firstResp = await apiService.uploadText(
+      first,
+      title,
+      language,
+      true,
+      { totalPages: segments.length, pageIndex: 1 },
+      splitMode
+    )
+    if (!(firstResp && (firstResp.success || firstResp.status === 'success'))) {
+      return firstResp
+    }
+    const payload = firstResp.data || firstResp
+    const articleId = payload.article_id || payload.text_id
+    if (articleId && segments.length > 1) {
+      localStorage.setItem(
+        `${SEGMENT_JOB_KEY}${articleId}`,
+        JSON.stringify({
+          remaining: segments.slice(1).map((piece, idx) => ({
+            content: piece,
+            pageIndex: idx + 2,
+          })),
+          language,
+          title,
+          splitMode,
+          totalPages: segments.length,
+          completedPages: 1,
+        })
+      )
+      void runSegmentAppendLoop(articleId)
+    }
+    return firstResp
+  }
+
   const handleArticleLimitExceeded = useCallback((message = null) => {
     setShowProgress(false)
     onUploadStart && onUploadStart(false)
@@ -152,30 +366,29 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         const fileName = file?.name || ''
         const fileExtension = '.' + fileName.split('.').pop().toLowerCase()
         const isPdf = fileExtension === '.pdf' || file?.type === 'application/pdf'
-        const rawTitle = customTitle.trim() || title || fileName.replace(/\.[^/.]+$/, "")
+        const rawTitle = fileArticleTitle.trim() || title || fileName.replace(/\.[^/.]+$/, "")
         const articleTitle = rawTitle.length > MAX_TITLE_LENGTH 
           ? rawTitle.slice(0, MAX_TITLE_LENGTH) 
           : rawTitle
 
         if (isPdf) {
           // PDF 超长时，与 URL 一致：直接上传截取后的纯文本（跳过长度检查）
-          response = await apiService.uploadText(truncatedContent, articleTitle, language, true)
+          response = await uploadTextWithSegmentation(truncatedContent, articleTitle)
         } else {
           // 对于纯文本文件，仍然走文件上传
-          const blob = new Blob([truncatedContent], { type: 'text/plain' })
-          const truncatedFile = new File([blob], fileName, { type: 'text/plain' })
-          response = await apiService.uploadFile(truncatedFile, articleTitle, language)
+          response = await uploadTextWithSegmentation(truncatedContent, articleTitle)
         }
       } else if (type === 'text') {
-        response = await apiService.uploadText(truncatedContent, title || 'Text Article', language)
+        // 截取后文本应跳过长度检查，避免后端二次判定导致上传失败
+        response = await uploadTextWithSegmentation(truncatedContent, title || 'Text Article')
       } else if (type === 'url') {
         // 对于URL，直接上传截取后的文本内容
-        const rawTitle = customTitle.trim() || title || 'URL Article'
+        const rawTitle = urlArticleTitle.trim() || title || 'URL Article'
         const articleTitle = rawTitle.length > MAX_TITLE_LENGTH 
           ? rawTitle.slice(0, MAX_TITLE_LENGTH) 
           : rawTitle
         console.log('📝 [UploadInterface] 截取后上传URL内容，使用标题:', articleTitle)
-        response = await apiService.uploadText(truncatedContent, articleTitle, language, true) // 🔧 传递 skipLengthCheck
+        response = await uploadTextWithSegmentation(truncatedContent, articleTitle)
       }
       
       console.log('✅ [Frontend] 截取后上传成功:', response)
@@ -202,12 +415,15 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       }
       
       setPendingContent(null)
+      pendingContentRef.current = null
     } catch (error) {
       console.error('❌ [Frontend] 截取后上传失败:', error)
       setShowProgress(false)
+      onUploadStart && onUploadStart(false)
       const errorMessage = error.response?.data?.error || error.response?.data?.detail || error.message || '未知错误'
       alert(t('上传失败: {error}').replace('{error}', errorMessage))
       setPendingContent(null)
+      pendingContentRef.current = null
     }
   }
 
@@ -215,6 +431,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
   const handleCancel = () => {
     setShowLengthDialog(false)
     setPendingContent(null)
+    pendingContentRef.current = null
     // 清空文件选择
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -280,8 +497,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       setUploadMethod(sourceType)
 
       // 使用统一的apiService（自动添加认证头）
-      const articleTitle = customTitle.trim() || baseTitle
-      const response = await apiService.uploadFile(file, articleTitle, language)
+      const articleTitle = fileArticleTitle.trim() || baseTitle
+      const response = await apiService.uploadFile(file, articleTitle, language, splitMode)
 
       console.log('📥 [Frontend] 文件上传响应:', response)
 
@@ -290,29 +507,20 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         // 检查是否是长度超限错误
         const errorData = response.data
         if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-          console.log('⚠️ [Frontend] 检测到长度超限错误，显示对话框')
-          setShowProgress(false)
-          // 优先通知父组件显示对话框（避免 UploadInterface 在上传过程中卸载导致对话框丢失）
-          if (onLengthExceeded) {
-            onUploadStart && onUploadStart(false)
-            onLengthExceeded({
-              type: sourceType,
-              file,
-              content: errorData.original_content,
-              title: articleTitle,
-              language,
-            })
+          console.log('⚠️ [Frontend] 文件超长，自动切换为分段文本上传')
+          const recovered = await uploadTextWithSegmentation(errorData.original_content, articleTitle)
+          if (recovered && (recovered.success || recovered.status === 'success')) {
+            handleUploadSuccess(recovered.data || recovered)
+            setSelectedFile(null)
+            setSelectedFileSource(null)
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ''
+            }
             return
           }
-
-          // fallback：本组件内对话框
-          setPendingContent({
-            type: sourceType,
-            file,
-            content: errorData.original_content,
-            title: articleTitle,
-          })
-          setShowLengthDialog(true)
+          setShowProgress(false)
+          onUploadStart && onUploadStart(false)
+          alert(t('文件上传失败: {error}').replace('{error}', recovered?.error || recovered?.message || '未知错误'))
           return
         }
 
@@ -344,26 +552,21 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       // 检查是否是长度超限错误（网络错误等情况）
       const errorData = error.response?.data?.data
       if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-        if (onLengthExceeded) {
-          onUploadStart && onUploadStart(false)
-          onLengthExceeded({
-            type: sourceType,
-            file,
-            content: errorData.original_content,
-            title: customTitle.trim() || file.name.replace(/\.[^/.]+$/, ''),
-            language,
-          })
+        const recovered = await uploadTextWithSegmentation(
+          errorData.original_content,
+          fileArticleTitle.trim() || file.name.replace(/\.[^/.]+$/, '')
+        )
+        if (recovered && (recovered.success || recovered.status === 'success')) {
+          handleUploadSuccess(recovered.data || recovered)
+          setSelectedFile(null)
+          setSelectedFileSource(null)
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
           return
         }
-
-        // fallback：本组件内对话框
-        setPendingContent({
-          type: sourceType,
-          file,
-          content: errorData.original_content,
-          title: file.name.replace(/\.[^/.]+$/, ''),
-        })
-        setShowLengthDialog(true)
+        onUploadStart && onUploadStart(false)
+        alert(t('文件上传失败: {error}').replace('{error}', recovered?.error || recovered?.message || '未知错误'))
         return
       }
 
@@ -472,8 +675,8 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         onUploadStart && onUploadStart()
         
         // 使用统一的apiService（自动添加认证头）
-        const articleTitle = customTitle.trim() || 'URL Article'
-        const response = await apiService.uploadUrl(url, articleTitle, language)
+        const articleTitle = urlArticleTitle.trim() || 'URL Article'
+        const response = await apiService.uploadUrl(url, articleTitle, language, splitMode)
         
         console.log('📥 [Frontend] URL处理响应:', response)
         console.log('📥 [Frontend] response.status:', response?.status)
@@ -489,50 +692,20 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
           console.log('⚠️ [Frontend] original_content存在:', !!errorData?.original_content)
           
           if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-            console.log('⚠️ [Frontend] 检测到长度超限错误，通知父组件显示对话框')
-            // 通知父组件不要显示进度条
-            onUploadStart && onUploadStart(false)
-            // 关闭进度条
-            setShowProgress(false)
-            // 通知父组件显示对话框
-            if (onLengthExceeded) {
-              try {
-                onLengthExceeded({
-                  type: 'url',
-                  url: url,
-                  content: errorData.original_content,
-                  title: customTitle.trim() || 'URL Article', // 🔧 使用自定义标题
-                  language: language
-                })
-              } catch (err) {
-                console.error('❌ [Frontend] onLengthExceeded 回调执行失败:', err)
-                // 如果回调失败，使用本地状态（向后兼容）
-                const contentData = {
-                  type: 'url',
-                  url: url,
-                  content: errorData.original_content,
-                  title: customTitle.trim() || 'URL Article', // 🔧 使用自定义标题
-                  language: language
-                }
-                pendingContentRef.current = contentData
-                setPendingContent(contentData)
-                setShowLengthDialog(true)
-              }
-            } else {
-              // 如果没有回调，使用本地状态（向后兼容）
-              const contentData = {
-                type: 'url',
-                url: url,
-                content: errorData.original_content,
-                title: 'URL Article',
-                language: language
-              }
-              pendingContentRef.current = contentData
-              setPendingContent(contentData)
-              setShowLengthDialog(true)
+            console.log('⚠️ [Frontend] URL 超长，自动切换为分段文本上传')
+            const recovered = await uploadTextWithSegmentation(
+              errorData.original_content,
+              urlArticleTitle.trim() || 'URL Article'
+            )
+            if (recovered && (recovered.success || recovered.status === 'success')) {
+              handleUploadSuccess(recovered.data || recovered)
+              e.target.url.value = ''
+              return
             }
-            console.log('✅ [Frontend] 已通知父组件显示对话框')
-            return // 🔧 确保在长度超限时直接返回，不执行后续代码
+            setShowProgress(false)
+            onUploadStart && onUploadStart(false)
+            alert(t('URL处理失败: {error}').replace('{error}', recovered?.error || recovered?.message || '未知错误'))
+            return
           }
           
           // 其他错误
@@ -568,14 +741,17 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         // 检查是否是长度超限错误（网络错误等情况）
         const errorData = error.response?.data?.data
         if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-          // 显示长度超限对话框
-          setPendingContent({
-            type: 'url',
-            url: url,
-            content: errorData.original_content,
-            title: 'URL Article'
-          })
-          setShowLengthDialog(true)
+          const recovered = await uploadTextWithSegmentation(
+            errorData.original_content,
+            urlArticleTitle.trim() || 'URL Article'
+          )
+          if (recovered && (recovered.success || recovered.status === 'success')) {
+            handleUploadSuccess(recovered.data || recovered)
+            e.target.url.value = ''
+            return
+          }
+          onUploadStart && onUploadStart(false)
+          alert(t('URL处理失败: {error}').replace('{error}', recovered?.error || recovered?.message || '未知错误'))
           return
         }
         
@@ -605,20 +781,15 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
       console.log('📝 [Upload] Text submitted:', { title: textTitle, contentLength: textContent.length, language })
       setUploadMethod('text')
       
-      // 检查长度
-      const canProceed = await checkAndHandleLength(textContent, 'text', null, textTitle || 'Text Article')
-      
-      if (!canProceed) {
-        return // 等待用户选择
-      }
-      
       try {
         console.log('🚀 [Frontend] 发送文字处理请求...')
         setShowProgress(true)
         onUploadStart && onUploadStart()
         
-        // 使用统一的apiService（自动添加认证头）
-        const response = await apiService.uploadText(textContent, textTitle || 'Text Article', language)
+        const contentForUpload = textContent.length > MAX_UPLOAD_TOTAL_CHARS
+          ? textContent.slice(0, MAX_UPLOAD_TOTAL_CHARS)
+          : textContent
+        const response = await uploadTextWithSegmentation(contentForUpload, textTitle || 'Text Article')
         
         console.log('📥 [Frontend] 文字处理响应:', response)
         
@@ -627,16 +798,16 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
           // 检查是否是长度超限错误
           const errorData = response.data
           if (errorData && errorData.error_code === 'CONTENT_TOO_LONG' && errorData.original_content) {
-            console.log('⚠️ [Frontend] 检测到长度超限错误，显示对话框')
-            setShowProgress(false)
-            // 显示长度超限对话框
-            setPendingContent({
-              type: 'text',
-              content: errorData.original_content,
-              title: textTitle || 'Text Article'
-            })
-            setShowLengthDialog(true)
-            return
+            const retryResponse = await uploadTextWithSegmentation(
+              String(errorData.original_content || '').slice(0, MAX_UPLOAD_TOTAL_CHARS),
+              textTitle || 'Text Article'
+            )
+            if (retryResponse && (retryResponse.success || retryResponse.status === 'success')) {
+              handleUploadSuccess(retryResponse.data || retryResponse)
+              setTextContent('')
+              setTextTitle('')
+              return
+            }
           }
           
           // 其他错误
@@ -769,25 +940,67 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         )}
       
       <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+        <div className="w-full max-w-md">
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t('articleSplitModeLabel')}</label>
+          <div className="grid grid-cols-2 gap-2">
+            {SPLIT_MODE_OPTIONS.map((mode) => {
+              const checked = splitMode === mode.id
+              return (
+                <label
+                  key={mode.id}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                    checked
+                      ? 'border-green-500 bg-green-50 text-green-800'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="split-mode"
+                    value={mode.id}
+                    checked={checked}
+                    onChange={() => setSplitMode(mode.id)}
+                    className="h-4 w-4 accent-green-600"
+                  />
+                  <span className="text-sm leading-snug">{t(mode.labelKey)}</span>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+
         {/* Upload URL */}
         <div className="w-full max-w-md">
           <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">{t('上传网址')}</h3>
           <form onSubmit={handleUrlSubmit} className="space-y-3">
-            <input
-              type="url"
-              name="url"
-              placeholder={t('请输入文章链接...')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-            <input
-              type="text"
-              value={customTitle}
-              maxLength={MAX_TITLE_LENGTH}
-              onChange={(e) => setCustomTitle(e.target.value)}
-              placeholder={t('自定义文章名（选填）')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div>
+              <label htmlFor="upload-url-address" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('articleUploadUrlLabel')}
+              </label>
+              <input
+                id="upload-url-address"
+                type="url"
+                name="url"
+                placeholder={t('Enter article URL...')}
+                autoComplete="url"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="upload-url-article-title" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('uploadFormUrlArticleTitle')}
+              </label>
+              <input
+                id="upload-url-article-title"
+                type="text"
+                value={urlArticleTitle}
+                maxLength={MAX_TITLE_LENGTH}
+                onChange={(e) => setUrlArticleTitle(e.target.value)}
+                placeholder={t('uploadFormOptionalArticleTitlePlaceholder')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
             <button
               type="submit"
               disabled={isArticleLimitReached}
@@ -801,7 +1014,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         {/* Divider */}
         <div className="flex items-center w-full max-w-md">
           <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-gray-500 text-sm">{t('或')}</span>
+          <span className="px-4 text-gray-500 text-sm">{t('OR')}</span>
           <div className="flex-1 border-t border-gray-300"></div>
         </div>
 
@@ -809,14 +1022,20 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         <div className="w-full max-w-md">
           <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">{t('上传文件')}</h3>
           <div className="space-y-3">
-            <input
-              type="text"
-              value={customTitle}
-              maxLength={MAX_TITLE_LENGTH}
-              onChange={(e) => setCustomTitle(e.target.value)}
-              placeholder={t('自定义文章名（选填）')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
+            <div>
+              <label htmlFor="upload-file-article-title" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('uploadFormFileArticleTitle')}
+              </label>
+              <input
+                id="upload-file-article-title"
+                type="text"
+                value={fileArticleTitle}
+                maxLength={MAX_TITLE_LENGTH}
+                onChange={(e) => setFileArticleTitle(e.target.value)}
+                placeholder={t('uploadFormOptionalArticleTitlePlaceholder')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
             {/* 合并的拖拽和选择区域 */}
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
@@ -896,7 +1115,7 @@ const UploadInterface = ({ onUploadStart, onLengthExceeded, onUploadComplete, on
         {/* Divider */}
         <div className="flex items-center w-full max-w-md">
           <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-gray-500 text-sm">{t('或')}</span>
+          <span className="px-4 text-gray-500 text-sm">{t('OR')}</span>
           <div className="flex-1 border-t border-gray-300"></div>
         </div>
 

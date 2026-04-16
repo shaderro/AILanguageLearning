@@ -1,9 +1,12 @@
 from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends, Header
+from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Optional
 import json
+import copy
+import re
 import requests
 import uuid
 from datetime import datetime, timedelta
@@ -94,9 +97,26 @@ except ImportError:
 
 # 文章长度限制（字符数）
 MAX_ARTICLE_LENGTH = 12000
+# 分段续传：单段最大字符（与前端 Sandbox 一致，控制单次预处理耗时）
+MAX_SEGMENT_CHARS = 2000
 MAX_ARTICLES_PER_USER = 50
 MAX_CHAT_QUESTION_LENGTH = 300
 MAX_CHAT_SELECTION_LENGTH = 500
+
+
+def _apply_sentence_split_mode(text: str, split_mode: Optional[str]) -> str:
+    """
+    分句模式预处理：
+    - punctuation: 忽略换行边界（把换行折叠为空格），主要按标点分句
+    - line: 保留换行（每行优先作为句边界），适合诗歌/歌词
+    """
+    mode = (split_mode or "punctuation").strip().lower()
+    normalized = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    if mode == "line":
+        lines = [ln.strip() for ln in normalized.split("\n")]
+        return "\n".join([ln for ln in lines if ln])
+    # 默认 punctuation
+    return re.sub(r"\s*\n+\s*", " ", normalized).strip()
 MAX_CHAT_KNOWLEDGE_ITEMS = 3
 # 开放内测保护阈值：1 小时 30k tokens 足够正常试用，同时能拦住异常高频/超长请求。
 MAX_CHAT_TOKENS_PER_HOUR = 30000
@@ -793,7 +813,14 @@ except Exception as e:
     print("⚠️ Continuing with empty data")
 
 # 将处理后的文章数据导入到数据库
-def import_article_to_database(result: dict, article_id: int, user_id, language: str = None, title: str = None):
+def import_article_to_database(
+    result: dict,
+    article_id: int,
+    user_id,
+    language: str = None,
+    title: str = None,
+    update_processing_status_on_failure: bool = True,
+):
     """
     将处理后的文章数据导入到数据库或返回游客数据
     
@@ -910,6 +937,8 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
             total_tokens = 0
             total_word_tokens = 0
             
+            from sqlalchemy.exc import IntegrityError
+
             for sentence_data in sentences:
                 sentence_id = sentence_data.get('sentence_id', total_sentences + 1)
                 sentence_body = sentence_data.get('sentence_body', '')
@@ -920,12 +949,22 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
                     print(f"⚠️ [Import] 句子 {article_id}:{sentence_id} 已存在，跳过")
                     continue
                 
-                # 创建句子
-                sentence = text_manager.add_sentence_to_text(
-                    text_id=article_id,
-                    sentence_text=sentence_body,
-                    difficulty_level=None
-                )
+                # 创建句子（显式 sentence_id，与 token 导入一致；支持分段续传追加）
+                try:
+                    sentence = text_manager.add_sentence_to_text(
+                        text_id=article_id,
+                        sentence_text=sentence_body,
+                        difficulty_level=None,
+                        sentence_id=sentence_id,
+                    )
+                except IntegrityError:
+                    # 并发/重试场景下，可能已有其他请求先写入同一 sentence_id
+                    session.rollback()
+                    existing_sentence = text_manager.get_sentence(article_id, sentence_id)
+                    if existing_sentence:
+                        print(f"⚠️ [Import] 句子 {article_id}:{sentence_id} 并发已写入，跳过")
+                        continue
+                    raise
                 total_sentences += 1
                 
                 # 3. 先导入 word_tokens（仅用于非空格语言），确保在创建 tokens 时可以引用
@@ -1040,20 +1079,22 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
             
         except Exception as e:
             session.rollback()
-            # 导入失败时，更新状态为"failed"
-            try:
-                from database_system.business_logic.models import OriginalText
-                text_model = session.query(OriginalText).filter(
-                    OriginalText.text_id == article_id,
-                    OriginalText.user_id == user_id
-                ).first()
-                if text_model:
-                    text_model.processing_status = 'failed'
-                    session.commit()
-                    print(f"⚠️ [Import] 导入失败，已更新文章状态为失败: {article_id}")
-            except Exception as update_error:
-                session.rollback()
-                print(f"⚠️ [Import] 更新文章状态失败: {update_error}")
+            # 首段导入失败时才将整篇标记为 failed；
+            # 分段续传失败应由 ArticleSegmentTask 记录，不应污染整篇状态
+            if update_processing_status_on_failure:
+                try:
+                    from database_system.business_logic.models import OriginalText
+                    text_model = session.query(OriginalText).filter(
+                        OriginalText.text_id == article_id,
+                        OriginalText.user_id == user_id
+                    ).first()
+                    if text_model:
+                        text_model.processing_status = 'failed'
+                        session.commit()
+                        print(f"⚠️ [Import] 导入失败，已更新文章状态为失败: {article_id}")
+                except Exception as update_error:
+                    session.rollback()
+                    print(f"⚠️ [Import] 更新文章状态失败: {update_error}")
             raise e
         finally:
             session.close()
@@ -1062,27 +1103,28 @@ def import_article_to_database(result: dict, article_id: int, user_id, language:
         print(f"❌ [Import] 导入文章到数据库失败: {e}")
         import traceback
         traceback.print_exc()
-        # 如果是在外层异常，尝试更新状态
-        try:
-            from database_system.business_logic.models import OriginalText
-            db_manager = get_database_manager(ENV)
-            session = db_manager.get_session()
+        # 如果是在外层异常，首段导入失败时才更新整篇状态
+        if update_processing_status_on_failure:
             try:
-                text_model = session.query(OriginalText).filter(
-                    OriginalText.text_id == article_id,
-                    OriginalText.user_id == user_id
-                ).first()
-                if text_model:
-                    text_model.processing_status = 'failed'
-                    session.commit()
-                    print(f"⚠️ [Import] 导入失败，已更新文章状态为失败: {article_id}")
-            except Exception as update_error:
-                session.rollback()
-                print(f"⚠️ [Import] 更新文章状态失败: {update_error}")
-            finally:
-                session.close()
-        except Exception as session_error:
-            print(f"⚠️ [Import] 无法获取数据库会话: {session_error}")
+                from database_system.business_logic.models import OriginalText
+                db_manager = get_database_manager(ENV)
+                session = db_manager.get_session()
+                try:
+                    text_model = session.query(OriginalText).filter(
+                        OriginalText.text_id == article_id,
+                        OriginalText.user_id == user_id
+                    ).first()
+                    if text_model:
+                        text_model.processing_status = 'failed'
+                        session.commit()
+                        print(f"⚠️ [Import] 导入失败，已更新文章状态为失败: {article_id}")
+                except Exception as update_error:
+                    session.rollback()
+                    print(f"⚠️ [Import] 更新文章状态失败: {update_error}")
+                finally:
+                    session.close()
+            except Exception as session_error:
+                print(f"⚠️ [Import] 无法获取数据库会话: {session_error}")
         return False
 
 # 异步保存数据的辅助函数
@@ -2726,6 +2768,7 @@ async def upload_file(
     file: UploadFile = File(...),
     title: str = Form("Untitled Article"),
     language: str = Form(...),
+    split_mode: Optional[str] = Form("punctuation"),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -2745,6 +2788,8 @@ async def upload_file(
         allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
         if not language or language not in allowed_languages:
             return create_error_response("语言参数无效，请选择正确的学习语言")
+        if split_mode not in ("punctuation", "line"):
+            return create_error_response("split_mode 无效，应为 punctuation 或 line")
 
         article_limit_error = _check_user_article_limit(user_id)
         if article_limit_error:
@@ -2768,6 +2813,13 @@ async def upload_file(
                 return create_error_response("无法从 PDF 提取正文内容（可能是扫描版/图片PDF）")
         else:
             return create_error_response(f"不支持的文件格式: {file.filename}")
+
+        text_content = _apply_sentence_split_mode(text_content, split_mode)
+        segments = _split_text_into_segments_for_upload(text_content, split_mode, MAX_SEGMENT_CHARS)
+        if not segments:
+            return create_error_response("文件内容为空")
+        first_segment = segments[0]
+        is_segmented_upload = len(segments) > 1
         
         # 检查内容长度
         if len(text_content) > MAX_ARTICLE_LENGTH:
@@ -2810,15 +2862,23 @@ async def upload_file(
         # 使用简单文章处理器处理文章
         ensure_article_preprocess_loaded()
         if process_article:
-            print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id}, 语言: {language})")
-            result = process_article(text_content, article_id, title, language=language)
+            print(f"📝 [Upload] 开始处理文章: {title} (用户 {user_id}, 语言: {language}, split_mode={split_mode})")
+            # 在线程池中执行 CPU/IO 密集处理，避免阻塞事件循环导致其他接口（如 auth/me）超时
+            result = await run_in_threadpool(process_article, first_segment, article_id, title, language)
             
             # 保存到文件系统
-            save_structured_data(result, RESULT_DIR)
+            await run_in_threadpool(save_structured_data, result, RESULT_DIR)
             
             # 保存到数据库（会更新状态为"completed"）
             print(f"💾 [Upload] 开始导入文章到数据库...")
-            import_success = import_article_to_database(result, article_id, user_id, language, title=title)
+            import_success = await run_in_threadpool(
+                import_article_to_database,
+                result,
+                article_id,
+                user_id,
+                language,
+                title
+            )
             if not import_success:
                 print(f"⚠️ [Upload] 数据库导入失败，但文件系统保存成功")
                 # 如果导入失败，更新状态为"failed"
@@ -2833,6 +2893,25 @@ async def upload_file(
                     print(f"⚠️ [Upload] 更新文章状态失败: {e}")
                 finally:
                     session.close()
+            elif is_segmented_upload:
+                _init_segment_tasks_for_first_page(
+                    article_id=article_id,
+                    user_id=user_id,
+                    total_pages=len(segments),
+                    first_page_index=1,
+                    first_page_sentence_count=result.get('total_sentences', 0),
+                )
+                remaining_ok = await _process_remaining_segments(
+                    article_id=article_id,
+                    user_id=user_id,
+                    language=language,
+                    title=title,
+                    split_mode=split_mode,
+                    remaining_segments=segments[1:],
+                    start_page_index=2,
+                )
+                if not remaining_ok:
+                    print("⚠️ [Upload] 文件分段续处理失败，部分分页可能不可用")
             
             return create_success_response(
                 data={
@@ -2841,7 +2920,9 @@ async def upload_file(
                     "language": language,
                     "total_sentences": result['total_sentences'],
                     "total_tokens": result['total_tokens'],
-                    "user_id": user_id
+                    "user_id": user_id,
+                    "segmented_total_pages": len(segments) if is_segmented_upload else 1,
+                    "segmented_page_index": 1,
                 },
                 message=f"文件上传并处理成功: {title}"
             )
@@ -2860,6 +2941,7 @@ async def upload_url(
     url: str = Form(...),
     title: str = Form("URL Article"),
     language: str = Form(...),
+    split_mode: Optional[str] = Form("punctuation"),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -2879,6 +2961,8 @@ async def upload_url(
         allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
         if not language or language not in allowed_languages:
             return create_error_response("语言参数无效，请选择正确的学习语言")
+        if split_mode not in ("punctuation", "line"):
+            return create_error_response("split_mode 无效，应为 punctuation 或 line")
 
         article_limit_error = _check_user_article_limit(user_id)
         if article_limit_error:
@@ -2904,6 +2988,13 @@ async def upload_url(
             response.raise_for_status()
             text_content = response.text
         
+        text_content = _apply_sentence_split_mode(text_content, split_mode)
+        segments = _split_text_into_segments_for_upload(text_content, split_mode, MAX_SEGMENT_CHARS)
+        if not segments:
+            return create_error_response("无法从 URL 提取正文内容，请检查 URL 是否有效")
+        first_segment = segments[0]
+        is_segmented_upload = len(segments) > 1
+
         # 检查内容长度
         if len(text_content) > MAX_ARTICLE_LENGTH:
             print(f"⚠️ [Upload] 内容长度超出限制: {len(text_content)} > {MAX_ARTICLE_LENGTH}")
@@ -2945,15 +3036,23 @@ async def upload_url(
         # 使用简单文章处理器处理文章
         ensure_article_preprocess_loaded()
         if process_article:
-            print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id}, 语言: {language})")
-            result = process_article(text_content, article_id, title, language=language)
+            print(f"📝 [Upload] 开始处理URL文章: {title} (用户 {user_id}, 语言: {language}, split_mode={split_mode})")
+            # 在线程池中执行 CPU/IO 密集处理，避免阻塞事件循环导致其他接口（如 auth/me）超时
+            result = await run_in_threadpool(process_article, first_segment, article_id, title, language)
             
             # 保存到文件系统
-            save_structured_data(result, RESULT_DIR)
+            await run_in_threadpool(save_structured_data, result, RESULT_DIR)
             
             # 保存到数据库或返回游客数据（会更新状态为"completed"）
             print(f"💾 [Upload] 开始导入文章...")
-            import_result = import_article_to_database(result, article_id, user_id, language, title=title)
+            import_result = await run_in_threadpool(
+                import_article_to_database,
+                result,
+                article_id,
+                user_id,
+                language,
+                title
+            )
             
             # 处理导入结果
             if isinstance(import_result, dict) and import_result.get('is_guest'):
@@ -2976,6 +3075,25 @@ async def upload_url(
             elif import_result is True:
                 # 正式用户模式：已成功保存到数据库（状态已在import_article_to_database中更新为"completed"）
                 print(f"✅ [Upload] 文章已成功导入数据库")
+                if is_segmented_upload:
+                    _init_segment_tasks_for_first_page(
+                        article_id=article_id,
+                        user_id=user_id,
+                        total_pages=len(segments),
+                        first_page_index=1,
+                        first_page_sentence_count=result.get('total_sentences', 0),
+                    )
+                    remaining_ok = await _process_remaining_segments(
+                        article_id=article_id,
+                        user_id=user_id,
+                        language=language,
+                        title=title,
+                        split_mode=split_mode,
+                        remaining_segments=segments[1:],
+                        start_page_index=2,
+                    )
+                    if not remaining_ok:
+                        print("⚠️ [Upload] URL 分段续处理失败，部分分页可能不可用")
                 return create_success_response(
                     data={
                         "article_id": article_id,
@@ -2984,7 +3102,9 @@ async def upload_url(
                         "language": language,
                         "total_sentences": result['total_sentences'],
                         "total_tokens": result['total_tokens'],
-                        "user_id": user_id
+                        "user_id": user_id,
+                        "segmented_total_pages": len(segments) if is_segmented_upload else 1,
+                        "segmented_page_index": 1,
                     },
                     message=f"URL内容抓取并处理成功: {title}"
                 )
@@ -3058,7 +3178,10 @@ async def upload_text(
     text: str = Form(...),
     title: str = Form("Text Article"),
     language: str = Form(...),
+    split_mode: Optional[str] = Form("punctuation"),
     skip_length_check: Optional[str] = Form(None),  # 是否跳过长度检查（用于截取后的内容）
+    segmented_total_pages: Optional[int] = Form(None),  # Sandbox 分页总页数（可选）
+    segmented_page_index: Optional[int] = Form(None),  # 当前分段页码（可选，默认首段=1）
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -3081,6 +3204,8 @@ async def upload_text(
         allowed_languages = ['中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语', '葡萄牙语', '意大利语', '俄语']
         if not language or language not in allowed_languages:
             return create_error_response("语言参数无效，请选择正确的学习语言")
+        if split_mode not in ("punctuation", "line"):
+            return create_error_response("split_mode 无效，应为 punctuation 或 line")
 
         article_limit_error = _check_user_article_limit(user_id)
         if article_limit_error:
@@ -3089,6 +3214,8 @@ async def upload_text(
         if not text.strip():
             return create_error_response("文字内容不能为空")
         
+        text = _apply_sentence_split_mode(text, split_mode)
+
         # 检查 skip_length_check 参数（FormData 传递的是字符串）
         should_skip_check = skip_length_check and skip_length_check.lower() in ('true', '1', 'yes')
         
@@ -3110,6 +3237,8 @@ async def upload_text(
         
         # 生成文章ID
         article_id = int(datetime.now().timestamp())
+        is_segmented_upload = bool(segmented_total_pages and segmented_total_pages > 1)
+        first_page_index = segmented_page_index or 1
         
         # 先创建文章记录（状态为"processing"），这样用户可以在处理过程中看到文章
         from database_system.business_logic.models import OriginalText
@@ -3136,15 +3265,23 @@ async def upload_text(
         # 使用简单文章处理器处理文章
         ensure_article_preprocess_loaded()
         if process_article:
-            print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id}, 语言: {language})")
-            result = process_article(text, article_id, title, language=language)
+            print(f"📝 [Upload] 开始处理文字内容: {title} (用户 {user_id}, 语言: {language}, split_mode={split_mode})")
+            # 在线程池中执行 CPU/IO 密集处理，避免阻塞事件循环导致其他接口（如 auth/me）超时
+            result = await run_in_threadpool(process_article, text, article_id, title, language)
             
             # 保存到文件系统
-            save_structured_data(result, RESULT_DIR)
+            await run_in_threadpool(save_structured_data, result, RESULT_DIR)
             
             # 保存到数据库或返回游客数据（会更新状态为"completed"）
             print(f"💾 [Upload] 开始导入文章...")
-            import_result = import_article_to_database(result, article_id, user_id, language, title=title)
+            import_result = await run_in_threadpool(
+                import_article_to_database,
+                result,
+                article_id,
+                user_id,
+                language,
+                title
+            )
             
             # 处理导入结果
             if isinstance(import_result, dict) and import_result.get('is_guest'):
@@ -3166,6 +3303,14 @@ async def upload_text(
             elif import_result is True:
                 # 正式用户模式：已成功保存到数据库
                 print(f"✅ [Upload] 文章已成功导入数据库")
+                if is_segmented_upload:
+                    _init_segment_tasks_for_first_page(
+                        article_id=article_id,
+                        user_id=user_id,
+                        total_pages=segmented_total_pages,
+                        first_page_index=first_page_index,
+                        first_page_sentence_count=result.get('total_sentences', 0),
+                    )
                 return create_success_response(
                     data={
                         "article_id": article_id,
@@ -3173,7 +3318,9 @@ async def upload_text(
                         "language": language,
                         "total_sentences": result['total_sentences'],
                         "total_tokens": result['total_tokens'],
-                        "user_id": user_id
+                        "user_id": user_id,
+                        "segmented_total_pages": segmented_total_pages if is_segmented_upload else 1,
+                        "segmented_page_index": first_page_index if is_segmented_upload else 1,
                     },
                     message=f"文字内容处理成功: {title}"
                 )
@@ -3211,6 +3358,453 @@ async def upload_text(
         import traceback
         traceback.print_exc()
         return create_error_response(f"文字内容处理失败: {str(e)}")
+
+
+def _max_global_token_id_from_result(result: dict) -> int:
+    m = -1
+    for s in result.get("sentences", []):
+        for t in s.get("tokens", []):
+            gid = t.get("global_token_id")
+            if gid is not None:
+                m = max(m, int(gid))
+    return m
+
+
+def _load_structured_data_from_disk(text_id: int, output_dir: str):
+    """从预处理输出目录恢复与 process_article 接近的 result 结构，用于分段合并。"""
+    text_dir = os.path.join(output_dir, f"text_{text_id:03d}")
+    sent_path = os.path.join(text_dir, "sentences.json")
+    orig_path = os.path.join(text_dir, "original_text.json")
+    if not os.path.isfile(sent_path):
+        return None
+    with open(sent_path, encoding="utf-8") as f:
+        sentences_raw = json.load(f)
+    title = "Article"
+    if os.path.isfile(orig_path):
+        with open(orig_path, encoding="utf-8") as f:
+            o = json.load(f)
+            title = o.get("text_title", title)
+    sentences = []
+    total_wt = 0
+    for s in sentences_raw:
+        stoks = s.get("tokens", [])
+        wts = s.get("word_tokens", []) or []
+        sentences.append({
+            "sentence_id": s["sentence_id"],
+            "sentence_body": s.get("sentence_body", ""),
+            "tokens": stoks,
+            "word_tokens": wts,
+            "token_count": len(stoks),
+        })
+        total_wt += len(wts)
+    mg = _max_global_token_id_from_result({"sentences": sentences})
+    return {
+        "text_id": text_id,
+        "text_title": title,
+        "language": None,
+        "sentences": sentences,
+        "total_sentences": len(sentences),
+        "total_tokens": mg + 1 if mg >= 0 else 0,
+        "total_word_tokens": total_wt,
+    }
+
+
+def _remap_chunk_for_append(chunk_result: dict, max_sentence_id: int, max_global_token_id: int) -> dict:
+    """将新分段预处理结果中的 sentence_id / global_token_id 接到已有文章之后。"""
+    out = copy.deepcopy(chunk_result)
+    for s in out.get("sentences", []):
+        old_sid = s.get("sentence_id", 0)
+        s["sentence_id"] = max_sentence_id + old_sid
+        for t in s.get("tokens", []):
+            og = t.get("global_token_id")
+            if og is not None:
+                t["global_token_id"] = max_global_token_id + 1 + int(og)
+    return out
+
+
+def _merge_article_structured(prev: dict, chunk_remapped: dict) -> dict:
+    merged = copy.deepcopy(prev)
+    merged["sentences"] = merged.get("sentences", []) + chunk_remapped.get("sentences", [])
+    mg = _max_global_token_id_from_result(merged)
+    tw = sum(len(s.get("word_tokens") or []) for s in merged["sentences"])
+    merged["total_sentences"] = len(merged["sentences"])
+    merged["total_tokens"] = mg + 1 if mg >= 0 else 0
+    merged["total_word_tokens"] = tw
+    return merged
+
+
+def _split_text_into_segments_for_upload(text: str, split_mode: Optional[str], max_chars: int) -> list[str]:
+    content = (text or "").strip()
+    if not content:
+        return []
+    if len(content) <= max_chars:
+        return [content]
+    mode = (split_mode or "punctuation").lower()
+    out = []
+    start = 0
+    while start < len(content):
+        end = min(start + max_chars, len(content))
+        if end < len(content):
+            slice_text = content[start:end]
+            break_at = -1
+            if mode == "line":
+                para = slice_text.rfind("\n\n")
+                line = slice_text.rfind("\n")
+                if para >= int(len(slice_text) * 0.5):
+                    break_at = para + 2
+                elif line >= int(len(slice_text) * 0.5):
+                    break_at = line + 1
+            else:
+                for i in range(len(slice_text) - 1, -1, -1):
+                    if slice_text[i] in {".", "!", "?", ";", "。", "！", "？", "；", "…"}:
+                        break_at = i + 1
+                        break
+                if break_at < int(len(slice_text) * 0.4):
+                    last_space = slice_text.rfind(" ")
+                    if last_space >= int(len(slice_text) * 0.7):
+                        break_at = last_space + 1
+            if break_at > 0:
+                end = start + break_at
+        out.append(content[start:end])
+        start = end
+    return out
+
+
+async def _process_remaining_segments(
+    *,
+    article_id: int,
+    user_id: int,
+    language: str,
+    title: str,
+    split_mode: Optional[str],
+    remaining_segments: list[str],
+    start_page_index: int = 2,
+) -> bool:
+    from database_system.business_logic.models import Sentence
+    from sqlalchemy import func
+
+    db_manager = get_database_manager(ENV)
+    page_index = start_page_index
+    for segment in remaining_segments:
+        _mark_segment_task_status(
+            article_id=article_id,
+            user_id=user_id,
+            page_index=page_index,
+            status="processing",
+            error_message=None,
+        )
+        prev = _load_structured_data_from_disk(article_id, RESULT_DIR)
+        if not prev or not prev.get("sentences"):
+            _mark_segment_task_status(
+                article_id=article_id,
+                user_id=user_id,
+                page_index=page_index,
+                status="failed",
+                error_message="找不到文章预处理数据",
+            )
+            return False
+
+        session = db_manager.get_session()
+        try:
+            max_sid = session.query(func.max(Sentence.sentence_id)).filter(
+                Sentence.text_id == article_id
+            ).scalar()
+            if max_sid is None:
+                max_sid = 0
+        finally:
+            session.close()
+
+        max_gid = _max_global_token_id_from_result(prev)
+        chunk_result = await run_in_threadpool(
+            process_article, segment, article_id, title, language
+        )
+        chunk_remapped = _remap_chunk_for_append(chunk_result, max_sid, max_gid)
+        merged = _merge_article_structured(prev, chunk_remapped)
+        merged["text_id"] = article_id
+        merged["text_title"] = title
+        merged["language"] = language
+
+        await run_in_threadpool(save_structured_data, merged, RESULT_DIR)
+        import_result = await run_in_threadpool(
+            import_article_to_database,
+            chunk_remapped,
+            article_id,
+            user_id,
+            language,
+            title,
+        )
+        if import_result is not True:
+            _mark_segment_task_status(
+                article_id=article_id,
+                user_id=user_id,
+                page_index=page_index,
+                status="failed",
+                error_message="追加内容导入数据库失败",
+            )
+            return False
+
+        before_sid = max_sid + 1
+        after_sid = max_sid + int(chunk_result.get("total_sentences", 0))
+        _mark_segment_task_status(
+            article_id=article_id,
+            user_id=user_id,
+            page_index=page_index,
+            status="completed",
+            sentence_start_id=before_sid,
+            sentence_end_id=after_sid,
+        )
+        page_index += 1
+    return True
+
+
+def _init_segment_tasks_for_first_page(
+    article_id: int,
+    user_id: int,
+    total_pages: int,
+    first_page_index: int,
+    first_page_sentence_count: int,
+) -> None:
+    """创建分页任务表记录：首段 completed，后续段 processing。"""
+    if not total_pages or total_pages <= 1:
+        return
+    from database_system.business_logic.models import ArticleSegmentTask
+
+    db_manager = get_database_manager(ENV)
+    session = db_manager.get_session()
+    try:
+        # 清理旧记录（同 text_id 理论上不应存在，防御性处理）
+        session.query(ArticleSegmentTask).filter(
+            ArticleSegmentTask.text_id == article_id
+        ).delete()
+        for page in range(1, total_pages + 1):
+            if page == first_page_index:
+                status = "completed"
+                start_id = 1
+                end_id = max(1, int(first_page_sentence_count or 0))
+            else:
+                status = "processing"
+                start_id = None
+                end_id = None
+            session.add(
+                ArticleSegmentTask(
+                    text_id=article_id,
+                    user_id=user_id,
+                    page_index=page,
+                    status=status,
+                    sentence_start_id=start_id,
+                    sentence_end_id=end_id,
+                )
+            )
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"⚠️ [SegmentTask] 初始化分页任务失败: {e}")
+    finally:
+        session.close()
+
+
+def _mark_segment_task_status(
+    *,
+    article_id: int,
+    user_id: int,
+    page_index: int,
+    status: str,
+    sentence_start_id: Optional[int] = None,
+    sentence_end_id: Optional[int] = None,
+    error_message: Optional[str] = None,
+) -> None:
+    from database_system.business_logic.models import ArticleSegmentTask
+
+    db_manager = get_database_manager(ENV)
+    session = db_manager.get_session()
+    try:
+        task = session.query(ArticleSegmentTask).filter(
+            ArticleSegmentTask.text_id == article_id,
+            ArticleSegmentTask.user_id == user_id,
+            ArticleSegmentTask.page_index == page_index,
+        ).first()
+        if not task:
+            task = ArticleSegmentTask(
+                text_id=article_id,
+                user_id=user_id,
+                page_index=page_index,
+            )
+            session.add(task)
+        task.status = status
+        if sentence_start_id is not None:
+            task.sentence_start_id = sentence_start_id
+        if sentence_end_id is not None:
+            task.sentence_end_id = sentence_end_id
+        task.error_message = error_message
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"⚠️ [SegmentTask] 更新分页任务失败: {e}")
+    finally:
+        session.close()
+
+
+@app.post("/api/upload/text/append-segment", response_model=ApiResponse)
+async def upload_text_append_segment(
+    text: str = Form(...),
+    article_id: int = Form(...),
+    language: str = Form(...),
+    split_mode: Optional[str] = Form("punctuation"),
+    page_index: Optional[int] = Form(None),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    分段续传：在已有文章后追加一段文本并合并预处理结果（需先完成首段上传）。
+    单段长度不得超过 MAX_SEGMENT_CHARS。
+    """
+    try:
+        user_id = current_user.user_id
+        target_page_index = page_index
+        if not text or not str(text).strip():
+            return create_error_response("追加内容不能为空")
+        if len(text) > MAX_SEGMENT_CHARS:
+            return create_error_response(
+                f"单段长度超出限制（{len(text)} > {MAX_SEGMENT_CHARS}）"
+            )
+        allowed_languages = [
+            '中文', '英文', '德文', '西班牙语', '法语', '日语', '韩语',
+            '葡萄牙语', '意大利语', '俄语',
+        ]
+        if not language or language not in allowed_languages:
+            return create_error_response("语言参数无效，请选择正确的学习语言")
+        if split_mode not in ("punctuation", "line"):
+            return create_error_response("split_mode 无效，应为 punctuation 或 line")
+
+        text = _apply_sentence_split_mode(text, split_mode)
+
+        from database_system.business_logic.models import OriginalText, Sentence, ArticleSegmentTask
+        from sqlalchemy import func
+
+        db_manager = get_database_manager(ENV)
+        session = db_manager.get_session()
+        try:
+            text_model = session.query(OriginalText).filter(
+                OriginalText.text_id == article_id,
+                OriginalText.user_id == user_id,
+            ).first()
+            if not text_model:
+                return create_error_response("文章不存在或无权访问")
+            title = text_model.text_title or "Article"
+            lang = language or text_model.language
+            # 容错：若前端未携带 page_index，则自动落到最早一个 processing 页
+            if not target_page_index:
+                pending_task = session.query(ArticleSegmentTask).filter(
+                    ArticleSegmentTask.text_id == article_id,
+                    ArticleSegmentTask.user_id == user_id,
+                    ArticleSegmentTask.status == "processing",
+                ).order_by(ArticleSegmentTask.page_index.asc()).first()
+                if pending_task:
+                    target_page_index = pending_task.page_index
+        finally:
+            session.close()
+
+        ensure_article_preprocess_loaded()
+        if not process_article or not save_structured_data:
+            return create_error_response("预处理系统未初始化")
+        if target_page_index:
+            _mark_segment_task_status(
+                article_id=article_id,
+                user_id=user_id,
+                page_index=target_page_index,
+                status="processing",
+                error_message=None,
+            )
+
+        prev = _load_structured_data_from_disk(article_id, RESULT_DIR)
+        if not prev or not prev.get("sentences"):
+            return create_error_response("找不到文章预处理数据，请先上传首段")
+
+        session = db_manager.get_session()
+        try:
+            max_sid = session.query(func.max(Sentence.sentence_id)).filter(
+                Sentence.text_id == article_id
+            ).scalar()
+            if max_sid is None:
+                max_sid = 0
+        finally:
+            session.close()
+
+        max_gid = _max_global_token_id_from_result(prev)
+
+        chunk_result = await run_in_threadpool(
+            process_article, text, article_id, title, lang
+        )
+        chunk_remapped = _remap_chunk_for_append(chunk_result, max_sid, max_gid)
+        merged = _merge_article_structured(prev, chunk_remapped)
+        merged["text_id"] = article_id
+        merged["text_title"] = title
+        merged["language"] = lang
+
+        await run_in_threadpool(save_structured_data, merged, RESULT_DIR)
+
+        import_result = await run_in_threadpool(
+            import_article_to_database,
+            chunk_remapped,
+            article_id,
+            user_id,
+            lang,
+            title,
+            False,
+        )
+        if isinstance(import_result, dict) and import_result.get("is_guest"):
+            return create_error_response("游客模式不支持分段续传，请登录后使用")
+        if import_result is not True:
+            if target_page_index:
+                _mark_segment_task_status(
+                    article_id=article_id,
+                    user_id=user_id,
+                    page_index=target_page_index,
+                    status="failed",
+                    error_message="追加内容导入数据库失败",
+                )
+            return create_error_response("追加内容导入数据库失败")
+
+        if target_page_index:
+            before_sid = max_sid + 1
+            after_sid = max_sid + int(chunk_result.get("total_sentences", 0))
+            _mark_segment_task_status(
+                article_id=article_id,
+                user_id=user_id,
+                page_index=target_page_index,
+                status="completed",
+                sentence_start_id=before_sid,
+                sentence_end_id=after_sid,
+            )
+
+        return create_success_response(
+            data={
+                "article_id": article_id,
+                "title": title,
+                "language": lang,
+                "total_sentences": merged["total_sentences"],
+                "total_tokens": merged["total_tokens"],
+                "user_id": user_id,
+                "page_index": target_page_index,
+            },
+            message=f"已追加分段: {title}",
+        )
+    except Exception as e:
+        print(f"❌ [Upload] 分段续传失败: {e}")
+        import traceback
+        traceback.print_exc()
+        if target_page_index:
+            try:
+                _mark_segment_task_status(
+                    article_id=article_id,
+                    user_id=current_user.user_id,
+                    page_index=target_page_index,
+                    status="failed",
+                    error_message=str(e),
+                )
+            except Exception:
+                pass
+        return create_error_response(f"分段续传失败: {str(e)}")
+
 
 # ==================== Asked Tokens API ====================
 

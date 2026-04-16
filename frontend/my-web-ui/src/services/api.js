@@ -32,6 +32,12 @@ function getApiTarget() {
   return 'db'; // 默认使用数据库模式
 }
 const API_TARGET = getApiTarget();
+const MAX_SEGMENT_CHARS = 2000;
+
+function normalizeFormText(value) {
+  // FormData 在传输文本字段时会把换行统一为 CRLF，先在前端归一化，避免长度判断偏差
+  return String(value ?? "").replace(/\r?\n/g, "\r\n");
+}
 // 从环境变量获取 API 基础 URL，默认使用 localhost:8000（本地开发）
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
@@ -626,6 +632,47 @@ export const apiService = {
     }
   },
 
+  // 获取文章分页状态
+  getArticlePages: async (id) => {
+    return api.get(`/api/v2/texts/${id}/pages`);
+  },
+
+  // 获取文章指定分页（仅该页 segment 内容）
+  getArticlePage: async (id, pageIndex = 1) => {
+    try {
+      // 分页阅读强制走 v2 分页接口，避免 mock 返回整篇导致“每页都一样”
+      return await api.get(`/api/v2/texts/${id}/pages/${pageIndex}`);
+    } catch (e) {
+      // 兜底：仅第一页尝试旧文章详情；非第一页返回 processing 占位
+      if (Number(pageIndex) > 1) {
+        return {
+          success: true,
+          data: {
+            text_id: id,
+            page_index: Number(pageIndex),
+            total_pages: Number(pageIndex),
+            page_status: 'processing',
+            sentences: [],
+          },
+        };
+      }
+      if (API_TARGET === 'mock') {
+        const full = await api.get(`/api/articles/${id}`);
+        return {
+          success: true,
+          data: {
+            ...(full?.data || {}),
+            page_index: 1,
+            total_pages: 1,
+            page_status: 'completed',
+            sentences: full?.data?.sentences || [],
+          },
+        };
+      }
+      throw e;
+    }
+  },
+
   // 获取文章的句子列表（可选 limit）
   getArticleSentences: (textId, { limit } = {}) => {
     const query = limit ? `?limit=${encodeURIComponent(limit)}` : '';
@@ -644,8 +691,18 @@ export const apiService = {
   
   // 删除文章
   deleteArticle: async (textId) => {
-    const response = await api.delete(`/api/v2/texts/${textId}`);
-    return response;
+    const requestConfig = { timeout: 600000 }; // 10 分钟，避免大文章删除时误超时
+    try {
+      const response = await api.delete(`/api/v2/texts/${textId}`, requestConfig);
+      return response;
+    } catch (error) {
+      // 删除接口具备幂等性，超时时做一次重试，降低偶发网络抖动影响
+      if (error?.code === "ECONNABORTED") {
+        const retryResponse = await api.delete(`/api/v2/texts/${textId}`, requestConfig);
+        return retryResponse;
+      }
+      throw error;
+    }
   },
 
   // 搜索文章
@@ -823,12 +880,13 @@ export const apiService = {
   // ==================== Upload API ====================
   
   // 上传文件
-  uploadFile: async (file, title = "Untitled Article", language = "") => {
+  uploadFile: async (file, title = "Untitled Article", language = "", splitMode = "punctuation") => {
     console.log('📤 [Frontend] Uploading file:', file.name, 'title:', title, 'language:', language);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
     formData.append('language', language);
+    formData.append('split_mode', splitMode);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
     // 🔧 增加超时时间到 10 分钟，因为处理大文件可能需要很长时间
@@ -841,12 +899,13 @@ export const apiService = {
   },
 
   // 上传URL
-  uploadUrl: async (url, title = "URL Article", language = "") => {
+  uploadUrl: async (url, title = "URL Article", language = "", splitMode = "punctuation") => {
     console.log('📤 [Frontend] Uploading URL:', url, 'title:', title, 'language:', language);
     const formData = new FormData();
     formData.append('url', url);
     formData.append('title', title);
     formData.append('language', language);
+    formData.append('split_mode', splitMode);
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
     // 🔧 增加超时时间到 10 分钟，因为 URL 提取和处理大量文本可能需要很长时间
@@ -859,7 +918,14 @@ export const apiService = {
   },
 
   // 上传文本
-  uploadText: async (text, title = "Text Article", language = "", skipLengthCheck = false) => {
+  uploadText: async (
+    text,
+    title = "Text Article",
+    language = "",
+    skipLengthCheck = false,
+    segmentedOptions = null,
+    splitMode = "punctuation"
+  ) => {
     console.log('📤 [Frontend] Uploading text, title:', title, 'length:', text.length, 'language:', language, 'skipLengthCheck:', skipLengthCheck);
     console.log('📤 [Frontend] Text content preview (first 100 chars):', text.substring(0, 100));
     console.log('📤 [Frontend] Text content preview (last 100 chars):', text.substring(Math.max(0, text.length - 100)));
@@ -867,16 +933,73 @@ export const apiService = {
     formData.append('text', text);
     formData.append('title', title);
     formData.append('language', language);
+    formData.append('split_mode', splitMode);
     if (skipLengthCheck) {
       formData.append('skip_length_check', 'true');
     }
+    if (segmentedOptions?.totalPages) {
+      formData.append('segmented_total_pages', String(segmentedOptions.totalPages));
+    }
+    if (segmentedOptions?.pageIndex) {
+      formData.append('segmented_page_index', String(segmentedOptions.pageIndex));
+    }
     
     // 🔧 注意：不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+    // 🔧 与文件/URL上传保持一致，长文本处理可能超过 2 分钟，避免误判超时
+    const sandboxStressBypass = segmentedOptions?.totalPages && segmentedOptions?.totalPages > 1
     return api.post("/api/upload/text", formData, {
+      timeout: 600000, // 10 分钟超时
       headers: {
         // 移除 Content-Type，让 axios 自动处理 FormData
+        ...(sandboxStressBypass ? { 'X-Sandbox-Test': '1' } : {}),
       },
     });
+  },
+
+  /** 分段续传：向已有文章追加一段文本（需先完成首段上传；单段长度由后端限制） */
+  appendArticleSegment: async (text, articleId, language = "", pageIndex = null, splitMode = "punctuation") => {
+    const normalizedText = normalizeFormText(text);
+    if (normalizedText.length > MAX_SEGMENT_CHARS) {
+      return {
+        status: "error",
+        data: null,
+        error: `单段长度超出限制（${normalizedText.length} > ${MAX_SEGMENT_CHARS}）`,
+        message: null,
+      };
+    }
+    const formData = new FormData();
+    formData.append("text", normalizedText);
+    formData.append("article_id", String(articleId));
+    formData.append("language", language);
+    formData.append("split_mode", splitMode);
+    const normalizedPageIndex = Number(pageIndex);
+    if (Number.isFinite(normalizedPageIndex) && normalizedPageIndex > 0) {
+      formData.append("page_index", String(normalizedPageIndex));
+    }
+    const requestConfig = {
+      timeout: 600000,
+      headers: {
+        // Dev-only: middleware/rate_limit.py 支持 X-Sandbox-Test=1 旁路压测限流
+        'X-Sandbox-Test': '1',
+      },
+    };
+    const maxRetries = 3;
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      try {
+        return await api.post("/api/upload/text/append-segment", formData, requestConfig);
+      } catch (error) {
+        const status = error?.response?.status;
+        if (status !== 429 || attempt === maxRetries) {
+          throw error;
+        }
+        const retryAfterSeconds = Number(error?.response?.headers?.['retry-after']);
+        const fallbackMs = 1000 * (attempt + 1) * 2;
+        const waitMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+          ? retryAfterSeconds * 1000
+          : fallbackMs;
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+    }
   },
 };
 

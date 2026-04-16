@@ -23,6 +23,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   const [editingArticle, setEditingArticle] = useState(null)
   const [editTitle, setEditTitle] = useState('')
   const [deletingArticle, setDeletingArticle] = useState(null)
+  const [pendingDeletionIds, setPendingDeletionIds] = useState(() => new Set())
   const [isProcessing, setIsProcessing] = useState(false)
   
   // 🔧 调试日志
@@ -291,6 +292,10 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       })),
     [filteredArticles, previewOverrides],
   )
+  const visibleArticles = useMemo(
+    () => enrichedArticles.filter((article) => !pendingDeletionIds.has(article.id)),
+    [enrichedArticles, pendingDeletionIds],
+  )
   console.log('📋 [ArticleSelection] mappedArticles 数量:', mappedArticles.length, 'filteredArticles 数量:', filteredArticles.length)
 
   const handleArticleSelect = (articleId) => {
@@ -355,20 +360,41 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
     if (!deletingArticle) {
       return
     }
-    
-    setIsProcessing(true)
+
+    const articleToDelete = deletingArticle
+    // 先更新UI：关闭弹窗并立刻从列表隐藏该文章，再异步删除后端数据
+    setDeletingArticle(null)
+    setPendingDeletionIds((prev) => {
+      const next = new Set(prev)
+      next.add(articleToDelete.id)
+      return next
+    })
+
     try {
-      await apiService.deleteArticle(deletingArticle.id)
+      await apiService.deleteArticle(articleToDelete.id)
       console.log('✅ [ArticleSelection] 文章已删除')
       // 刷新文章列表
       queryClient.invalidateQueries({ queryKey: ['articles'] })
       refetch()
-      setDeletingArticle(null)
     } catch (error) {
       console.error('❌ [ArticleSelection] 删除文章失败:', error)
+      // 删除失败时回滚UI，恢复该文章
+      setPendingDeletionIds((prev) => {
+        const next = new Set(prev)
+        next.delete(articleToDelete.id)
+        return next
+      })
       alert(t('删除失败: {error}').replace('{error}', error.response?.data?.detail || error.message || '未知错误'))
     } finally {
-      setIsProcessing(false)
+      // 删除请求完成后，清理本地 pending 状态（成功时后端刷新后不会再出现）
+      setPendingDeletionIds((prev) => {
+        if (!prev.has(articleToDelete.id)) {
+          return prev
+        }
+        const next = new Set(prev)
+        next.delete(articleToDelete.id)
+        return next
+      })
     }
   }
   
@@ -411,16 +437,16 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
                 <div className="mb-6">
                   <p className="text-gray-600">
                     {t('共显示 {count} 篇文章（{language}）')
-                      .replace('{count}', enrichedArticles.length)
+                      .replace('{count}', visibleArticles.length)
                       .replace('{language}', t(selectedLanguage) || selectedLanguage)
                     }
                   </p>
                 </div>
 
                 {/* Article List */}
-                {enrichedArticles.length > 0 ? (
+                {visibleArticles.length > 0 ? (
                   <ArticleList 
-                    articles={enrichedArticles}
+                    articles={visibleArticles}
                     onArticleSelect={handleArticleSelect}
                     onArticleEdit={handleEdit}
                     editingArticleId={editingArticle}
