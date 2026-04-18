@@ -45,7 +45,13 @@ function SentenceContainer({
   // 🔧 新增：Token是否不足（用于禁用AI详细解释按钮）
   isTokenInsufficient = false,
   // 🔧 新增：自动翻译开关状态
-  autoTranslationEnabled = false
+  autoTranslationEnabled = false,
+  autoHintTarget = null,
+  autoHintPreviewing = false,
+  autoHintTooltipVisible = false,
+  autoHintFading = false,
+  autoHintMessage = '',
+  onAutoHintInteraction = null,
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -109,6 +115,35 @@ function SentenceContainer({
   
   // 🔧 获取 sentence_id 用于标识（优先使用数据中的 sentence_id，否则使用索引+1）
   const sentenceId = sentence?.sentence_id || (typeof sentence === 'object' && sentence?.id) || (sentenceIndex + 1)
+  const autoHintForThisSentence = autoHintTarget && Number(autoHintTarget?.sentenceId) === Number(sentenceId)
+    ? autoHintTarget
+    : null
+  const autoGrammarHintActive = Boolean(
+    autoHintForThisSentence &&
+    autoHintForThisSentence.type === 'grammar' &&
+    autoHintTooltipVisible
+  )
+
+  useEffect(() => {
+    if (!autoGrammarHintActive) return
+    const rect = sentenceRef.current?.getBoundingClientRect()
+    if (rect) {
+      setGrammarCardPosition({
+        top: rect.bottom + 14,
+        left: rect.left,
+        right: 'auto',
+        sentenceTop: rect.top,
+        sentenceBottom: rect.bottom,
+      })
+    }
+    setShowGrammarCard(true)
+  }, [autoGrammarHintActive])
+
+  useEffect(() => {
+    if (autoHintForThisSentence?.type !== 'grammar') return
+    if (autoHintTooltipVisible) return
+    setShowGrammarCard(false)
+  }, [autoHintForThisSentence, autoHintTooltipVisible])
   
   // Check if this sentence has grammar notations
   // 🔧 使用 useMemo 缓存结果，避免每次渲染都调用函数（可能导致无限循环）
@@ -438,7 +473,7 @@ function SentenceContainer({
     <div 
       ref={sentenceRef}
       key={`s-${sentenceIndex}`} 
-      className={`select-none relative transition-all duration-200 ${hoverStyle} ${backgroundStyle} ${selectionSentenceClass}`}
+      className={`select-none relative transition-all duration-200 ${hoverStyle} ${selectionSentenceClass} ${backgroundStyle}`}
       data-sentence="1"
       data-sentence-id={sentenceId}
       data-sentence-index={sentenceIndex}
@@ -538,6 +573,12 @@ function SentenceContainer({
               sourceLanguageCode={sourceLang}
               // 🔧 单词 hover 翻译只在自动翻译开启时显示
               autoTranslationEnabled={autoTranslationEnabled}
+              autoHintTarget={autoHintForThisSentence}
+              autoHintPreviewing={autoHintPreviewing}
+              autoHintTooltipVisible={autoHintTooltipVisible}
+              autoHintFading={autoHintFading}
+              autoHintMessage={autoHintMessage}
+              onAutoHintInteraction={onAutoHintInteraction}
             />
             {/* 🔧 在不同 word token 之间添加空格（只在 hover 时显示） */}
             {shouldAddSpaceAfter && (
@@ -569,8 +610,7 @@ function SentenceContainer({
           {/* 右下角小徽标作为触发器 */}
           <div className="mt-1 flex justify-end">
             <GrammarNoteBadge
-              className=""
-              style={{ fontSize: '0.60em' }}
+              className={autoHintForThisSentence?.type === 'grammar' && autoHintPreviewing ? 'animate-pulse' : ''}
               label="grammar note"
               onMouseEnter={() => {
                 const rect = sentenceRef.current?.getBoundingClientRect()
@@ -585,8 +625,12 @@ function SentenceContainer({
                   })
                 }
                 setShowGrammarCard(true)
+                onAutoHintInteraction?.({ type: 'grammar', sentenceId })
                 // 🔧 当显示 grammar notation 时，隐藏整句翻译
                 clearSentenceTranslation()
+              }}
+              onClick={() => {
+                onAutoHintInteraction?.({ type: 'grammar', sentenceId })
               }}
               onMouseLeave={() => {
                 hideCardTimerRef.current = setTimeout(() => setShowGrammarCard(false), 120)
@@ -605,6 +649,9 @@ function SentenceContainer({
             onMouseLeave={handleCardMouseLeave}
             cachedGrammarRules={grammarNotations}
             getGrammarRuleById={getGrammarRuleById}
+            autoHintMessage={autoGrammarHintActive ? autoHintMessage : ''}
+            autoHintFading={autoGrammarHintActive ? autoHintFading : false}
+            onTooltipInteract={() => onAutoHintInteraction?.({ type: 'grammar', sentenceId })}
           />
         </>
       )}

@@ -110,7 +110,10 @@ export default function GrammarNotationCard({
   onMouseEnter = null,
   onMouseLeave = null,
   cachedGrammarRules = null,
-  getGrammarRuleById = null
+  getGrammarRuleById = null,
+  autoHintMessage = '',
+  autoHintFading = false,
+  onTooltipInteract = null,
 }) {
   const t = useUIText()
   const [grammarRules, setGrammarRules] = useState([])
@@ -357,11 +360,19 @@ export default function GrammarNotationCard({
         height: 'auto',
         padding: '16px',
         boxSizing: 'border-box',
-        display: 'block'
+        display: 'block',
+        opacity: autoHintFading ? 0 : 1,
+        transition: 'opacity 300ms ease',
       }}
-      onMouseEnter={onMouseEnter}
+      onMouseEnter={(e) => {
+        onTooltipInteract?.()
+        onMouseEnter?.(e)
+      }}
       onMouseLeave={onMouseLeave}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        onTooltipInteract?.()
+        e.stopPropagation()
+      }}
     >
       <div 
         style={{ 
@@ -371,6 +382,19 @@ export default function GrammarNotationCard({
           overflowX: 'hidden'
         }}
       >
+        {autoHintMessage && (
+          <div style={{
+            marginBottom: '8px',
+            border: '1px solid #d1fae5',
+            background: '#ecfdf5',
+            color: '#047857',
+            borderRadius: '6px',
+            padding: '4px 8px',
+            fontSize: '11px',
+          }}>
+            {autoHintMessage}
+          </div>
+        )}
         {isLoading && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
             <div style={{ 

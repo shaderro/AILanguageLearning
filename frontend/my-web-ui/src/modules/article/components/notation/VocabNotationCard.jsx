@@ -282,7 +282,11 @@ export default function VocabNotationCard({
   onMouseEnter = null,
   onMouseLeave = null,
   getVocabExampleForToken = null,
-  anchorRef = null
+  anchorRef = null,
+  autoHintMessage = '',
+  onTooltipInteract = null,
+  autoOffsetY = 0,
+  autoHintFading = false,
 }) {
   const t = useUIText()
   const { selectedLanguage } = useLanguage()
@@ -644,24 +648,25 @@ export default function VocabNotationCard({
     // 确保不会超出视口边界（此时 maxHeightPx 已根据空间收缩）
     const finalTop = Math.max(0, Math.min(top, viewportHeight - maxHeightPx))
     const finalOpacity = isVisible ? 1 : 0
+    const computedOpacity = autoHintFading ? 0 : finalOpacity
     
     // 🔧 如果位置和透明度没有变化，跳过更新，避免不必要的重新渲染
     if (
       lastPositionRef.current.left === left &&
       lastPositionRef.current.top === finalTop &&
-      lastPositionRef.current.opacity === finalOpacity
+      lastPositionRef.current.opacity === computedOpacity
     ) {
       return
     }
     
-    lastPositionRef.current = { left, top: finalTop, opacity: finalOpacity }
-    
+    lastPositionRef.current = { left, top: finalTop, opacity: computedOpacity }
+
     setPortalStyle({
       position: 'fixed',
-      top: `${finalTop}px`,
+      top: `${finalTop + Number(autoOffsetY || 0)}px`,
       left: `${left}px`,
       width: `${DEFAULT_CARD_WIDTH}px`,
-      opacity: finalOpacity,
+      opacity: computedOpacity,
       pointerEvents: isVisible ? 'auto' : 'none',
       zIndex: 100000,
       maxHeightPx,
@@ -684,7 +689,7 @@ export default function VocabNotationCard({
       computed: { left, top: finalTop },
       isVisible,
     })
-  }, [anchorRef, isVisible, position, cardHeight])
+  }, [anchorRef, isVisible, position, cardHeight, autoOffsetY, autoHintFading])
 
   useLayoutEffect(() => {
     if (isVisible && cardRef.current) {
@@ -868,13 +873,21 @@ export default function VocabNotationCard({
     )
   }
 
+  const showAutoHintMessage = Boolean(autoHintMessage)
+
   return createPortal(
     <div 
-      className="transition-opacity duration-200 notation-card"
+      className="transition-opacity duration-300 notation-card"
       style={portalStyle}
-      onMouseEnter={onMouseEnter}
+      onMouseEnter={(e) => {
+        onTooltipInteract?.()
+        onMouseEnter?.(e)
+      }}
       onMouseLeave={onMouseLeave}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        onTooltipInteract?.()
+        e.stopPropagation()
+      }}
     >
       <div 
         ref={cardRef}
@@ -887,6 +900,11 @@ export default function VocabNotationCard({
           overflowY: 'auto'
         }}
       >
+        {showAutoHintMessage && (
+          <div className="mb-2 rounded border border-emerald-100 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">
+            {autoHintMessage}
+          </div>
+        )}
         {displayContent}
       </div>
     </div>,

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import ArticleViewer from './components/ArticleViewer'
 import UploadInterface from './components/UploadInterface'
@@ -23,8 +24,50 @@ import { colors } from '../../design-tokens'
 import VocabNotationDebugPanel from './components/VocabNotationDebugPanel'
 import { BackButton } from '../../components/base'
 
+const SEGMENT_MAX_CHARS = 2000
+
+const isSentenceBoundaryChar = (ch) =>
+  ['.', '!', '?', ';', '。', '！', '？', '；', '…'].includes(ch)
+
+const splitSegmentWithBoundary = (text, splitMode = 'punctuation') => {
+  const t = String(text || '').trim()
+  if (!t) return []
+  if (t.length <= SEGMENT_MAX_CHARS) return [t]
+  const out = []
+  let start = 0
+  while (start < t.length) {
+    let end = Math.min(start + SEGMENT_MAX_CHARS, t.length)
+    if (end < t.length) {
+      const slice = t.slice(start, end)
+      let breakAt = -1
+      if ((splitMode || 'punctuation') === 'line') {
+        const para = slice.lastIndexOf('\n\n')
+        const line = slice.lastIndexOf('\n')
+        if (para >= Math.floor(slice.length * 0.5)) breakAt = para + 2
+        else if (line >= Math.floor(slice.length * 0.5)) breakAt = line + 1
+      } else {
+        for (let i = slice.length - 1; i >= 0; i -= 1) {
+          if (isSentenceBoundaryChar(slice[i])) {
+            breakAt = i + 1
+            break
+          }
+        }
+        if (breakAt < Math.floor(slice.length * 0.4)) {
+          const lastSpace = slice.lastIndexOf(' ')
+          if (lastSpace >= Math.floor(slice.length * 0.7)) breakAt = lastSpace + 1
+        }
+      }
+      if (breakAt > 0) end = start + breakAt
+    }
+    out.push(t.slice(start, end))
+    start = end
+  }
+  return out
+}
+
+const getTransportLength = (text) => String(text || '').replace(/\r?\n/g, '\r\n').length
+
 function ArticleCanvas({ children, onClearQuote }) {
-  const { clearSelection } = useSelection()
   return (
     <div className="flex-1 min-h-0 flex flex-col" onClick={(e) => {
       console.log('🖱️ [ArticleCanvas] onClick 被触发', {
@@ -47,8 +90,7 @@ function ArticleCanvas({ children, onClearQuote }) {
         return
       }
       console.log('🧹 [ArticleCanvas] 清除选择和引用')
-      clearSelection()
-      // 🔧 当点击空白区域时，也清除引用
+      // onClearQuote 由父组件提供，已包含 SelectionContext.clearSelection + 引用状态清理
       if (onClearQuote && typeof onClearQuote === 'function') {
         onClearQuote()
       }
@@ -58,7 +100,13 @@ function ArticleCanvas({ children, onClearQuote }) {
   )
 }
 
-export default function ArticleChatView({ articleId, onBack, isUploadMode = false, onUploadComplete }) {
+export default function ArticleChatView({
+  articleId,
+  onBack,
+  isUploadMode = false,
+  onUploadComplete,
+  enableAutoAnnotationHint = false,
+}) {
   const t = useUIText()
   // 🔧 从 URL 参数读取 sentenceId（用于自动滚动和高亮）
   const getSentenceIdFromURL = () => {
@@ -88,6 +136,157 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   const [selectedSentence, setSelectedSentence] = useState(null)  // 新增：保存选中的句子
   const [hasSelectedSentence, setHasSelectedSentence] = useState(false)  // 新增：是否有选中的句子
   const [autoTranslationEnabled, setAutoTranslationEnabled] = useState(false)  // 🔧 自动翻译开关状态
+
+  const queryClient = useQueryClient()
+  const [currentPageIndex, setCurrentPageIndex] = useState(1)
+
+  useEffect(() => {
+    if (!articleId || articleId === 'upload') return
+    setCurrentPageIndex(1)
+  }, [articleId])
+
+  // Sandbox：后台继续处理后续 segment（分页任务）
+  useEffect(() => {
+    if (!articleId || articleId === 'upload' || isUploadMode) return
+    const key = `article_segment_job_${articleId}`
+    const runningKey = `article_segment_running_${articleId}`
+    if (localStorage.getItem(runningKey) === '1') return
+    const raw = localStorage.getItem(key)
+    if (!raw) return
+    let job
+    try {
+      job = JSON.parse(raw)
+    } catch {
+      localStorage.removeItem(key)
+      return
+    }
+    const { remaining } = job
+    if (!Array.isArray(remaining) || remaining.length === 0) {
+      localStorage.removeItem(key)
+      return
+    }
+
+    let cancelled = false
+    const run = async () => {
+      localStorage.setItem(runningKey, '1')
+      let queue = [...remaining]
+      let completed = job.completedPages ?? 1
+      let total = job.totalPages ?? completed + queue.length
+      while (!cancelled && queue.length > 0) {
+        // 轻微节流，减少与 auth/chat 轮询同时冲击限流窗口
+        await new Promise((resolve) => setTimeout(resolve, 120))
+        const nextItem = queue[0]
+        const content = typeof nextItem === 'string' ? nextItem : nextItem?.content
+        const pageIndex = typeof nextItem === 'string' ? completed + 1 : (nextItem?.pageIndex || completed + 1)
+        if (!content) {
+          queue.shift()
+          continue
+        }
+        try {
+          const safeContent = String(content)
+          if (getTransportLength(safeContent) > SEGMENT_MAX_CHARS) {
+            let parts = splitSegmentWithBoundary(safeContent, job.splitMode || 'punctuation')
+            // 兜底：若边界切分未能缩短（例如换行 CRLF 扩容导致超限），强制二分避免死循环
+            if (parts.length <= 1) {
+              const pivot = Math.max(1, Math.floor(safeContent.length / 2))
+              parts = [safeContent.slice(0, pivot), safeContent.slice(pivot)].filter(Boolean)
+            }
+            const tail = queue.slice(1)
+            const replacement = parts.map((p, idx) => ({ content: p, pageIndex: pageIndex + idx }))
+            const delta = Math.max(0, replacement.length - 1)
+            const shiftedTail = tail.map((it, idx) => {
+              if (typeof it === 'string') {
+                return { content: it, pageIndex: pageIndex + replacement.length + idx }
+              }
+              return { ...it, pageIndex: Number(it.pageIndex || (pageIndex + replacement.length + idx)) + delta }
+            })
+            queue = [...replacement, ...shiftedTail]
+            total += delta
+            localStorage.setItem(
+              key,
+              JSON.stringify({
+                ...job,
+                remaining: queue,
+                completedPages: completed,
+                totalPages: total,
+              })
+            )
+            continue
+          }
+          const res = await apiService.appendArticleSegment(
+            safeContent,
+            articleId,
+            job.language,
+            pageIndex,
+            job.splitMode || 'punctuation'
+          )
+          const ok = res?.status === 'success'
+          if (!ok) {
+            const msg = String(res?.error || res?.message || '')
+            if (msg.includes('超出限制') && safeContent.length > 1) {
+              let parts = splitSegmentWithBoundary(safeContent, job.splitMode || 'punctuation')
+              // 兜底：边界切分未生效时强制二分，确保每轮都会推进
+              if (parts.length <= 1) {
+                const pivot = Math.max(1, Math.floor(safeContent.length / 2))
+                parts = [safeContent.slice(0, pivot), safeContent.slice(pivot)].filter(Boolean)
+              }
+              const tail = queue.slice(1)
+              const replacement = parts.map((p, idx) => ({ content: p, pageIndex: pageIndex + idx }))
+              const delta = Math.max(0, replacement.length - 1)
+              const shiftedTail = tail.map((it, idx) => {
+                if (typeof it === 'string') {
+                  return { content: it, pageIndex: pageIndex + replacement.length + idx }
+                }
+                return { ...it, pageIndex: Number(it.pageIndex || (pageIndex + replacement.length + idx)) + delta }
+              })
+              queue = [...replacement, ...shiftedTail]
+              total += delta
+              localStorage.setItem(
+                key,
+                JSON.stringify({
+                  ...job,
+                  remaining: queue,
+                  completedPages: completed,
+                  totalPages: total,
+                })
+              )
+              continue
+            }
+            break
+          }
+          queue.shift()
+          completed += 1
+          if (queue.length === 0) {
+            localStorage.removeItem(key)
+          } else {
+            localStorage.setItem(
+              key,
+              JSON.stringify({
+                ...job,
+                remaining: queue,
+                completedPages: completed,
+                totalPages: total,
+              })
+            )
+          }
+          queryClient.invalidateQueries({
+            predicate: (q) =>
+              Array.isArray(q.queryKey) &&
+              q.queryKey[0] === 'article-page' &&
+              String(q.queryKey[1]) === String(articleId),
+          })
+        } catch {
+          break
+        }
+      }
+      localStorage.removeItem(runningKey)
+    }
+    run()
+    return () => {
+      cancelled = true
+      localStorage.removeItem(runningKey)
+    }
+  }, [articleId, isUploadMode, queryClient])
 
   // 🔧 修复：移除在这里设置全局 window.chatViewMessagesRef 的逻辑
   // ChatView 组件会在 articleId 改变时自动从后端加载对应文章的历史记录
@@ -428,6 +627,173 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   // 格式：{ articleId, sentenceId, tokenId } 或 null
   // 目的：即使 TokenSpan 重挂载，tooltip 状态也不会丢失
   const [activeVocabNotation, setActiveVocabNotation] = useState(null)
+  const [autoHintTarget, setAutoHintTarget] = useState(null)
+  const [autoHintPreviewing, setAutoHintPreviewing] = useState(false)
+  const [autoHintTooltipVisible, setAutoHintTooltipVisible] = useState(false)
+  const [autoHintFading, setAutoHintFading] = useState(false)
+  const autoHintDelayTimerRef = useRef(null)
+  const autoHintHideTimerRef = useRef(null)
+  const autoHintFadeInTimerRef = useRef(null)
+  const autoHintFadeOutTimerRef = useRef(null)
+  const autoHintInteractedRef = useRef(false)
+  const autoHintMessage = '✨ New insight — hover to explore • click for details'
+
+  const clearAutoHintTimers = useCallback(() => {
+    if (autoHintDelayTimerRef.current) {
+      clearTimeout(autoHintDelayTimerRef.current)
+      autoHintDelayTimerRef.current = null
+    }
+    if (autoHintHideTimerRef.current) {
+      clearTimeout(autoHintHideTimerRef.current)
+      autoHintHideTimerRef.current = null
+    }
+    if (autoHintFadeInTimerRef.current) {
+      clearTimeout(autoHintFadeInTimerRef.current)
+      autoHintFadeInTimerRef.current = null
+    }
+    if (autoHintFadeOutTimerRef.current) {
+      clearTimeout(autoHintFadeOutTimerRef.current)
+      autoHintFadeOutTimerRef.current = null
+    }
+  }, [])
+
+  const markAutoHintSeen = useCallback((id) => {
+    if (!id || typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`annotation_hint_seen_${id}`, '1')
+    } catch {
+      // ignore persistence errors
+    }
+  }, [])
+
+  const isSameHintTarget = useCallback((a, b) => {
+    if (!a || !b) return false
+    if (a.type !== b.type) return false
+    if (Number(a.sentenceId) !== Number(b.sentenceId)) return false
+    if (a.type === 'vocab') {
+      return Number(a.tokenId) === Number(b.tokenId)
+    }
+    return true
+  }, [])
+
+  const handleAutoHintInteraction = useCallback((interactionTarget) => {
+    if (!autoHintTooltipVisible || !autoHintTarget) return
+    if (!isSameHintTarget(autoHintTarget, interactionTarget)) return
+    autoHintInteractedRef.current = true
+    setAutoHintFading(false)
+    if (autoHintHideTimerRef.current) {
+      clearTimeout(autoHintHideTimerRef.current)
+      autoHintHideTimerRef.current = null
+    }
+    if (autoHintFadeOutTimerRef.current) {
+      clearTimeout(autoHintFadeOutTimerRef.current)
+      autoHintFadeOutTimerRef.current = null
+    }
+  }, [autoHintTarget, autoHintTooltipVisible, isSameHintTarget])
+
+  useEffect(() => {
+    clearAutoHintTimers()
+    setAutoHintTarget(null)
+    setAutoHintPreviewing(false)
+    setAutoHintTooltipVisible(false)
+    setAutoHintFading(false)
+    autoHintInteractedRef.current = false
+  }, [articleId, clearAutoHintTimers])
+
+  useEffect(() => {
+    if (!enableAutoAnnotationHint || !articleId || isUploadMode) return
+    if (!isNotationInitialized) return
+    if (typeof window === 'undefined') return
+
+    const seenKey = `annotation_hint_seen_${articleId}`
+    if (localStorage.getItem(seenKey) === '1') return
+
+    const firstVocab = Array.isArray(vocabNotations)
+      ? vocabNotations
+          .map((n) => ({
+            type: 'vocab',
+            sentenceId: Number(n?.sentence_id || 0),
+            tokenId: Number(n?.token_id ?? n?.token_index ?? 0),
+            scoreSentence: Number(n?.sentence_id || Number.MAX_SAFE_INTEGER),
+            scoreToken: Number(n?.token_id ?? n?.token_index ?? Number.MAX_SAFE_INTEGER),
+          }))
+          .filter((n) => Number.isFinite(n.sentenceId) && n.sentenceId > 0)
+          .sort((a, b) => (a.scoreSentence - b.scoreSentence) || (a.scoreToken - b.scoreToken))[0]
+      : null
+
+    const firstGrammar = Array.isArray(grammarNotations)
+      ? grammarNotations
+          .map((n) => {
+            const marked = Array.isArray(n?.marked_token_ids) && n.marked_token_ids.length > 0
+              ? Number(n.marked_token_ids[0])
+              : Number.MAX_SAFE_INTEGER
+            return {
+              type: 'grammar',
+              sentenceId: Number(n?.sentence_id || 0),
+              scoreSentence: Number(n?.sentence_id || Number.MAX_SAFE_INTEGER),
+              scoreToken: marked,
+            }
+          })
+          .filter((n) => Number.isFinite(n.sentenceId) && n.sentenceId > 0)
+          .sort((a, b) => (a.scoreSentence - b.scoreSentence) || (a.scoreToken - b.scoreToken))[0]
+      : null
+
+    const candidates = [firstVocab, firstGrammar].filter(Boolean)
+    if (candidates.length === 0) return
+    const firstTarget = candidates.sort((a, b) => (a.scoreSentence - b.scoreSentence) || (a.scoreToken - b.scoreToken))[0]
+    if (!firstTarget) return
+
+    autoHintInteractedRef.current = false
+    setAutoHintTarget(firstTarget)
+    setAutoHintPreviewing(true)
+
+    autoHintDelayTimerRef.current = setTimeout(() => {
+      setAutoHintPreviewing(false)
+      setAutoHintTooltipVisible(true)
+      setAutoHintFading(true)
+      if (firstTarget.type === 'vocab') {
+        setActiveVocabNotation({
+          articleId,
+          sentenceId: firstTarget.sentenceId,
+          tokenId: firstTarget.tokenId,
+        })
+      }
+      markAutoHintSeen(articleId)
+      autoHintFadeInTimerRef.current = setTimeout(() => {
+        setAutoHintFading(false)
+      }, 60)
+
+      autoHintHideTimerRef.current = setTimeout(() => {
+        if (autoHintInteractedRef.current) return
+        setAutoHintFading(true)
+        autoHintFadeOutTimerRef.current = setTimeout(() => {
+          setAutoHintTooltipVisible(false)
+          setAutoHintFading(false)
+          if (firstTarget.type === 'vocab') {
+            setActiveVocabNotation((prev) => {
+              if (!prev) return prev
+              if (Number(prev.sentenceId) !== Number(firstTarget.sentenceId)) return prev
+              if (Number(prev.tokenId) !== Number(firstTarget.tokenId)) return prev
+              return null
+            })
+          }
+        }, 260)
+      }, 4000)
+    }, 650)
+
+    return () => {
+      clearAutoHintTimers()
+    }
+  }, [
+    articleId,
+    clearAutoHintTimers,
+    enableAutoAnnotationHint,
+    grammarNotations,
+    isNotationInitialized,
+    isUploadMode,
+    markAutoHintSeen,
+    vocabNotations,
+  ])
 
   // 构建 NotationContext 的值
   // 🔧 添加 vocabNotations 和 grammarNotations 到依赖，确保缓存更新时 Context 值也更新
@@ -482,6 +848,11 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
   // 🔧 新增：处理 AI 详细解释请求（内部组件，可以使用 useChatEvent）
   const ArticleChatViewInner = () => {
     const { sendMessageToChat } = useChatEvent()
+    const { clearSelection } = useSelection()
+    const dismissSelectionAndQuote = useCallback(() => {
+      clearSelection()
+      handleClearQuote()
+    }, [clearSelection, handleClearQuote])
     const { token: userToken, userInfo } = useUser()
     
     const handleAskAI = useCallback(async (token, sentenceIndex) => {
@@ -683,7 +1054,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                   </div>
                 </div>
                 {/* Article View */}
-                <ArticleCanvas onClearQuote={handleClearQuote}>
+                <ArticleCanvas onClearQuote={dismissSelectionAndQuote}>
                   <ArticleViewer 
                     key={`article-viewer-${articleId}`}
                     articleId={articleId} 
@@ -697,6 +1068,14 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
                     onTargetSentenceScrolled={handleTargetSentenceScrolled}
                     onAskAI={userToken ? wrappedHandleAskAI : null}
                     autoTranslationEnabled={autoTranslationEnabled}
+                    pageIndex={currentPageIndex}
+                    onPageChange={setCurrentPageIndex}
+                    autoHintTarget={autoHintTarget}
+                    autoHintPreviewing={autoHintPreviewing}
+                    autoHintTooltipVisible={autoHintTooltipVisible}
+                    autoHintFading={autoHintFading}
+                    autoHintMessage={autoHintMessage}
+                    onAutoHintInteraction={handleAutoHintInteraction}
                   />
                 </ArticleCanvas>
               </div>
@@ -706,7 +1085,7 @@ export default function ArticleChatView({ articleId, onBack, isUploadMode = fals
               <ChatView 
                 key={`chatview-${articleId}`}  // 🔧 添加稳定的 key，防止不必要的重新挂载
                 quotedText={quotedText}
-                onClearQuote={handleClearQuote}
+                onClearQuote={dismissSelectionAndQuote}
                 disabled={isUploadMode && !uploadComplete}
                 hasSelectedToken={hasSelectedToken}
                 selectedTokenCount={selectedTokens.length || 1}

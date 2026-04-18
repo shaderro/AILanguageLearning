@@ -1,6 +1,7 @@
-import React, { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect, memo } from 'react'
+/* @refresh reset */
+import React, { useMemo, useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useArticle } from '../../../hooks/useApi'
+import { useQuery } from '@tanstack/react-query'
 import { useTokenSelection } from '../hooks/useTokenSelection'
 import { useTokenDrag } from '../hooks/useTokenDrag'
 import { useVocabExplanations } from '../hooks/useVocabExplanations'
@@ -8,9 +9,10 @@ import { useSentenceInteraction } from '../hooks/useSentenceInteraction'
 import { useUser } from '../../../contexts/UserContext'
 import { useUIText } from '../../../i18n/useUIText'
 import { useSelection } from '../selection/hooks/useSelection'
-import { useSpeechSynthesis } from 'react-speech-kit'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import { useArticleTts } from '../hooks/useArticleTts'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
+import { apiService } from '../../../services/api'
 import SentenceContainer from './SentenceContainer'
 import { useTokenHighlight } from '../hooks/useTokenHighlight'
 
@@ -32,7 +34,15 @@ function ArticleViewer({
   onTargetSentenceScrolled = null,  // 🔧 滚动完成后的回调
   onAskAI = null,  // 🔧 AI详细解释回调
   isTokenInsufficient = false,  // 🔧 Token是否不足（用于禁用AI详细解释按钮）
-  autoTranslationEnabled = false  // 🔧 自动翻译开关状态
+  autoTranslationEnabled = false,  // 🔧 自动翻译开关状态
+  pageIndex = 1,
+  onPageChange = null,
+  autoHintTarget = null,
+  autoHintPreviewing = false,
+  autoHintTooltipVisible = false,
+  autoHintFading = false,
+  autoHintMessage = '',
+  onAutoHintInteraction = null,
 }) {
   // 🔧 Debug: detect unexpected remounts (selection state loss)
   useEffect(() => {
@@ -64,7 +74,45 @@ function ArticleViewer({
   
   // 🔧 使用稳定的 userId（避免因 userId 变化导致查询循环）
   const stableUserId = useMemo(() => userId, [userId])
-  const { data, isLoading, isError, error } = useArticle(articleId, stableUserId)
+  const fallbackTotalPages = useMemo(() => {
+    if (!articleId || articleId === 'upload') return 1
+    try {
+      const raw =
+        localStorage.getItem(`article_segment_job_${articleId}`) ||
+        sessionStorage.getItem(`article_segment_job_${articleId}`)
+      if (!raw) return 1
+      const job = JSON.parse(raw)
+      const total = Number(job?.totalPages || 1)
+      return Number.isFinite(total) && total > 0 ? total : 1
+    } catch {
+      return 1
+    }
+  }, [articleId])
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['article-page', articleId, pageIndex, stableUserId],
+    queryFn: async () => {
+      try {
+        return await apiService.getArticlePage(articleId, pageIndex)
+      } catch (e) {
+        // 分页任务未就绪时，兜底为 processing 页面，避免“无按钮可翻页”
+        if (pageIndex > 1) {
+          return {
+            success: true,
+            data: {
+              text_id: articleId,
+              page_index: pageIndex,
+              total_pages: fallbackTotalPages,
+              page_status: 'processing',
+              sentences: [],
+            },
+          }
+        }
+        throw e
+      }
+    },
+    enabled: !!articleId && articleId !== 'upload',
+    staleTime: 10 * 1000,
+  })
   
   // 🔧 调试：检查 useArticle 的状态
   useEffect(() => {
@@ -91,6 +139,28 @@ function ArticleViewer({
   }
 
   const rawSentences = data?.data?.sentences
+  const pageStatus = data?.data?.page_status || 'completed'
+  const totalPages = Math.max(data?.data?.total_pages || 1, fallbackTotalPages)
+  const isPageProcessing = pageStatus !== 'completed'
+  const segmentProgress = useMemo(() => {
+    if (!articleId || articleId === 'upload') return null
+    const defaultProgress = {
+      completed: Math.min(Math.max(Number(pageIndex) || 1, 1), Math.max(totalPages, 1)),
+      total: Math.max(totalPages, 1),
+      running: false,
+    }
+    try {
+      const raw = localStorage.getItem(`article_segment_job_${articleId}`)
+      const running = localStorage.getItem(`article_segment_running_${articleId}`) === '1'
+      if (!raw) return { ...defaultProgress, running }
+      const job = JSON.parse(raw)
+      const total = Math.max(Number(job?.totalPages || defaultProgress.total), 1)
+      const completed = Math.min(Math.max(Number(job?.completedPages || 1), 1), total)
+      return { completed, total, running }
+    } catch {
+      return defaultProgress
+    }
+  }, [articleId, pageIndex, totalPages])
   const articleLanguage = data?.data?.language || null
   const articleLanguageCode = normalizeLanguageCode(articleLanguage)
   const articleIsNonWhitespace = articleLanguageCode
@@ -157,18 +227,18 @@ function ArticleViewer({
 
   // Sentence interaction management
   const {
-    hoveredSentenceIndex,
-    clickedSentenceIndex,
+    hoveredSentenceIndex: _hoveredSentenceIndex,
+    clickedSentenceIndex: _clickedSentenceIndex,
     selectedSentenceIndex,
-    sentenceRefs,
+    sentenceRefs: _sentenceRefs,
     handleSentenceMouseEnter,
     handleSentenceMouseLeave,
     handleSentenceClick: originalHandleSentenceClick,
-    clearSentenceInteraction,
+    clearSentenceInteraction: _clearSentenceInteraction,
     clearSentenceSelection,
     getSentenceBackgroundStyle,
     isSentenceInteracting,
-    isSentenceSelected
+    isSentenceSelected: _isSentenceSelected
   } = useSentenceInteraction()
   
   // 🔧 包装 handleSentenceClick，添加调试日志
@@ -190,7 +260,7 @@ function ArticleViewer({
   // Selection context (new system) - need to sync with old token selection system
   const {
     currentSelection,
-    clearSelection: clearSelectionContext,
+    clearSelection: _clearSelectionContext,
     selectTokens: selectTokensInContext,
   } = useSelection()
 
@@ -228,7 +298,7 @@ function ArticleViewer({
     clearSelection,
     addSingle,
     selectRange, // 🔧 获取 selectRange 函数
-    emitSelection
+    emitSelection: _emitSelection
   } = useTokenSelection(tokenSelectionParams)
 
   // 🔧 稳定 selectRange 函数引用，避免 useTokenDrag 的 useEffect 频繁重新执行
@@ -304,16 +374,6 @@ function ArticleViewer({
   // 🔧 目标句子闪烁状态
   const [flashingSentenceId, setFlashingSentenceId] = useState(null)
   
-  // 🔧 朗读功能 - 必须在早期返回之前调用所有 hooks
-  const { speak, speaking, cancel, voices, supported } = useSpeechSynthesis()
-  const [isReading, setIsReading] = useState(false)
-  const currentReadingIndexRef = useRef(0)
-  const readingTimeoutRef = useRef(null)
-  const isReadingRef = useRef(false) // 使用 ref 来跟踪朗读状态，避免闭包问题
-  const isUserStoppedRef = useRef(false) // 跟踪是否是用户主动停止
-  const [currentReadingToken, setCurrentReadingToken] = useState(null) // 跟踪当前正在朗读的 token {sentenceIndex, tokenIndex}
-  const [currentReadingSentenceIndex, setCurrentReadingSentenceIndex] = useState(null) // 跟踪当前正在朗读的句子索引
-  
   // 🔧 使用 ref 存储最新的 sentences，避免在 useCallback 依赖中导致频繁重新创建
   const sentencesRef = useRef(sentences)
   useEffect(() => {
@@ -324,25 +384,6 @@ function ArticleViewer({
   const [readAloudButtonContainer, setReadAloudButtonContainer] = useState(null)
   const containerRef = useRef(null) // 使用 ref 来保持容器引用，避免重新查找
   
-  // 🔧 清理朗读状态 - 必须在早期返回之前调用
-  useEffect(() => {
-    return () => {
-      if (readingTimeoutRef.current) {
-        clearTimeout(readingTimeoutRef.current)
-        readingTimeoutRef.current = null
-      }
-      // 🔧 只在组件卸载时清理，不要因为状态变化就取消朗读
-      // 使用原生 API 的 cancel，而不是 react-speech-kit 的 cancel
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
-    }
-  }, []) // 只在组件卸载时执行
-
-  // 🔧 不再监听 speaking 状态变化，因为我们现在使用原生 API
-  // react-speech-kit 的 speaking 状态可能与原生 API 不同步
-  // 我们完全依赖 utterance.onend 事件来处理句子完成
-
   // 🔧 查找朗读按钮容器 - 使用 ref 来避免重复查找
   useEffect(() => {
     // 如果 ref 中已经有容器且容器还在 DOM 中，直接使用，不需要重新查找
@@ -397,6 +438,7 @@ function ArticleViewer({
         clearInterval(checkAttempts)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only discovery; container sync is in the next effect
   }, []) // 只在组件挂载时执行一次
   
   // 🔧 监听容器变化，确保在容器重新创建时能重新找到（仅在容器丢失时检查）
@@ -547,7 +589,7 @@ function ArticleViewer({
   }
 
   // 🔧 检测当前窗口内可见的第一行句子索引
-  // 注意：这个函数在 handleReadAloud 内部被调用，所以需要使用 sentencesRef.current
+  // 注意：朗读重构完成后会由 useArticleTts 使用；当前使用 sentencesRef.current 避免闭包陈旧
   const getFirstVisibleSentenceIndex = () => {
     const currentSentences = sentencesRef.current
     if (!scrollContainerRef.current || currentSentences.length === 0) return 0
@@ -593,624 +635,30 @@ function ArticleViewer({
     return 0
   }
 
-  // 🔧 等待语音列表加载完成
-  const ensureVoicesLoaded = async () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      return false
-    }
-    
-    let voices = window.speechSynthesis.getVoices()
-    
-    // 如果语音列表已加载，直接返回
-    if (voices.length > 0) {
-      console.log('🔊 [ArticleViewer] 语音列表已加载，共', voices.length, '个语音')
-      return true
-    }
-    
-    console.log('🔊 [ArticleViewer] 等待语音列表加载...')
-    
-    // 如果语音列表为空，等待加载
-    return new Promise((resolve) => {
-      // 先尝试触发 getVoices（某些浏览器需要这个）
-      window.speechSynthesis.getVoices()
-      
-      let resolved = false
-      
-      // 设置超时保护
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          voices = window.speechSynthesis.getVoices()
-          const success = voices.length > 0
-          console.log('🔊 [ArticleViewer] 语音列表加载超时，结果:', success, '语音数量:', voices.length)
-          resolve(success)
-        }
-      }, 2000)
-      
-      // 监听语音列表变化事件
-      const onVoicesChanged = () => {
-        if (!resolved) {
-          voices = window.speechSynthesis.getVoices()
-          if (voices.length > 0) {
-            resolved = true
-            clearTimeout(timeout)
-            // 恢复原来的监听器（如果有）
-            const originalHandler = window.speechSynthesis._originalOnVoicesChanged
-            if (originalHandler) {
-              window.speechSynthesis.onvoiceschanged = originalHandler
-              delete window.speechSynthesis._originalOnVoicesChanged
-            } else {
-              window.speechSynthesis.onvoiceschanged = null
-            }
-            console.log('🔊 [ArticleViewer] 语音列表加载完成，共', voices.length, '个语音')
-            resolve(true)
-          }
-        }
-      }
-      
-      // 检查是否支持 onvoiceschanged 事件
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        // 保存原来的监听器（如果有）
-        if (window.speechSynthesis.onvoiceschanged) {
-          window.speechSynthesis._originalOnVoicesChanged = window.speechSynthesis.onvoiceschanged
-        }
-        window.speechSynthesis.onvoiceschanged = onVoicesChanged
-      } else {
-        // 如果不支持事件，等待一段时间后重试
-        setTimeout(() => {
-          if (!resolved) {
-            resolved = true
-            voices = window.speechSynthesis.getVoices()
-            clearTimeout(timeout)
-            const success = voices.length > 0
-            console.log('🔊 [ArticleViewer] 语音列表加载完成（无事件支持），结果:', success, '语音数量:', voices.length)
-            resolve(success)
-          }
-        }, 500)
-      }
-    })
-  }
-
-  // 🔧 根据语言代码获取对应的语音（确保从当前可用的语音列表中获取）
-  const getVoiceForLanguage = (langCode) => {
-    // 确保从最新的语音列表中获取
-    const availableVoices = typeof window !== 'undefined' && window.speechSynthesis 
-      ? window.speechSynthesis.getVoices() 
-      : (voices || [])
-    
-    if (!availableVoices || availableVoices.length === 0) {
-      console.warn('⚠️ [ArticleViewer] 没有可用的语音')
-      return null
-    }
-    
-    // 语言代码映射
-    const langMap = {
-      'de': 'de-DE',
-      'en': 'en-US',
-      'zh': 'zh-CN',
-      'fr': 'fr-FR',
-      'es': 'es-ES',
-      'it': 'it-IT',
-      'ja': 'ja-JP',
-      'ko': 'ko-KR',
-    }
-    
-    const targetLang = langMap[langCode] || langCode
-    
-    // 优先查找完全匹配的语音
-    let voice = availableVoices.find(v => v.lang === targetLang)
-    
-    // 如果找不到，查找语言代码前缀匹配的
-    if (!voice) {
-      const langPrefix = targetLang.split('-')[0]
-      voice = availableVoices.find(v => v.lang && v.lang.startsWith(langPrefix))
-    }
-    
-    // 如果还是找不到，使用默认语音（通常是第一个）
-    if (!voice && availableVoices.length > 0) {
-      voice = availableVoices[0]
-      console.warn(`⚠️ [ArticleViewer] 未找到 ${targetLang} 语音，使用默认语音: ${voice.name}`)
-    }
-    
-    return voice || null
-  }
-
-  // ============================================================================
-  // 🔧 所有 Hooks（必须在 early return 之前）
-  // ============================================================================
-  
-  // 🔧 朗读当前可见区域的所有句子
-  // ⚠️ 注意：这个函数使用了多个状态和 ref，需要用 useCallback 包装以避免频繁重新创建
-  const handleReadAloud = useCallback(async () => {
-    console.log('🔍 [ArticleViewer] handleReadAloud useCallback 执行')
-    // 🔧 使用 ref 获取最新的 sentences，避免闭包问题
-    const currentSentences = sentencesRef.current
-    console.log('🔊 [ArticleViewer] handleReadAloud 被调用', {
-      isReading,
-      supported,
-      sentencesCount: currentSentences.length,
-      voicesCount: voices?.length || 0
-    })
-
-    if (isReadingRef.current) {
-      // 停止朗读
-      console.log('🔊 [ArticleViewer] 用户主动停止朗读')
-      // 标记为用户主动停止
-      isUserStoppedRef.current = true
-      // 同时使用 react-speech-kit 的 cancel 和原生 API 的 cancel
-      cancel()
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
-      setIsReading(false)
-      isReadingRef.current = false
-      // 🔧 不重置 currentReadingIndexRef.current，保留当前朗读位置，以便下次继续
-      setCurrentReadingToken(null) // 清除当前朗读的 token 高亮
-      setCurrentReadingSentenceIndex(null) // 清除当前朗读的句子高亮
-      if (readingTimeoutRef.current) {
-        clearTimeout(readingTimeoutRef.current)
-        readingTimeoutRef.current = null
-      }
-      // 重置标志（延迟足够时间，确保错误处理能检测到）
-      // 错误回调可能是异步的，需要给足够的时间
-      setTimeout(() => {
-        isUserStoppedRef.current = false
-      }, 500)
-      return
-    }
-
-    if (!supported) {
-      console.warn('⚠️ [ArticleViewer] 浏览器不支持语音合成')
-      alert('您的浏览器不支持语音合成功能')
-      return
-    }
-
-    if (currentSentences.length === 0) {
-      console.warn('⚠️ [ArticleViewer] 没有可朗读的内容')
-      alert(t('没有可朗读的内容'))
-      return
-    }
-
-    // 确保语音列表已加载
-    const voicesLoaded = await ensureVoicesLoaded()
-    if (!voicesLoaded) {
-      console.warn('⚠️ [ArticleViewer] 语音列表加载失败或超时')
-      // 继续尝试，可能某些浏览器不需要等待
-    }
-
-    // 🔧 确定起始索引：
-    // 1. 如果有选中的句子，从选中句子开始
-    // 2. 如果没有选中句子，检查是否有上次朗读位置，如果有则继续，否则从可见第一句开始
-    let startIndex
-    const preferredSelectedSentenceIndex =
-      selectedSentenceIndexFromSelectionContext !== null && selectedSentenceIndexFromSelectionContext !== undefined
-        ? selectedSentenceIndexFromSelectionContext
-        : selectedSentenceIndex
-
-    if (preferredSelectedSentenceIndex !== null && preferredSelectedSentenceIndex !== undefined) {
-      // 从选中的句子开始
-      startIndex = preferredSelectedSentenceIndex
-      console.log('🔊 [ArticleViewer] 从选中的句子开始朗读，起始索引:', startIndex, {
-        selectedSentenceIndex,
-        selectedSentenceIndexFromSelectionContext,
-        currentSelection
-      })
-    } else if (currentReadingIndexRef.current > 0 && currentReadingIndexRef.current < currentSentences.length) {
-      // 从上次朗读位置继续
-      startIndex = currentReadingIndexRef.current
-      console.log('🔊 [ArticleViewer] 从上次朗读位置继续，起始索引:', startIndex)
-    } else {
-      // 从当前可见的第一行开始
-      startIndex = getFirstVisibleSentenceIndex()
-      console.log('🔊 [ArticleViewer] 从可见第一句开始朗读，起始索引:', startIndex)
-    }
-    currentReadingIndexRef.current = startIndex
-    setIsReading(true)
-    isReadingRef.current = true
-    isUserStoppedRef.current = false // 重置用户停止标志
-
-    // 开始朗读
-    const readNextSentence = async () => {
-      // 🔧 使用 ref 获取最新的 sentences
-      const latestSentences = sentencesRef.current
-      console.log('🔊 [ArticleViewer] readNextSentence 被调用', {
-        currentIndex: currentReadingIndexRef.current,
-        totalSentences: latestSentences.length,
-        isReadingState: isReading
-      })
-
-      // 检查是否还在朗读状态（用户可能已经停止）
-      if (!isReadingRef.current) {
-        console.log('🔊 [ArticleViewer] 朗读已停止，退出')
-        return
-      }
-
-      if (currentReadingIndexRef.current >= latestSentences.length) {
-        // 朗读完成
-        console.log('🔊 [ArticleViewer] 朗读完成')
-        setIsReading(false)
-        isReadingRef.current = false
-        isUserStoppedRef.current = false // 重置用户停止标志
-        currentReadingIndexRef.current = 0
-              setCurrentReadingToken(null) // 清除当前朗读的 token 高亮
-              setCurrentReadingSentenceIndex(null) // 清除当前朗读的句子高亮
-        if (readingTimeoutRef.current) {
-          clearTimeout(readingTimeoutRef.current)
-          readingTimeoutRef.current = null
-        }
-        return
-      }
-
-      const sentence = latestSentences[currentReadingIndexRef.current]
-      const sentenceText = getSentenceText(sentence)
-      
-      console.log('🔊 [ArticleViewer] 准备朗读句子', {
-        index: currentReadingIndexRef.current,
-        sentenceText: sentenceText?.substring(0, 100),
-        textLength: sentenceText?.length,
-        tokensCount: sentence?.tokens?.length || 0
-      })
-      
-      if (!sentenceText || sentenceText.trim().length === 0) {
-        // 如果句子为空，跳过
-        console.log('🔊 [ArticleViewer] 句子为空，跳过')
-        currentReadingIndexRef.current++
-        // 使用 setTimeout 避免递归过深
-        readingTimeoutRef.current = setTimeout(() => {
-          readNextSentence()
-        }, 100)
-        return
-      }
-
-      // 🔧 使用全局语言状态，而不是从数据中推断
-      const globalLangCode = languageNameToCode(selectedLanguage)
-      const langCode = globalLangCode || 'de' // 默认使用 'de'
-      const voice = getVoiceForLanguage(langCode)
-      
-      console.log('🔊 [ArticleViewer] 准备调用 speak', {
-        langCode,
-        voice: voice ? voice.name : 'null',
-        textLength: sentenceText.length
-      })
-
-      // 🔧 检查当前句子是否在可见范围内，如果不在则自动滚动
-      const checkAndScrollToSentence = () => {
-        if (!scrollContainerRef.current) return
-        
-        const container = scrollContainerRef.current
-        const containerRect = container.getBoundingClientRect()
-        const containerTop = containerRect.top
-        const containerBottom = containerRect.bottom
-        
-        const sentenceElement = container.querySelector(
-          `[data-sentence-index="${currentReadingIndexRef.current}"]`
-        )
-        
-        if (sentenceElement) {
-          const sentenceRect = sentenceElement.getBoundingClientRect()
-          const sentenceTop = sentenceRect.top
-          const sentenceBottom = sentenceRect.bottom
-          
-          // 检查句子是否在可见区域内
-          const isVisible = sentenceBottom > containerTop && sentenceTop < containerBottom
-          
-          if (!isVisible) {
-            // 如果不在可见区域内，滚动到该句子
-            console.log('🔊 [ArticleViewer] 句子不在可见范围内，自动滚动到句子:', currentReadingIndexRef.current)
-            sentenceElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          }
-        }
-      }
-      
-      // 延迟一点执行滚动，确保 DOM 已更新
-      setTimeout(checkAndScrollToSentence, 100)
-
-      // 朗读当前句子 - 直接使用 Web Speech API
-      try {
-        console.log('🔊 [ArticleViewer] 调用 speak API', {
-          text: sentenceText.substring(0, 50),
-          voiceName: voice?.name,
-          voiceLang: voice?.lang,
-          rate: 0.9,
-          pitch: 1.0,
-          volume: 1.0
-        })
-        
-        // 检查浏览器是否支持 Web Speech API
-        if (typeof window === 'undefined' || !window.speechSynthesis) {
-          console.error('❌ [ArticleViewer] 浏览器不支持 Web Speech API')
-          alert('您的浏览器不支持语音合成功能')
-          setIsReading(false)
-          isReadingRef.current = false
-          isUserStoppedRef.current = false // 重置用户停止标志
-              setCurrentReadingToken(null) // 清除当前朗读的 token 高亮
-              setCurrentReadingSentenceIndex(null) // 清除当前朗读的句子高亮
-          return
-        }
-
-        // 等待一小段时间，确保之前的操作完成
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // 🔧 检查是否有正在进行的朗读，只在有正在进行的朗读时才取消
-        // 避免取消当前正要开始的朗读
-        if (window.speechSynthesis.speaking) {
-          console.log('🔊 [ArticleViewer] 检测到正在进行的朗读，取消它')
-          window.speechSynthesis.cancel()
-          // 再等待一小段时间，确保 cancel 完成
-          await new Promise(resolve => setTimeout(resolve, 100))
-        }
-
-        // 确保语音列表已加载（某些浏览器需要触发 getVoices 才能加载）
-        let availableVoices = window.speechSynthesis.getVoices()
-        if (availableVoices.length === 0) {
-          // 如果语音列表为空，等待一下再试
-          await new Promise(resolve => setTimeout(resolve, 100))
-          availableVoices = window.speechSynthesis.getVoices()
-        }
-
-        // 重新验证并获取语音对象（确保使用最新的语音列表）
-        let validVoice = null
-        if (voice) {
-          // 从当前可用的语音列表中查找匹配的语音
-          validVoice = availableVoices.find(v => 
-            v.name === voice.name && v.lang === voice.lang
-          ) || availableVoices.find(v => v.lang === voice.lang)
-        }
-        
-        // 如果找不到匹配的语音，重新获取
-        if (!validVoice) {
-          validVoice = getVoiceForLanguage(langCode)
-        }
-
-        // 🔧 计算字符位置到 token 索引的映射
-        const sentenceIndex = currentReadingIndexRef.current
-        
-        // 直接使用 Web Speech API
-        const utterance = new SpeechSynthesisUtterance(sentenceText)
-        
-        // 🔧 为每个 utterance 创建唯一标识，避免旧的 utterance 事件影响新的朗读
-        const utteranceId = `${sentenceIndex}-${Date.now()}-${Math.random()}`
-        utterance._utteranceId = utteranceId
-        
-        // 只有在找到有效语音时才设置
-        if (validVoice) {
-          utterance.voice = validVoice
-          console.log('🔊 [ArticleViewer] 使用语音:', validVoice.name, validVoice.lang)
-        } else {
-          console.warn('⚠️ [ArticleViewer] 未找到有效语音，使用浏览器默认语音')
-        }
-        
-        utterance.rate = 0.9
-        utterance.pitch = 1.0
-        utterance.volume = 1.0
-        // 🔧 使用全局语言状态转换为 BCP 47 标签
-        utterance.lang = languageCodeToBCP47(langCode) || 'de-DE'
-        
-        let hasStarted = false
-        let hasEnded = false
-        const currentUtteranceIdRef = { current: utteranceId } // 使用 ref 来跟踪当前 utterance ID
-        const tokens = sentence.tokens || []
-        let charToTokenMap = []
-        let currentCharIndex = 0
-        
-        // 🔧 使用与 getSentenceText 相同的方式构建文本，确保字符映射准确
-        // 构建字符到 token 的映射
-        tokens.forEach((token, tokenIndex) => {
-          // 使用与 getSentenceText 相同的逻辑获取 token 文本
-          let tokenText = ''
-          if (typeof token === 'string') {
-            tokenText = token
-          } else if (token?.token_body) {
-            tokenText = token.token_body
-          }
-          
-          // 只处理非空 token
-          if (tokenText.trim().length > 0) {
-            const tokenLength = tokenText.length
-            
-            // 为这个 token 的每个字符记录 token 索引
-            for (let i = 0; i < tokenLength; i++) {
-              charToTokenMap[currentCharIndex + i] = tokenIndex
-            }
-            currentCharIndex += tokenLength
-          }
-        })
-        
-        utterance.onstart = () => {
-          // 🔧 只处理当前 utterance 的开始事件
-          if (utterance._utteranceId !== currentUtteranceIdRef.current) {
-            console.log('🔊 [ArticleViewer] 忽略旧的 utterance 开始事件:', utterance._utteranceId, '当前:', currentUtteranceIdRef.current)
-            return
-          }
-          hasStarted = true
-          // 设置当前正在朗读的句子索引
-          setCurrentReadingSentenceIndex(sentenceIndex)
-          console.log('🔊 [ArticleViewer] onStart 回调被触发，开始朗读', {
-            utteranceId: utterance._utteranceId,
-            sentenceIndex
-          })
-        }
-        
-        // 🔧 监听 boundary 事件，跟踪当前朗读到的字符位置
-        utterance.onboundary = (event) => {
-          // 🔧 只处理当前 utterance 的 boundary 事件
-          if (utterance._utteranceId !== currentUtteranceIdRef.current) {
-            return
-          }
-          
-          // 只处理 word 类型的 boundary 事件（单词边界）
-          // 注意：不要在这里做任何可能影响朗读流程的操作
-          if (event.name === 'word' && isReadingRef.current && !hasEnded) {
-            try {
-              const charIndex = event.charIndex
-              
-              // 查找字符索引对应的 token
-              // 如果找不到精确匹配，查找最接近的 token
-              let tokenIndex = charToTokenMap[charIndex]
-              
-              // 如果当前字符索引没有映射，向前查找最近的 token
-              if (tokenIndex === undefined && charIndex > 0) {
-                for (let i = charIndex - 1; i >= 0; i--) {
-                  if (charToTokenMap[i] !== undefined) {
-                    tokenIndex = charToTokenMap[i]
-                    break
-                  }
-                }
-              }
-              
-              if (tokenIndex !== undefined) {
-                // 使用 setTimeout 确保状态更新不会阻塞朗读流程
-                setTimeout(() => {
-                  if (isReadingRef.current && !hasEnded && utterance._utteranceId === currentUtteranceIdRef.current) {
-                    setCurrentReadingToken({
-                      sentenceIndex,
-                      tokenIndex
-                    })
-                  }
-                }, 0)
-              }
-            } catch (err) {
-              // 静默处理错误，避免影响朗读
-              console.warn('⚠️ [ArticleViewer] onboundary 处理错误:', err)
-            }
-          }
-        }
-        
-        utterance.onend = () => {
-          // 🔧 只处理当前 utterance 的结束事件，忽略旧的 utterance 的结束事件
-          if (utterance._utteranceId !== currentUtteranceIdRef.current) {
-            console.log('🔊 [ArticleViewer] 忽略旧的 utterance 结束事件:', utterance._utteranceId, '当前:', currentUtteranceIdRef.current)
-            return
-          }
-          
-          if (hasEnded) {
-            console.warn('⚠️ [ArticleViewer] onEnd 被多次调用')
-            return
-          }
-          hasEnded = true
-          console.log('🔊 [ArticleViewer] onEnd 回调被触发，句子朗读完成', {
-            sentenceIndex,
-            sentenceText: sentenceText.substring(0, 50),
-            isReading: isReadingRef.current
-          })
-          // 清除当前朗读的 token 高亮和句子高亮
-          setCurrentReadingToken(null)
-          setCurrentReadingSentenceIndex(null)
-          // 当前句子朗读完成后，继续下一句
-          if (isReadingRef.current) {
-            currentReadingIndexRef.current++
-            readingTimeoutRef.current = setTimeout(() => {
-              readNextSentence()
-            }, 500) // 句子之间间隔 500ms，给用户时间理解
-          }
-        }
-        
-        utterance.onerror = (event) => {
-          // 🔧 只处理当前 utterance 的错误，忽略旧的 utterance 的错误
-          if (utterance._utteranceId !== currentUtteranceIdRef.current) {
-            console.log('🔊 [ArticleViewer] 忽略旧的 utterance 错误:', utterance._utteranceId, '当前:', currentUtteranceIdRef.current)
-            return
-          }
-          
-          console.log('🔊 [ArticleViewer] onError 被触发:', {
-            error: event.error,
-            utteranceId: utterance._utteranceId,
-            hasStarted,
-            isReading: isReadingRef.current,
-            isUserStopped: isUserStoppedRef.current
-          })
-          
-          // 处理 'interrupted' 错误 - 这通常不是严重错误
-          if (event.error === 'interrupted') {
-            // 如果是用户主动停止，不记录错误
-            if (isUserStoppedRef.current || !isReadingRef.current) {
-              console.log('🔊 [ArticleViewer] 用户主动停止，忽略 interrupted 错误')
-              return
-            }
-            
-            // 🔧 interrupted 错误通常是因为调用了 cancel()，这是正常的操作
-            // 但是，如果当前 utterance 刚刚开始就被中断，可能是被新的 utterance 取消了
-            // 在这种情况下，我们应该等待新的 utterance 开始，而不是继续下一句
-            if (hasStarted) {
-              console.log('🔊 [ArticleViewer] 朗读被中断（已开始），可能是被新的朗读取消，不继续下一句')
-            } else {
-              console.log('🔊 [ArticleViewer] 朗读被中断（未开始），可能是被新的朗读取消，不继续下一句')
-            }
-          // 清除当前朗读的 token 高亮和句子高亮
-          setCurrentReadingToken(null)
-          setCurrentReadingSentenceIndex(null)
-            return
-          }
-          
-          // 记录其他类型的错误
-          console.error('❌ [ArticleViewer] onError 回调被触发，朗读错误:', {
-            error: event.error,
-            type: event.type,
-            charIndex: event.charIndex,
-            charLength: event.charLength
-          })
-          
-          // 如果是 'synthesis-failed' 错误，尝试继续下一句（可能是语音不可用）
-          if (event.error === 'synthesis-failed') {
-            console.warn('⚠️ [ArticleViewer] 语音合成失败，跳过当前句子，继续下一句')
-            if (isReadingRef.current) {
-              currentReadingIndexRef.current++
-              readingTimeoutRef.current = setTimeout(() => {
-                readNextSentence()
-              }, 500)
-            }
-            return
-          }
-          
-          // 其他错误才停止朗读
-          console.error('❌ [ArticleViewer] 严重错误，停止朗读:', event.error)
-          setIsReading(false)
-          isReadingRef.current = false
-          isUserStoppedRef.current = false // 重置用户停止标志
-          currentReadingIndexRef.current = 0
-              setCurrentReadingToken(null) // 清除当前朗读的 token 高亮
-              setCurrentReadingSentenceIndex(null) // 清除当前朗读的句子高亮
-          if (readingTimeoutRef.current) {
-            clearTimeout(readingTimeoutRef.current)
-            readingTimeoutRef.current = null
-          }
-        }
-        
-        // 开始朗读
-        console.log('🔊 [ArticleViewer] 调用 window.speechSynthesis.speak')
-        window.speechSynthesis.speak(utterance)
-        console.log('🔊 [ArticleViewer] speak 调用完成')
-        
-      } catch (err) {
-        console.error('❌ [ArticleViewer] 调用 speak 失败:', err)
-        setIsReading(false)
-        isReadingRef.current = false
-        isUserStoppedRef.current = false // 重置用户停止标志
-        currentReadingIndexRef.current = 0
-              setCurrentReadingToken(null) // 清除当前朗读的 token 高亮
-              setCurrentReadingSentenceIndex(null) // 清除当前朗读的句子高亮
-        if (readingTimeoutRef.current) {
-          clearTimeout(readingTimeoutRef.current)
-          readingTimeoutRef.current = null
-        }
-      }
-    }
-
-    // 使用 setTimeout 确保状态更新后再开始朗读
-    setTimeout(() => {
-      readNextSentence()
-    }, 100)
-  }, [
-    supported,
-    voices?.length || 0,
+  const {
+    ttsPhase,
+    ttsUiReading,
+    speechSupported,
+    handleReadAloud,
+    currentReadingToken,
+    currentReadingSentenceIndex,
+  } = useArticleTts({
+    sentences,
+    sentencesRef,
     selectedLanguage,
+    languageNameToCode,
+    languageCodeToBCP47,
+    getSentenceText,
+    scrollContainerRef,
+    getFirstVisibleSentenceIndex,
     selectedSentenceIndex,
-    setIsReading,
-    setCurrentReadingToken,
-    setCurrentReadingSentenceIndex
-  ])
-  // 注意：ref 不需要放在依赖数组中，因为它们不会变化
-  // 注意：sentences 通过 sentencesRef 访问，不需要放在依赖数组中
+    selectedSentenceIndexFromSelectionContext,
+    currentSelection,
+    activeSentenceIndex,
+    selectedTokenIds,
+    t,
+  })
+
   
   // 🔧 使用 useCallback 包装 handleReadAloud，避免在 useMemo 中频繁变化
   const handleReadAloudClick = useCallback((e) => {
@@ -1222,42 +670,57 @@ function ArticleViewer({
         : selectedSentenceIndex
     const selected = typeof idx === 'number' && idx >= 0 && idx < latestSentences.length ? latestSentences[idx] : null
     const selectedText = selected ? getSentenceText(selected) : null
-    console.log('🔊 [ArticleViewer] 朗读按钮被点击', {
+    console.log('[TTS] read_button_clicked', {
       selectedSentenceIndex,
       selectedSentenceIndexFromSelectionContext,
       currentSelection,
       selectedSentenceId: selected?.sentence_id ?? selected?.id ?? null,
       selectedSentencePreview: selectedText ? String(selectedText).slice(0, 120) : null,
       fallbackFirstSentencePreview: latestSentences[0] ? String(getSentenceText(latestSentences[0]) || '').slice(0, 120) : null,
-      isReading: isReadingRef.current,
+      ttsUiReading,
+      ttsPhase,
     })
     handleReadAloud()
-  }, [handleReadAloud, currentSelection, selectedSentenceIndex, selectedSentenceIndexFromSelectionContext])
+  }, [handleReadAloud, currentSelection, selectedSentenceIndex, selectedSentenceIndexFromSelectionContext, ttsUiReading, ttsPhase])
+
+  const hasTtsSelection =
+    Boolean(currentSelection?.sentenceId !== null && currentSelection?.sentenceId !== undefined) ||
+    (typeof selectedSentenceIndexFromSelectionContext === 'number' && selectedSentenceIndexFromSelectionContext >= 0) ||
+    (typeof selectedSentenceIndex === 'number' && selectedSentenceIndex >= 0) ||
+    (Array.isArray(selectedTokenIds) && selectedTokenIds.length > 0 && typeof activeSentenceIndex === 'number' && activeSentenceIndex >= 0)
+  const canClickReadAloud = ttsUiReading || hasTtsSelection
   
-  // 🔧 构建朗读按钮 - 使用 useMemo 缓存，避免不必要的重新创建
-  const readAloudButton = useMemo(() => {
-    console.log('🔍 [ArticleViewer] readAloudButton useMemo 执行')
-    if (!readAloudButtonContainer) return null
-    
-    return (
+  // 🔧 构建朗读按钮（避免在该区域继续增加 hook，降低 hooks 顺序问题风险）
+  const readAloudButton = !readAloudButtonContainer
+    ? null
+    : (
       <button
+        type="button"
+        disabled={!speechSupported || !canClickReadAloud}
         onClick={handleReadAloudClick}
-        className="flex items-center gap-2 px-4 py-2 text-white rounded-lg shadow-md transition-colors"
-        style={{ 
-          backgroundColor: isReading ? '#14b8a6' : '#2dd4bf', // teal-500 when reading, teal-400 otherwise
+        className="flex items-center gap-2 px-4 py-2 text-white rounded-lg shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          backgroundColor: ttsUiReading ? '#14b8a6' : '#2dd4bf', // teal-500 when reading, teal-400 otherwise
         }}
         onMouseEnter={(e) => {
-          if (!isReading) {
+          if (!ttsUiReading && speechSupported && canClickReadAloud) {
             e.currentTarget.style.backgroundColor = '#14b8a6' // teal-500 on hover
           }
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isReading ? '#14b8a6' : '#2dd4bf'
+          e.currentTarget.style.backgroundColor = ttsUiReading ? '#14b8a6' : '#2dd4bf'
         }}
-        title={isReading ? t('停止朗读') : t('朗读')}
+        title={
+          !speechSupported
+            ? t('浏览器不支持朗读')
+            : !canClickReadAloud
+              ? t('请先选择要朗读的句子')
+            : ttsUiReading
+              ? t('停止朗读')
+              : t('朗读')
+        }
       >
-        {/* 播放/停止图标 - 白色轮廓 */}
-        {isReading ? (
+        {ttsUiReading ? (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <rect x="9" y="9" width="6" height="6" rx="1" />
             <circle cx="12" cy="12" r="10" />
@@ -1267,27 +730,18 @@ function ArticleViewer({
             <path d="M8 5v14l11-7z" />
           </svg>
         )}
-        <span className="text-sm font-medium">{isReading ? t('停止朗读') : t('朗读')}</span>
+        <span className="text-sm font-medium">{ttsUiReading ? t('停止朗读') : t('朗读')}</span>
       </button>
     )
-  }, [readAloudButtonContainer, isReading, handleReadAloudClick, t])
 
-  // 🔧 使用 useMemo 缓存 Portal，避免不必要的重新创建
-  const readAloudButtonPortal = useMemo(() => {
-    console.log('🔍 [ArticleViewer] readAloudButtonPortal useMemo 执行:', {
-      hasReadAloudButtonContainer: !!readAloudButtonContainer,
-      hasReadAloudButton: !!readAloudButton
-    })
-    if (!readAloudButtonContainer || !readAloudButton) return null
+  let readAloudButtonPortal = null
+  if (readAloudButtonContainer && readAloudButton) {
     try {
-      const portal = createPortal(readAloudButton, readAloudButtonContainer)
-      console.log('✅ [ArticleViewer] Portal 创建成功')
-      return portal
+      readAloudButtonPortal = createPortal(readAloudButton, readAloudButtonContainer)
     } catch (err) {
       console.error('❌ [ArticleViewer] Portal 创建失败:', err)
-      return null
     }
-  }, [readAloudButtonContainer, readAloudButton])
+  }
 
   // ============================================================================
   // 🔧 Early Return（必须在所有 hooks 之后）
@@ -1302,33 +756,10 @@ function ArticleViewer({
     sentencesLength: sentences.length
   })
 
-  if (isLoading) {
-    console.log('⏸️ [ArticleViewer] 提前返回：isLoading = true')
-    return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-gray-500">{t('Loading article...')}</div>
-      </div>
-    )
-  }
-
-  if (isError) {
-    console.log('❌ [ArticleViewer] 提前返回：isError = true', error)
-    return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-red-500">{t('加载失败')}: {String(error?.message || error)}</div>
-      </div>
-    )
-  }
-
-  // 🔧 如果没有数据且不在加载中，返回空状态（避免渲染错误）
-  if (!data && !isLoading) {
-    console.log('⚠️ [ArticleViewer] 提前返回：没有数据')
-    return (
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 overflow-auto min-h-0 relative overflow-visible">
-        <div className="text-gray-500">{t('No article data available')}</div>
-      </div>
-    )
-  }
+  const showLoadingState = isLoading && !data
+  const showErrorState = isError
+  const showEmptyState = !data && !isLoading && !isError
+  const showPagination = totalPages > 1 || pageIndex > 1 || fallbackTotalPages > 1
 
   // 🔧 调试：在返回前检查状态
   console.log('🔍 [ArticleViewer] 准备渲染，当前状态:', {
@@ -1389,7 +820,23 @@ function ArticleViewer({
           })
           return null
         })()}
-        {sentences.length === 0 && (
+        {showLoadingState ? (
+          <div className="text-gray-500 text-base text-center py-12">
+            {t('Loading article...')}
+          </div>
+        ) : showErrorState ? (
+          <div className="text-red-500 text-base text-center py-12">
+            {t('加载失败')}: {String(error?.message || error)}
+          </div>
+        ) : showEmptyState ? (
+          <div className="text-gray-500 text-base text-center py-12">
+            {t('No article data available')}
+          </div>
+        ) : isPageProcessing ? (
+          <div className="text-gray-400 text-base text-center py-12">
+            {t('articleSegmentPreprocessing')}
+          </div>
+        ) : sentences.length === 0 && (
           <div className="text-gray-500 p-4">
             ⚠️ 没有句子数据。调试信息：
             <pre className="text-xs mt-2 bg-gray-100 p-2 rounded">
@@ -1410,7 +857,7 @@ function ArticleViewer({
             </pre>
           </div>
         )}
-        {sentences.map((sentence, sIdx) => {
+        {!isPageProcessing && sentences.map((sentence, sIdx) => {
           const sentenceId = sentence.sentence_id || (typeof sentence === 'object' && sentence.id)
           const isFlashing = flashingSentenceId === sentenceId
           
@@ -1467,7 +914,7 @@ function ArticleViewer({
                 const baseStyle = getSentenceBackgroundStyle(idx)
                 // 🔧 如果当前句子正在被朗读，添加 success-50 背景色
                 const isCurrentlyReading = currentReadingSentenceIndex === idx
-                const readingStyle = isCurrentlyReading ? 'bg-green-50' : ''
+                const readingStyle = isCurrentlyReading ? '!bg-green-100 ring-1 ring-green-300' : ''
                 const flashingStyle = isFlashing ? 'sentence-flashing' : ''
                 return `${baseStyle} ${readingStyle} ${flashingStyle}`.trim()
               }}
@@ -1476,10 +923,42 @@ function ArticleViewer({
               onAskAI={onAskAI}
               isTokenInsufficient={isTokenInsufficient}
               autoTranslationEnabled={autoTranslationEnabled}
+              autoHintTarget={autoHintTarget}
+              autoHintPreviewing={autoHintPreviewing}
+              autoHintTooltipVisible={autoHintTooltipVisible}
+              autoHintFading={autoHintFading}
+              autoHintMessage={autoHintMessage}
+              onAutoHintInteraction={onAutoHintInteraction}
             />
             </React.Fragment>
           )
         })}
+
+        {showPagination && (
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => onPageChange && onPageChange(Math.max(1, pageIndex - 1))}
+              disabled={pageIndex <= 1 || !onPageChange}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {t('articlePrevPage')}
+            </button>
+            <span className="text-sm text-gray-500">
+              {t('articlePageLabel').replace('{page}', String(pageIndex)).replace('{total}', String(totalPages))}
+            </span>
+            <button
+              type="button"
+              onClick={() => onPageChange && onPageChange(Math.min(totalPages, pageIndex + 1))}
+              disabled={pageIndex >= totalPages || !onPageChange}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {t('articleNextPage')}
+            </button>
+            </div>
+          </div>
+        )}
 
         {/* 🔧 Bottom spacer: allow scrolling past last sentence for comfort */}
         <div aria-hidden="true" style={{ height: '35vh' }} />

@@ -26,6 +26,8 @@ import OnboardingLanguage from './pages/OnboardingLanguage'
 import OnboardingReadingIntro from './pages/OnboardingReadingIntro'
 import PrivacyPolicyAndTerms from './pages/PrivacyPolicyAndTerms'
 import ChatConcurrencySandbox from './pages/ChatConcurrencySandbox'
+import ArticleUploadSandbox from './pages/ArticleUploadSandbox'
+import ArticleViewSandbox from './pages/ArticleViewSandbox'
 import { colors } from './design-tokens'
 import { recordRecentArticle } from './utils/pageStateManager'
 
@@ -832,6 +834,28 @@ function AppContent() {
           {currentPage === 'UIDemo' && <UIDemoPage />}
           {currentPage === 'testTranslationAPI' && <TestTranslationAPI />}
           {currentPage === 'chatConcurrencySandbox' && <ChatConcurrencySandbox />}
+
+          {currentPage === 'articleUploadSandbox' && (
+            <ArticleUploadSandbox
+              onBack={() => {
+                setCurrentPage('landing')
+              }}
+              onNavigateToArticle={(id) => {
+                if (!id) return
+                setIsUploadMode(false)
+                setSelectedArticleId(id)
+                setCurrentPage('article')
+              }}
+            />
+          )}
+
+          {currentPage === 'articleViewSandbox' && (
+            <ArticleViewSandbox
+              onBack={() => {
+                setCurrentPage('landing')
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

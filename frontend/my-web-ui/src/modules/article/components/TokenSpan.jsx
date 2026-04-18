@@ -54,7 +54,13 @@ export default function TokenSpan({
   // 🔧 新增：源语言代码（来自句子/文章），用于单词自动翻译
   sourceLanguageCode = null,
   // 🔧 新增：自动翻译开关（只有开启才显示 hover 单词翻译）
-  autoTranslationEnabled = false
+  autoTranslationEnabled = false,
+  autoHintTarget = null,
+  autoHintPreviewing = false,
+  autoHintTooltipVisible = false,
+  autoHintFading = false,
+  autoHintMessage = '',
+  onAutoHintInteraction = null,
 }) {
   // 从 NotationContext 获取 notation 相关功能
   const notationContext = useContext(NotationContext)
@@ -312,12 +318,15 @@ export default function TokenSpan({
   // 🔧 朗读函数
   const handleSpeak = useCallback(async (text) => {
     if (!text) return
+    // 避免 token 级发音打断文章整句朗读
+    if (typeof window !== 'undefined' && (window.__ARTICLE_TTS_ACTIVE__ || window.__ARTICLE_TTS_OWNER__ === 'article')) {
+      return
+    }
     
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // 先取消任何正在进行的朗读
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel()
-        await new Promise(resolve => setTimeout(resolve, 100))
+      // 不再主动 cancel 正在进行的朗读，避免打断主 TTS 会话
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+        return
       }
       
       // 使用源语言（因为要朗读的是原文）
@@ -476,6 +485,12 @@ export default function TokenSpan({
   // 优先使用vocab notation，asked tokens作为备用（向后兼容）
   // 如果vocab notation存在，就不需要检查asked tokens了
   const hasVocabVisual = hasVocabNotationForToken || (isAsked && !hasVocabNotationForToken)
+  const autoHintForThisToken = Boolean(
+    autoHintTarget &&
+    autoHintTarget.type === 'vocab' &&
+    Number(autoHintTarget.sentenceId) === Number(tokenSentenceId) &&
+    Number(autoHintTarget.tokenId) === Number(tokenSentenceTokenId)
+  )
 
   // 🔧 检查是否在高亮范围内
   const isHighlighted = highlightedRange && 
@@ -483,15 +498,14 @@ export default function TokenSpan({
     tokenIdx >= highlightedRange.startTokenIdx &&
     tokenIdx <= highlightedRange.endTokenIdx
   
-  // 🔧 朗读高亮优先级最高，然后是选中，然后是拖拽高亮（仅在拖拽过程中显示），最后是 hover
-  // 注意：拖拽高亮（isHighlighted）只在拖拽过程中显示，不影响选中状态（selected）
-  const bgClass = isCurrentlyReading
-    ? 'bg-green-200' // success-200 颜色
-    : (selected
-      ? 'bg-yellow-300' // 选中状态优先级高于拖拽高亮
-      : (isHighlighted
-        ? 'bg-yellow-200' // 拖拽高亮颜色改为黄色（仅在拖拽过程中）
-        : (hoverAllowed ? 'bg-transparent hover:bg-yellow-200' : 'bg-transparent')))
+  // 🔧 朗读与选中样式可叠加：绿色朗读底层 + 黄色选中上层强调
+  const bgClass = [
+    isCurrentlyReading ? '!bg-green-300 ring-1 ring-green-400' : '',
+    selected ? 'ring-2 ring-yellow-400 shadow-[inset_0_0_0_9999px_rgba(253,224,71,0.35)]' : '',
+    !isCurrentlyReading && !selected && isHighlighted ? 'bg-yellow-200' : '',
+    !isCurrentlyReading && !selected && !isHighlighted && hoverAllowed ? 'bg-transparent hover:bg-yellow-200' : '',
+    !isCurrentlyReading && !selected && !isHighlighted && !hoverAllowed ? 'bg-transparent' : ''
+  ].filter(Boolean).join(' ')
   const tokenHasExplanation = isTextToken && hasExplanation(token)
   const tokenExplanation = isTextToken ? getExplanation(token) : null
   const isHovered = hoveredTokenId === uid
@@ -713,6 +727,13 @@ export default function TokenSpan({
           // tokenRefsRef 已移除（不再需要拖拽功能）
         }}
         onMouseEnter={(e) => {
+          if (autoHintForThisToken) {
+            onAutoHintInteraction?.({
+              type: 'vocab',
+              sentenceId: tokenSentenceId,
+              tokenId: tokenSentenceTokenId,
+            })
+          }
           setIsMouseOverToken(true)
           isHoveringRef.current = true
           // 只有可选择的token才触发hover效果
@@ -813,6 +834,13 @@ export default function TokenSpan({
           // 这里不需要额外处理，因为当鼠标离开整个句子时，SentenceContainer 会处理
         }}
         onClick={(e) => { 
+          if (autoHintForThisToken) {
+            onAutoHintInteraction?.({
+              type: 'vocab',
+              sentenceId: tokenSentenceId,
+              tokenId: tokenSentenceTokenId,
+            })
+          }
           // 只有可选择的token才响应点击
           if (selectable) { 
             if (typeof selOnClick === 'function') {
@@ -829,16 +857,35 @@ export default function TokenSpan({
           }
         }}
         className={[
-          'px-0.5 rounded-sm transition-colors duration-150 select-none relative',
+          'px-0.5 rounded-sm transition-colors duration-150 select-none relative inline-flex items-center',
           cursorClass,
-          bgClass,
           selectionTokenClass,
-          // 只渲染 vocab 绿色下划线；grammar 改为句子徽标触发
-          hasVocabVisual ? 'border-b-2 border-green-500' : ''
+          bgClass,
+          autoHintForThisToken && autoHintPreviewing ? 'animate-pulse' : '',
         ].join(' ')}
         style={{ color: '#111827' }}
       >
-        {displayText}
+        <span className={`relative inline-block ${hasVocabVisual ? 'pr-3' : ''}`}>
+          {displayText}
+          {hasVocabVisual && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-[0px] left-0 h-[2px] w-full bg-emerald-400/70"
+            />
+          )}
+          {hasVocabVisual && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-0 top-[0.15em] inline-flex h-3.5 w-3.5 items-center justify-center leading-none text-emerald-500"
+            >
+              {isMouseOverToken ? (
+                <span className="text-[10px]">✨</span>
+              ) : (
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              )}
+            </span>
+          )}
+        </span>
         {/* 🔧 分词下划线：在 token 下方显示灰色下划线（表示 word token 的分词边界） */}
         {/* 🔧 只对文本类型的 token 显示下划线，不包括标点符号和空格 */}
         {showSegmentationUnderline && wordTokenInfo && isTextToken && token?.token_type !== 'punctuation' && token?.token_type !== 'space' && (() => {
@@ -940,6 +987,17 @@ export default function TokenSpan({
           onMouseLeave={handleNotationMouseLeave}
           getVocabExampleForToken={getVocabExampleForToken}
           anchorRef={anchorRef}
+          autoHintMessage={autoHintForThisToken && autoHintTooltipVisible ? autoHintMessage : ''}
+          autoHintFading={autoHintForThisToken ? autoHintFading : false}
+          autoOffsetY={autoHintForThisToken && autoHintTooltipVisible ? 8 : 0}
+          onTooltipInteract={() => {
+            if (!autoHintForThisToken) return
+            onAutoHintInteraction?.({
+              type: 'vocab',
+              sentenceId: tokenSentenceId,
+              tokenId: tokenSentenceTokenId,
+            })
+          }}
         />
       )}
       
