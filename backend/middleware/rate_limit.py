@@ -120,9 +120,14 @@ async def rate_limit_middleware(request: Request, call_next):
         # Dev-only: allow sandbox stress tests to bypass rate limits.
         # This keeps normal UI behavior intact while enabling high-RPS bursts.
         env = os.getenv("ENV", "development").lower()
+        sandbox_bypass_paths = {
+            "/api/chat",
+            "/api/upload/text",
+            "/api/upload/text/append-segment",
+        }
         if (
             env != "production"
-            and request.url.path == "/api/chat"
+            and request.url.path in sandbox_bypass_paths
             and request.headers.get("x-sandbox-test") == "1"
         ):
             return await call_next(request)

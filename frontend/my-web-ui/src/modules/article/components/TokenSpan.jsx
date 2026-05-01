@@ -53,6 +53,8 @@ export default function TokenSpan({
   isTokenInsufficient = false,
   // 🔧 新增：源语言代码（来自句子/文章），用于单词自动翻译
   sourceLanguageCode = null,
+  // 🔧 注音：按现有 token 边界对齐后的 reading
+  rubyReading = null,
   // 🔧 新增：自动翻译开关（只有开启才显示 hover 单词翻译）
   autoTranslationEnabled = false,
   autoHintTarget = null,
@@ -82,7 +84,13 @@ export default function TokenSpan({
   const hoverAllowed = selectable && (!hasSelection ? (activeSentenceIndex == null || activeSentenceIndex === sentenceIdx) : activeSentenceIndex === sentenceIdx)
   const cursorClass = hoverAllowed ? 'cursor-pointer' : 'cursor-default'
   const isTextToken = typeof token === 'object' && token?.token_type === 'text'
-
+  const shouldShowRuby = Boolean(
+    rubyReading &&
+    String(displayText || '').trim().length > 0 &&
+    /[\u4e00-\u9faf]/.test(String(displayText || '')) &&
+    token?.token_type !== 'punctuation' &&
+    token?.token_type !== 'space'
+  )
   // 🔧 新增：hover翻译相关状态和逻辑
   const { uiLanguage } = useUiLanguage() // 🔧 目标语言跟随 UI 语言（与句子翻译一致）
   // 清除调试日志
@@ -497,6 +505,19 @@ export default function TokenSpan({
     highlightedRange.sentenceIdx === sentenceIdx &&
     tokenIdx >= highlightedRange.startTokenIdx &&
     tokenIdx <= highlightedRange.endTokenIdx
+  const rubyRtStyle = useMemo(() => {
+    const base = { fontSize: '0.55em', lineHeight: 1.1, color: '#374151' }
+    if (selected) {
+      return { ...base, backgroundColor: 'rgba(253, 224, 71, 0.35)', borderRadius: '2px', padding: '0 1px' }
+    }
+    if (isCurrentlyReading) {
+      return { ...base, backgroundColor: 'rgba(74, 222, 128, 0.35)', borderRadius: '2px', padding: '0 1px' }
+    }
+    if (isHighlighted) {
+      return { ...base, backgroundColor: 'rgba(253, 224, 71, 0.22)', borderRadius: '2px', padding: '0 1px' }
+    }
+    return base
+  }, [selected, isCurrentlyReading, isHighlighted])
   
   // 🔧 朗读与选中样式可叠加：绿色朗读底层 + 黄色选中上层强调
   const bgClass = [
@@ -866,7 +887,14 @@ export default function TokenSpan({
         style={{ color: '#111827' }}
       >
         <span className={`relative inline-block ${hasVocabVisual ? 'pr-3' : ''}`}>
-          {displayText}
+          {shouldShowRuby ? (
+            <ruby style={{ rubyPosition: 'over' }}>
+              {displayText}
+              <rt style={rubyRtStyle}>{rubyReading}</rt>
+            </ruby>
+          ) : (
+            displayText
+          )}
           {hasVocabVisual && (
             <span
               aria-hidden="true"

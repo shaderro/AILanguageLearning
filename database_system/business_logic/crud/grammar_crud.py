@@ -2,7 +2,7 @@
 语法规则相关 CRUD 操作
 """
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import List, Optional
 from ..models import GrammarRule, GrammarExample, SourceType, LearnStatus
 
@@ -119,11 +119,32 @@ class GrammarCRUD:
                 canonical_key=canonical_key,
             )
         
-        # 🔧 查找已存在的语法规则（按user_id和rule_name）
-        existing = self.session.query(GrammarRule).filter(
-            GrammarRule.rule_name == rule_name,
-            GrammarRule.user_id == user_id
-        ).first()
+        # 1) 优先按 canonical_key + user_id 查重（最精确，天然包含语言维度）
+        existing = None
+        if canonical_key:
+            existing = self.session.query(GrammarRule).filter(
+                GrammarRule.user_id == user_id,
+                GrammarRule.canonical_key == canonical_key
+            ).first()
+
+        # 2) 兼容旧数据：按 rule_name + user_id + language 查重，避免跨语言串用
+        if existing is None:
+            query = self.session.query(GrammarRule).filter(
+                GrammarRule.rule_name == rule_name,
+                GrammarRule.user_id == user_id
+            )
+            if language:
+                query = query.filter(func.lower(GrammarRule.language) == str(language).strip().lower())
+            existing = query.first()
+
+        # 3) 兼容历史 language 为空的旧记录：只在同名同用户且 language 为空时回填语言
+        if existing is None and language:
+            existing = self.session.query(GrammarRule).filter(
+                GrammarRule.rule_name == rule_name,
+                GrammarRule.user_id == user_id,
+                GrammarRule.language.is_(None)
+            ).first()
+
         if existing:
             # 🔧 如果已存在，更新language字段（如果提供了language且现有记录的language为None）
             if language and existing.language is None:
@@ -153,11 +174,21 @@ class GrammarCRUD:
             GrammarRule.rule_id == rule_id
         ).first()
     
-    def get_by_name(self, rule_name: str) -> Optional[GrammarRule]:
-        """根据名称获取语法规则"""
-        return self.session.query(GrammarRule).filter(
+    def get_by_name(
+        self,
+        rule_name: str,
+        user_id: Optional[int] = None,
+        language: Optional[str] = None
+    ) -> Optional[GrammarRule]:
+        """根据名称获取语法规则（可选按 user_id / language 过滤）"""
+        query = self.session.query(GrammarRule).filter(
             GrammarRule.rule_name == rule_name
-        ).first()
+        )
+        if user_id is not None:
+            query = query.filter(GrammarRule.user_id == user_id)
+        if language:
+            query = query.filter(func.lower(GrammarRule.language) == str(language).strip().lower())
+        return query.first()
     
     def get_all(self, skip: int = 0, limit: int = 100) -> List[GrammarRule]:
         """获取所有语法规则"""

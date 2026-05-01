@@ -135,9 +135,14 @@ function ChatView({
   addVocabNotationToCache = null,
   addGrammarRuleToCache = null,
   addVocabExampleToCache = null,
-  isProcessing: externalIsProcessing = null,
+  isProcessing = false,
   onProcessingChange = null
 }) {
+  // 🔧 处理中状态由 ArticleChatView 持有，避免仅存在于子组件时与关闭引用等操作不同步
+  const setProcessing = useCallback((value) => {
+    onProcessingChange?.(value)
+  }, [onProcessingChange])
+
   const { pendingMessage, clearPendingMessage, pendingContext, clearPendingContext, pendingToast, clearPendingToast } = useChatEvent()
   const { refreshGrammar, refreshVocab } = useRefreshData()
   const { addLog } = useTranslationDebug()
@@ -359,7 +364,6 @@ function ChatView({
   const { uiLanguage } = useUiLanguage()
   const [messages, setMessages] = useState(getInitialMessages)
   const [inputText, setInputText] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
   const MAX_QUESTION_LENGTH = 300
   const MAX_SELECTION_LENGTH = 500
   const isLoginRequired = !token
@@ -413,6 +417,7 @@ function ChatView({
   
   // 🔧 从后端加载历史记录（添加去重机制，避免重复请求）
   const loadingHistoryRef = useRef(false)
+  const historyFetchIdRef = useRef(0)
   useEffect(() => {
     if (!articleId || isProcessing || loadingHistoryRef.current) return
     
@@ -425,11 +430,14 @@ function ChatView({
     })
     
     loadingHistoryRef.current = true
+    const fetchId = ++historyFetchIdRef.current
     const loadHistory = async () => {
       try {
         const { apiService } = await import('../../../services/api')
         // 注意：apiService.getChatHistory 已经过 Axios 拦截器处理，直接返回 innerData（即 { items, count, ... }）
         const resp = await apiService.getChatHistory({ textId: articleId, limit: 200 })
+        // 文章切换或已有更新的请求：丢弃本次结果，避免 setMessages 盖住稍后插入的本地消息
+        if (fetchId !== historyFetchIdRef.current) return
         const items = resp?.items || []
         console.log('💬 [ChatView] /api/chat/history 响应:', {
           raw: resp,
@@ -753,9 +761,7 @@ function ChatView({
         return
       }
       
-      setIsProcessing(true)
-      
-      // 🔧 立即添加用户消息
+      // 🔧 先插入用户气泡再置处理中（与 handleSendMessage 一致）
       const userMessage = {
         id: generateMessageId(),
         text: questionText,
@@ -764,7 +770,10 @@ function ChatView({
         quote: currentQuotedText || null,
         articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
       }
-      addMessage(userMessage)
+      flushSync(() => {
+        addMessage(userMessage)
+      })
+      setProcessing(true)
       
       // 🔧 调用 API（合并 session 更新，避免重复请求）
       try {
@@ -1142,7 +1151,7 @@ function ChatView({
         }
         addMessage(errorMsg)
       } finally {
-        setIsProcessing(false)
+        setProcessing(false)
         clearPendingMessage()
         clearPendingContext()
         // 🔧 修复问题3：处理完成后，重置处理标记
@@ -1217,13 +1226,13 @@ function ChatView({
     return raw.trim()
   }
 
-  // 行内 code 优先于 **bold**，避免反引号内 ** 被当成加粗。
-  // 使用 **…** 非贪婪匹配，允许加粗内含单个 *（旧版 [^*]+ 会在遇到 * 时整段无法匹配）。
+  // 行内：code → ***粗斜体*** → **加粗** → *斜体*（交替顺序保证长定界符先匹配）
+  // 加粗/粗斜体/斜体内递归，支持嵌套如 **a *b* c**
   const renderSimpleMarkdownInline = (text) => {
     const source = String(text ?? '')
-    const parts = source.split(/(`[^`]*`|\*\*[\s\S]+?\*\*)/g)
+    const parts = source.split(/(`[^`]*`|\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|\*[^*\n]+\*)/g)
     return parts.map((part, idx) => {
-      if (!part) return null
+      if (part == null || part === '') return null
       if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
         return (
           <code key={`md-c-${idx}`} className="rounded bg-gray-200 px-1 py-0.5 text-[0.95em]">
@@ -1231,11 +1240,28 @@ function ChatView({
           </code>
         )
       }
+      if (part.startsWith('***') && part.endsWith('***') && part.length > 6) {
+        const inner = part.slice(3, -3)
+        return (
+          <strong key={`md-bi-${idx}`} className="font-semibold italic">
+            {renderSimpleMarkdownInline(inner)}
+          </strong>
+        )
+      }
       if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        const inner = part.slice(2, -2)
         return (
           <strong key={`md-b-${idx}`} className="font-semibold">
-            {part.slice(2, -2)}
+            {renderSimpleMarkdownInline(inner)}
           </strong>
+        )
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2 && !part.startsWith('**')) {
+        const inner = part.slice(1, -1)
+        return (
+          <em key={`md-i-${idx}`} className="italic">
+            {renderSimpleMarkdownInline(inner)}
+          </em>
         )
       }
       return <span key={`md-t-${idx}`}>{part}</span>
@@ -1275,6 +1301,15 @@ function ChatView({
       if (!line) {
         flushParagraph()
         flushList()
+        continue
+      }
+      // Markdown 水平线：单独一行的 --- / *** / ___
+      if (/^(?:\*{3,}|-{3,}|_{3,})\s*$/.test(line)) {
+        flushParagraph()
+        flushList()
+        blocks.push(
+          <hr key={`md-hr-${blocks.length}`} className="my-2 border-gray-200" />
+        )
         continue
       }
       if (line.startsWith('- ')) {
@@ -1434,12 +1469,11 @@ function ChatView({
       return
     }
 
-    setIsProcessing(true)
     console.log(`🔍 [ChatView] handleSendMessage 开始处理: questionText="${questionText}"`)
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
     
-    // 🔧 立即添加用户消息
+    // 🔧 先提交用户消息与清空输入，再通知父组件「处理中」，避免先发 isProcessing 导致气泡/输入框与回复一起才刷新
     const userMessage = {
       id: generateMessageId(),
       text: questionText,
@@ -1448,8 +1482,11 @@ function ChatView({
       quote: currentQuotedText || null,
       articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
     }
-    addMessage(userMessage)
-    setInputText('')
+    flushSync(() => {
+      addMessage(userMessage)
+      setInputText('')
+    })
+    setProcessing(true)
     
     // 🔧 调用 API（合并 session 更新，避免重复请求）
     try {
@@ -1844,7 +1881,7 @@ function ChatView({
       }
       addMessage(errorMsg)
     } finally {
-      setIsProcessing(false)
+      setProcessing(false)
       sendingRef.current = false
     }
   }
@@ -1885,12 +1922,10 @@ function ChatView({
       return
     }
 
-    setIsProcessing(true)
     const currentQuotedText = quotedText
     const currentSelectionContext = selectionContext
     console.log(`🔍 [ChatView] handleSuggestedQuestionSelect 开始处理: question="${normalizedQuestion}"`)
     
-    // 🔧 立即添加用户消息
     const userMessage = {
       id: generateMessageId(),
       text: normalizedQuestion,
@@ -1899,7 +1934,10 @@ function ChatView({
       quote: currentQuotedText || null,
       articleId: articleId ? String(articleId) : undefined  // 🔧 添加 articleId 用于跨设备同步
     }
-    addMessage(userMessage)
+    flushSync(() => {
+      addMessage(userMessage)
+    })
+    setProcessing(true)
     
     // 🔧 调用 API（合并 session 更新，避免重复请求）
     try {
@@ -2236,7 +2274,7 @@ function ChatView({
       }
       addMessage(errorMsg)
     } finally {
-      setIsProcessing(false)
+      setProcessing(false)
       sendingRef.current = false
     }
   }
@@ -2255,28 +2293,29 @@ function ChatView({
     return dateObj.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   }
 
-  const handleMessageAreaBlankClickCapture = useCallback((e) => {
-    // Only clear quote when user clicks non-interactive blank areas in messages area.
+  // 有引用时：点击侧栏空白、消息区空白、或文本输入框（准备输入）时取消文章选择与引用；引用条、建议按钮、消息气泡等不触发
+  const handleChatShellDismissCapture = useCallback((e) => {
+    if (!quotedText || !onClearQuote) return
     const target = e.target
     if (!(target instanceof Element)) return
 
-    const interactiveSelector = [
+    const exemptSelector = [
       '[data-chat-message-bubble]',
       'button',
-      'input',
       'textarea',
       'a',
       '[role="button"]',
       '[data-keep-quote]',
+      'input[type="checkbox"]',
+      'input[type="radio"]',
+      'select',
     ].join(', ')
 
-    if (target.closest(interactiveSelector)) {
+    if (target.closest(exemptSelector)) {
       return
     }
 
-    if (quotedText && onClearQuote) {
-      onClearQuote()
-    }
+    onClearQuote()
   }, [quotedText, onClearQuote])
   
   // ⚠️ Language detection: Presentation-only, does NOT affect data fetching
@@ -2333,12 +2372,16 @@ function ChatView({
         )}
       </div>
 
+      {/* 正文区：空白处与输入框点击可取消引用（capture 在子元素之前） */}
+      <div
+        className="flex-1 min-h-0 flex flex-col overflow-hidden"
+        onMouseDownCapture={handleChatShellDismissCapture}
+      >
       {/* Messages Area */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         <div
           ref={scrollContainerRef}
           className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 chat-scrollbar"
-          onClickCapture={handleMessageAreaBlankClickCapture}
         >
           {messages.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
@@ -2407,6 +2450,7 @@ function ChatView({
       {/* Quote Display */}
       {quotedText && (
         <div 
+          data-keep-quote
           className={`px-4 py-2 border-t flex-shrink-0 ${hasSelectedSentence ? 'bg-green-50 border-green-200' : ''}`}
           style={!hasSelectedSentence ? {
             backgroundColor: colors.primary[50],
@@ -2435,6 +2479,19 @@ function ChatView({
                 "{quotedText}"
               </div>
             </div>
+            <button
+              type="button"
+              className="flex-shrink-0 rounded p-1 text-gray-500 hover:text-gray-800 hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-offset-1"
+              style={{ '--tw-ring-color': colors.primary[400] }}
+              aria-label={tUI('关闭引用')}
+              title={tUI('关闭引用')}
+              onClick={(e) => {
+                e.stopPropagation()
+                onClearQuote?.()
+              }}
+            >
+              <span className="text-lg leading-none" aria-hidden>×</span>
+            </button>
           </div>
         </div>
       )}
@@ -2519,6 +2576,7 @@ function ChatView({
             {t("发送")}
           </button>
         </div>
+      </div>
       </div>
       </div>
 

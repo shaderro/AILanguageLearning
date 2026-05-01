@@ -30,6 +30,7 @@ function ArticleViewer({
   getNotationContent,
   setNotationContent,
   onSentenceSelect,
+  selectedSentenceIndexExternal = null,
   targetSentenceId = null,  // 🔧 目标句子ID（用于自动滚动和高亮）
   onTargetSentenceScrolled = null,  // 🔧 滚动完成后的回调
   onAskAI = null,  // 🔧 AI详细解释回调
@@ -870,6 +871,10 @@ function ArticleViewer({
               articleId={articleId}
               selectedTokenIds={selectedTokenIds}
               activeSentenceIndex={activeSentenceIndex}
+              isSelected={
+                (typeof selectedSentenceIndexExternal === 'number' && selectedSentenceIndexExternal === sIdx) ||
+                _isSentenceSelected(sIdx)
+              }
               hasExplanation={hasExplanation}
               getExplanation={getExplanation}
               hoveredTokenId={hoveredTokenId}
@@ -918,7 +923,6 @@ function ArticleViewer({
                 const flashingStyle = isFlashing ? 'sentence-flashing' : ''
                 return `${baseStyle} ${readingStyle} ${flashingStyle}`.trim()
               }}
-              isSentenceInteracting={isSentenceInteracting}
               currentReadingToken={currentReadingToken}
               onAskAI={onAskAI}
               isTokenInsufficient={isTokenInsufficient}

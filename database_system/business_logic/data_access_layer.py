@@ -89,9 +89,14 @@ class GrammarDataAccessLayer:
         """根据ID获取语法规则"""
         return self._crud.get_by_id(rule_id)
     
-    def find_grammar_by_name(self, rule_name: str) -> Optional[GrammarRule]:
-        """根据名称查找语法规则"""
-        return self._crud.get_by_name(rule_name)
+    def find_grammar_by_name(
+        self,
+        rule_name: str,
+        user_id: Optional[int] = None,
+        language: Optional[str] = None
+    ) -> Optional[GrammarRule]:
+        """根据名称查找语法规则（可选按 user_id / language 过滤）"""
+        return self._crud.get_by_name(rule_name, user_id=user_id, language=language)
     
     def list_all_grammar_rules(self, skip: int = 0, limit: int = 100) -> List[GrammarRule]:
         """列出所有语法规则"""
