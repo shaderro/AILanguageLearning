@@ -10,6 +10,7 @@ import { getQuickTranslation, getSystemLanguage } from '../../../services/transl
 import { useLanguage, languageNameToCode } from '../../../contexts/LanguageContext'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
+import { apiService } from '../../../services/api'
 
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
@@ -20,6 +21,7 @@ function SentenceContainer({
   articleId,
   selectedTokenIds,
   activeSentenceIndex,
+  isSelected = false,
   hasExplanation,
   getExplanation,
   hoveredTokenId,
@@ -206,6 +208,14 @@ function SentenceContainer({
   
   // 🔧 跟踪 hover 状态（句子或 token）
   const [isHovered, setIsHovered] = useState(false)
+
+  // ==================== Furigana (Japanese ruby) ====================
+  const [furiganaTokens, setFuriganaTokens] = useState(null)
+  const [tokenReadingById, setTokenReadingById] = useState({})
+  const [isLoadingFurigana, setIsLoadingFurigana] = useState(false)
+  const [furiganaError, setFuriganaError] = useState('')
+  const furiganaReqSeqRef = useRef(0)
+  const furiganaCacheRef = useRef(new Map())
   
   // 🔧 整句翻译相关状态
   const { selectedLanguage } = useLanguage()
@@ -257,9 +267,104 @@ function SentenceContainer({
     }
     return ''
   }, [sentence])
+  const furiganaTokenInputs = useMemo(
+    () =>
+      (sentence?.tokens || [])
+        .map((t) => ({
+          token_id: t?.sentence_token_id ?? t?.token_id,
+          text: String(t?.token_body ?? t?.token ?? ''),
+        }))
+        .filter((t) => t.token_id != null && t.text.length > 0),
+    [sentence?.tokens]
+  )
+  const furiganaTokenSignature = useMemo(
+    () => furiganaTokenInputs.map((t) => `${t.token_id}:${t.text}`).join('|'),
+    [furiganaTokenInputs]
+  )
+
+  const isJapaneseSentence = useMemo(() => {
+    const raw =
+      String(sentence?.language_code || sentence?.languageCode || sentence?.language || sentence?.lang || '')
+        .toLowerCase()
+        .trim()
+    const normalized = raw === 'japanese' ? 'ja' : raw
+    if (['ja', 'ja-jp', 'jp', 'jpn'].includes(normalized)) return true
+    // fallback: Japanese kana presence
+    return /[\u3040-\u30ff]/.test(String(sentenceText || ''))
+  }, [sentence, sentenceText])
+  const isChineseSentence = useMemo(() => {
+    const raw =
+      String(sentence?.language_code || sentence?.languageCode || sentence?.language || sentence?.lang || '')
+        .toLowerCase()
+        .trim()
+    const normalized = raw === 'chinese' ? 'zh' : raw
+    if (['zh', 'zh-cn', 'zh-tw', 'cn', 'zho', 'chi'].includes(normalized)) return true
+    const text = String(sentenceText || '')
+    const hasKana = /[\u3040-\u30ff]/.test(text)
+    const hasHanzi = /[\u4e00-\u9faf]/.test(text)
+    return hasHanzi && !hasKana
+  }, [sentence, sentenceText])
   
   // 🔧 检查句子是否被选中或交互中
-  const isSentenceSelected = isInteracting
+  const isSentenceSelected = typeof isSelected === 'boolean' ? isSelected : isInteracting
+
+  useEffect(() => {
+    const pronunciationMode = isJapaneseSentence ? 'ja' : (isChineseSentence ? 'zh' : null)
+    const shouldShow = isSentenceSelected && pronunciationMode && sentenceText && sentenceText.trim().length > 0
+
+    if (!shouldShow) {
+      // 保留已生成的注音映射，避免 token 选择期间出现瞬时“无注音”闪烁
+      return
+    }
+
+    const cacheKey = `${sentenceId}:${pronunciationMode}:${sentenceText}`
+    const cached = furiganaCacheRef.current.get(cacheKey)
+    if (cached) {
+      setFuriganaTokens(cached.alignedTokens || [])
+      setTokenReadingById(cached.readingById || {})
+      setIsLoadingFurigana(false)
+      setFuriganaError('')
+      return
+    }
+
+    const seq = ++furiganaReqSeqRef.current
+    setIsLoadingFurigana(true)
+    setFuriganaError('')
+
+    ;(async () => {
+      try {
+        const res = pronunciationMode === 'zh'
+          ? await apiService.alignChinesePinyinTokens(sentenceText, furiganaTokenInputs)
+          : await apiService.alignFuriganaTokens(sentenceText, furiganaTokenInputs)
+        const tokens = res?.aligned_tokens || null
+        if (furiganaReqSeqRef.current !== seq) return
+        if (Array.isArray(tokens) && tokens.length > 0) {
+          const readingById = {}
+          tokens.forEach((item) => {
+            if (item?.token_id == null) return
+            if (item?.needs_ruby && item?.reading) {
+              readingById[String(item.token_id)] = item.reading
+            }
+          })
+          furiganaCacheRef.current.set(cacheKey, { alignedTokens: tokens, readingById })
+          setFuriganaTokens(tokens)
+          setTokenReadingById(readingById)
+        } else {
+          setFuriganaTokens(null)
+          setTokenReadingById({})
+        }
+      } catch (e) {
+        if (furiganaReqSeqRef.current !== seq) return
+        const detail = e?.response?.data?.detail || e?.message || 'furigana failed'
+        setFuriganaError(String(detail))
+        setFuriganaTokens(null)
+        setTokenReadingById({})
+      } finally {
+        if (furiganaReqSeqRef.current !== seq) return
+        setIsLoadingFurigana(false)
+      }
+    })()
+  }, [isSentenceSelected, isJapaneseSentence, isChineseSentence, sentenceId, sentenceText, furiganaTokenInputs, furiganaTokenSignature])
   
   // 🔧 检查是否有 token 被选中（在当前句子中）
   // selectedTokenIds 中的 uid 格式是 `${sentenceIdx}-${sentence_token_id}`
@@ -498,6 +603,17 @@ function SentenceContainer({
       style={{}}
     >
       {/* 移除旧的背景/边框层，避免与 Selection 模块产生双重边框/叠加样式 */}
+
+      {/* Furigana status (short-term): keep tokens as single text flow */}
+      {isSentenceSelected && (isJapaneseSentence || isChineseSentence) ? (
+        <div className="mb-1">
+          {isLoadingFurigana ? (
+            <div className="text-xs text-gray-400">注音生成中...</div>
+          ) : furiganaError ? (
+            <div className="text-xs text-red-600">{furiganaError}</div>
+          ) : null}
+        </div>
+      ) : null}
       
       {(sentence?.tokens || []).map((token, tokenIndex) => {
         // 🔧 获取该 token 的 word_token 信息（用于显示分词下划线）
@@ -538,6 +654,8 @@ function SentenceContainer({
         }
         
         const tokenKey = getTokenKey(sentenceIndex, token, tokenIndex)
+        const tokenIdForRuby = token?.sentence_token_id ?? token?.token_id ?? null
+        const rubyReading = tokenIdForRuby != null ? (tokenReadingById[String(tokenIdForRuby)] || null) : null
 
         return (
           <React.Fragment key={tokenKey}>
@@ -571,6 +689,7 @@ function SentenceContainer({
               onAskAI={onAskAI}
               // 🔧 传入源语言代码，供单词自动翻译使用
               sourceLanguageCode={sourceLang}
+              rubyReading={rubyReading}
               // 🔧 单词 hover 翻译只在自动翻译开启时显示
               autoTranslationEnabled={autoTranslationEnabled}
               autoHintTarget={autoHintForThisSentence}

@@ -693,6 +693,14 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import grammar_routes: {e}")
 
+# 注册日语注音测试API路由
+try:
+    from backend.api.furigana_routes import router as furigana_router
+    app.include_router(furigana_router)
+    print("[OK] 注册Furigana测试API路由: /api/v2/furigana")
+except ImportError as e:
+    print(f"Warning: Could not import furigana_routes: {e}")
+
 # 注册聊天历史API路由
 try:
     from backend.api.chat_history_routes import router as chat_history_router

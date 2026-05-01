@@ -376,8 +376,12 @@ async def create_grammar_rule(
     try:
         grammar_manager = GrammarRuleManagerDB(session)
         
-        # 检查是否已存在
-        existing = grammar_manager.get_rule_by_name(request.name)
+        # 检查是否已存在（仅在当前用户 + 同语言范围内）
+        existing = grammar_manager.get_rule_by_name(
+            request.name,
+            user_id=current_user.user_id,
+            language=request.language
+        )
         if existing:
             raise HTTPException(
                 status_code=400, 

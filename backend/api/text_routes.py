@@ -10,7 +10,12 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from database_system.business_logic.models import User, OriginalText
+from database_system.business_logic.models import (
+    User,
+    OriginalText,
+    Sentence,
+    ArticleSegmentTask,
+)
 
 # 导入认证依赖
 from backend.api.auth_routes import get_current_user
@@ -83,6 +88,46 @@ router = APIRouter(
     tags=["texts-db"],
     responses={404: {"description": "Not found"}},
 )
+
+
+def _serialize_sentence_with_tokens(sentence_model, text_language: Optional[str]):
+    language_code = get_language_code(text_language) if text_language else None
+    is_non_whitespace = is_non_whitespace_language(language_code) if language_code else None
+    tokens = []
+    for t in (getattr(sentence_model, "tokens", None) or []):
+        tokens.append({
+            "token_body": t.token_body,
+            "sentence_token_id": t.sentence_token_id,
+            "token_type": (str(t.token_type).lower() if t.token_type is not None else "text"),
+            "difficulty_level": t.difficulty_level,
+            "global_token_id": getattr(t, "global_token_id", None),
+            "pos_tag": getattr(t, "pos_tag", None),
+            "lemma": getattr(t, "lemma", None),
+            "word_token_id": getattr(t, "word_token_id", None),
+            "selectable": True,
+        })
+    word_tokens = []
+    for wt in (getattr(sentence_model, "word_tokens", None) or []):
+        word_tokens.append({
+            "word_token_id": wt.word_token_id,
+            "word_body": wt.word_body,
+            "token_ids": list(wt.token_ids),
+            "pos_tag": wt.pos_tag,
+            "lemma": wt.lemma,
+            "linked_vocab_id": wt.linked_vocab_id,
+        })
+    return {
+        "sentence_id": sentence_model.sentence_id,
+        "sentence_body": sentence_model.sentence_body,
+        "difficulty_level": sentence_model.sentence_difficulty_level,
+        "grammar_annotations": list(sentence_model.grammar_annotations) if sentence_model.grammar_annotations else [],
+        "vocab_annotations": list(sentence_model.vocab_annotations) if sentence_model.vocab_annotations else [],
+        "tokens": tokens,
+        "word_tokens": word_tokens,
+        "language": text_language,
+        "language_code": language_code,
+        "is_non_whitespace": is_non_whitespace,
+    }
 
 
 # ==================== API 端点 ====================
@@ -411,6 +456,144 @@ async def get_text(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{text_id}/pages", summary="获取文章分页任务状态")
+async def get_text_pages(
+    text_id: int,
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    获取文章分页状态（用于分页阅读）。
+    """
+    text_model = session.query(OriginalText).filter(
+        OriginalText.text_id == text_id,
+        OriginalText.user_id == current_user.user_id,
+    ).first()
+    if not text_model:
+        raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+
+    tasks = session.query(ArticleSegmentTask).filter(
+        ArticleSegmentTask.text_id == text_id,
+        ArticleSegmentTask.user_id == current_user.user_id,
+    ).order_by(ArticleSegmentTask.page_index.asc()).all()
+
+    if not tasks:
+        # 非分段文章：兼容为单页 completed
+        return {
+            "success": True,
+            "data": {
+                "text_id": text_id,
+                "total_pages": 1,
+                "pages": [{"page_index": 1, "status": "completed"}],
+            },
+        }
+
+    return {
+        "success": True,
+        "data": {
+            "text_id": text_id,
+            "total_pages": len(tasks),
+            "pages": [
+                {
+                    "page_index": t.page_index,
+                    "status": t.status,
+                    "sentence_start_id": t.sentence_start_id,
+                    "sentence_end_id": t.sentence_end_id,
+                }
+                for t in tasks
+            ],
+        },
+    }
+
+
+@router.get("/{text_id}/pages/{page_index}", summary="获取文章指定分页")
+async def get_text_page_detail(
+    text_id: int,
+    page_index: int,
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    获取分页内容：
+    - completed: 返回该页 sentence 列表
+    - processing/failed: 返回状态，sentences 为空
+    """
+    if page_index <= 0:
+        raise HTTPException(status_code=400, detail="page_index must be greater than 0")
+
+    text_model = session.query(OriginalText).filter(
+        OriginalText.text_id == text_id,
+        OriginalText.user_id == current_user.user_id,
+    ).first()
+    if not text_model:
+        raise HTTPException(status_code=404, detail=f"Text ID {text_id} not found")
+
+    tasks = session.query(ArticleSegmentTask).filter(
+        ArticleSegmentTask.text_id == text_id,
+        ArticleSegmentTask.user_id == current_user.user_id,
+    ).order_by(ArticleSegmentTask.page_index.asc()).all()
+
+    # 非分段文章：page=1 返回整篇
+    if not tasks:
+        if page_index != 1:
+            raise HTTPException(status_code=404, detail="page not found")
+        sentences = session.query(Sentence).filter(
+            Sentence.text_id == text_id
+        ).order_by(Sentence.sentence_id.asc()).all()
+        return {
+            "success": True,
+            "data": {
+                "text_id": text_id,
+                "text_title": text_model.text_title,
+                "language": text_model.language,
+                "page_index": 1,
+                "total_pages": 1,
+                "page_status": "completed",
+                "sentences": [_serialize_sentence_with_tokens(s, text_model.language) for s in sentences],
+            },
+        }
+
+    task = next((t for t in tasks if t.page_index == page_index), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="page not found")
+
+    if task.status != "completed" or not task.sentence_start_id or not task.sentence_end_id:
+        return {
+            "success": True,
+            "data": {
+                "text_id": text_id,
+                "text_title": text_model.text_title,
+                "language": text_model.language,
+                "page_index": page_index,
+                "total_pages": len(tasks),
+                "page_status": task.status,
+                "sentences": [],
+                "error_message": task.error_message,
+            },
+        }
+
+    sentences = session.query(Sentence).filter(
+        Sentence.text_id == text_id,
+        Sentence.sentence_id >= task.sentence_start_id,
+        Sentence.sentence_id <= task.sentence_end_id,
+    ).order_by(Sentence.sentence_id.asc()).all()
+
+    return {
+        "success": True,
+        "data": {
+            "text_id": text_id,
+            "text_title": text_model.text_title,
+            "language": text_model.language,
+            "page_index": page_index,
+            "total_pages": len(tasks),
+            "page_status": task.status,
+            "sentences": [_serialize_sentence_with_tokens(s, text_model.language) for s in sentences],
+            "sentence_start_id": task.sentence_start_id,
+            "sentence_end_id": task.sentence_end_id,
+        },
+    }
 
 
 @router.post("/", summary="创建新文章", status_code=201)

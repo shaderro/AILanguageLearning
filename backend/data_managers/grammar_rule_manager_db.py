@@ -85,7 +85,12 @@ class GrammarRuleManager:
         
         return GrammarAdapter.model_to_dto(grammar_model, include_examples=True)
     
-    def get_rule_by_name(self, rule_name: str) -> Optional[GrammarDTO]:
+    def get_rule_by_name(
+        self,
+        rule_name: str,
+        user_id: Optional[int] = None,
+        language: Optional[str] = None
+    ) -> Optional[GrammarDTO]:
         """
         根据规则名称查找
         
@@ -96,7 +101,11 @@ class GrammarRuleManager:
             GrammarDTO: 语法规则数据对象
             None: 规则不存在
         """
-        grammar_model = self.db_manager.find_grammar_by_name(rule_name)
+        grammar_model = self.db_manager.find_grammar_by_name(
+            rule_name,
+            user_id=user_id,
+            language=language
+        )
         if not grammar_model:
             return None
         

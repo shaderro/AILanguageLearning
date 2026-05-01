@@ -58,9 +58,12 @@ export function UserProvider({ children }) {
   const [showMigrationDialog, setShowMigrationDialog] = useState(false) // 是否显示迁移对话框
   const isInitializedRef = useRef(false) // 🔧 使用 ref 标记是否已经初始化，避免重复初始化
   const lastUserInfoFetchAtRef = useRef(0)
+  const userInfoRequestInFlightRef = useRef(null)
+  const nextUserInfoRetryAtRef = useRef(0)
+  const userInfoFailureCountRef = useRef(0)
 
   const refreshUserInfo = useCallback(async (overrideToken = token, options = {}) => {
-    const { clearOnMissingToken = true, clearOnError = false } = options
+    const { clearOnMissingToken = true, clearOnError = false, force = false } = options
 
     if (!overrideToken) {
       if (clearOnMissingToken) {
@@ -69,21 +72,56 @@ export function UserProvider({ children }) {
       return null
     }
 
+    const now = Date.now()
+    if (!force && now < nextUserInfoRetryAtRef.current) {
+      return userInfo
+    }
+
+    if (userInfoRequestInFlightRef.current) {
+      return userInfoRequestInFlightRef.current
+    }
+
+    const requestPromise = (async () => {
+      try {
+        const info = await authService.getCurrentUser(overrideToken)
+        setUserInfo(info)
+        if (info?.email) {
+          setEmail(info.email)
+        }
+        lastUserInfoFetchAtRef.current = Date.now()
+        userInfoFailureCountRef.current = 0
+        nextUserInfoRetryAtRef.current = 0
+        return info
+      } catch (error) {
+        const isTimeoutOrNetwork =
+          error?.code === 'ECONNABORTED' ||
+          error?.message?.includes('timeout') ||
+          error?.message?.includes('Network Error') ||
+          !error?.response
+
+        if (isTimeoutOrNetwork) {
+          userInfoFailureCountRef.current += 1
+          const backoffMs = Math.min(300000, 30000 * userInfoFailureCountRef.current) // 30s, 60s, 90s...最多5分钟
+          nextUserInfoRetryAtRef.current = Date.now() + backoffMs
+        }
+
+        if (clearOnError) {
+          setUserInfo(null)
+        }
+        throw error
+      } finally {
+        userInfoRequestInFlightRef.current = null
+      }
+    })()
+
+    userInfoRequestInFlightRef.current = requestPromise
+
     try {
-      const info = await authService.getCurrentUser(overrideToken)
-      setUserInfo(info)
-      if (info?.email) {
-        setEmail(info.email)
-      }
-      lastUserInfoFetchAtRef.current = Date.now()
-      return info
+      return await requestPromise
     } catch (error) {
-      if (clearOnError) {
-        setUserInfo(null)
-      }
       throw error
     }
-  }, [token])
+  }, [token, userInfo])
 
   // 初始化：从 localStorage 恢复登录状态或创建游客ID
   // 🔧 用于标记用户是否主动登录，以便忽略自动登录的结果
@@ -214,11 +252,11 @@ export function UserProvider({ children }) {
       }
     }
 
-    if (!userInfo || Date.now() - lastUserInfoFetchAtRef.current > 15000) {
+    if (!userInfo || Date.now() - lastUserInfoFetchAtRef.current > 60000) {
       syncUserInfo()
     }
 
-    const interval = setInterval(syncUserInfo, 30000)
+    const interval = setInterval(syncUserInfo, 60000)
     return () => {
       cancelled = true
       clearInterval(interval)
@@ -388,6 +426,9 @@ export function UserProvider({ children }) {
     setEmail(null) // 🔧 清除 email
     setUserInfo(null)
     lastUserInfoFetchAtRef.current = 0
+    nextUserInfoRetryAtRef.current = 0
+    userInfoFailureCountRef.current = 0
+    userInfoRequestInFlightRef.current = null
     setPassword(null)
     setIsAuthenticated(false)
     setIsGuest(true)

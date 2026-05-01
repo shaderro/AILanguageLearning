@@ -339,10 +339,8 @@ export default function ArticleChatView({
     console.log('  - Current hasSelectedSentence:', hasSelectedSentence)
     console.log('  - Current selectedSentence:', selectedSentence)
     
-    // Token选择优先：总是清除句子选择
-    if (hasSelectedSentence) {
-      console.log('🧹 [ArticleChatView] Token selection takes priority - clearing sentence selection')
-      setSelectedSentence(null)
+    // 保留 selectedSentence（用于持续显示注音），但 token 选择时关闭“整句选择判定”
+    if (selectedTexts.length > 0 && hasSelectedSentence) {
       setHasSelectedSentence(false)
     }
     
@@ -406,7 +404,7 @@ export default function ArticleChatView({
         console.error('❌ [ArticleChatView] Failed to clear backend token:', error)
       }
     }
-  }, [articleId, hasSelectedToken, isProcessing, hasSelectedSentence, selectedSentence])
+  }, [articleId, hasSelectedToken, isProcessing])
   
   const handleClearQuote = useCallback(() => {
     console.log('🧹 [ArticleChatView] Clearing all selections and quotes')
@@ -1064,6 +1062,7 @@ export default function ArticleChatView({
                     getNotationContent={getNotationContent}
                     setNotationContent={setNotationContent}
                     onSentenceSelect={handleSentenceSelect}
+                    selectedSentenceIndexExternal={selectedSentence?.index ?? null}
                     targetSentenceId={targetSentenceId}
                     onTargetSentenceScrolled={handleTargetSentenceScrolled}
                     onAskAI={userToken ? wrappedHandleAskAI : null}

@@ -28,6 +28,8 @@ import PrivacyPolicyAndTerms from './pages/PrivacyPolicyAndTerms'
 import ChatConcurrencySandbox from './pages/ChatConcurrencySandbox'
 import ArticleUploadSandbox from './pages/ArticleUploadSandbox'
 import ArticleViewSandbox from './pages/ArticleViewSandbox'
+import FuriganaSandbox from './pages/FuriganaSandbox'
+import ChineseZhuyinSandbox from './pages/ChineseZhuyinSandbox'
 import { colors } from './design-tokens'
 import { recordRecentArticle } from './utils/pageStateManager'
 
@@ -851,6 +853,22 @@ function AppContent() {
 
           {currentPage === 'articleViewSandbox' && (
             <ArticleViewSandbox
+              onBack={() => {
+                setCurrentPage('landing')
+              }}
+            />
+          )}
+
+          {currentPage === 'furiganaSandbox' && (
+            <FuriganaSandbox
+              onBack={() => {
+                setCurrentPage('landing')
+              }}
+            />
+          )}
+
+          {currentPage === 'chineseZhuyinSandbox' && (
+            <ChineseZhuyinSandbox
               onBack={() => {
                 setCurrentPage('landing')
               }}

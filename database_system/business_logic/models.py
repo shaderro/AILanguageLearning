@@ -141,7 +141,37 @@ class OriginalText(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
     sentences = relationship('Sentence', back_populates='text', cascade='all, delete-orphan')
+    segment_tasks = relationship('ArticleSegmentTask', back_populates='text', cascade='all, delete-orphan')
     owner = relationship('User', backref='original_texts')
+
+
+class ArticleSegmentTask(Base):
+    """
+    文章分页任务：
+    - 一页对应一个 segment（page_index 从 1 开始）
+    - status: processing / completed / failed
+    - 通过 sentence_id 区间标记该页句子范围
+    """
+    __tablename__ = 'article_segment_tasks'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    page_index = Column(Integer, nullable=False)
+    status = Column(String(32), default='processing', nullable=False)
+    sentence_start_id = Column(Integer, nullable=True)
+    sentence_end_id = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('text_id', 'page_index', name='uq_article_segment_task_text_page'),
+        Index('idx_article_segment_task_text_status', 'text_id', 'status'),
+    )
+
+    text = relationship('OriginalText', back_populates='segment_tasks')
+    owner = relationship('User', backref='article_segment_tasks')
 
 class Sentence(Base):
     __tablename__ = 'sentences'

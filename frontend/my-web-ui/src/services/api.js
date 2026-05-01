@@ -38,8 +38,9 @@ function normalizeFormText(value) {
   // FormData 在传输文本字段时会把换行统一为 CRLF，先在前端归一化，避免长度判断偏差
   return String(value ?? "").replace(/\r?\n/g, "\r\n");
 }
-// 从环境变量获取 API 基础 URL，默认使用 localhost:8000（本地开发）
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+// 从环境变量获取 API 基础 URL，默认使用 127.0.0.1:8000（本地开发）
+// Windows 上 `localhost` 可能优先解析到 IPv6（::1），导致命中错误的监听服务/返回 503。
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 // 创建 axios 实例
 const api = axios.create({
@@ -370,6 +371,12 @@ api.interceptors.response.use(
 export const apiService = {
   // 健康检查（两端均支持）
   healthCheck: () => api.get("/api/health"),
+
+  // Furigana 预览（测试用）
+  previewFurigana: (text) => api.post("/api/v2/furigana/preview", { text }),
+  previewChineseZhuyin: (text) => api.post("/api/v2/furigana/zh-preview", { text }),
+  alignFuriganaTokens: (text, tokens) => api.post("/api/v2/furigana/align", { text, tokens }),
+  alignChinesePinyinTokens: (text, tokens) => api.post("/api/v2/furigana/zh-align", { text, tokens }),
 
   // ==================== Vocab API（数据库版本）====================
   

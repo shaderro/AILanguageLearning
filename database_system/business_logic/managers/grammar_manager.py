@@ -18,9 +18,14 @@ class GrammarManager:
         """获取语法规则"""
         return self.dal.get_grammar(rule_id)
     
-    def find_grammar_by_name(self, rule_name: str) -> Optional[GrammarRule]:
-        """根据名称查找语法规则"""
-        return self.dal.find_grammar_by_name(rule_name)
+    def find_grammar_by_name(
+        self,
+        rule_name: str,
+        user_id: Optional[int] = None,
+        language: Optional[str] = None
+    ) -> Optional[GrammarRule]:
+        """根据名称查找语法规则（可选按 user_id / language 过滤）"""
+        return self.dal.find_grammar_by_name(rule_name, user_id=user_id, language=language)
     
     def list_grammar_rules(self, skip: int = 0, limit: int = 100, starred_only: bool = False) -> List[GrammarRule]:
         """列出语法规则"""
