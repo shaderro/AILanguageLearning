@@ -10,6 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 const authApi = axios.create({
   baseURL: API_BASE_URL,
   timeout: 600000, // 上传导入期间后端可能繁忙，认证请求放宽到 10 分钟避免误超时
+  withCredentials: true, // 与 api.js 一致：跨域携带 Cookie
   headers: {
     'Content-Type': 'application/json',
   },
@@ -128,11 +129,23 @@ export const authService = {
    * @returns {Promise<{user_id: number, email: string, created_at: string, ui_language?: string, content_language?: string, languages_list?: string[]}>}
    */
   getCurrentUser: async (token) => {
-    const response = await authApi.get('/api/auth/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const config = {}
+    if (token) {
+      config.headers = { Authorization: `Bearer ${token}` }
+    }
+    const response = await authApi.get('/api/auth/me', config)
+    return response.data
+  },
+
+  /** 请求发送 magic link 邮件 */
+  requestMagicLink: async (email) => {
+    const response = await authApi.post('/api/auth/magic-link/request', { email })
+    return response.data
+  },
+
+  /** 校验邮件中的 token，后端会 Set-Cookie；同时返回 session_token 供 Bearer 使用 */
+  verifyMagicLink: async (token) => {
+    const response = await authApi.post('/api/auth/magic-link/verify', { token })
     return response.data
   },
 

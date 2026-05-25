@@ -2,8 +2,9 @@
 认证 API 路由
 提供注册、登录、当前用户等认证相关接口
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session, sessionmaker
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -52,41 +53,65 @@ SessionLocal = _get_session_local()
 security = HTTPBearer(auto_error=False)
 
 
-def get_current_user(
+def get_bearer_or_cookie_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    session: Session = Depends(get_db_session)
+    auth_session: Optional[str] = Cookie(None, alias="auth_session"),
+) -> Optional[str]:
+    """Authorization Bearer 优先；否则读取 HttpOnly Cookie（magic-link 登录）。"""
+    if credentials and credentials.credentials:
+        return credentials.credentials.strip()
+    if auth_session:
+        return auth_session.strip()
+    return None
+
+
+def get_current_user(
+    raw_token: Optional[str] = Depends(get_bearer_or_cookie_token),
+    session: Session = Depends(get_db_session),
 ) -> User:
     """
-    从 JWT token 中获取当前用户
-    
-    用法：
-        @router.get("/protected")
-        def protected_route(current_user: User = Depends(get_current_user)):
-            return {"user_id": current_user.user_id}
+    认证方式（二选一）：
+    1) JWT（Authorization Bearer，以 eyJ 开头）— 与原有密码登录兼容；
+    2) AuthSession opaque token（Bearer 或 Cookie auth_session）— magic-link 换发后的会话。
+
+    InviteCode / 余额校验不在此处理；仅解析身份为 User。
     """
     import time
+
     start_time = time.time()
-    
-    # 如果没有提供token，返回401错误
-    if credentials is None:
+
+    if raw_token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="需要认证，请先登录",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    token = credentials.credentials
-    
-    # 解码 token
-    payload = decode_access_token(token)
+
+    # --- AuthSession（opaque）---
+    if not raw_token.startswith("eyJ"):
+        from backend.utils.session_auth import resolve_auth_session_user
+
+        user = resolve_auth_session_user(session, raw_token)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效或已过期的会话",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        total_elapsed = (time.time() - start_time) * 1000
+        if total_elapsed > 100:
+            print(f"⚠️ [Auth] get_current_user(session) 较慢: {total_elapsed:.2f}ms (user_id: {user.user_id})")
+        return user
+
+    # --- JWT（密码登录等）---
+    payload = decode_access_token(raw_token)
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # 提取 user_id（从字符串转换为整数）
+
     user_id_str: str = payload.get("sub")
     if user_id_str is None:
         raise HTTPException(
@@ -94,8 +119,7 @@ def get_current_user(
             detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # 转换为整数并查询用户
+
     try:
         user_id = int(user_id_str)
     except (ValueError, TypeError):
@@ -104,15 +128,14 @@ def get_current_user(
             detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # 查询用户（添加性能日志）
+
     query_start = time.time()
     user = session.query(User).filter(User.user_id == user_id).first()
     query_elapsed = (time.time() - query_start) * 1000
-    
-    if query_elapsed > 100:  # 如果查询超过 100ms，记录警告
+
+    if query_elapsed > 100:
         print(f"⚠️ [Auth] get_current_user 数据库查询较慢: {query_elapsed:.2f}ms (user_id: {user_id})")
-    
+
     if user is None:
         print(f"❌ [Auth] 用户不存在: user_id={user_id}")
         raise HTTPException(
@@ -120,14 +143,12 @@ def get_current_user(
             detail="用户不存在",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     total_elapsed = (time.time() - start_time) * 1000
-    if total_elapsed > 100:  # 如果总耗时超过 100ms，记录警告
-        print(f"⚠️ [Auth] get_current_user 总耗时较长: {total_elapsed:.2f}ms (user_id: {user_id})")
-    
-    # 🔧 添加调试日志：记录成功认证的用户
-    print(f"✅ [Auth] 用户认证成功: user_id={user.user_id}, email={user.email}")
-    
+    if total_elapsed > 100:
+        print(f"⚠️ [Auth] get_current_user(JWT) 总耗时较长: {total_elapsed:.2f}ms (user_id: {user_id})")
+
+    print(f"✅ [Auth] 用户认证成功(JWT): user_id={user.user_id}, email={user.email}")
     return user
 
 
@@ -192,6 +213,21 @@ class UserPreferencesUpdateRequest(BaseModel):
     languages_list: Optional[list[str]] = Field(None, description="已添加的内容语言代码列表")
 
 
+class MagicLinkEmailRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=255, description="登录邮箱")
+
+
+class MagicLinkVerifyRequest(BaseModel):
+    token: str = Field(..., min_length=8, description="邮件中的 magic link token")
+
+
+class MagicLinkVerifyResponse(BaseModel):
+    ok: bool = True
+    session_token: str
+    user_id: int
+    token_type: str = "session"
+
+
 # ==================== 路由器 ====================
 
 router = APIRouter(
@@ -239,8 +275,12 @@ async def register(
         password_hash = hash_password(request.password)
         
         # 创建用户（强制 email 唯一性）
+        from backend.services.signup_token_grant import grant_new_user_signup_tokens
+
         new_user = User(password_hash=password_hash, email=request.email.strip())
         session.add(new_user)
+        session.flush()
+        grant_new_user_signup_tokens(session, new_user)
         session.commit()
         session.refresh(new_user)
         
@@ -367,6 +407,85 @@ async def login(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"登录失败: {str(e)}"
         )
+
+
+@router.post("/magic-link/request")
+async def request_magic_link(
+    body: MagicLinkEmailRequest,
+    session: Session = Depends(get_db_session),
+):
+    """
+    请求发送 magic link 邮件。不暴露邮箱是否存在于系统中。
+    与 InviteCode / Credit 无关。
+    """
+    try:
+        from backend.services.magic_link_auth import create_and_send_magic_link
+
+        create_and_send_magic_link(session, body.email)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱格式无效")
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"无法发送登录邮件: {e!s}",
+        )
+    return {
+        "ok": True,
+        "detail": "若该邮箱可接收邮件，您将很快收到登录链接。",
+    }
+
+
+@router.post("/magic-link/verify")
+async def verify_magic_link(
+    body: MagicLinkVerifyRequest,
+    session: Session = Depends(get_db_session),
+):
+    """
+    校验一次性 magic link，创建或关联 User，签发 AuthSession。
+    返回 JSON 中的 session_token，并设置 HttpOnly Cookie `auth_session`。
+    """
+    from backend.services.magic_link_auth import consume_magic_link
+    from backend.config import AUTH_SESSION_TTL_DAYS, ENV
+
+    try:
+        user, raw_session = consume_magic_link(session, body.token, AUTH_SESSION_TTL_DAYS)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="链接无效或已使用、已过期",
+        )
+
+    payload = MagicLinkVerifyResponse(session_token=raw_session, user_id=user.user_id)
+    resp = JSONResponse(content=payload.model_dump())
+    resp.set_cookie(
+        key="auth_session",
+        value=raw_session,
+        httponly=True,
+        samesite="lax",
+        max_age=86400 * AUTH_SESSION_TTL_DAYS,
+        secure=(ENV == "production"),
+        path="/",
+    )
+    return resp
+
+
+@router.post("/logout")
+async def logout_session(
+    raw_token: Optional[str] = Depends(get_bearer_or_cookie_token),
+    session: Session = Depends(get_db_session),
+):
+    """
+    撤销当前 AuthSession（opaque token / Cookie）。JWT 登录无法在此服务端失效，仅清除 Cookie。
+    """
+    from backend.utils.session_auth import revoke_auth_session_by_raw
+
+    if raw_token and not raw_token.startswith("eyJ"):
+        revoke_auth_session_by_raw(session, raw_token)
+    resp = JSONResponse(content={"ok": True})
+    resp.delete_cookie("auth_session", path="/")
+    return resp
 
 
 @router.get("/me", response_model=UserResponse)

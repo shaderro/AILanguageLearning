@@ -507,27 +507,26 @@ async def validation_exception_handler(request, exc: RequestValidationError):
     )
 
 # ==================== CORS 配置 =====================
-# MVP 阶段：允许所有来源（方便开发和测试）
-# 后续生产环境：应收紧为指定域名列表，提高安全性
-#
-# 推荐的生产环境配置（取消注释并修改）：
-# ALLOWED_ORIGINS = [
-#     "https://your-frontend-domain.vercel.app",  # Vercel 生产环境
-#     "https://your-frontend-domain.com",            # 自定义域名（如果有）
-#     "http://localhost:5173",                       # 本地开发（可选）
-#     "http://127.0.0.1:5173",                      # 本地开发（可选）
-# ]
-# 
-# 然后修改下面的 allow_origins=ALLOWED_ORIGINS
+# CORS：带 Cookie（withCredentials）时不能使用 allow_origins=["*"]。
+# 白名单来自 backend.config.CORS_ALLOWED_ORIGINS（环境变量 CORS_ALLOWED_ORIGINS，逗号分隔）。
+try:
+    from backend.config import CORS_ALLOWED_ORIGINS as _CORS_ALLOWED_ORIGINS
+except ImportError:
+    _CORS_ALLOWED_ORIGINS = [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+    ]
 
-# MVP 阶段：允许所有来源
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # MVP 阶段：允许所有来源（Vercel 前端可正常访问）
+    allow_origins=_CORS_ALLOWED_ORIGINS,
     allow_credentials=True,  # 允许携带认证信息（Cookie、Authorization header）
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # 允许的 HTTP 方法
     allow_headers=["*"],  # 允许所有请求头（包括 Authorization、Content-Type 等）
 )
+print(f"[OK] CORS allow_origins={len(_CORS_ALLOWED_ORIGINS)} 个（带 Cookie 须白名单，勿用 *）")
 
 # ==================== Rate Limit 中间件 ====================
 # ⚠️ 安全：限制 API 调用频率，防止滥用（特别是 AI 接口）
@@ -566,13 +565,20 @@ async def startup_event():
             print("📊 检测到 PostgreSQL 数据库")
             # 检查表是否已存在
             from sqlalchemy import inspect
+            from database_system.business_logic.models import MagicLinkToken, AuthSession
+
             inspector = inspect(engine)
             existing_tables = inspector.get_table_names()
-            
+
             if existing_tables:
                 print(f"✅ 数据库表已存在 ({len(existing_tables)} 个表)")
                 for table in sorted(existing_tables):
                     print(f"   - {table}")
+                # 增量补表：已有库时仍创建 ORM 中新增且尚未存在的表
+                Base.metadata.create_all(
+                    engine,
+                    tables=[MagicLinkToken.__table__, AuthSession.__table__],
+                )
             else:
                 print("📋 创建数据库表结构...")
                 Base.metadata.create_all(engine)

@@ -39,6 +39,7 @@ typing-inspection==0.4.1
 typing_extensions==4.14.0
 urllib3==2.5.0
 python-dotenv>=1.0.0  # 环境变量管理（用于加载 .env 文件）
+resend>=2.0.0  # 事务邮件（magic link 等），需配置 RESEND_API_KEY
 
 # HTML 提取依赖（可选，按优先级排序）
 trafilatura>=1.6.0  # 推荐：最好的 HTML 正文提取库

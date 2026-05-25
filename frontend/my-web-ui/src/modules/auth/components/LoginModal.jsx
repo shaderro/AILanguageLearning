@@ -6,12 +6,15 @@ import { useState } from 'react'
 import { useUser } from '../../../contexts/UserContext'
 import { useTranslate } from '../../../i18n/useTranslate'
 import { BaseModal, BaseInput, BaseButton } from '../../../components/base'
+import { authService } from '../services/authService'
 
 const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassword }) => {
   const [userId, setUserId] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [magicLinkSending, setMagicLinkSending] = useState(false)
+  const [magicLinkMessage, setMagicLinkMessage] = useState('')
   const [error, setError] = useState('')
   const t = useTranslate()
   
@@ -60,6 +63,26 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassw
       setError(t('登录失败，请重试'))
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleMagicLink = async () => {
+    setError('')
+    setMagicLinkMessage('')
+    const trimmed = (email || '').trim()
+    if (!trimmed || !trimmed.includes('@')) {
+      setError(t('请先填写有效邮箱'))
+      return
+    }
+    setMagicLinkSending(true)
+    try {
+      const res = await authService.requestMagicLink(trimmed)
+      setMagicLinkMessage(res?.detail || t('若该邮箱可接收邮件，您将很快收到登录链接。'))
+    } catch (err) {
+      const detail = err?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : t('发送失败，请稍后重试'))
+    } finally {
+      setMagicLinkSending(false)
     }
   }
 
@@ -131,9 +154,24 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister, onSwitchToForgotPassw
           </div>
         )}
 
+        {magicLinkMessage && (
+          <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {magicLinkMessage}
+          </div>
+        )}
+
         <div className="flex flex-col space-y-3 pt-2">
           <BaseButton type="submit" loading={isLoading} fullWidth>
             {isLoading ? t('登录中...') : t('登录')}
+          </BaseButton>
+          <BaseButton
+            type="button"
+            variant="secondary"
+            loading={magicLinkSending}
+            fullWidth
+            onClick={handleMagicLink}
+          >
+            {magicLinkSending ? t('发送中...') : t('发送邮箱登录链接')}
           </BaseButton>
           <BaseButton type="button" variant="secondary" onClick={onClose} fullWidth>
             {t('取消')}

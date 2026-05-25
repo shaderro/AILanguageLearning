@@ -46,6 +46,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 120000, // 增加到 2 分钟
+  withCredentials: true, // 跨域时携带 Cookie（如 auth_session），需与后端 CORS 白名单配合
   headers: { "Content-Type": "application/json" },
 });
 

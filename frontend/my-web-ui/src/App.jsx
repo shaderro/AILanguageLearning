@@ -10,6 +10,7 @@ import LoginModal from './modules/auth/components/LoginModal'
 import RegisterModal from './modules/auth/components/RegisterModal'
 import ForgotPasswordModal from './modules/auth/components/ForgotPasswordModal'
 import ResetPasswordPage from './modules/auth/components/ResetPasswordPage'
+import AuthCallbackPage from './modules/auth/components/AuthCallbackPage'
 import UserAvatar from './modules/auth/components/UserAvatar'
 import ProfilePage from './modules/auth/components/ProfilePage'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
@@ -40,6 +41,7 @@ function AppContent() {
   
   // 🔧 检查是否在重置密码页面
   const isResetPasswordPage = window.location.pathname === '/reset-password'
+  const isAuthCallbackPage = window.location.pathname === '/auth/callback'
   
   // 🔧 从 URL 参数初始化页面状态
   const getInitialStateFromURL = () => {
@@ -396,6 +398,10 @@ function AppContent() {
         }}
       />
     )
+  }
+
+  if (isAuthCallbackPage) {
+    return <AuthCallbackPage />
   }
 
   // 如果显示个人中心页面

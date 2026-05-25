@@ -412,6 +412,40 @@ class User(Base):
     )
 
 
+class MagicLinkToken(Base):
+    """
+    一次性邮箱登录令牌：仅存哈希；明文仅在邮件发送时出现一次。
+    与 InviteCode / 余额无关，仅用于建立身份。
+    """
+    __tablename__ = "magic_link_tokens"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+
+
+class AuthSession(Base):
+    """
+    已登录会话：请求侧携带的 opaque token 的哈希与本表匹配且未撤销、未过期即视为已认证。
+    通过 user_id 关联 User；不参与邀请码与扣费逻辑。
+    """
+    __tablename__ = "auth_sessions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+    __table_args__ = (Index("idx_auth_sessions_user_active", "user_id", "expires_at"),)
+
+
 class InviteCode(Base):
     """
     一次性邀请码表：

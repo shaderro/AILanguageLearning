@@ -17,7 +17,8 @@ try:
     # 从项目根目录查找 .env 文件
     env_path = Path(__file__).parent.parent / '.env'
     if env_path.exists():
-        load_dotenv(env_path)
+        # override=True：避免 Windows 用户/系统环境里的旧 RESEND_API_KEY 盖掉 .env
+        load_dotenv(env_path, override=True)
         print(f"[OK] 已加载环境变量文件: {env_path}")
     else:
         print(f"[WARN] 未找到 .env 文件: {env_path}")
@@ -46,6 +47,48 @@ if ENV not in ["development", "testing", "production"]:
 
 # 数据库 URL（可选，如果设置了则覆盖配置文件中的值）
 DATABASE_URL = os.getenv("DATABASE_URL")  # 如果未设置，将使用配置文件中的默认值
+
+# Resend magic-link（可选）
+def _normalize_resend_api_key(raw: str | None) -> str | None:
+    if not raw:
+        return None
+    s = raw.strip().lstrip("\ufeff")
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in "\"'":
+        s = s[1:-1].strip()
+    return s or None
+
+
+RESEND_API_KEY = _normalize_resend_api_key(os.getenv("RESEND_API_KEY"))
+# 邮件内登录链接跳转的前端 origin（含协议）
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "LinkText <onboarding@resend.dev>")
+MAGIC_LINK_TTL_MINUTES = int(os.getenv("MAGIC_LINK_TTL_MINUTES", "30"))
+AUTH_SESSION_TTL_DAYS = int(os.getenv("AUTH_SESSION_TTL_DAYS", "30"))
+
+# 新用户注册/首次邮箱登录赠送积分（1 积分 = 10_000 token，与邀请码展示一致）
+POINTS_PER_TOKEN_UNIT = 10_000
+NEW_USER_SIGNUP_POINTS = int(os.getenv("NEW_USER_SIGNUP_POINTS", "80"))
+
+def _parse_cors_allowed_origins(raw: str | None) -> list[str]:
+    """
+    浏览器带 Cookie（credentials）时，Access-Control-Allow-Origin 不能为 *。
+    未设置 CORS_ALLOWED_ORIGINS 时使用常见本地前端 origin（Vite / CRA）。
+    生产环境请设置：CORS_ALLOWED_ORIGINS=https://你的前端域名
+    多个用英文逗号分隔。
+    """
+    if raw and raw.strip():
+        return [o.strip() for o in raw.split(",") if o.strip()]
+    return [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+        "http://127.0.0.1:4173",
+        "http://localhost:4173",
+    ]
+
+
+CORS_ALLOWED_ORIGINS = _parse_cors_allowed_origins(os.getenv("CORS_ALLOWED_ORIGINS"))
 
 # ==================== 可选的环境变量 ====================
 
