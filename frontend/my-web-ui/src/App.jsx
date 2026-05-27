@@ -6,13 +6,14 @@ import GrammarReviewSandbox from './modules/grammar-demo/GrammarReviewSandbox'
 import ArticleSelection from './modules/article/ArticleSelection'
 import ArticleChatView from './modules/article/ArticleChatView'
 import LoginButton from './modules/auth/components/LoginButton'
-import LoginModal from './modules/auth/components/LoginModal'
-import RegisterModal from './modules/auth/components/RegisterModal'
-import ForgotPasswordModal from './modules/auth/components/ForgotPasswordModal'
+import MagicLinkAuthModal from './modules/auth/components/MagicLinkAuthModal'
 import ResetPasswordPage from './modules/auth/components/ResetPasswordPage'
 import AuthCallbackPage from './modules/auth/components/AuthCallbackPage'
 import UserAvatar from './modules/auth/components/UserAvatar'
 import ProfilePage from './modules/auth/components/ProfilePage'
+import CreditsIndicator from './components/features/credits/CreditsIndicator'
+import WelcomeCreditsBanner from './components/features/credits/WelcomeCreditsBanner'
+import { shouldShowWelcomeCredits, dismissWelcomeCredits } from './utils/creditsUtils'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
@@ -130,14 +131,14 @@ function AppContent() {
   }, [currentPage, selectedArticleId])
   
   // 模态框状态
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
   const [showProfilePage, setShowProfilePage] = useState(false)
   const [showPPTermsPage, setShowPPTermsPage] = useState(false)
   const [showHeaderLanguageMenu, setShowHeaderLanguageMenu] = useState(false)
   const [showHeaderAddLanguages, setShowHeaderAddLanguages] = useState(false)
   const [showInsightsMenu, setShowInsightsMenu] = useState(false)
+  const [showWelcomeCredits, setShowWelcomeCredits] = useState(false)
+  const [headerLanguagesList, setHeaderLanguagesList] = useState([])
   const headerLanguageRef = useRef(null)
   const insightsMenuRef = useRef(null)
   
@@ -155,6 +156,21 @@ function AppContent() {
     showMigrationDialog,
     setShowMigrationDialog
   } = useUser()
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId || !userInfo) {
+      setShowWelcomeCredits(false)
+      return
+    }
+    setShowWelcomeCredits(shouldShowWelcomeCredits(currentUserId))
+  }, [isAuthenticated, currentUserId, userInfo])
+
+  const handleDismissWelcomeCredits = () => {
+    if (currentUserId) {
+      dismissWelcomeCredits(currentUserId)
+    }
+    setShowWelcomeCredits(false)
+  }
   
   // 从 LanguageContext 获取语言选择
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
@@ -175,7 +191,7 @@ function AppContent() {
     return `content_languages_chosen_${id}`
   }
 
-  const resolveHeaderLanguages = () => {
+  const readHeaderLanguagesFromStorage = () => {
     const fallback = selectedLanguage ? [selectedLanguage] : ['德文']
     if (typeof window === 'undefined') {
       return fallback
@@ -187,13 +203,105 @@ function AppContent() {
       const parsed = JSON.parse(raw)
       if (!Array.isArray(parsed)) return fallback
       const valid = parsed.filter((lang) => ALL_LANGUAGES.includes(lang))
-      return Array.from(new Set([...valid, ...fallback]))
+      return valid.length > 0 ? valid : fallback
     } catch {
       return fallback
     }
   }
 
-  const headerLanguages = resolveHeaderLanguages()
+  const persistHeaderLanguages = (names) => {
+    const valid = Array.from(
+      new Set(names.filter((lang) => ALL_LANGUAGES.includes(lang))),
+    )
+    const next = valid.length > 0 ? valid : readHeaderLanguagesFromStorage()
+    setHeaderLanguagesList(next)
+    if (typeof window !== 'undefined') {
+      try {
+        const key = getHeaderLanguageStorageKey()
+        window.localStorage.setItem(key, JSON.stringify(next))
+      } catch {
+        // ignore
+      }
+    }
+    return next
+  }
+
+  useEffect(() => {
+    setHeaderLanguagesList(readHeaderLanguagesFromStorage())
+  }, [currentUserId])
+
+  const headerLanguages = headerLanguagesList.length > 0
+    ? headerLanguagesList
+    : readHeaderLanguagesFromStorage()
+
+  const refreshLanguageContent = () => {
+    if (!currentUserId) return
+    queryClient.invalidateQueries({ queryKey: ['articles', currentUserId] })
+    queryClient.invalidateQueries({ queryKey: ['vocab', currentUserId] })
+    queryClient.invalidateQueries({ queryKey: ['grammar', currentUserId] })
+  }
+
+  const prevSelectedLanguageForRefreshRef = useRef(selectedLanguage)
+  useEffect(() => {
+    if (prevSelectedLanguageForRefreshRef.current === selectedLanguage) {
+      return
+    }
+    prevSelectedLanguageForRefreshRef.current = selectedLanguage
+    if (isAuthenticated && currentUserId) {
+      refreshLanguageContent()
+    }
+  }, [selectedLanguage, isAuthenticated, currentUserId, queryClient])
+
+  const applyHeaderLanguageSelection = async (lang, updatedHeaderLanguages = null) => {
+    const updated = persistHeaderLanguages(updatedHeaderLanguages || headerLanguages)
+
+    setShowHeaderLanguageMenu(false)
+    setShowHeaderAddLanguages(false)
+
+    if (isAuthenticated) {
+      try {
+        const languageCodes = updated.map((name) => languageNameToCode(name))
+        await authService.updatePreferences({
+          languages_list: languageCodes,
+          content_language: languageNameToCode(lang),
+        })
+      } catch (e) {
+        console.warn('⚠️ [App] 同步 header 语言到后端失败:', e)
+      }
+    }
+
+    setSelectedLanguage(lang)
+    refreshLanguageContent()
+  }
+
+  /** 从「正在学习」列表移除语言，不删除该语言下的文章/词汇等数据 */
+  const removeHeaderLanguage = async (langToRemove) => {
+    if (headerLanguages.length <= 1) {
+      return
+    }
+
+    const updated = headerLanguages.filter((lang) => lang !== langToRemove)
+    persistHeaderLanguages(updated)
+
+    let nextSelected = selectedLanguage
+    if (selectedLanguage === langToRemove) {
+      nextSelected = updated[0]
+      setSelectedLanguage(nextSelected)
+    }
+
+    if (isAuthenticated) {
+      try {
+        await authService.updatePreferences({
+          languages_list: updated.map((name) => languageNameToCode(name)),
+          content_language: languageNameToCode(nextSelected),
+        })
+      } catch (e) {
+        console.warn('⚠️ [App] 从正在学习列表移除语言失败:', e)
+      }
+    }
+
+    refreshLanguageContent()
+  }
 
   const setSelectedLanguageWithoutArticleReset = (language) => {
     suppressNextArticleResetRef.current = true
@@ -330,6 +438,7 @@ function AppContent() {
           } catch {
             // ignore
           }
+          setHeaderLanguagesList(names)
         }
       }
       initializedUserLanguageRef.current = currentUserId
@@ -464,7 +573,7 @@ function AppContent() {
                           : colors.semantic?.text?.secondary ?? '#6b7280',
                     }}
                   >
-                    <span>{t('Insights')}</span>
+                    <span key={uiLanguage}>{t('知识点')}</span>
                     {insightsSubLabel && (
                       <span className="ml-2 text-sm font-normal text-gray-900">
                         {insightsSubLabel}
@@ -551,32 +660,57 @@ function AppContent() {
                       {/* 已添加的语言列表（可直接切换） */}
                       {headerLanguages.map((lang) => {
                         const isActiveLang = lang === selectedLanguage
+                        const canRemove = headerLanguages.length > 1
                         return (
-                          <button
+                          <div
                             key={lang}
-                            type="button"
-                            onClick={() => {
-                              setSelectedLanguage(lang)
-                              setShowHeaderLanguageMenu(false)
-                              setShowHeaderAddLanguages(false)
-                            }}
                             className={[
-                              'w-full flex items-center justify-between px-3 py-2 text-xs sm:text-sm',
-                              isActiveLang ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50',
+                              'group flex items-center w-full',
+                              isActiveLang ? 'bg-green-50' : 'hover:bg-gray-50',
                             ].join(' ')}
                           >
-                            <span>{t(lang) || lang}</span>
-                            {isActiveLang && (
-                              <svg
-                                className="w-4 h-4 text-green-600"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                            <button
+                              type="button"
+                              onClick={() => {
+                                applyHeaderLanguageSelection(lang)
+                              }}
+                              className={[
+                                'flex-1 flex items-center justify-between px-3 py-2 text-xs sm:text-sm text-left min-w-0',
+                                isActiveLang ? 'text-green-800' : 'text-gray-700',
+                              ].join(' ')}
+                            >
+                              <span className="truncate">{t(lang) || lang}</span>
+                              {isActiveLang && (
+                                <svg
+                                  className="w-4 h-4 shrink-0 text-green-600 ml-2"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                            {canRemove && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeHeaderLanguage(lang)
+                                }}
+                                className="group/remove shrink-0 mr-1 py-2 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                                aria-label={t('从正在学习中移除') || '从正在学习中移除'}
+                                title={t('从正在学习中移除') || '从正在学习中移除'}
                               >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200/90 transition-colors group-hover/remove:bg-red-500/25">
+                                  <span
+                                    className="block w-2 h-px bg-gray-400 rounded-full transition-all group-hover/remove:w-2.5 group-hover/remove:h-0.5 group-hover/remove:bg-red-500"
+                                    aria-hidden
+                                  />
+                                </span>
+                              </button>
                             )}
-                          </button>
+                          </div>
                         )
                       })}
                       <div className="my-1 border-t border-gray-100" />
@@ -604,30 +738,7 @@ function AppContent() {
                                 type="button"
                                 onClick={async () => {
                                   const updated = Array.from(new Set([...headerLanguages, lang]))
-                                  if (typeof window !== 'undefined') {
-                                    try {
-                                      const key = getHeaderLanguageStorageKey()
-                                      window.localStorage.setItem(
-                                        key,
-                                        JSON.stringify(updated),
-                                      )
-                                    } catch {
-                                      // ignore
-                                    }
-                                  }
-                                  setSelectedLanguage(lang)
-                                  setShowHeaderLanguageMenu(false)
-                                  setShowHeaderAddLanguages(false)
-
-                                  // 同步到后端偏好：将上边栏语言转换为代码列表，触发预置文章导入
-                                  try {
-                                    const languageCodes = updated.map((name) => languageNameToCode(name))
-                                    await authService.updatePreferences({
-                                      languages_list: languageCodes,
-                                    })
-                                  } catch (e) {
-                                    console.warn('⚠️ [App] 同步 header 语言到后端失败:', e)
-                                  }
+                                  await applyHeaderLanguageSelection(lang, updated)
                                 }}
                                 className="w-full px-3 py-2 text-left text-xs sm:text-sm text-gray-700 hover:bg-gray-50"
                               >
@@ -644,71 +755,34 @@ function AppContent() {
               
               {isAuthenticated ? (
                 <>
-                  {/* Debug 按钮（仅开发环境）- 已隐藏 */}
-                  {/* <UserDebugButton 
-                    userId={currentUserId} 
-                    password={currentUserPassword}
-                  /> */}
-                  
-                  {/* 用户头像 */}
+                  <CreditsIndicator
+                    tokenBalance={userInfo?.token_balance}
+                    role={userInfo?.role}
+                    onOpenUsage={() => setShowProfilePage(true)}
+                  />
                   <UserAvatar 
                     userId={currentUserId}
-                    email={currentUserEmail} // 🔧 传递 email
+                    email={currentUserEmail}
                     onLogout={handleLogout}
                     onOpenProfile={() => setShowProfilePage(true)}
                   />
                 </>
               ) : (
-                <LoginButton onClick={() => setShowLoginModal(true)} />
+                <LoginButton key={uiLanguage} onClick={() => setShowAuthModal(true)} />
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 登录模态框 */}
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onSwitchToRegister={() => {
-          setShowLoginModal(false)
-          setShowRegisterModal(true)
-        }}
-        onSwitchToForgotPassword={() => {
-          setShowLoginModal(false)
-          setShowForgotPasswordModal(true)
-        }}
+      <MagicLinkAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
       />
 
-      {/* 注册模态框 */}
-      <RegisterModal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        onSwitchToLogin={() => {
-          setShowRegisterModal(false)
-          setShowLoginModal(true)
-        }}
-        onOpenPPTerms={() => {
-          setShowRegisterModal(false)
-          setShowPPTermsPage(true)
-        }}
-        onStartOnboarding={() => {
-          setShowRegisterModal(false)
-          setIsUploadMode(false)
-          setSelectedArticleId(null)
-          setCurrentPage('onboardingLanguage')
-        }}
-      />
-
-      {/* 忘记密码模态框 */}
-      <ForgotPasswordModal
-        isOpen={showForgotPasswordModal}
-        onClose={() => setShowForgotPasswordModal(false)}
-        onSwitchToLogin={() => {
-          setShowForgotPasswordModal(false)
-          setShowLoginModal(true)
-        }}
-      />
+      {showWelcomeCredits && (
+        <WelcomeCreditsBanner onDismiss={handleDismissWelcomeCredits} />
+      )}
 
       {/* 数据迁移模态框 */}
       <DataMigrationModal
@@ -733,7 +807,7 @@ function AppContent() {
                 onNavigateToArticles={handleLandingViewAll}
                 onStartVocabReview={handleStartVocabReview}
                 onStartGrammarReview={handleStartGrammarReview}
-                onRegister={() => setShowRegisterModal(true)}
+                onContinue={() => setShowAuthModal(true)}
               />
             </div>
           )}

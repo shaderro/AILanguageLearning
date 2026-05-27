@@ -226,6 +226,7 @@ class MagicLinkVerifyResponse(BaseModel):
     session_token: str
     user_id: int
     token_type: str = "session"
+    is_new_user: bool = False
 
 
 # ==================== 路由器 ====================
@@ -421,7 +422,7 @@ async def request_magic_link(
     try:
         from backend.services.magic_link_auth import create_and_send_magic_link
 
-        create_and_send_magic_link(session, body.email)
+        result = create_and_send_magic_link(session, body.email)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="邮箱格式无效")
     except RuntimeError as e:
@@ -431,9 +432,12 @@ async def request_magic_link(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"无法发送登录邮件: {e!s}",
         )
+    retry_after = int(result.get("retry_after_seconds") or 0)
     return {
         "ok": True,
         "detail": "若该邮箱可接收邮件，您将很快收到登录链接。",
+        "retry_after_seconds": retry_after,
+        "sent": bool(result.get("sent", True)),
     }
 
 
@@ -450,14 +454,18 @@ async def verify_magic_link(
     from backend.config import AUTH_SESSION_TTL_DAYS, ENV
 
     try:
-        user, raw_session = consume_magic_link(session, body.token, AUTH_SESSION_TTL_DAYS)
+        user, raw_session, is_new_user = consume_magic_link(session, body.token, AUTH_SESSION_TTL_DAYS)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="链接无效或已使用、已过期",
         )
 
-    payload = MagicLinkVerifyResponse(session_token=raw_session, user_id=user.user_id)
+    payload = MagicLinkVerifyResponse(
+        session_token=raw_session,
+        user_id=user.user_id,
+        is_new_user=is_new_user,
+    )
     resp = JSONResponse(content=payload.model_dump())
     resp.set_cookie(
         key="auth_session",

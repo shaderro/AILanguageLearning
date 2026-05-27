@@ -1,0 +1,164 @@
+[
+  {
+    "language_code": "ar",
+    "language_name": "阿拉伯语",
+    "title": "التحول الرقمي في العالم العربي: التحديات والفرص",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "ar",
+    "language_name": "阿拉伯语",
+    "title": "الثقافة العربية والتقاليد",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "ar",
+    "language_name": "阿拉伯语",
+    "title": "الأدب العربي الحديث: بين التراث والمعاصرة",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "de",
+    "language_name": "德文",
+    "title": "Ethische Herausforderungen künstlicher Intelligenz",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "de",
+    "language_name": "德文",
+    "title": "Der kleine Prinz (Auszug)",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "de",
+    "language_name": "德文",
+    "title": "Die Berliner Mauer: Geschichte und Erinnerung",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "en",
+    "language_name": "英文",
+    "title": "Climate Policy: Balancing Economic Growth and Environmental Sustainability",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "en",
+    "language_name": "英文",
+    "title": "Climate Change Today",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "en",
+    "language_name": "英文",
+    "title": "The Rise of Streaming Culture",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "es",
+    "language_name": "西班牙语",
+    "title": "Estudios migratorios contemporáneos: perspectivas interdisciplinarias",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "es",
+    "language_name": "西班牙语",
+    "title": "La cultura de la comida en España",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "es",
+    "language_name": "西班牙语",
+    "title": "La evolución de la música latina en el siglo XXI",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "fr",
+    "language_name": "法语",
+    "title": "L'intégration européenne: défis théoriques et pratiques",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "fr",
+    "language_name": "法语",
+    "title": "La vie à Paris",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "fr",
+    "language_name": "法语",
+    "title": "Le cinéma français: entre tradition et innovation",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "ja",
+    "language_name": "日语",
+    "title": "超高齢社会の日本的課題：社会保障制度の再構築",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "ja",
+    "language_name": "日语",
+    "title": "日本の四季",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "ja",
+    "language_name": "日语",
+    "title": "アニメ文化の世界的広がり",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "ko",
+    "language_name": "韩语",
+    "title": "한국 디지털 경제의 구조적 특성과 발전 과제",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "ko",
+    "language_name": "韩语",
+    "title": "한국의 대표 음식",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "ko",
+    "language_name": "韩语",
+    "title": "K팝의 세계적 현상과 문화적 영향",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "ru",
+    "language_name": "俄语",
+    "title": "Постсоветский переход: политико-экономический анализ",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "ru",
+    "language_name": "俄语",
+    "title": "Русские традиции и праздники",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "ru",
+    "language_name": "俄语",
+    "title": "Золотой век русской литературы",
+    "difficulty": "intermediate"
+  },
+  {
+    "language_code": "zh",
+    "language_name": "中文",
+    "title": "人工智能与意识哲学：图灵测试的当代反思",
+    "difficulty": "advanced"
+  },
+  {
+    "language_code": "zh",
+    "language_name": "中文",
+    "title": "小镇的一天",
+    "difficulty": "beginner"
+  },
+  {
+    "language_code": "zh",
+    "language_name": "中文",
+    "title": "数字游民：新时代的工作与生活方式",
+    "difficulty": "intermediate"
+  }
+]

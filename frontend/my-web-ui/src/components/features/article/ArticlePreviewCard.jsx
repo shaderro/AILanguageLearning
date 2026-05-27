@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BaseCard, BaseButton, BaseSpinner } from '../../base';
 import { componentTokens } from '../../../design-tokens/design-tokens';
 import { useUIText } from '../../../i18n/useUIText';
+import { formatExamContentLabel } from '../../../utils/examContentLabels';
 
 export function ArticlePreviewCard({
   title,
@@ -14,6 +15,7 @@ export function ArticlePreviewCard({
   wordCount = 0,
   noteCount = 0,
   difficulty = null,
+  examContent = null,
   preview = '',
   processingStatus = 'completed',
   onEdit,
@@ -26,7 +28,7 @@ export function ArticlePreviewCard({
   showEditButton = true,
   showDeleteButton = true,
 }) {
-  const t = useUIText ? useUIText() : (text) => text;
+  const t = useUIText();
   const widthValue = typeof width === 'number' ? `${width}px` : width;
   const heightValue = typeof height === 'number' ? `${height}px` : height;
   const titleRef = useRef(null);
@@ -60,6 +62,7 @@ export function ArticlePreviewCard({
     },
   };
   const difficultyBadge = difficultyConfig[normalizedDifficulty] || null;
+  const examLabel = formatExamContentLabel(examContent);
 
   useEffect(() => {
     if (!isEditing || !titleInputRef.current) {
@@ -184,43 +187,52 @@ export function ArticlePreviewCard({
     >
       <div className="flex h-full flex-col space-y-1">
         <div className="relative">
-          <div
-            className="overflow-hidden"
-            onMouseEnter={() => titleOverflow && setIsTitleHover(true)}
-            onMouseLeave={() => setIsTitleHover(false)}
-          >
-            {isEditing ? (
-              <input
-                ref={titleInputRef}
-                type="text"
-                value={editingTitle}
-                onChange={(e) => onEditingTitleChange?.(e.target.value)}
-                onBlur={() => {
-                  if (!isEditingBusy) {
-                    onEditSave?.()
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    e.currentTarget.blur()
-                  } else if (e.key === 'Escape') {
-                    e.preventDefault()
-                    onEditCancel?.()
-                  }
-                }}
-                disabled={isEditingBusy}
-                className="w-full rounded-md border border-gray-300 px-2 py-1 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300"
-              />
-            ) : (
-              <h3
-                ref={titleRef}
-                className="pr-12 text-lg font-semibold text-gray-900 whitespace-nowrap"
-                style={titleAnimationStyle}
+          <div className="flex items-start gap-2 min-w-0">
+            <div
+              className="min-w-0 flex-1 overflow-hidden"
+              onMouseEnter={() => titleOverflow && setIsTitleHover(true)}
+              onMouseLeave={() => setIsTitleHover(false)}
+            >
+              {isEditing ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={editingTitle}
+                  onChange={(e) => onEditingTitleChange?.(e.target.value)}
+                  onBlur={() => {
+                    if (!isEditingBusy) {
+                      onEditSave?.()
+                    }
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      e.currentTarget.blur()
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault()
+                      onEditCancel?.()
+                    }
+                  }}
+                  disabled={isEditingBusy}
+                  className="w-full rounded-md border border-gray-300 px-2 py-1 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                />
+              ) : (
+                <h3
+                  ref={titleRef}
+                  className="pr-12 text-lg font-semibold text-gray-900 whitespace-nowrap"
+                  style={titleAnimationStyle}
+                >
+                  {title}
+                </h3>
+              )}
+            </div>
+            {!isEditing && difficultyBadge && (
+              <span
+                className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${difficultyBadge.className}`}
               >
-                {title}
-              </h3>
+                {difficultyBadge.label}
+              </span>
             )}
           </div>
           {!isEditing && canInteract && showEditButton && onEdit && (
@@ -256,9 +268,9 @@ export function ArticlePreviewCard({
         }}>
           <span>{wordCount} {t('词')}</span>
           <span>{noteCount} {t('条笔记')}</span>
-          {difficultyBadge && (
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${difficultyBadge.className}`}>
-              {difficultyBadge.label}
+          {examLabel && (
+            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+              {examLabel}
             </span>
           )}
         </div>

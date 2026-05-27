@@ -84,29 +84,155 @@ def load_preset_files(languages: List[str]) -> List[Dict[str, Any]]:
     return presets
 
 
+VALID_EXAM_SLUGS = frozenset({
+    'toefl', 'ielts', 'hsk', 'jlpt', 'topik', 'testdaf', 'goethe', 'dele', 'delf', 'torfl', 'cet',
+})
+
+EXAM_DISPLAY_LABELS: Dict[str, str] = {
+    'toefl': 'TOEFL',
+    'ielts': 'IELTS',
+    'hsk': 'HSK',
+    'jlpt': 'JLPT',
+    'topik': 'TOPIK',
+    'testdaf': 'TestDaF',
+    'goethe': 'Goethe',
+    'dele': 'DELE',
+    'delf': 'DELF',
+    'torfl': 'TORFL',
+    'cet': 'CET',
+}
+
+
+def _resolve_language_code(language_name: Optional[str]) -> Optional[str]:
+    if not language_name:
+        return None
+    reverse_lang_map = {name: code for code, name in LANG_CODE_TO_NAME.items()}
+    lang_code = reverse_lang_map.get(str(language_name).strip())
+    if not lang_code:
+        lang_code = get_language_code(language_name)
+    return lang_code or None
+
+
 @lru_cache(maxsize=1)
-def _build_preset_difficulty_map() -> Dict[Tuple[str, str], str]:
-    mapping: Dict[Tuple[str, str], str] = {}
+def _build_preset_metadata_map() -> Dict[Tuple[str, str], Dict[str, Optional[str]]]:
+    mapping: Dict[Tuple[str, str], Dict[str, Optional[str]]] = {}
     for preset in load_preset_files([]):
         lang_code = str(preset.get('language_code') or '').strip()
         title = str(preset.get('title') or '').strip()
-        difficulty = str(preset.get('difficulty') or '').strip().lower()
-        if not lang_code or not title or not difficulty:
+        if not lang_code or not title:
             continue
-        mapping[(lang_code, title)] = difficulty
+        mapping[(lang_code, title)] = {
+            'difficulty': _normalize_preset_difficulty(preset),
+            'exam_content': _normalize_exam_content(preset),
+        }
     return mapping
+
+
+@lru_cache(maxsize=1)
+def _build_preset_difficulty_map() -> Dict[Tuple[str, str], str]:
+    mapping: Dict[Tuple[str, str], str] = {}
+    for key, meta in _build_preset_metadata_map().items():
+        if meta.get('difficulty'):
+            mapping[key] = meta['difficulty']
+    return mapping
+
+
+def get_preset_metadata_for_text(
+    language_name: Optional[str], title: Optional[str]
+) -> Dict[str, Optional[str]]:
+    if not language_name or not title:
+        return {}
+    lang_code = _resolve_language_code(language_name)
+    if not lang_code:
+        return {}
+    return _build_preset_metadata_map().get((lang_code, str(title).strip()), {})
 
 
 def get_preset_difficulty_for_text(language_name: Optional[str], title: Optional[str]) -> Optional[str]:
     if not language_name or not title:
         return None
-
-    reverse_lang_map = {name: code for code, name in LANG_CODE_TO_NAME.items()}
-    lang_code = reverse_lang_map.get(str(language_name).strip())
+    lang_code = _resolve_language_code(language_name)
     if not lang_code:
         return None
+    meta = _build_preset_metadata_map().get((lang_code, str(title).strip()), {})
+    return meta.get('difficulty')
 
-    return _build_preset_difficulty_map().get((lang_code, str(title).strip()))
+
+def get_preset_exam_content_for_text(language_name: Optional[str], title: Optional[str]) -> Optional[str]:
+    meta = get_preset_metadata_for_text(language_name, title)
+    return meta.get('exam_content')
+
+
+def _normalize_preset_difficulty(preset: Dict[str, Any]) -> Optional[str]:
+    raw = str(preset.get('difficulty') or '').strip().lower()
+    return raw if raw in ('beginner', 'intermediate', 'advanced') else None
+
+
+def _normalize_exam_content(preset: Dict[str, Any]) -> Optional[str]:
+    """仅当预置 JSON 显式声明 exam_content / exam / exam_type 时返回，不做语言默认推断。"""
+    raw = preset.get('exam_content') or preset.get('exam') or preset.get('exam_type')
+    if isinstance(raw, list) and raw:
+        raw = raw[0]
+    if not raw:
+        return None
+    slug = str(raw).strip().lower().replace(' ', '').replace('-', '')
+    if slug in VALID_EXAM_SLUGS:
+        return slug
+    return None
+
+
+def _apply_preset_metadata_to_row(
+    row: OriginalText, preset: Dict[str, Any], *, force: bool = False
+) -> None:
+    difficulty = _normalize_preset_difficulty(preset)
+    exam = _normalize_exam_content(preset)
+    if difficulty and (force or not row.difficulty):
+        row.difficulty = difficulty
+    if force:
+        row.exam_content = exam
+    elif exam and not getattr(row, 'exam_content', None):
+        row.exam_content = exam
+
+
+def backfill_all_preset_metadata(session: Session, *, force: bool = True) -> Dict[str, int]:
+    """
+    将所有能匹配预置 JSON 的文章回填 difficulty / exam_content。
+    force=True 时覆盖已有值（用于一键同步预置定义）。
+    """
+    meta_map = _build_preset_metadata_map()
+    stats = {
+        'scanned': 0,
+        'matched': 0,
+        'difficulty_updated': 0,
+        'exam_updated': 0,
+        'exam_cleared': 0,
+    }
+    for row in session.query(OriginalText).all():
+        stats['scanned'] += 1
+        lang_code = _resolve_language_code(row.language)
+        title = (row.text_title or '').strip()
+        if not lang_code or not title:
+            continue
+        meta = meta_map.get((lang_code, title))
+        if not meta:
+            continue
+        stats['matched'] += 1
+        if meta.get('difficulty') and (force or not row.difficulty):
+            row.difficulty = meta['difficulty']
+            stats['difficulty_updated'] += 1
+        exam = meta.get('exam_content')
+        if force:
+            if row.exam_content and not exam:
+                row.exam_content = None
+                stats['exam_cleared'] += 1
+            elif exam and row.exam_content != exam:
+                row.exam_content = exam
+                stats['exam_updated'] += 1
+        elif exam and not getattr(row, 'exam_content', None):
+            row.exam_content = exam
+            stats['exam_updated'] += 1
+    session.flush()
+    return stats
 
 
 def seed_presets_for_user(
@@ -152,6 +278,7 @@ def seed_presets_for_user(
             .first()
         )
         if existing:
+            _apply_preset_metadata_to_row(existing, preset, force=False)
             _repair_existing_preset_text_if_needed(
                 session=session,
                 text=existing,
@@ -163,9 +290,16 @@ def seed_presets_for_user(
             text_title=title,
             user_id=user_id,
             language=language_name,
-            # 先标记为 processing，预处理完成后再更新为 completed
             processing_status='processing',
         )
+
+        existing_model = (
+            session.query(OriginalText)
+            .filter(OriginalText.text_id == text_dto.text_id)
+            .first()
+        )
+        if existing_model:
+            _apply_preset_metadata_to_row(existing_model, preset, force=False)
 
         sentence_entries: List[Dict[str, Any]] = []
         for raw in sentences:

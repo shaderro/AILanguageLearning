@@ -171,7 +171,8 @@ api.interceptors.response.use(
         const mappedTexts = innerData.map(text => ({
           ...text,
           id: text.text_id,
-          title: text.text_title
+          title: text.text_title,
+          difficulty: text.difficulty ?? text.difficulty_level ?? null,
         }));
         return {
           data: mappedTexts,
@@ -266,7 +267,8 @@ api.interceptors.response.use(
           const mappedTexts = innerData.texts.map(text => ({
             ...text,
             id: text.text_id,              // 前端期望 id
-            title: text.text_title         // 前端期望 title
+            title: text.text_title,        // 前端期望 title
+            difficulty: text.difficulty ?? text.difficulty_level ?? null,
           }));
           console.log("🔍 [DEBUG] Mapped texts:", mappedTexts[0]);
           // 返回完整的数据结构，保持前端组件期望的格式

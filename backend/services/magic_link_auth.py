@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -27,16 +27,35 @@ def _find_user_by_email_ci(session: Session, email_norm: str) -> Optional[User]:
     )
 
 
-def create_and_send_magic_link(session: Session, email: str) -> None:
+def create_and_send_magic_link(session: Session, email: str) -> Dict[str, Any]:
     """
     Replace any pending tokens for this email, insert new MagicLinkToken, send Resend email.
+    Within MAGIC_LINK_RESEND_COOLDOWN_SECONDS, skips sending another email (returns retry_after_seconds).
     Raises on email send failure (caller maps to HTTP).
     """
     from backend.services.magic_link_email import send_magic_login_email
+    from backend.config import MAGIC_LINK_RESEND_COOLDOWN_SECONDS
 
     email_norm = normalize_email(email)
     if not email_norm or "@" not in email_norm:
         raise ValueError("invalid_email")
+
+    now = datetime.now()
+    latest = (
+        session.query(MagicLinkToken)
+        .filter(
+            MagicLinkToken.email == email_norm,
+            MagicLinkToken.used_at.is_(None),
+            MagicLinkToken.expires_at > now,
+        )
+        .order_by(MagicLinkToken.created_at.desc())
+        .first()
+    )
+    if latest is not None:
+        elapsed = (now - latest.created_at).total_seconds()
+        if elapsed < MAGIC_LINK_RESEND_COOLDOWN_SECONDS:
+            retry_after = int(MAGIC_LINK_RESEND_COOLDOWN_SECONDS - elapsed)
+            return {"sent": False, "retry_after_seconds": max(1, retry_after)}
 
     session.query(MagicLinkToken).filter(
         MagicLinkToken.email == email_norm,
@@ -54,14 +73,15 @@ def create_and_send_magic_link(session: Session, email: str) -> None:
     session.flush()
 
     send_magic_login_email(to_email=email_norm, raw_magic_token=raw)
+    return {"sent": True, "retry_after_seconds": MAGIC_LINK_RESEND_COOLDOWN_SECONDS}
 
 
 def consume_magic_link(
     session: Session, raw_magic_token: str, session_ttl_days: int
-) -> Tuple[User, str]:
+) -> Tuple[User, str, bool]:
     """
     Validate one-time token, mark used, find-or-create User, create AuthSession.
-    Returns (user, raw_session_token for Set-Cookie / Authorization).
+    Returns (user, raw_session_token, is_new_user).
     """
     if not raw_magic_token or not raw_magic_token.strip():
         raise ValueError("missing_token")
@@ -85,10 +105,13 @@ def consume_magic_link(
 
     email_norm = m.email
     user = _find_user_by_email_ci(session, email_norm)
+    is_new_user = False
     if user is None:
         import secrets as sec
 
         from backend.services.signup_token_grant import grant_new_user_signup_tokens
+
+        is_new_user = True
 
         user = User(
             password_hash=hash_password(sec.token_urlsafe(32)),
@@ -107,4 +130,4 @@ def consume_magic_link(
     session.add(sess)
     session.flush()
 
-    return user, raw_session
+    return user, raw_session, is_new_user

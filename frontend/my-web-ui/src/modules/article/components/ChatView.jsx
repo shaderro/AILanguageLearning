@@ -2293,7 +2293,7 @@ function ChatView({
     return dateObj.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   }
 
-  // 有引用时：点击侧栏空白、消息区空白、或文本输入框（准备输入）时取消文章选择与引用；引用条、建议按钮、消息气泡等不触发
+  // 有引用时：点击侧栏空白或消息区空白可取消引用；输入框、建议问题、引用条等保持选择
   const handleChatShellDismissCapture = useCallback((e) => {
     if (!quotedText || !onClearQuote) return
     const target = e.target
@@ -2301,11 +2301,14 @@ function ChatView({
 
     const exemptSelector = [
       '[data-chat-message-bubble]',
+      '[data-chat-input]',
+      '[data-keep-quote]',
       'button',
       'textarea',
       'a',
       '[role="button"]',
-      '[data-keep-quote]',
+      'input[type="text"]',
+      'input[type="search"]',
       'input[type="checkbox"]',
       'input[type="radio"]',
       'select',
@@ -2372,7 +2375,7 @@ function ChatView({
         )}
       </div>
 
-      {/* 正文区：空白处与输入框点击可取消引用（capture 在子元素之前） */}
+      {/* 正文区：空白处点击可取消引用（capture 在子元素之前） */}
       <div
         className="flex-1 min-h-0 flex flex-col overflow-hidden"
         onMouseDownCapture={handleChatShellDismissCapture}
@@ -2509,21 +2512,22 @@ function ChatView({
       />
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0">
+      <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg flex-shrink-0" data-keep-quote>
         {isLoginRequired && !isProcessing && (
           <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
             {tUI('请先登录后使用 AI 聊天')}
           </div>
         )}
-        {/* 🔧 Token不足提示 */}
+        {/* Credits insufficient */}
         {tokenInsufficient && !isProcessing && !isLoginRequired && (
           <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-            {t('积分不足')}
+            {tUI('Insufficient credits')}
           </div>
         )}
         <div className="flex space-x-2">
           <input
             type="text"
+            data-chat-input
             value={inputText}
             onChange={(e) => setInputText(e.target.value.slice(0, MAX_QUESTION_LENGTH))}
             onKeyPress={handleKeyPress}
@@ -2536,7 +2540,7 @@ function ChatView({
                   : isLoginRequired
                     ? tUI("请先登录后使用 AI 聊天")
                   : tokenInsufficient 
-                    ? t("积分不足，无法使用AI聊天功能")
+                    ? tUI('Insufficient credits, AI chat is unavailable')
                     : (!hasSelectedToken && !hasSelectedSentence) 
                       ? t("请先选择文章中的词汇或句子")
                       : (quotedText 
@@ -2567,7 +2571,7 @@ function ChatView({
               isLoginRequired
                 ? tUI("请先登录后使用 AI 聊天")
                 : tokenInsufficient 
-                ? t("积分不足")
+                ? tUI('Insufficient credits')
                 : (!hasSelectedToken && !hasSelectedSentence) 
                   ? t("请先选择文章中的词汇或句子")
                   : t("发送消息")

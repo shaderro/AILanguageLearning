@@ -9,7 +9,7 @@ import copy
 import re
 import requests
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from threading import Lock
 
 # 首先设置路径
@@ -206,7 +206,7 @@ def _get_user_hourly_token_usage(session, user_id: int, window_minutes: int = 60
     from sqlalchemy import func
     from database_system.business_logic.models import TokenLog
 
-    window_start = datetime.utcnow() - timedelta(minutes=window_minutes)
+    window_start = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
     total_tokens = (
         session.query(func.sum(TokenLog.total_tokens))
         .filter(
@@ -682,6 +682,14 @@ try:
     print("[OK] 注册文章API路由: /api/v2/texts")
 except ImportError as e:
     print(f"Warning: Could not import text_routes: {e}")
+
+# 注册轻量翻译代理（hover / 整句翻译，避免浏览器直连第三方 CORS/超时）
+try:
+    from backend.api.translate_routes import router as translate_router
+    app.include_router(translate_router)
+    print("[OK] 注册翻译API路由: /api/v2/translate")
+except ImportError as e:
+    print(f"Warning: Could not import translate_routes: {e}")
 
 # 注册词汇API路由
 try:
@@ -1555,36 +1563,21 @@ def _sync_to_database(user_id: int = None, session_state_instance: SessionState 
 
 @app.post("/api/chat")
 async def chat_with_assistant(
-    payload: dict, 
-    background_tasks: BackgroundTasks, 
-    authorization: Optional[str] = Header(None)
+    payload: dict,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
 ):
     """聊天功能（完整 MainAssistant 集成）"""
     import traceback
-    user_id = None
+    user_id = current_user.user_id
     chat_slot_acquired = False
     release_chat_slot_in_endpoint = True
     try:
         import time
         request_id = int(time.time() * 1000) % 10000
         # 🔧 记录本轮请求的开始时间（用于后续汇总 token 使用）
-        request_start_time = datetime.utcnow()
-        
-        # 开放内测：未登录用户禁止使用 AI Chat
-        if not authorization or not authorization.startswith("Bearer "):
-            return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
-
-        try:
-            token = authorization.replace("Bearer ", "")
-            from backend.utils.auth import decode_access_token
-            payload_data = decode_access_token(token)
-            if not payload_data or "sub" not in payload_data:
-                return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
-            user_id = int(payload_data["sub"])
-            _main_assistant_flow_log(user_id, request_id, f"✅ [Chat] 使用认证用户: {user_id}")
-        except Exception as e:
-            _main_assistant_flow_log(None, request_id, f"⚠️ [Chat] Token 解析失败: {e}")
-            return _chat_error_response(401, "auth_required", "请先登录后使用 AI chat")
+        request_start_time = datetime.now(timezone.utc)
+        _main_assistant_flow_log(user_id, request_id, f"✅ [Chat] 使用认证用户: {user_id}")
         
         # 🔧 从 payload 获取 UI 语言（用于控制 AI 输出语言）
         raw_ui_language = payload.get('ui_language', '中文')
@@ -1992,7 +1985,7 @@ async def chat_with_assistant(
                     # 使用一个时间窗口（请求开始时间往前推3秒，确保包含主回答的 token 记录）
                     # 因为主回答的 token 记录可能在后台任务开始之前就已经写入
                     time_window_start = request_start_time - timedelta(seconds=3)
-                    time_window_end = datetime.utcnow() + timedelta(seconds=1)  # 加1秒确保包含刚刚写入的记录
+                    time_window_end = datetime.now(timezone.utc) + timedelta(seconds=1)  # 加1秒确保包含刚刚写入的记录
                     
                     # 1. 获取总体统计
                     token_summary = (

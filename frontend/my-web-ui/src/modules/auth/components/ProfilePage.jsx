@@ -43,8 +43,9 @@ const profileTexts = {
     notLoggedIn: '未登录',
     fetchError: '获取用户信息失败',
     changePasswordAlert: '修改密码功能待实现',
-    tokensManagement: 'Token 管理',
-    currentPoints: '当前积分',
+    tokensManagement: 'Usage',
+    currentPoints: 'Credits remaining',
+    creditsLabel: 'credits',
     inviteCode: '邀请码',
     enterInviteCode: '请输入邀请码',
     internalTestingOnly: '(仅内部测试用)',
@@ -87,8 +88,9 @@ const profileTexts = {
     notLoggedIn: 'Not signed in',
     fetchError: 'Failed to load profile',
     changePasswordAlert: 'Password change feature is under construction',
-    tokensManagement: 'Tokens Management',
-    currentPoints: 'Current Points',
+    tokensManagement: 'Usage',
+    currentPoints: 'Credits remaining',
+    creditsLabel: 'credits',
     inviteCode: 'Invite Code',
     enterInviteCode: 'Enter invite code',
     internalTestingOnly: '(Internal testing only)',
@@ -100,7 +102,7 @@ const profileTexts = {
   }
 }
 
-import { convertTokensToPoints } from '../../../utils/tokenUtils'
+import { formatCredits } from '../../../utils/creditsUtils'
 
 // 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
 const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
@@ -111,7 +113,7 @@ const getLanguageStorageKey = (userId) => {
 }
 
 const ProfilePage = ({ onClose, onLogout }) => {
-  const { userId, email, token } = useUser() // 🔧 添加 email
+  const { userId, email, token, refreshUserInfo } = useUser()
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
   const { uiLanguage, setUiLanguage } = useUiLanguage()
   const [userInfo, setUserInfo] = useState(null)
@@ -253,6 +255,7 @@ const ProfilePage = ({ onClose, onLogout }) => {
         // 刷新用户信息以更新 token 余额
         const updatedInfo = await authService.getCurrentUser(token)
         setUserInfo(updatedInfo)
+        refreshUserInfo?.()
       } else {
         setRedeemMessage(t.redeemError + ': ' + (result.message || t.invalidCode))
       }
@@ -496,20 +499,25 @@ const ProfilePage = ({ onClose, onLogout }) => {
             </div>
           </div>
 
-          {/* Token 管理 */}
+          {/* Usage */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.tokensManagement}</h2>
             <div className="space-y-4">
-              {/* 当前积分 */}
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <div>
                   <label className="text-sm font-medium text-gray-500">{t.currentPoints}</label>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {convertTokensToPoints(userInfo?.token_balance)}
+                  <p className="text-2xl font-semibold tabular-nums text-gray-900 mt-1">
+                    {formatCredits(userInfo?.token_balance)}
+                    <span className="ml-1.5 text-sm font-normal text-gray-400">{t.creditsLabel}</span>
                   </p>
                 </div>
                 <span className="text-xs text-gray-400">{t.displayOnly}</span>
               </div>
+              <p className="text-sm text-gray-500">
+                {uiLanguage === 'en'
+                  ? 'Used for AI explanations and analysis.'
+                  : '用于 AI 解释与分析。'}
+              </p>
 
               {/* 邀请码兑换 */}
               <div className="pt-4">

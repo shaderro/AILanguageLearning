@@ -12,6 +12,7 @@ import {
   hydrateArticlePreviewCache,
   fetchArticlePreview,
 } from '../../utils/articlePreviewCache'
+import { resolveArticleDifficulty } from '../../utils/articleMetadata'
 
 const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
   const { userId, isGuest } = useUser()
@@ -121,7 +122,8 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       s.snippet ||
       s.first_sentence ||
       fallbackPreview
-    const difficulty = s.difficulty || null
+    const difficulty = resolveArticleDifficulty(s)
+    const examContent = s.exam_content || s.examContent || null
     
     return {
       id: textId,
@@ -131,6 +133,7 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
         : `Sentences: ${totalSentences} • Tokens: ${totalTokens}`,
       language: language, // 从后端获取语言字段，null表示未设置
       difficulty,
+      examContent,
       wordCount: totalTokens,
       noteCount,
       preview: previewText,
@@ -408,12 +411,6 @@ const ArticleSelection = ({ onArticleSelect, onUploadNew }) => {
       {/* Main Content */}
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-4">
-              <span className="block text-primary-600 font-medium">
-                {t('当前筛选：')}{t(selectedLanguage) || selectedLanguage}
-              </span>
-            </div>
-
             {/* Loading / Error */}
             {isLoading && (
               <div className="text-center text-gray-600 py-8">{t('Loading articles...')}</div>

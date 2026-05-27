@@ -238,7 +238,7 @@ export default function QuickTranslationTooltip({
               ? 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent hover:border-gray-300'
           }`}
-          title={isTokenInsufficient ? "积分不足" : "AI详细解释"}
+          title={isTokenInsufficient ? t('Insufficient credits') : 'AI详细解释'}
         >
           AI详细解释
         </button>

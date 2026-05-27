@@ -173,6 +173,7 @@ const SuggestedQuestions = ({
     <div 
       data-keep-quote
       className="w-full bg-gray-50 border-t border-gray-200 px-4 py-3 flex-shrink-0"
+      data-keep-quote
       onClick={handleContainerClick}
     >
       <div className="text-sm text-gray-600 mb-2">

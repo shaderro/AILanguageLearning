@@ -22,7 +22,8 @@ Each JSON file should have shape:
   "preset_id": "de_beginner_little_prince",
   "language_code": "de",
   "title": "Der kleine Prinz (Auszug)",
-  "difficulty": "beginner",        # optional: 'beginner'|'intermediate'|'advanced'
+  "difficulty": "beginner",        # optional: beginner|intermediate|advanced
+  "exam_content": "toefl",         # optional; omit = no exam tag (manual / DB only)
   "sentences": [
     "First sentence.",
     "Second sentence."

@@ -63,6 +63,7 @@ RESEND_API_KEY = _normalize_resend_api_key(os.getenv("RESEND_API_KEY"))
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "LinkText <onboarding@resend.dev>")
 MAGIC_LINK_TTL_MINUTES = int(os.getenv("MAGIC_LINK_TTL_MINUTES", "30"))
+MAGIC_LINK_RESEND_COOLDOWN_SECONDS = int(os.getenv("MAGIC_LINK_RESEND_COOLDOWN_SECONDS", "60"))
 AUTH_SESSION_TTL_DAYS = int(os.getenv("AUTH_SESSION_TTL_DAYS", "30"))
 
 # 新用户注册/首次邮箱登录赠送积分（1 积分 = 10_000 token，与邀请码展示一致）

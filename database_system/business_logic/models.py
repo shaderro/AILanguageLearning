@@ -136,6 +136,8 @@ class OriginalText(Base):
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False, index=True)
     text_title = Column(String(500), nullable=False)
     language = Column(String(50), nullable=True)  # 语言：中文、英文、德文
+    difficulty = Column(String(32), nullable=True)  # 文章难度：beginner / intermediate / advanced
+    exam_content = Column(String(64), nullable=True)  # 考试/测评标签：toefl, hsk, jlpt 等
     processing_status = Column(String(50), default='completed', nullable=False)  # 处理状态：processing（处理中）、completed（已完成）、failed（失败）
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)

@@ -46,6 +46,7 @@ const ArticleList = ({
           wordCount={article.wordCount}
           noteCount={article.noteCount}
           difficulty={article.difficulty}
+          examContent={article.examContent}
           preview={article.preview}
           processingStatus={article.processingStatus}
           width="100%"

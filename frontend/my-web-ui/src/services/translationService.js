@@ -273,7 +273,7 @@ export const queryEnglishDictionaryAPI = async (word) => {
     const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase().trim())}`
     
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 12000)
     
     try {
       const response = await fetch(apiUrl, { signal: controller.signal })
@@ -357,7 +357,7 @@ export const queryGermanDictionaryAPI = async (word, targetLang = 'en') => {
       internalLog('info', `尝试变体: "${variant}" (extracts方式)`, { variant, url: apiUrlExtracts })
     
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      const timeoutId = setTimeout(() => controller.abort(), 12000)
       
       try {
         internalLog('info', `发送Wiktionary API请求`, { variant, url: apiUrlExtracts })
@@ -664,6 +664,16 @@ const normalizeLangCode = (langCode) => {
   return LANGUAGE_CODE_MAP[langCode] || langCode
 }
 
+const getTranslateApiBase = () => import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+
+const isInvalidTranslationResponse = (text) => {
+  if (!text || typeof text !== 'string') return true
+  const s = text.trim()
+  if (!s) return true
+  if (/MYMEMORY\s+WARNING|NEXT\s+AVAILABLE\s+IN|USAGELIMITS/i.test(s)) return true
+  return false
+}
+
 /**
  * 解码 HTML 实体（例如 MyMemory 返回的 `&#x0D;`）
  */
@@ -809,6 +819,47 @@ const isSuspiciousWordTranslation = (word, translation, sourceLang, targetLang) 
 }
 
 /**
+ * 通过后端代理翻译（避免浏览器 CORS / 短超时导致整句翻译失败）
+ */
+const queryBackendTranslateAPI = async (word, sourceLang, targetLang) => {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
+    const response = await fetch(`${getTranslateApiBase()}/api/v2/translate/quick`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        text: word,
+        source_lang: sourceLang,
+        target_lang: targetLang,
+      }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json()
+    const translation = payload?.data?.translation ?? payload?.translation
+    if (!translation || typeof translation !== 'string') {
+      return null
+    }
+    const sanitized = sanitizeTranslationText(translation)
+    if (!sanitized || isInvalidTranslationResponse(sanitized)) {
+      return null
+    }
+    return sanitized
+  } catch (error) {
+    console.warn('[TranslationService] Backend translate proxy failed:', error.message)
+    return null
+  }
+}
+
+/**
  * 使用MyMemory API查询翻译
  * @param {string} word - 单词
  * @param {string} sourceLang - 源语言代码
@@ -848,7 +899,7 @@ const queryMyMemoryAPI = async (word, sourceLang, targetLang) => {
     
     // 添加超时控制（5秒）
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 12000)
     
     try {
       const response = await fetch(apiUrl, { signal: controller.signal })
@@ -893,6 +944,10 @@ const queryMyMemoryAPI = async (word, sourceLang, targetLang) => {
 
         translationCandidates.sort((a, b) => b.score - a.score)
         let translation = translationCandidates[0]?.text || null
+
+        if (translation && isInvalidTranslationResponse(translation)) {
+          return null
+        }
         
         // 如果翻译结果和原文相同，可能不是有效翻译
         if (translation && translation.toLowerCase() === originalLower) {
@@ -967,7 +1022,7 @@ const queryLibreTranslateAPI = async (word, sourceLang, targetLang) => {
         
         // 添加超时控制（5秒）
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000)
+        const timeoutId = setTimeout(() => controller.abort(), 12000)
         
         try {
           const response = await fetch(apiUrl, {
@@ -1073,6 +1128,7 @@ export const defaultTranslationAPIs = [
 ]
 
 // 为API函数添加显示名称（用于日志）
+queryBackendTranslateAPI.displayName = 'BackendProxy'
 queryMyMemoryAPI.displayName = 'MyMemory'
 queryLibreTranslateAPI.displayName = 'LibreTranslate'
 
@@ -1187,14 +1243,18 @@ export const getQuickTranslation = async (
   // 如果为 null 或 undefined 则使用默认API列表
   let apiProvider = options.apiProvider
   if (!apiProvider) {
-    // 🔧 默认情况下：单词优先 LibreTranslate（对短词更稳），句子优先 MyMemory（速度/覆盖更好）
-    apiProvider = isWord ? [queryLibreTranslateAPI, queryMyMemoryAPI] : [queryMyMemoryAPI, queryLibreTranslateAPI]
+    // 🔧 默认：优先后端代理（无 CORS），再回退公共翻译 API
+    apiProvider = isWord
+      ? [queryBackendTranslateAPI, queryLibreTranslateAPI, queryMyMemoryAPI]
+      : [queryBackendTranslateAPI, queryMyMemoryAPI, queryLibreTranslateAPI]
   } else if (typeof apiProvider === 'function') {
     // 单个API函数，转换为数组
     apiProvider = [apiProvider]
   } else if (!Array.isArray(apiProvider)) {
     // 无效类型，使用默认
-    apiProvider = isWord ? [queryLibreTranslateAPI, queryMyMemoryAPI] : [queryMyMemoryAPI, queryLibreTranslateAPI]
+    apiProvider = isWord
+      ? [queryBackendTranslateAPI, queryLibreTranslateAPI, queryMyMemoryAPI]
+      : [queryBackendTranslateAPI, queryMyMemoryAPI, queryLibreTranslateAPI]
   }
 
   // 记录开始查询

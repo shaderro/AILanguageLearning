@@ -357,6 +357,17 @@
   "单词": "Words",
   "未知规则": "Unknown rule",
   "Insights": "Insights",
+  "知识点": "Insights",
+  "Get Started": "Get Started",
+  "credits": "credits",
+  "Credits remaining": "Credits remaining",
+  "Used for AI explanations and analysis.": "Used for AI explanations and analysis.",
+  "Billing — coming soon": "Billing — coming soon",
+  "View usage details": "View usage details",
+  "Running low": "Running low",
+  "You received {n} free credits": "You received {n} free credits",
+  "Insufficient credits": "Insufficient credits",
+  "Insufficient credits, AI chat is unavailable": "Insufficient credits, AI chat is unavailable",
   "来源": "Source",
   "未知": "unknown",
   "取消收藏": "Remove from favorites",
@@ -369,6 +380,13 @@
   "原句": "Original sentence:",
   "相关词汇位置": "Token positions",
   "词汇ID": "Vocab ID",
-  "规则ID": "Rule ID"
+  "规则ID": "Rule ID",
+  "邮箱登录": "Email sign-in",
+  "正在验证登录链接…": "Verifying your sign-in link…",
+  "链接无效：缺少 token 参数": "Invalid link: missing token.",
+  "登录成功，正在跳转…": "Signed in successfully. Redirecting…",
+  "链接无效或已过期，请重新获取登录邮件": "This link is invalid or has expired. Please request a new sign-in email.",
+  "链接无效或已使用、已过期": "This link is invalid, already used, or has expired.",
+  "返回首页": "Back to home"
 }
 

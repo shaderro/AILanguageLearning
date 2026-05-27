@@ -12,6 +12,14 @@ import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { apiService } from '../../../services/api'
 
+const resolveSourceLangCode = (sentence) => {
+  const raw = sentence?.language_code ?? sentence?.language ?? null
+  if (!raw) return null
+  const s = String(raw).trim()
+  if (/^[a-z]{2}$/i.test(s)) return s.toLowerCase()
+  return languageNameToCode(s) || null
+}
+
 /**
  * SentenceContainer - Handles sentence-level interactions and renders tokens
  */
@@ -231,7 +239,7 @@ function SentenceContainer({
   
   // 获取源语言和目标语言
   const sourceLang = useMemo(() => {
-    return sentence?.language_code || 'de' // 默认德语
+    return resolveSourceLangCode(sentence) || 'de'
   }, [sentence])
   
   const targetLang = useMemo(() => {

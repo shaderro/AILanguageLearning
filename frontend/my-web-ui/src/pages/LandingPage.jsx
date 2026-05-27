@@ -13,6 +13,7 @@ import {
   hydrateArticlePreviewCache,
   fetchArticlePreview,
 } from '../utils/articlePreviewCache'
+import { resolveArticleDifficulty } from '../utils/articleMetadata'
 
 const extractArray = (response) => {
   if (!response) {
@@ -37,7 +38,8 @@ const normalizeArticle = (article, fallbackPreview) => {
   const textId = article.text_id || article.article_id || article.id
   const textTitle = article.text_title || article.title || `Article ${textId}`
   const wordCount = article.total_tokens || article.wordCount || article.token_count || 0
-  const difficulty = article.difficulty || null
+  const difficulty = resolveArticleDifficulty(article)
+  const examContent = article.exam_content || article.examContent || null
   const noteCount =
     article.note_count ??
     article.notes_count ??
@@ -59,6 +61,7 @@ const normalizeArticle = (article, fallbackPreview) => {
     title: textTitle,
     wordCount,
     difficulty,
+    examContent,
     noteCount,
     preview,
   }
@@ -69,7 +72,7 @@ const LandingPage = ({
   onNavigateToArticles,
   onStartVocabReview,
   onStartGrammarReview,
-  onRegister,
+  onContinue,
 }) => {
   const { userId, isGuest, isAuthenticated } = useUser()
   const { selectedLanguage } = useLanguage()
@@ -80,13 +83,18 @@ const LandingPage = ({
 
   const effectiveUserId = isAuthenticated ? userId : null
 
-  const { data: articleResponse } = useArticles(effectiveUserId, selectedLanguage, isGuest)
+  const { data: articleResponse, refetch: refetchArticles } = useArticles(effectiveUserId, selectedLanguage, isGuest)
   const { data: vocabResponse } = useVocabList(effectiveUserId, isGuest, selectedLanguage)
   const { data: grammarResponse } = useGrammarList(effectiveUserId, isGuest, selectedLanguage)
 
   const fallbackPreview = t('暂无摘要')
   
   ensureArticlePreviewCacheLoaded()
+
+  useEffect(() => {
+    if (!effectiveUserId || !selectedLanguage) return
+    refetchArticles()
+  }, [effectiveUserId, selectedLanguage, refetchArticles])
 
   const articles = useMemo(() => {
     if (!isAuthenticated) {
@@ -101,7 +109,7 @@ const LandingPage = ({
         preview: cachedPreview || normalized.preview,
       }
     })
-  }, [articleResponse, isAuthenticated, fallbackPreview])
+  }, [articleResponse, isAuthenticated, fallbackPreview, selectedLanguage])
 
   const [previewOverrides, setPreviewOverrides] = useState(() => {
     const initial = {}
@@ -557,10 +565,10 @@ const LandingPage = ({
                   )}
                 </p>
 
-                {onRegister && (
+                {onContinue && !isAuthenticated && (
                   <div className="mt-7 flex flex-col sm:flex-row sm:items-center gap-4">
                     <button
-                      onClick={onRegister}
+                      onClick={onContinue}
                       className="px-9 py-3.5 text-base font-semibold text-white"
                       style={{
                         borderRadius: radius.lg,
@@ -579,13 +587,13 @@ const LandingPage = ({
                         e.currentTarget.style.boxShadow = shadow.sm
                       }}
                     >
-                      {t('立即注册')}
+                      {t('Get Started')}
                     </button>
                     <button
                       onClick={() => setUiLanguage(uiLanguage === 'zh' ? 'en' : 'zh')}
                       className="text-sm text-gray-500 hover:text-gray-700 transition-colors underline bg-transparent border-none cursor-pointer"
                     >
-                      {t('中文')} / {t('英文')}
+                      中文/English
                     </button>
                   </div>
                 )}
@@ -692,6 +700,7 @@ const LandingPage = ({
                     wordCount={article.wordCount}
                     noteCount={article.noteCount}
                     difficulty={article.difficulty}
+                    examContent={article.examContent}
                     preview={article.preview}
                     processingStatus="completed"
                     onRead={() => onArticleSelect?.(article.id)}

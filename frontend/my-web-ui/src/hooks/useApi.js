@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api.js';
 import guestDataManager from '../utils/guestDataManager.js';
+import { enrichArticleListItem } from '../utils/articleMetadata.js';
 
 const normalizeLanguageKey = (language) => {
   if (!language) return null;
@@ -84,8 +85,38 @@ const filterResponseDataByLanguage = (response, selectedLanguage, label) => {
       count: filtered.length,
     };
   }
+  if (response && Array.isArray(response.texts)) {
+    const filtered = filterListByLanguage(response.texts, selectedLanguage, label);
+    return {
+      ...response,
+      texts: filtered,
+      count: filtered.length,
+    };
+  }
   return response;
 };
+
+const enrichArticlesResponse = (response) => {
+  if (!response) return response;
+  if (Array.isArray(response)) {
+    return response.map(enrichArticleListItem);
+  }
+  if (response && Array.isArray(response.data)) {
+    return {
+      ...response,
+      data: response.data.map(enrichArticleListItem),
+    };
+  }
+  if (response && Array.isArray(response.texts)) {
+    return {
+      ...response,
+      texts: response.texts.map(enrichArticleListItem),
+    };
+  }
+  return response;
+};
+
+export { matchesSelectedLanguage, filterListByLanguage };
 
 // React Query 配置 - 添加 userId 到 queryKeys
 export const queryKeys = {
@@ -259,13 +290,16 @@ export const useArticles = (userId = null, language = null, isGuest = false) => 
       let articles = guestDataManager.getArticles(userId)
       // 在本地过滤语言
       if (language && language !== 'all') {
-        articles = articles.filter(a => a.language === language)
+        articles = articles.filter(a => matchesSelectedLanguage(a.language, language))
       }
       console.log('👤 [useArticles] 游客模式，加载本地数据:', articles.length, '条', language ? `(语言: ${language})` : '')
-      return { data: articles }
-    } : () => apiService.getArticlesList(language),
+      return { data: articles.map(enrichArticleListItem) }
+    } : async () => {
+      const response = await apiService.getArticlesList(language)
+      return enrichArticlesResponse(filterResponseDataByLanguage(response, language, 'articles'))
+    },
     enabled: userId !== null,  // 游客和登录用户都可以查询（userId 不为 null）
-    staleTime: 5 * 60 * 1000, // 5分钟
+    staleTime: 60 * 1000, // 1分钟（语言切换后更快拿到新数据）
     retry: 2, // 失败时重试2次
     retryDelay: 1000, // 重试延迟1秒
   });
