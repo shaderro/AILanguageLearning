@@ -3,9 +3,9 @@
  * 处理所有认证相关的 API 调用
  */
 import axios from 'axios'
+import { resolveApiBaseUrl } from '../../../utils/apiBaseUrl.js'
 
-// 从环境变量获取 API 基础 URL，默认使用 localhost:8000（本地开发）
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = resolveApiBaseUrl()
 
 const authApi = axios.create({
   baseURL: API_BASE_URL,

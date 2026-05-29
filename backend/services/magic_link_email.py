@@ -41,4 +41,10 @@ def send_magic_login_email(*, to_email: str, raw_magic_token: str) -> None:
                 "Resend API key 无效：请检查项目根目录 .env 中的 RESEND_API_KEY，"
                 "或在 Resend 控制台重新生成；若 Windows 环境变量里也有 RESEND_API_KEY，请删除错误的那个。"
             ) from e
+        if "testing emails" in err or "verify a domain" in err or "@resend.dev" in err:
+            raise RuntimeError(
+                f"发件地址仍为 Resend 测试域（当前 from={RESEND_FROM_EMAIL!r}）。"
+                "请在 Render Environment 设置 RESEND_FROM_EMAIL=auth@linktext.app 并重新部署；"
+                "并确认 Resend 中 linktext.app 为 Verified。"
+            ) from e
         raise

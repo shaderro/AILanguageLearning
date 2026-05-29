@@ -3,6 +3,8 @@
  * 提供 hover 词典翻译功能（非 AI），作为 select → ask AI 之前的轻量翻译层
  */
 
+import { resolveApiBaseUrl } from '../utils/apiBaseUrl.js'
+
 // 🔧 全局debug logger引用（用于内部函数输出日志到debug panel）
 let globalDebugLogger = null
 
@@ -664,7 +666,7 @@ const normalizeLangCode = (langCode) => {
   return LANGUAGE_CODE_MAP[langCode] || langCode
 }
 
-const getTranslateApiBase = () => import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+const getTranslateApiBase = () => resolveApiBaseUrl()
 
 const isInvalidTranslationResponse = (text) => {
   if (!text || typeof text !== 'string') return true

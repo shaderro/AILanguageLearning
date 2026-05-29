@@ -523,7 +523,10 @@ async def startup_event():
     """应用启动时自动初始化数据库表结构"""
     try:
         from database_system.business_logic.models import Base
-        from backend.config import ENV
+        from backend.config import ENV, FRONTEND_ORIGIN, RESEND_FROM_EMAIL
+
+        print(f"[OK] Magic link FRONTEND_ORIGIN={FRONTEND_ORIGIN}")
+        print(f"[OK] Magic link RESEND_FROM_EMAIL={RESEND_FROM_EMAIL}")
         
         print("\n" + "="*60)
         print("🔧 初始化数据库表结构...")
@@ -635,25 +638,31 @@ try:
     from backend.config import CORS_ALLOWED_ORIGINS as _CORS_ALLOWED_ORIGINS
 except ImportError:
     _CORS_ALLOWED_ORIGINS = [
+        "https://linktext.app",
+        "https://www.linktext.app",
+        "https://linktext-language.vercel.app",
         "http://127.0.0.1:5173",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://localhost:3000",
-        "https://linktext-language.vercel.app",
     ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://[a-z0-9][a-z0-9-]*(\.[a-z0-9][a-z0-9-]*)*\.vercel\.app",
+    # Vercel 预览 + linktext.app 子域（若将来使用 send.linktext.app 等）
+    allow_origin_regex=(
+        r"https://([a-z0-9-]+\.)*vercel\.app|"
+        r"https://([a-z0-9-]+\.)*linktext\.app"
+    ),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
 print(
-    f"[OK] CORS allow_origins={len(_CORS_ALLOWED_ORIGINS)} 个 + *.vercel.app 正则；"
-    f"示例: {_CORS_ALLOWED_ORIGINS[:3]}"
+    f"[OK] CORS allow_origins={len(_CORS_ALLOWED_ORIGINS)} 个 + vercel/linktext 正则；"
+    f"示例: {_CORS_ALLOWED_ORIGINS[:4]}"
 )
 
 # 注册新的标注API路由

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { resolveApiBaseUrl } from "../utils/apiBaseUrl.js";
 
 // 环境切换优先级：
 // 生产环境：强制使用 db（忽略 URL 参数和 localStorage）
@@ -38,9 +39,8 @@ function normalizeFormText(value) {
   // FormData 在传输文本字段时会把换行统一为 CRLF，先在前端归一化，避免长度判断偏差
   return String(value ?? "").replace(/\r?\n/g, "\r\n");
 }
-// 从环境变量获取 API 基础 URL，默认使用 127.0.0.1:8000（本地开发）
-// Windows 上 `localhost` 可能优先解析到 IPv6（::1），导致命中错误的监听服务/返回 503。
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+// 从环境变量或生产域名解析 API 根地址（本地默认 127.0.0.1:8000）
+const BASE_URL = resolveApiBaseUrl();
 
 // 创建 axios 实例
 const api = axios.create({
