@@ -453,12 +453,19 @@ async def verify_magic_link(
     from backend.services.magic_link_auth import consume_magic_link
     from backend.config import AUTH_SESSION_TTL_DAYS, ENV
 
+    _VERIFY_ERRORS = {
+        "missing_token": "链接无效：缺少 token",
+        "link_invalid": "链接无效，请重新获取登录邮件",
+        "link_expired": "链接已过期，请重新获取登录邮件",
+        "link_used": "链接已使用，请重新获取登录邮件",
+    }
     try:
         user, raw_session, is_new_user = consume_magic_link(session, body.token, AUTH_SESSION_TTL_DAYS)
-    except ValueError:
+    except ValueError as e:
+        code = str(e.args[0]) if e.args else "link_invalid"
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="链接无效或已使用、已过期",
+            detail=_VERIFY_ERRORS.get(code, "链接无效或已使用、已过期"),
         )
 
     payload = MagicLinkVerifyResponse(

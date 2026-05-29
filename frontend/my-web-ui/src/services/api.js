@@ -57,13 +57,13 @@ api.interceptors.request.use(
   (config) => {
     console.log("🌐 API Request:", config.method?.toUpperCase(), config.url);
     
-    // 🔧 从 localStorage 获取 token 并添加到请求头
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("🔑 Added Authorization header with token:", token.substring(0, 20) + "...");
-    } else {
-      console.warn("⚠️ No access token found in localStorage - API request may fail with 401");
+    // Bearer token（localStorage）；无 token 时仍带 Cookie（magic-link 会话）
+    const existingAuth = config.headers?.Authorization || config.headers?.authorization
+    if (!existingAuth) {
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
     
     // 🔧 如果是 FormData，移除 Content-Type 让浏览器自动设置（包含 boundary）

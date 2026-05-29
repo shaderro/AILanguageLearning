@@ -61,7 +61,7 @@ def _normalize_resend_api_key(raw: str | None) -> str | None:
 RESEND_API_KEY = _normalize_resend_api_key(os.getenv("RESEND_API_KEY"))
 # 邮件内登录链接跳转的前端 origin（含协议）
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
-RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "LinkText <onboarding@resend.dev>")
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "auth@linktext.app")
 MAGIC_LINK_TTL_MINUTES = int(os.getenv("MAGIC_LINK_TTL_MINUTES", "30"))
 MAGIC_LINK_RESEND_COOLDOWN_SECONDS = int(os.getenv("MAGIC_LINK_RESEND_COOLDOWN_SECONDS", "60"))
 AUTH_SESSION_TTL_DAYS = int(os.getenv("AUTH_SESSION_TTL_DAYS", "30"))
@@ -69,6 +69,10 @@ AUTH_SESSION_TTL_DAYS = int(os.getenv("AUTH_SESSION_TTL_DAYS", "30"))
 # 新用户注册/首次邮箱登录赠送积分（1 积分 = 10_000 token，与邀请码展示一致）
 POINTS_PER_TOKEN_UNIT = 10_000
 NEW_USER_SIGNUP_POINTS = int(os.getenv("NEW_USER_SIGNUP_POINTS", "80"))
+
+def _normalize_origin(origin: str) -> str:
+    return origin.strip().rstrip("/")
+
 
 def _parse_cors_allowed_origins(raw: str | None) -> list[str]:
     """
@@ -78,8 +82,12 @@ def _parse_cors_allowed_origins(raw: str | None) -> list[str]:
     多个用英文逗号分隔。
     """
     if raw and raw.strip():
-        return [o.strip() for o in raw.split(",") if o.strip()]
+        return [_normalize_origin(o) for o in raw.split(",") if o.strip()]
     return [
+        # 生产前端（Render 未设置 CORS_ALLOWED_ORIGINS 时的兜底）
+        "https://linktext-language.vercel.app",
+        "https://www.linktext-language.vercel.app",
+        # 本地开发
         "http://127.0.0.1:5173",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
@@ -89,7 +97,23 @@ def _parse_cors_allowed_origins(raw: str | None) -> list[str]:
     ]
 
 
-CORS_ALLOWED_ORIGINS = _parse_cors_allowed_origins(os.getenv("CORS_ALLOWED_ORIGINS"))
+def _build_cors_allowed_origins() -> list[str]:
+    """合并 CORS_ALLOWED_ORIGINS、FRONTEND_ORIGIN，去重（勿带尾部 /）。"""
+    origins = _parse_cors_allowed_origins(os.getenv("CORS_ALLOWED_ORIGINS"))
+    fo = _normalize_origin(FRONTEND_ORIGIN)
+    if fo.startswith("http") and fo not in origins:
+        origins.append(fo)
+    # 去重且保持顺序
+    seen: set[str] = set()
+    out: list[str] = []
+    for o in origins:
+        if o not in seen:
+            seen.add(o)
+            out.append(o)
+    return out
+
+
+CORS_ALLOWED_ORIGINS = _build_cors_allowed_origins()
 
 # ==================== 可选的环境变量 ====================
 

@@ -76,29 +76,64 @@ def create_and_send_magic_link(session: Session, email: str) -> Dict[str, Any]:
     return {"sent": True, "retry_after_seconds": MAGIC_LINK_RESEND_COOLDOWN_SECONDS}
 
 
+def _issue_session_for_user(
+    session: Session, user: User, session_ttl_days: int, now: datetime
+) -> str:
+    raw_session = new_opaque_token()
+    sess = AuthSession(
+        session_token_hash=sha256_hex(raw_session),
+        user_id=user.user_id,
+        expires_at=now + timedelta(days=session_ttl_days),
+    )
+    session.add(sess)
+    session.flush()
+    return raw_session
+
+
 def consume_magic_link(
     session: Session, raw_magic_token: str, session_ttl_days: int
 ) -> Tuple[User, str, bool]:
     """
     Validate one-time token, mark used, find-or-create User, create AuthSession.
     Returns (user, raw_session_token, is_new_user).
+
+    Raises ValueError with a short detail code for HTTP mapping:
+    missing_token | link_expired | link_used | link_invalid
     """
-    if not raw_magic_token or not raw_magic_token.strip():
+    token = (raw_magic_token or "").strip()
+    if not token:
         raise ValueError("missing_token")
 
-    th = sha256_hex(raw_magic_token.strip())
+    th = sha256_hex(token)
     now = datetime.now()
+    m_any = (
+        session.query(MagicLinkToken)
+        .filter(MagicLinkToken.token_hash == th)
+        .first()
+    )
+
+    # 已使用：5 分钟内允许重复校验（防重复点击 / 页面重复挂载）
+    if m_any is not None and m_any.used_at is not None:
+        elapsed = (now - m_any.used_at).total_seconds()
+        if elapsed <= 300:
+            user = _find_user_by_email_ci(session, m_any.email)
+            if user is not None:
+                raw_session = _issue_session_for_user(session, user, session_ttl_days, now)
+                return user, raw_session, False
+        raise ValueError("link_used")
+
     m = (
         session.query(MagicLinkToken)
         .filter(
             MagicLinkToken.token_hash == th,
             MagicLinkToken.used_at.is_(None),
-            MagicLinkToken.expires_at > now,
         )
         .first()
     )
     if m is None:
-        raise ValueError("invalid_or_expired_token")
+        raise ValueError("link_invalid")
+    if m.expires_at <= now:
+        raise ValueError("link_expired")
 
     m.used_at = now
     session.add(m)
@@ -121,13 +156,5 @@ def consume_magic_link(
         session.flush()
         grant_new_user_signup_tokens(session, user)
 
-    raw_session = new_opaque_token()
-    sess = AuthSession(
-        session_token_hash=sha256_hex(raw_session),
-        user_id=user.user_id,
-        expires_at=now + timedelta(days=session_ttl_days),
-    )
-    session.add(sess)
-    session.flush()
-
+    raw_session = _issue_session_for_user(session, user, session_ttl_days, now)
     return user, raw_session, is_new_user

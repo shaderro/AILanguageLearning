@@ -1,7 +1,7 @@
 /**
  * Magic link 回调：/auth/callback?token=...
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslate } from '../../../i18n/useTranslate'
 import { authService } from '../services/authService'
 import { markPendingWelcomeCredits } from '../../../utils/creditsUtils'
@@ -11,11 +11,22 @@ const AuthCallbackPage = () => {
   const t = useTranslate()
   const [phase, setPhase] = useState('loading') // loading | ok | error
   const [errorDetail, setErrorDetail] = useState(null) // 'missing_token' | string (API detail)
+  const verifyStarted = useRef(false)
 
   useEffect(() => {
     const run = async () => {
+      if (verifyStarted.current) return
+      verifyStarted.current = true
+
       const params = new URLSearchParams(window.location.search)
-      const token = params.get('token')
+      let token = params.get('token')
+      if (token) {
+        try {
+          token = decodeURIComponent(token.trim())
+        } catch {
+          token = token.trim()
+        }
+      }
       if (!token) {
         setPhase('error')
         setErrorDetail('missing_token')

@@ -16,22 +16,22 @@ const authApi = axios.create({
   },
 })
 
-// 🔧 添加请求拦截器：自动添加 Authorization header（与 api.js 保持一致）
+// 🔧 请求拦截器：优先使用已有 Authorization，否则从 localStorage 读取
 authApi.interceptors.request.use(
   (config) => {
-    // 从 localStorage 获取 token 并添加到请求头
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-      console.log('🔑 [authApi] Added Authorization header')
-    } else {
-      console.log('⚠️ [authApi] No access token found in localStorage')
+    const existingAuth = config.headers?.Authorization || config.headers?.authorization
+    if (!existingAuth) {
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
-    
-    // 记录请求开始时间（用于性能监控）
+
     config.metadata = { startTime: new Date() }
-    console.log(`📤 [authApi] 请求开始: ${config.method?.toUpperCase()} ${config.url}`)
-    
+    if (import.meta.env.DEV) {
+      console.log(`📤 [authApi] ${config.method?.toUpperCase()} ${config.url}`)
+    }
+
     return config
   },
   (error) => {

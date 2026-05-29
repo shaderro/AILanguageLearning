@@ -506,28 +506,6 @@ async def validation_exception_handler(request, exc: RequestValidationError):
         content={"detail": message},
     )
 
-# ==================== CORS 配置 =====================
-# CORS：带 Cookie（withCredentials）时不能使用 allow_origins=["*"]。
-# 白名单来自 backend.config.CORS_ALLOWED_ORIGINS（环境变量 CORS_ALLOWED_ORIGINS，逗号分隔）。
-try:
-    from backend.config import CORS_ALLOWED_ORIGINS as _CORS_ALLOWED_ORIGINS
-except ImportError:
-    _CORS_ALLOWED_ORIGINS = [
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://localhost:3000",
-    ]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_CORS_ALLOWED_ORIGINS,
-    allow_credentials=True,  # 允许携带认证信息（Cookie、Authorization header）
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # 允许的 HTTP 方法
-    allow_headers=["*"],  # 允许所有请求头（包括 Authorization、Content-Type 等）
-)
-print(f"[OK] CORS allow_origins={len(_CORS_ALLOWED_ORIGINS)} 个（带 Cookie 须白名单，勿用 *）")
-
 # ==================== Rate Limit 中间件 ====================
 # ⚠️ 安全：限制 API 调用频率，防止滥用（特别是 AI 接口）
 try:
@@ -565,20 +543,31 @@ async def startup_event():
             print("📊 检测到 PostgreSQL 数据库")
             # 检查表是否已存在
             from sqlalchemy import inspect
-            from database_system.business_logic.models import MagicLinkToken, AuthSession
+            from database_system.business_logic.models import (
+                ArticleSegmentTask,
+                AuthSession,
+                MagicLinkToken,
+            )
 
             inspector = inspect(engine)
-            existing_tables = inspector.get_table_names()
+            existing_tables = set(inspector.get_table_names())
 
             if existing_tables:
                 print(f"✅ 数据库表已存在 ({len(existing_tables)} 个表)")
                 for table in sorted(existing_tables):
                     print(f"   - {table}")
                 # 增量补表：已有库时仍创建 ORM 中新增且尚未存在的表
-                Base.metadata.create_all(
-                    engine,
-                    tables=[MagicLinkToken.__table__, AuthSession.__table__],
-                )
+                incremental_models = (MagicLinkToken, AuthSession, ArticleSegmentTask)
+                missing_tables = [
+                    m.__table__
+                    for m in incremental_models
+                    if m.__tablename__ not in existing_tables
+                ]
+                if missing_tables:
+                    print(f"📝 增量创建缺失表: {[t.name for t in missing_tables]}")
+                    Base.metadata.create_all(engine, tables=missing_tables)
+                else:
+                    print("✅ 增量表均已存在，无需创建")
             else:
                 print("📋 创建数据库表结构...")
                 Base.metadata.create_all(engine)
@@ -640,6 +629,32 @@ async def log_requests(request, call_next):
         # 🔧 捕获并记录异常，然后重新抛出
         print(f"❌ [Request] 处理请求时发生异常: {e}")
         raise
+
+# ==================== CORS（须在所有 http 中间件之后注册，使其成为最外层）====================
+try:
+    from backend.config import CORS_ALLOWED_ORIGINS as _CORS_ALLOWED_ORIGINS
+except ImportError:
+    _CORS_ALLOWED_ORIGINS = [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+        "https://linktext-language.vercel.app",
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://[a-z0-9][a-z0-9-]*(\.[a-z0-9][a-z0-9-]*)*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+print(
+    f"[OK] CORS allow_origins={len(_CORS_ALLOWED_ORIGINS)} 个 + *.vercel.app 正则；"
+    f"示例: {_CORS_ALLOWED_ORIGINS[:3]}"
+)
 
 # 注册新的标注API路由
 if notation_router:

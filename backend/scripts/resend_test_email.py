@@ -11,7 +11,8 @@ override=True so the file wins (avoids stale system keys).
 
 Use --debug-key to print masked length/prefix when troubleshooting.
 
-With onboarding@resend.dev, Resend only allows sending to your account email.
+With auth@linktext.app, linktext.app must be verified in Resend.
+Use onboarding@resend.dev locally if the domain is not verified yet.
 """
 from __future__ import annotations
 
@@ -33,14 +34,14 @@ def _normalize_resend_api_key(raw: str | None) -> str | None:
     return s or None
 
 
-def send_magic_link(email: str, token: str):
+def send_magic_link(email: str, token: str, from_email: str):
     import resend
 
     login_url = f"http://localhost:3000/auth/callback?token={token}"
 
     return resend.Emails.send(
         {
-            "from": "LinkText <onboarding@resend.dev>",
+            "from": from_email,
             "to": email,
             "subject": "Your login link",
             "html": f"""
@@ -104,9 +105,12 @@ def main() -> int:
     import resend
     from resend.exceptions import ResendError
 
+    sys.path.insert(0, str(REPO_ROOT))
+    from backend.config import RESEND_FROM_EMAIL
+
     resend.api_key = key
     try:
-        response = send_magic_link(args.to, args.token)
+        response = send_magic_link(args.to, args.token, RESEND_FROM_EMAIL)
     except ResendError as e:
         err = str(e).lower()
         print(f"Resend error: {e}", file=sys.stderr)
