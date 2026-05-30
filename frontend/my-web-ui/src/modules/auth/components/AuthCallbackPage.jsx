@@ -3,12 +3,14 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { useTranslate } from '../../../i18n/useTranslate'
+import { useUser } from '../../../contexts/UserContext'
 import { authService } from '../services/authService'
 import { markPendingWelcomeCredits } from '../../../utils/creditsUtils'
 import { clearMagicLinkSendState } from '../utils/magicLinkCooldown'
 
 const AuthCallbackPage = () => {
   const t = useTranslate()
+  const { establishSession } = useUser()
   const [phase, setPhase] = useState('loading') // loading | ok | error
   const [errorDetail, setErrorDetail] = useState(null) // 'missing_token' | string (API detail)
   const verifyStarted = useRef(false)
@@ -34,14 +36,14 @@ const AuthCallbackPage = () => {
       }
       try {
         const data = await authService.verifyMagicLink(token)
-        authService.saveAuth(String(data.user_id), data.session_token)
-        clearMagicLinkSendState()
+        await establishSession(data.user_id, data.session_token)
         if (data.is_new_user) {
           markPendingWelcomeCredits()
         }
+        clearMagicLinkSendState()
         setPhase('ok')
         window.setTimeout(() => {
-          window.location.href = '/'
+          window.location.replace('/')
         }, 800)
       } catch (err) {
         const detail = err?.response?.data?.detail
@@ -50,7 +52,7 @@ const AuthCallbackPage = () => {
       }
     }
     run()
-  }, [])
+  }, [establishSession])
 
   const message = (() => {
     if (phase === 'loading') return t('正在验证登录链接…')

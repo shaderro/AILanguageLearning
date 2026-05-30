@@ -387,6 +387,20 @@
   "登录成功，正在跳转…": "Signed in successfully. Redirecting…",
   "链接无效或已过期，请重新获取登录邮件": "This link is invalid or has expired. Please request a new sign-in email.",
   "链接无效或已使用、已过期": "This link is invalid, already used, or has expired.",
-  "返回首页": "Back to home"
+  "返回首页": "Back to home",
+  "继续使用 LinkText": "Continue to LinkText",
+  "输入邮箱，我们将发送登录链接。": "Enter your email to receive a sign-in link.",
+  "发送中…": "Sending...",
+  "发送登录链接": "Send Link",
+  "新用户将自动创建账号。": "New users will automatically create an account.",
+  "无法发送登录链接，请稍后重试。": "Could not send the sign-in link. Please try again.",
+  "请查收邮件": "Check your email",
+  "我们已向以下邮箱发送安全登录链接：": "We sent a secure sign-in link to",
+  "若未收到，请检查垃圾邮件或推广文件夹。": "Check spam/promotions if you don't see it.",
+  "你可以在 {n} 秒后重新请求链接": "You can request another link in {n}s.",
+  "{n} 秒后可重新发送": "Resend available in {n}s",
+  "重新发送链接": "Resend link",
+  "完成": "Done",
+  "使用其他邮箱": "Use a different email"
 }
 

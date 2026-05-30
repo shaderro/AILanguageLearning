@@ -11,6 +11,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import authService from '../modules/auth/services/authService'
 import guestDataManager from '../utils/guestDataManager'
+import { setLastMagicLinkEmail } from '../modules/auth/utils/magicLinkRemember'
 
 const UserContext = createContext(null)
 
@@ -161,6 +162,9 @@ export function UserProvider({ children }) {
           setUserId(parseInt(savedUserId))
           setToken(savedToken)
           setEmail(user.email || null) // 🔧 设置 email
+          if (user.email) {
+            setLastMagicLinkEmail(user.email)
+          }
           setUserInfo(user)
           setIsAuthenticated(true)
           setIsGuest(false)
@@ -183,6 +187,8 @@ export function UserProvider({ children }) {
                                  error.message?.includes('Network Error') ||
                                  !error.response
           
+          const isAuthError = error?.response?.status === 401 || error?.response?.status === 403
+
           if (isNetworkError) {
             // 网络错误：保持登录状态，不清除信息
             console.log('⚠️ [UserContext] 网络错误，保持登录状态（不清除 localStorage）')
@@ -193,9 +199,14 @@ export function UserProvider({ children }) {
             setIsAuthenticated(true)
             setIsGuest(false)
             isInitializedRef.current = true
+          } else if (isAuthError) {
+            // 会话已失效：清除无效 token，避免每次打开都假登录
+            console.log('⚠️ [UserContext] 会话无效或已过期，清除本地凭据')
+            authService.clearAuth()
+            createGuestUser()
+            isInitializedRef.current = true
           } else {
-            // 认证错误：切换到游客模式，但不清除 localStorage
-            console.log('⚠️ [UserContext] Token 验证失败，保持登录信息但切换到游客模式（不清除 localStorage）')
+            console.log('⚠️ [UserContext] Token 验证失败，保持登录信息但切换到游客模式')
             createGuestUser()
             isInitializedRef.current = true
           }
@@ -404,12 +415,52 @@ export function UserProvider({ children }) {
   }
 
   /**
+   * Magic link / 外部回调完成后建立登录态（写入 localStorage + 更新 Context）
+   */
+  const establishSession = useCallback(async (inputUserId, inputToken) => {
+    const uid = String(inputUserId)
+    const tok = String(inputToken || '').trim()
+    if (!uid || !tok) {
+      throw new Error('缺少 userId 或 session token')
+    }
+
+    authService.saveAuth(uid, tok)
+    userInitiatedLoginRef.current = true
+
+    const user = await refreshUserInfo(tok, {
+      clearOnMissingToken: false,
+      clearOnError: false,
+      force: true,
+    })
+
+    setUserId(parseInt(uid, 10))
+    setToken(tok)
+    setEmail(user?.email || null)
+    if (user?.email) {
+      setLastMagicLinkEmail(user.email)
+    }
+    setUserInfo(user)
+    setIsAuthenticated(true)
+    setIsGuest(false)
+    isInitializedRef.current = true
+    setIsLoading(false)
+
+    return user
+  }, [refreshUserInfo])
+
+  /**
    * 退出登录（切换回游客模式）
    */
-  const logout = () => {
+  const logout = async () => {
     console.log('👋 [UserContext] 退出登录')
-    
-    // 清除登录信息
+
+    const { token: currentToken } = authService.getAuth()
+    try {
+      await authService.logoutSession(currentToken)
+    } catch (e) {
+      console.warn('⚠️ [UserContext] 服务端 logout 失败（仍清除本地）:', e?.message || e)
+    }
+
     authService.clearAuth()
     
     // 切换回游客模式
@@ -444,6 +495,7 @@ export function UserProvider({ children }) {
     isGuest,  // 是否为游客模式
     isLoading,
     refreshUserInfo,
+    establishSession,
     login,
     register,
     logout,

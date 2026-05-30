@@ -149,6 +149,15 @@ export const authService = {
     return response.data
   },
 
+  /** 撤销服务端 AuthSession（退出登录时调用） */
+  logoutSession: async (token) => {
+    const config = {}
+    if (token) {
+      config.headers = { Authorization: `Bearer ${token}` }
+    }
+    await authApi.post('/api/auth/logout', {}, config)
+  },
+
   /**
    * 更新当前用户的语言偏好（UI 语言、内容语言、已添加语言列表）
    * @param {{ ui_language?: string, content_language?: string, languages_list?: string[] }} preferences

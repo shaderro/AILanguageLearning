@@ -3,6 +3,8 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { BaseModal, BaseInput, BaseButton } from '../../../components/base'
+import { useTranslate } from '../../../i18n/useTranslate'
+import { useUser } from '../../../contexts/UserContext'
 import { authService } from '../services/authService'
 import {
   getMagicLinkSendState,
@@ -11,10 +13,13 @@ import {
   isEmailInCooldown,
   MAGIC_LINK_COOLDOWN_SECONDS,
 } from '../utils/magicLinkCooldown'
+import { getLastMagicLinkEmail, setLastMagicLinkEmail } from '../utils/magicLinkRemember'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const MagicLinkAuthModal = ({ isOpen, onClose }) => {
+  const t = useTranslate()
+  const { isAuthenticated } = useUser()
   const [email, setEmail] = useState('')
   const [phase, setPhase] = useState('form') // form | success
   const [isSending, setIsSending] = useState(false)
@@ -33,11 +38,19 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (!isOpen) return
-    applyPendingState()
-  }, [isOpen, applyPendingState])
+    if (isAuthenticated) {
+      onClose?.()
+      return
+    }
+    if (applyPendingState()) return
+    const remembered = getLastMagicLinkEmail()
+    if (remembered) {
+      setEmail(remembered)
+    }
+  }, [isOpen, isAuthenticated, applyPendingState, onClose])
 
   useEffect(() => {
-    if (!isOpen || cooldownSeconds <= 0) return undefined
+    if (!isOpen || isAuthenticated || cooldownSeconds <= 0) return undefined
     const timer = window.setInterval(() => {
       const pending = getMagicLinkSendState()
       if (!pending) {
@@ -58,6 +71,7 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
       1,
       Number(retryAfterSeconds) || MAGIC_LINK_COOLDOWN_SECONDS,
     )
+    setLastMagicLinkEmail(trimmedEmail)
     setMagicLinkSendState(trimmedEmail, seconds)
     setEmail(trimmedEmail)
     setPhase('success')
@@ -70,7 +84,7 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
     setError('')
     const trimmed = email.trim()
     if (!trimmed || !EMAIL_RE.test(trimmed)) {
-      setError('Please enter a valid email address.')
+      setError(t('请输入有效的邮箱地址'))
       return
     }
 
@@ -88,8 +102,8 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
       const detail = err?.response?.data?.detail
       setError(
         typeof detail === 'string'
-          ? detail
-          : 'Could not send the sign-in link. Please try again.',
+          ? t(detail) || detail
+          : t('无法发送登录链接，请稍后重试。'),
       )
     } finally {
       setIsSending(false)
@@ -119,10 +133,10 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
           <>
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
-                Continue to LinkText
+                {t('继续使用 LinkText')}
               </h2>
               <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-                Enter your email to receive a sign-in link.
+                {t('输入邮箱，我们将发送登录链接。')}
               </p>
             </div>
 
@@ -131,7 +145,7 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
                 type="email"
                 name="email"
                 autoComplete="email"
-                placeholder="you@company.com"
+                placeholder={t('请输入邮箱')}
                 value={email}
                 onChange={(ev) => setEmail(ev.target.value)}
                 disabled={isSending}
@@ -154,12 +168,12 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
                 disabled={isSending}
                 className="rounded-xl h-11 font-medium shadow-sm hover:shadow-md transition-shadow"
               >
-                {isSending ? 'Sending...' : 'Send Link'}
+                {isSending ? t('发送中…') : t('发送登录链接')}
               </BaseButton>
             </form>
 
             <p className="mt-6 text-center text-xs text-gray-400 leading-relaxed">
-              New users will automatically create an account.
+              {t('新用户将自动创建账号。')}
             </p>
           </>
         ) : (
@@ -175,18 +189,18 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
               </svg>
             </div>
             <h2 className="text-xl font-semibold tracking-tight text-gray-900">
-              Check your email
+              {t('请查收邮件')}
             </h2>
             <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-              We sent a secure sign-in link to
+              {t('我们已向以下邮箱发送安全登录链接：')}
             </p>
             <p className="mt-1 text-sm font-medium text-gray-900 break-all">{email}</p>
             <p className="mt-3 text-xs text-gray-400 leading-relaxed">
-              Check spam/promotions if you don&apos;t see it.
+              {t('若未收到，请检查垃圾邮件或推广文件夹。')}
             </p>
             {cooldownSeconds > 0 && (
               <p className="mt-4 text-xs text-gray-500">
-                You can request another link in {cooldownSeconds}s.
+                {t('你可以在 {n} 秒后重新请求链接').replace('{n}', String(cooldownSeconds))}
               </p>
             )}
             <div className="mt-8 space-y-3">
@@ -200,8 +214,8 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
                 onClick={handleResend}
               >
                 {cooldownSeconds > 0
-                  ? `Resend available in ${cooldownSeconds}s`
-                  : 'Resend link'}
+                  ? t('{n} 秒后可重新发送').replace('{n}', String(cooldownSeconds))
+                  : t('重新发送链接')}
               </BaseButton>
               <BaseButton
                 type="button"
@@ -209,7 +223,7 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
                 className="rounded-xl h-11 font-medium"
                 onClick={handleClose}
               >
-                Done
+                {t('完成')}
               </BaseButton>
               <button
                 type="button"
@@ -221,7 +235,7 @@ const MagicLinkAuthModal = ({ isOpen, onClose }) => {
                   setError('')
                 }}
               >
-                Use a different email
+                {t('使用其他邮箱')}
               </button>
             </div>
           </div>
