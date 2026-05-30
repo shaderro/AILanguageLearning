@@ -43,9 +43,9 @@ const profileTexts = {
     notLoggedIn: '未登录',
     fetchError: '获取用户信息失败',
     changePasswordAlert: '修改密码功能待实现',
-    tokensManagement: 'Usage',
-    currentPoints: 'Credits remaining',
-    creditsLabel: 'credits',
+    tokensManagement: '使用情况',
+    currentPoints: '剩余积分',
+    creditsLabel: '积分',
     inviteCode: '邀请码',
     enterInviteCode: '请输入邀请码',
     internalTestingOnly: '(仅内部测试用)',
@@ -103,14 +103,14 @@ const profileTexts = {
 }
 
 import { formatCredits } from '../../../utils/creditsUtils'
+import {
+  CONTENT_LANGUAGE_NAMES,
+  languageCodesToNames,
+  readStoredHeaderLanguages,
+  writeStoredHeaderLanguages,
+} from '../../../utils/headerLanguageStorage'
 
-// 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
-const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
-
-const getLanguageStorageKey = (userId) => {
-  const id = userId || 'guest'
-  return `content_languages_chosen_${id}`
-}
+const ALL_LANGUAGES = CONTENT_LANGUAGE_NAMES
 
 const ProfilePage = ({ onClose, onLogout }) => {
   const { userId, email, token, refreshUserInfo } = useUser()
@@ -126,39 +126,23 @@ const ProfilePage = ({ onClose, onLogout }) => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const syncTimeoutRef = useRef(null)
   const lastPayloadRef = useRef(null)
+  const preferencesInitializedRef = useRef(false)
   const [chosenLanguages, setChosenLanguages] = useState(() => {
-    const initial = selectedLanguage ? [selectedLanguage] : ['德文']
-    if (typeof window === 'undefined') {
-      return initial
-    }
-    try {
-      const key = getLanguageStorageKey(userId)
-      const raw = window.localStorage.getItem(key)
-      if (!raw) return initial
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed)) return initial
-      const valid = parsed.filter((lang) => ALL_LANGUAGES.includes(lang))
-      return Array.from(new Set([...initial, ...valid]))
-    } catch {
-      return initial
-    }
+    const stored = readStoredHeaderLanguages(userId)
+    if (stored?.length) return stored
+    return selectedLanguage ? [selectedLanguage] : []
   })
   const t = profileTexts[uiLanguage] || profileTexts.zh
 
   // 持久化已选择语言列表（按用户维度）
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    try {
-      const key = getLanguageStorageKey(userId)
-      window.localStorage.setItem(key, JSON.stringify(chosenLanguages))
-    } catch {
-      // ignore
-    }
+    if (userId == null) return
+    writeStoredHeaderLanguages(userId, chosenLanguages)
   }, [chosenLanguages, userId])
 
   // 同步语言偏好到后端（UI 语言 + 内容语言 + 已添加列表）
   useEffect(() => {
-    if (!token || !userId) return
+    if (!token || !userId || !preferencesInitializedRef.current) return
 
     const languagesCodes = chosenLanguages.map((name) => languageNameToCode(name))
     const currentCode = selectedLanguage ? languageNameToCode(selectedLanguage) : null
@@ -223,6 +207,21 @@ const ProfilePage = ({ onClose, onLogout }) => {
       try {
         const info = await authService.getCurrentUser(token)
         setUserInfo(info)
+
+        if (Array.isArray(info.languages_list) && info.languages_list.length > 0) {
+          const names = languageCodesToNames(info.languages_list)
+          if (names.length > 0) {
+            setChosenLanguages(names)
+            writeStoredHeaderLanguages(userId, names)
+          }
+        }
+
+        lastPayloadRef.current = JSON.stringify({
+          ui_language: info.ui_language || uiLanguage,
+          content_language: info.content_language || null,
+          languages_list: Array.isArray(info.languages_list) ? info.languages_list : [],
+        })
+        preferencesInitializedRef.current = true
       } catch (err) {
         console.error('获取用户信息失败:', err)
         setError(t.fetchError)

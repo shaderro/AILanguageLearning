@@ -4,11 +4,14 @@
  */
 import { useState } from 'react'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
+import { useUser } from '../../../contexts/UserContext'
 import { colors } from '../../../design-tokens'
 
 const UserAvatar = ({ userId, email, onLogout, onOpenProfile }) => {
   const [showMenu, setShowMenu] = useState(false)
   const { uiLanguage } = useUiLanguage()
+  const { userInfo } = useUser()
+  const displayEmail = email || userInfo?.email || null
 
   const labels = uiLanguage === 'en'
     ? {
@@ -66,9 +69,17 @@ const UserAvatar = ({ userId, email, onLogout, onOpenProfile }) => {
           />
           
           {/* 菜单内容 */}
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20">
+          <div className="absolute right-0 mt-2 min-w-[12rem] max-w-[16rem] bg-white rounded-md shadow-lg border border-gray-200 z-20">
             <div className="py-1">
-              {/* 仅保留设置与退出登录 */}
+              {displayEmail && (
+                <div
+                  className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100 truncate"
+                  title={displayEmail}
+                >
+                  {displayEmail}
+                </div>
+              )}
+
               <button
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() => {

@@ -6,6 +6,7 @@ import { useTranslate } from '../../../i18n/useTranslate'
 import { useUser } from '../../../contexts/UserContext'
 import { authService } from '../services/authService'
 import { markPendingWelcomeCredits } from '../../../utils/creditsUtils'
+import { markPendingOnboarding } from '../../../utils/onboardingUtils'
 import { clearMagicLinkSendState } from '../utils/magicLinkCooldown'
 
 const AuthCallbackPage = () => {
@@ -37,13 +38,16 @@ const AuthCallbackPage = () => {
       try {
         const data = await authService.verifyMagicLink(token)
         await establishSession(data.user_id, data.session_token)
+        let redirectTo = '/'
         if (data.is_new_user) {
           markPendingWelcomeCredits()
+          markPendingOnboarding()
+          redirectTo = '/?page=onboardingLanguage'
         }
         clearMagicLinkSendState()
         setPhase('ok')
         window.setTimeout(() => {
-          window.location.replace('/')
+          window.location.replace(redirectTo)
         }, 800)
       } catch (err) {
         const detail = err?.response?.data?.detail

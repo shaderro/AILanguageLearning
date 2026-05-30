@@ -1,22 +1,10 @@
-import { useState, useMemo } from 'react'
-import { useLanguage, languageNameToCode } from '../contexts/LanguageContext'
+import { useState } from 'react'
+import { useLanguage } from '../contexts/LanguageContext'
 import { useUIText } from '../i18n/useUIText'
 import { colors } from '../design-tokens'
 import { useUser } from '../contexts/UserContext'
 import { authService } from '../modules/auth/services/authService'
-
-const LANGUAGE_CODE_TO_NAME = {
-  zh: '中文',
-  en: '英文',
-  de: '德文',
-  es: '西班牙语',
-  fr: '法语',
-  ja: '日语',
-  ko: '韩语',
-  ar: '阿拉伯语',
-  ru: '俄语',
-}
-
+import { LANGUAGE_CODE_TO_NAME } from '../utils/headerLanguageStorage'
 const languageOptions = [
   {
     code: 'zh',
@@ -67,21 +55,17 @@ const languageOptions = [
 
 const OnboardingLanguage = ({ onContinue }) => {
   const t = useUIText()
-  const { selectedLanguage, setSelectedLanguage } = useLanguage()
-  const { token } = useUser()
+  const { setSelectedLanguage } = useLanguage()
+  const { token, refreshUserInfo } = useUser()
 
-  const initialCode = useMemo(
-    () => languageNameToCode(selectedLanguage),
-    [selectedLanguage],
-  )
-
-  const [selectedCode, setSelectedCode] = useState(initialCode)
+  const [selectedCode, setSelectedCode] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleContinue = async () => {
     if (!selectedCode || isSubmitting) return
     setIsSubmitting(true)
-    const languageName = LANGUAGE_CODE_TO_NAME[selectedCode] || LANGUAGE_CODE_TO_NAME.de
+    const languageName = LANGUAGE_CODE_TO_NAME[selectedCode]
+    if (!languageName) return
     setSelectedLanguage(languageName)
     // 首次选择内容语言时，同步到后端偏好（仅在已登录且有 token 时）
     const syncPreferences = async () => {
@@ -97,6 +81,13 @@ const OnboardingLanguage = ({ onContinue }) => {
     }
     try {
       await syncPreferences()
+      if (token) {
+        try {
+          await refreshUserInfo(token, { force: true })
+        } catch {
+          // ignore
+        }
+      }
     } finally {
       setIsSubmitting(false)
     }

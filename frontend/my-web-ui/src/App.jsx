@@ -14,6 +14,15 @@ import ProfilePage from './modules/auth/components/ProfilePage'
 import CreditsIndicator from './components/features/credits/CreditsIndicator'
 import WelcomeCreditsBanner from './components/features/credits/WelcomeCreditsBanner'
 import { shouldShowWelcomeCredits, dismissWelcomeCredits } from './utils/creditsUtils'
+import { shouldShowOnboarding, completeOnboarding, userNeedsOnboarding } from './utils/onboardingUtils'
+import {
+  CONTENT_LANGUAGE_NAMES,
+  LANGUAGE_CODE_TO_NAME,
+  languageCodesToNames,
+  resolveHeaderLanguages,
+  readStoredHeaderLanguages,
+  writeStoredHeaderLanguages,
+} from './utils/headerLanguageStorage'
 import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
@@ -147,6 +156,7 @@ function AppContent() {
     userId: currentUserId,
     email: currentUserEmail, // 🔧 添加 email
     password: currentUserPassword,
+    token,
     isAuthenticated,
     userInfo,
     login,
@@ -154,7 +164,8 @@ function AppContent() {
     logout,
     pendingGuestId,
     showMigrationDialog,
-    setShowMigrationDialog
+    setShowMigrationDialog,
+    refreshUserInfo,
   } = useUser()
 
   useEffect(() => {
@@ -164,6 +175,16 @@ function AppContent() {
     }
     setShowWelcomeCredits(shouldShowWelcomeCredits(currentUserId))
   }, [isAuthenticated, currentUserId, userInfo])
+
+  // Magic link 等新用户：若尚未设置内容语言，进入 onboarding
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId || !userInfo) return
+    if (!shouldShowOnboarding(currentUserId, userInfo)) return
+    if (currentPage === 'onboardingLanguage' || currentPage === 'onboardingReading') return
+    setCurrentPage(
+      userNeedsOnboarding(userInfo) ? 'onboardingLanguage' : 'onboardingReading',
+    )
+  }, [isAuthenticated, currentUserId, userInfo, currentPage])
 
   const handleDismissWelcomeCredits = () => {
     if (currentUserId) {
@@ -183,56 +204,55 @@ function AppContent() {
   const hasCompletedDirectOpenArticleLanguageSyncRef = useRef(
     !(initialUrlPageRef.current === 'article' && initialUrlArticleIdRef.current && initialUrlLanguageRef.current)
   )
-  // 内容语言候选（UI 展示用，内部仍兼容“英语/德语”等旧值）
-  const ALL_LANGUAGES = ['中文', '英文', '西班牙语', '法语', '日语', '韩语', '德文', '阿拉伯语', '俄语']
+  const ALL_LANGUAGES = CONTENT_LANGUAGE_NAMES
 
-  const getHeaderLanguageStorageKey = () => {
-    const id = currentUserId || 'guest'
-    return `content_languages_chosen_${id}`
-  }
-
-  const readHeaderLanguagesFromStorage = () => {
-    const fallback = selectedLanguage ? [selectedLanguage] : ['德文']
-    if (typeof window === 'undefined') {
-      return fallback
-    }
-    try {
-      const key = getHeaderLanguageStorageKey()
-      const raw = window.localStorage.getItem(key)
-      if (!raw) return fallback
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed)) return fallback
-      const valid = parsed.filter((lang) => ALL_LANGUAGES.includes(lang))
-      return valid.length > 0 ? valid : fallback
-    } catch {
-      return fallback
-    }
-  }
+  const getResolvedHeaderLanguages = () =>
+    resolveHeaderLanguages({
+      userId: currentUserId,
+      isAuthenticated,
+      userInfo,
+      selectedLanguage,
+      needsOnboarding: isAuthenticated && userNeedsOnboarding(userInfo),
+    })
 
   const persistHeaderLanguages = (names) => {
     const valid = Array.from(
       new Set(names.filter((lang) => ALL_LANGUAGES.includes(lang))),
     )
-    const next = valid.length > 0 ? valid : readHeaderLanguagesFromStorage()
+    const next = valid.length > 0 ? valid : getResolvedHeaderLanguages()
     setHeaderLanguagesList(next)
-    if (typeof window !== 'undefined') {
-      try {
-        const key = getHeaderLanguageStorageKey()
-        window.localStorage.setItem(key, JSON.stringify(next))
-      } catch {
-        // ignore
-      }
+    if (currentUserId != null) {
+      writeStoredHeaderLanguages(currentUserId, next)
     }
     return next
   }
 
-  useEffect(() => {
-    setHeaderLanguagesList(readHeaderLanguagesFromStorage())
-  }, [currentUserId])
+  const serverLanguagesKey = JSON.stringify(userInfo?.languages_list ?? [])
 
-  const headerLanguages = headerLanguagesList.length > 0
-    ? headerLanguagesList
-    : readHeaderLanguagesFromStorage()
+  // 登录后随服务端 languages_list 更新「正在学习」列表
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId || !userInfo) return
+    const names = languageCodesToNames(userInfo.languages_list)
+    if (names.length > 0) {
+      setHeaderLanguagesList(names)
+      writeStoredHeaderLanguages(currentUserId, names)
+    } else if (userNeedsOnboarding(userInfo)) {
+      setHeaderLanguagesList([])
+    }
+  }, [isAuthenticated, currentUserId, serverLanguagesKey])
+
+  // 游客模式：按用户维度读取本地缓存
+  useEffect(() => {
+    if (isAuthenticated || currentUserId == null) return
+    const stored = readStoredHeaderLanguages(currentUserId)
+    if (stored?.length) {
+      setHeaderLanguagesList(stored)
+      return
+    }
+    setHeaderLanguagesList(selectedLanguage ? [selectedLanguage] : ['德文'])
+  }, [currentUserId, isAuthenticated, selectedLanguage])
+
+  const headerLanguages = headerLanguagesList
 
   const refreshLanguageContent = () => {
     if (!currentUserId) return
@@ -265,6 +285,9 @@ function AppContent() {
           languages_list: languageCodes,
           content_language: languageNameToCode(lang),
         })
+        if (token) {
+          await refreshUserInfo(token, { force: true })
+        }
       } catch (e) {
         console.warn('⚠️ [App] 同步 header 语言到后端失败:', e)
       }
@@ -295,6 +318,9 @@ function AppContent() {
           languages_list: updated.map((name) => languageNameToCode(name)),
           content_language: languageNameToCode(nextSelected),
         })
+        if (token) {
+          await refreshUserInfo(token, { force: true })
+        }
       } catch (e) {
         console.warn('⚠️ [App] 从正在学习列表移除语言失败:', e)
       }
@@ -404,42 +430,19 @@ function AppContent() {
         setUiLanguage(info.ui_language)
       }
 
-      // 内容语言：使用 codes -> 中文名称
-      const codeToName = {
-        zh: '中文',
-        en: '英文',
-        de: '德文',
-        es: '西班牙语',
-        fr: '法语',
-        ja: '日语',
-        ko: '韩语',
-        ar: '阿拉伯语',
-        ru: '俄语',
-      }
-
-      if (info.content_language && codeToName[info.content_language]) {
-        setSelectedLanguageWithoutArticleReset(codeToName[info.content_language])
+      if (info.content_language && LANGUAGE_CODE_TO_NAME[info.content_language]) {
+        setSelectedLanguageWithoutArticleReset(LANGUAGE_CODE_TO_NAME[info.content_language])
       } else if (Array.isArray(info.languages_list) && info.languages_list.length > 0) {
         const first = info.languages_list[0]
-        if (codeToName[first]) {
-          setSelectedLanguageWithoutArticleReset(codeToName[first])
+        if (LANGUAGE_CODE_TO_NAME[first]) {
+          setSelectedLanguageWithoutArticleReset(LANGUAGE_CODE_TO_NAME[first])
         }
       }
 
-      // 同步 per-user 本地 languages_list 缓存
-      if (Array.isArray(info.languages_list) && info.languages_list.length > 0 && typeof window !== 'undefined') {
-        const names = info.languages_list
-          .map((code) => codeToName[code])
-          .filter(Boolean)
-        if (names.length > 0) {
-          const key = getHeaderLanguageStorageKey()
-          try {
-            window.localStorage.setItem(key, JSON.stringify(names))
-          } catch {
-            // ignore
-          }
-          setHeaderLanguagesList(names)
-        }
+      const names = languageCodesToNames(info.languages_list)
+      if (names.length > 0) {
+        setHeaderLanguagesList(names)
+        writeStoredHeaderLanguages(currentUserId, names)
       }
       initializedUserLanguageRef.current = currentUserId
     } catch (e) {
@@ -814,7 +817,19 @@ function AppContent() {
 
           {currentPage === 'onboardingLanguage' && (
             <OnboardingLanguage
-              onContinue={() => {
+              onContinue={async (selectedCode) => {
+                const languageName = LANGUAGE_CODE_TO_NAME[selectedCode]
+                if (languageName) {
+                  persistHeaderLanguages([languageName])
+                  setSelectedLanguageWithoutArticleReset(languageName)
+                }
+                if (token) {
+                  try {
+                    await refreshUserInfo(token, { force: true })
+                  } catch {
+                    // ignore
+                  }
+                }
                 setCurrentPage('onboardingReading')
               }}
             />
@@ -823,6 +838,9 @@ function AppContent() {
           {currentPage === 'onboardingReading' && (
             <OnboardingReadingIntro
               onStartReading={(articleId) => {
+                if (currentUserId) {
+                  completeOnboarding(currentUserId)
+                }
                 setIsUploadMode(false)
                 if (articleId) {
                   setSelectedArticleId(articleId)
@@ -832,6 +850,9 @@ function AppContent() {
                 setCurrentPage('article')
               }}
               onUploadOwn={() => {
+                if (currentUserId) {
+                  completeOnboarding(currentUserId)
+                }
                 setIsUploadMode(true)
                 setSelectedArticleId('upload')
                 setCurrentPage('article')
