@@ -14,6 +14,7 @@ import TranslationDebugPanel from '../../components/TranslationDebugPanel'
 import { useChatEvent } from './contexts/ChatEventContext'
 import { useTranslationDebug } from '../../contexts/TranslationDebugContext'
 import { useUser } from '../../contexts/UserContext'
+import { useBilling } from '../../contexts/BillingContext'
 import { isTokenInsufficient } from '../../utils/tokenUtils'
 import { useAskedTokens } from './hooks/useAskedTokens'
 import { useTokenNotations } from './hooks/useTokenNotations'
@@ -852,6 +853,11 @@ export default function ArticleChatView({
       handleClearQuote()
     }, [clearSelection, handleClearQuote])
     const { token: userToken, userInfo } = useUser()
+    const { openPaywall } = useBilling()
+
+    const handleCreditsBlocked = useCallback(() => {
+      openPaywall({ action: 'annotation' })
+    }, [openPaywall])
     
     const handleAskAI = useCallback(async (token, sentenceIndex) => {
       if (!userToken) {
@@ -869,7 +875,7 @@ export default function ArticleChatView({
       if (userInfo) {
         const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
         if (insufficient) {
-          console.log(`⚠️ [ArticleChatView] Token不足，无法使用AI详细解释功能`)
+          openPaywall({ action: 'annotation' })
           return
         }
       }
@@ -937,19 +943,18 @@ export default function ArticleChatView({
       } catch (error) {
         // 静默处理错误
       }
-    }, [articleId, isProcessing, handleTokenSelect, setCurrentContext, sendMessageToChat, userInfo, userToken])
+    }, [articleId, isProcessing, handleTokenSelect, setCurrentContext, sendMessageToChat, userInfo, userToken, openPaywall])
     
-    // 🔧 包装handleAskAI，传递token不足状态给TokenSpan
     const wrappedHandleAskAI = useCallback(async (token, sentenceIndex) => {
-      // 检查token是否不足
       if (userInfo) {
         const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
         if (insufficient) {
+          openPaywall({ action: 'annotation' })
           return
         }
       }
       return handleAskAI(token, sentenceIndex)
-    }, [handleAskAI, userInfo])
+    }, [handleAskAI, userInfo, openPaywall])
     
     // 🔧 计算token是否不足（用于禁用AI详细解释按钮）
     const isTokenInsufficientForAI = useMemo(() => {
@@ -1066,6 +1071,8 @@ export default function ArticleChatView({
                     targetSentenceId={targetSentenceId}
                     onTargetSentenceScrolled={handleTargetSentenceScrolled}
                     onAskAI={userToken ? wrappedHandleAskAI : null}
+                    isTokenInsufficient={isTokenInsufficientForAI}
+                    onCreditsBlocked={handleCreditsBlocked}
                     autoTranslationEnabled={autoTranslationEnabled}
                     pageIndex={currentPageIndex}
                     onPageChange={setCurrentPageIndex}

@@ -26,6 +26,7 @@ import {
 import UserDebugButton from './modules/auth/components/UserDebugButton'
 import DataMigrationModal from './components/DataMigrationModal'
 import { UserProvider, useUser } from './contexts/UserContext'
+import { BillingProvider } from './contexts/BillingContext'
 import { LanguageProvider, useLanguage, languageNameToCode } from './contexts/LanguageContext'
 import { UiLanguageProvider, useUiLanguage } from './contexts/UiLanguageContext'
 import { authService } from './modules/auth/services/authService'
@@ -43,6 +44,7 @@ import FuriganaSandbox from './pages/FuriganaSandbox'
 import ChineseZhuyinSandbox from './pages/ChineseZhuyinSandbox'
 import { colors } from './design-tokens'
 import { recordRecentArticle } from './utils/pageStateManager'
+import BillingSandboxRoutes, { isBillingSandboxPath } from './sandbox/billing/BillingSandboxRoutes'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -761,7 +763,6 @@ function AppContent() {
                   <CreditsIndicator
                     tokenBalance={userInfo?.token_balance}
                     role={userInfo?.role}
-                    onOpenUsage={() => setShowProfilePage(true)}
                   />
                   <UserAvatar 
                     userId={currentUserId}
@@ -983,11 +984,17 @@ function AppContent() {
 
 // 使用 UserProvider 和 LanguageProvider 包装 AppContent
 function App() {
+  if (typeof window !== 'undefined' && isBillingSandboxPath(window.location.pathname)) {
+    return <BillingSandboxRoutes />
+  }
+
   return (
     <UserProvider>
       <LanguageProvider>
         <UiLanguageProvider>
-          <AppContent />
+          <BillingProvider>
+            <AppContent />
+          </BillingProvider>
         </UiLanguageProvider>
       </LanguageProvider>
     </UserProvider>

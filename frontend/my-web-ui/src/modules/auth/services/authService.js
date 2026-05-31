@@ -167,6 +167,20 @@ export const authService = {
     return response.data
   },
 
+  /** 模拟 Pro 升级（非 Paddle，用于 in-app paywall UX） */
+  simulateProUpgrade: async (token) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+    const response = await authApi.post('/api/auth/billing/simulate-upgrade', {}, config)
+    return response.data
+  },
+
+  /** 模拟购买积分包（非真实支付） */
+  simulateCreditsPurchase: async (token, credits) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+    const response = await authApi.post('/api/auth/billing/simulate-credits', { credits }, config)
+    return response.data
+  },
+
   /**
    * 本地存储：保存认证信息
    */

@@ -46,6 +46,9 @@ const profileTexts = {
     tokensManagement: '使用情况',
     currentPoints: '剩余积分',
     creditsLabel: '积分',
+    currentPlan: '当前方案',
+    manageBilling: '管理账单',
+    billingReference: '账单与升级请在应用内完成，无需单独页面。',
     inviteCode: '邀请码',
     enterInviteCode: '请输入邀请码',
     internalTestingOnly: '(仅内部测试用)',
@@ -91,6 +94,9 @@ const profileTexts = {
     tokensManagement: 'Usage',
     currentPoints: 'Credits remaining',
     creditsLabel: 'credits',
+    currentPlan: 'Current plan',
+    manageBilling: 'Manage billing',
+    billingReference: 'Billing and upgrades happen in-app — no separate page needed.',
     inviteCode: 'Invite Code',
     enterInviteCode: 'Enter invite code',
     internalTestingOnly: '(Internal testing only)',
@@ -103,6 +109,9 @@ const profileTexts = {
 }
 
 import { formatCredits } from '../../../utils/creditsUtils'
+import { planLabel } from '../../../utils/billingConstants'
+import { useBilling } from '../../../contexts/BillingContext'
+import { useUIText } from '../../../i18n/useUIText'
 import {
   CONTENT_LANGUAGE_NAMES,
   languageCodesToNames,
@@ -133,6 +142,8 @@ const ProfilePage = ({ onClose, onLogout }) => {
     return selectedLanguage ? [selectedLanguage] : []
   })
   const t = profileTexts[uiLanguage] || profileTexts.zh
+  const tUI = useUIText()
+  const { openBilling } = useBilling()
 
   // 持久化已选择语言列表（按用户维度）
   useEffect(() => {
@@ -498,10 +509,19 @@ const ProfilePage = ({ onClose, onLogout }) => {
             </div>
           </div>
 
-          {/* Usage */}
+          {/* Usage — reference only; opens same in-app billing modal */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.tokensManagement}</h2>
             <div className="space-y-4">
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">{t.currentPlan}</label>
+                  <p className="text-lg font-semibold text-gray-900 mt-1">
+                    {planLabel(userInfo?.plan, tUI)}
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400">{t.displayOnly}</span>
+              </div>
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <div>
                   <label className="text-sm font-medium text-gray-500">{t.currentPoints}</label>
@@ -512,11 +532,14 @@ const ProfilePage = ({ onClose, onLogout }) => {
                 </div>
                 <span className="text-xs text-gray-400">{t.displayOnly}</span>
               </div>
-              <p className="text-sm text-gray-500">
-                {uiLanguage === 'en'
-                  ? 'Used for AI explanations and analysis.'
-                  : '用于 AI 解释与分析。'}
-              </p>
+              <p className="text-sm text-gray-500">{t.billingReference}</p>
+              <button
+                type="button"
+                onClick={() => openBilling({ variant: 'usage', trigger: 'settings' })}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors"
+              >
+                {t.manageBilling}
+              </button>
 
               {/* 邀请码兑换 */}
               <div className="pt-4">
@@ -552,10 +575,15 @@ const ProfilePage = ({ onClose, onLogout }) => {
             </div>
           </div>
 
-          {/* 会员中心 */}
+          {/* Membership — reference only */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.membership}</h2>
-            <p className="text-sm text-gray-400">{t.membershipDesc}</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">{t.membership}</h2>
+            <p className="text-sm text-gray-600">
+              {planLabel(userInfo?.plan, tUI)}
+              {' · '}
+              {formatCredits(userInfo?.token_balance)} {t.creditsLabel}
+            </p>
+            <p className="mt-2 text-xs text-gray-400">{t.membershipDesc}</p>
           </div>
 
           {/* 关于 */}

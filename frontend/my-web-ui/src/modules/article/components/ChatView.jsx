@@ -30,6 +30,7 @@ import { useRefreshData } from '../../../hooks/useApi'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { colors } from '../../../design-tokens'
 import { useUser } from '../../../contexts/UserContext'
+import { useBilling } from '../../../contexts/BillingContext'
 import { isTokenInsufficient } from '../../../utils/tokenUtils'
 import { useTranslate } from '../../../i18n/useTranslate'
 import { useUIText } from '../../../i18n/useUIText'
@@ -147,6 +148,7 @@ function ChatView({
   const { refreshGrammar, refreshVocab } = useRefreshData()
   const { addLog } = useTranslationDebug()
   const { token, userInfo } = useUser()
+  const { openPaywall, openBilling } = useBilling()
   
   // 🔧 Token不足检查相关状态
   const [tokenInsufficient, setTokenInsufficient] = useState(false)
@@ -1450,13 +1452,12 @@ function ChatView({
     if (!isProcessing && userInfo) {
       const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
       if (insufficient) {
-        console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+        openPaywall({ action: 'chat' })
         sendingRef.current = false
         return
       }
     } else if (!isProcessing && tokenInsufficient) {
-      // 如果userInfo还未加载，但之前检查过token不足，也阻止
-      console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+      openPaywall({ action: 'chat' })
       sendingRef.current = false
       return
     }
@@ -1903,13 +1904,12 @@ function ChatView({
     if (!isProcessing && userInfo) {
       const insufficient = isTokenInsufficient(userInfo.token_balance, userInfo.role)
       if (insufficient) {
-        console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+        openPaywall({ action: 'chat' })
         sendingRef.current = false
         return
       }
     } else if (!isProcessing && tokenInsufficient) {
-      // 如果userInfo还未加载，但之前检查过token不足，也阻止
-      console.log(`⚠️ [ChatView] Token不足，无法使用AI聊天功能`)
+      openPaywall({ action: 'chat' })
       sendingRef.current = false
       return
     }
@@ -2520,9 +2520,13 @@ function ChatView({
         )}
         {/* Credits insufficient */}
         {tokenInsufficient && !isProcessing && !isLoginRequired && (
-          <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-            {tUI('Insufficient credits')}
-          </div>
+          <button
+            type="button"
+            onClick={() => openBilling({ variant: 'paywall', trigger: 'chat' })}
+            className="mb-2 w-full text-left px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900 hover:bg-amber-100 transition-colors"
+          >
+            {tUI('Insufficient credits')} — {tUI('Upgrade to keep learning')}
+          </button>
         )}
         <div className="flex space-x-2">
           <input
@@ -2540,7 +2544,7 @@ function ChatView({
                   : isLoginRequired
                     ? tUI("请先登录后使用 AI 聊天")
                   : tokenInsufficient 
-                    ? tUI('Insufficient credits, AI chat is unavailable')
+                    ? tUI('Insufficient credits — tap send to upgrade')
                     : (!hasSelectedToken && !hasSelectedSentence) 
                       ? t("请先选择文章中的词汇或句子")
                       : (quotedText 
@@ -2556,12 +2560,12 @@ function ChatView({
             onBlur={(e) => {
               e.currentTarget.style.boxShadow = ''
             }}
-            disabled={disabled || isProcessing || isLoginRequired || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
+            disabled={disabled || isProcessing || isLoginRequired || (!hasSelectedToken && !hasSelectedSentence)}
           />
           <button
             type="button"
             onClick={handleSendMessage}
-            disabled={inputText.trim() === '' || isQuestionTooLong || disabled || isProcessing || isLoginRequired || tokenInsufficient || (!hasSelectedToken && !hasSelectedSentence)}
+            disabled={inputText.trim() === '' || isQuestionTooLong || disabled || isProcessing || isLoginRequired || (!hasSelectedToken && !hasSelectedSentence)}
             className="px-4 py-2 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:brightness-95 active:brightness-90"
             style={{
               backgroundColor: colors.primary[600],

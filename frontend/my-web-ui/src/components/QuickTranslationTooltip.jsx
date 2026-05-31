@@ -19,6 +19,7 @@ export default function QuickTranslationTooltip({
   onMouseLeave = null, // tooltip hover 离开回调
   onAskAI = null, // AI详细解释回调函数（可选，可以接收 (word) 或 (token, sentenceIdx)）
   isTokenInsufficient = false, // 🔧 Token是否不足（用于禁用AI详细解释按钮）
+  onCreditsBlocked = null, // 积分不足时打开 paywall
   fullWidth = false, // 🔧 是否使用全宽模式（与 anchor 宽度一致）
   uiScale = 1, // 🔧 UI缩放（仅影响 tooltip 自身字体/间距）
   zIndex = 9999, // 🔧 自定义 z-index，用于控制叠放顺序
@@ -217,7 +218,10 @@ export default function QuickTranslationTooltip({
           onClick={(e) => {
             e.stopPropagation()
             e.preventDefault()
-            if (isTokenInsufficient) return
+            if (isTokenInsufficient) {
+              onCreditsBlocked?.()
+              return
+            }
             if (typeof onAskAI === 'function') {
               try {
                 const result = onAskAI()
@@ -232,10 +236,10 @@ export default function QuickTranslationTooltip({
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
-          disabled={isTokenInsufficient}
+          disabled={false}
           className={`mt-2 w-full px-2 py-1 text-xs rounded transition-colors border ${
             isTokenInsufficient
-              ? 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed'
+              ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-transparent hover:border-gray-300'
           }`}
           title={isTokenInsufficient ? t('Insufficient credits') : 'AI详细解释'}

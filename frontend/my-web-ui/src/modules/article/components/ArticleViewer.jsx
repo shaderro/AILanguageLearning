@@ -35,6 +35,7 @@ function ArticleViewer({
   onTargetSentenceScrolled = null,  // 🔧 滚动完成后的回调
   onAskAI = null,  // 🔧 AI详细解释回调
   isTokenInsufficient = false,  // 🔧 Token是否不足（用于禁用AI详细解释按钮）
+  onCreditsBlocked = null,  // 🔧 积分不足时触发 paywall
   autoTranslationEnabled = false,  // 🔧 自动翻译开关状态
   pageIndex = 1,
   onPageChange = null,
@@ -926,6 +927,7 @@ function ArticleViewer({
               currentReadingToken={currentReadingToken}
               onAskAI={onAskAI}
               isTokenInsufficient={isTokenInsufficient}
+              onCreditsBlocked={onCreditsBlocked}
               autoTranslationEnabled={autoTranslationEnabled}
               autoHintTarget={autoHintTarget}
               autoHintPreviewing={autoHintPreviewing}

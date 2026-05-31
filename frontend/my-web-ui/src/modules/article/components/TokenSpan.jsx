@@ -51,6 +51,7 @@ export default function TokenSpan({
   highlightedRange = null,
   // 🔧 新增：Token是否不足（用于禁用AI详细解释按钮）
   isTokenInsufficient = false,
+  onCreditsBlocked = null,
   // 🔧 新增：源语言代码（来自句子/文章），用于单词自动翻译
   sourceLanguageCode = null,
   // 🔧 注音：按现有 token 边界对齐后的 reading
@@ -983,7 +984,9 @@ export default function TokenSpan({
           onSpeak={handleSpeak}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
-          // 🔧 不传 onAskAI：不显示“AI详细解释”的幽灵按钮
+          onAskAI={onAskAI ? () => onAskAI(token, sentenceIdx) : null}
+          isTokenInsufficient={isTokenInsufficient}
+          onCreditsBlocked={onCreditsBlocked}
           uiScale={0.67}
           fullWidth={false}
         />

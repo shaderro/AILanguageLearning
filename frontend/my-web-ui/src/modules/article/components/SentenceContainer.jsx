@@ -54,6 +54,7 @@ function SentenceContainer({
   highlightedRange = null,
   // 🔧 新增：Token是否不足（用于禁用AI详细解释按钮）
   isTokenInsufficient = false,
+  onCreditsBlocked = null,
   // 🔧 新增：自动翻译开关状态
   autoTranslationEnabled = false,
   autoHintTarget = null,
@@ -680,6 +681,7 @@ function SentenceContainer({
               hoveredTokenId={hoveredTokenId}
               setHoveredTokenId={setHoveredTokenId}
               isTokenInsufficient={isTokenInsufficient}
+              onCreditsBlocked={onCreditsBlocked}
               handleGetExplanation={handleGetExplanation}
               onTokenMouseLeave={handleTokenHoverLeave}
               addSingle={addSingle}

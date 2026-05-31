@@ -394,6 +394,8 @@ class User(Base):
     role = Column(String(32), nullable=False, default='user')
     # 当前可用 token 余额（使用 BigInteger 以避免后续累计溢出）
     token_balance = Column(BigInteger, nullable=False, default=0)
+    # 订阅计划：'free' | 'pro'（模拟/未来 Paddle 对接）
+    plan = Column(String(16), nullable=False, default='free')
     # 最近一次 token 变动时间（用于排查和前端展示，可为空）
     token_updated_at = Column(DateTime, nullable=True)
     # UI 语言偏好（跨设备记忆）：'zh' | 'en' 等

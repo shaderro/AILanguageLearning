@@ -182,6 +182,7 @@ class UserResponse(BaseModel):
     token_balance: Optional[int] = None
     total_tokens_used: Optional[int] = None  # 累计使用的 token 数量
     role: Optional[str] = None  # 用户角色（'admin' | 'user'）
+    plan: Optional[str] = 'free'  # 订阅计划：'free' | 'pro'
     ui_language: Optional[str] = None  # 界面语言偏好（如 'zh' / 'en'）
     content_language: Optional[str] = None  # 当前内容语言代码（如 'zh' / 'en' / 'de'）
     languages_list: Optional[list[str]] = None  # 已添加的内容语言代码列表
@@ -211,6 +212,16 @@ class UserPreferencesUpdateRequest(BaseModel):
     ui_language: Optional[str] = Field(None, description="界面语言代码，如 'zh' / 'en'")
     content_language: Optional[str] = Field(None, description="当前内容语言代码，如 'zh' / 'en' / 'de'")
     languages_list: Optional[list[str]] = Field(None, description="已添加的内容语言代码列表")
+
+
+class SimulateCreditsRequest(BaseModel):
+    credits: int = Field(..., ge=1, le=10000, description="模拟购买的积分数量")
+
+
+class BillingSimulateResponse(BaseModel):
+    plan: str
+    token_balance: int
+    credits_granted: int
 
 
 class MagicLinkEmailRequest(BaseModel):
@@ -541,6 +552,7 @@ async def get_current_user_info(
             token_balance=current_user.token_balance or 0,
             total_tokens_used=total_tokens_used,
             role=current_user.role or 'user',
+            plan=getattr(current_user, 'plan', None) or 'free',
             # 不强制默认 'zh'，交由前端根据 localStorage / 默认值决定
             ui_language=current_user.ui_language,
             content_language=current_user.content_language,
@@ -758,6 +770,66 @@ async def update_user_preferences(
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail=f"更新偏好失败: {str(e)}")
+
+
+def _normalize_plan(plan: Optional[str]) -> str:
+    return 'pro' if plan == 'pro' else 'free'
+
+
+@router.post("/billing/simulate-upgrade", response_model=BillingSimulateResponse)
+async def simulate_pro_upgrade(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_db_session),
+):
+    """
+    模拟 Pro 升级（非 Paddle）：plan=pro，并赠送 1000 积分。
+    用于产品内 paywall / billing modal UX 验证。
+    """
+    from backend.config import POINTS_PER_TOKEN_UNIT
+
+    credits_granted = 1000
+    grant_tokens = credits_granted * POINTS_PER_TOKEN_UNIT
+    try:
+        current_user.plan = 'pro'
+        current_user.token_balance = (current_user.token_balance or 0) + grant_tokens
+        from datetime import datetime
+        current_user.token_updated_at = datetime.now()
+        session.add(current_user)
+        session.commit()
+        return BillingSimulateResponse(
+            plan='pro',
+            token_balance=current_user.token_balance,
+            credits_granted=credits_granted,
+        )
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"模拟升级失败: {str(e)}")
+
+
+@router.post("/billing/simulate-credits", response_model=BillingSimulateResponse)
+async def simulate_credits_purchase(
+    body: SimulateCreditsRequest,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_db_session),
+):
+    """模拟购买积分包（非真实支付）。"""
+    from backend.config import POINTS_PER_TOKEN_UNIT
+
+    grant_tokens = body.credits * POINTS_PER_TOKEN_UNIT
+    try:
+        current_user.token_balance = (current_user.token_balance or 0) + grant_tokens
+        from datetime import datetime
+        current_user.token_updated_at = datetime.now()
+        session.add(current_user)
+        session.commit()
+        return BillingSimulateResponse(
+            plan=_normalize_plan(getattr(current_user, 'plan', None)),
+            token_balance=current_user.token_balance,
+            credits_granted=body.credits,
+        )
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"模拟购买积分失败: {str(e)}")
 
 
 @router.get("/debug/all-users")
