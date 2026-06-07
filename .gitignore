@@ -11,3 +11,8 @@ __pycache__/
 # ===== OS junk =====
 .DS_Store
 ._*
+Thumbs.db
+
+# ===== Installers (do not commit) =====
+*.msi
+python-installer.exe

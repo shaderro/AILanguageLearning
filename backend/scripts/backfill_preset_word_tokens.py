@@ -17,7 +17,7 @@
 2) 发版后执行一次回填（幂等，已分词的文章会 skipped）:
      ENV=production python backend/scripts/backfill_preset_word_tokens.py
    或在批量导入预置后顺带执行:
-     python seed_preset_articles_for_all.py --env production --backfill-word-tokens
+     python scripts/admin/seed_preset_articles_for_all.py --env production --backfill-word-tokens
 
 3) 新用户：注册时仍会 seed 预置；若某预置文已存在，会走修复逻辑补 WordToken。
 

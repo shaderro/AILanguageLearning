@@ -550,6 +550,7 @@ async def startup_event():
                 ArticleSegmentTask,
                 AuthSession,
                 MagicLinkToken,
+                PaddleWebhookEvent,
             )
 
             inspector = inspect(engine)
@@ -560,7 +561,7 @@ async def startup_event():
                 for table in sorted(existing_tables):
                     print(f"   - {table}")
                 # 增量补表：已有库时仍创建 ORM 中新增且尚未存在的表
-                incremental_models = (MagicLinkToken, AuthSession, ArticleSegmentTask)
+                incremental_models = (MagicLinkToken, AuthSession, ArticleSegmentTask, PaddleWebhookEvent)
                 missing_tables = [
                     m.__table__
                     for m in incremental_models
@@ -585,9 +586,65 @@ async def startup_event():
                     print(f"   - {table} ({len(columns)} 列)")
         else:
             print("📊 检测到 SQLite 数据库")
+            from sqlalchemy import inspect, text
+            from database_system.data_storage.config.config import DB_FILES
+
+            db_file = DB_FILES.get("dev") if ENV == "development" else DB_FILES.get("test")
+            if db_file:
+                print(f"   数据库文件: {os.path.abspath(db_file)}")
+
             # SQLite: 确保表结构存在
             Base.metadata.create_all(engine)
             print("✅ SQLite 数据库表已初始化")
+
+            # 增量补列：旧 dev.db 可能没有 users.plan（会导致 magic-link verify 500）
+            inspector = inspect(engine)
+            if "users" in inspector.get_table_names():
+                user_cols = {c["name"] for c in inspector.get_columns("users")}
+                if "plan" not in user_cols:
+                    print("📝 增量添加 users.plan ...")
+                    with engine.begin() as conn:
+                        conn.execute(
+                            text(
+                                "ALTER TABLE users ADD COLUMN plan VARCHAR(16) DEFAULT 'free' NOT NULL"
+                            )
+                        )
+                    print("✅ users.plan 已添加")
+                else:
+                    print("✅ users.plan 已存在")
+                for col_name, col_sql in (
+                    ("paddle_customer_id", "VARCHAR(64)"),
+                    ("paddle_subscription_id", "VARCHAR(64)"),
+                ):
+                    if col_name not in user_cols:
+                        print(f"📝 增量添加 users.{col_name} ...")
+                        with engine.begin() as conn:
+                            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_sql}"))
+                        print(f"✅ users.{col_name} 已添加")
+                        user_cols.add(col_name)
+                    else:
+                        print(f"✅ users.{col_name} 已存在")
+                if "paddle_webhook_events" not in inspector.get_table_names():
+                    from database_system.business_logic.models import PaddleWebhookEvent
+                    print("📝 增量创建 paddle_webhook_events ...")
+                    Base.metadata.create_all(engine, tables=[PaddleWebhookEvent.__table__])
+                    print("✅ paddle_webhook_events 已创建")
+            # 增量补列：旧 dev.db 可能没有 original_texts.difficulty / exam_content
+            if "original_texts" in inspector.get_table_names():
+                text_cols = {c["name"] for c in inspector.get_columns("original_texts")}
+                for col_name, col_sql in (
+                    ("difficulty", "VARCHAR(32)"),
+                    ("exam_content", "VARCHAR(64)"),
+                ):
+                    if col_name not in text_cols:
+                        print(f"📝 增量添加 original_texts.{col_name} ...")
+                        with engine.begin() as conn:
+                            conn.execute(
+                                text(f"ALTER TABLE original_texts ADD COLUMN {col_name} {col_sql}")
+                            )
+                        print(f"✅ original_texts.{col_name} 已添加")
+                    else:
+                        print(f"✅ original_texts.{col_name} 已存在")
         
         print("="*60 + "\n")
         
@@ -604,7 +661,7 @@ async def log_requests(request, call_next):
     # 🔧 修复：只在需要时读取请求体，并且正确处理异常
     try:
         # 如果是 POST 请求，尝试记录请求体大小（但不影响后续处理）
-        if request.method == "POST":
+        if request.method == "POST" and request.url.path != "/api/billing/webhooks/paddle":
             # 使用 FastAPI 官方推荐方式：一次性读取 body，然后重新注入 _receive
             body_bytes = await request.body()
             if body_bytes:
@@ -746,6 +803,14 @@ try:
     print("[OK] 注册聊天历史API路由: /api/chat/history")
 except ImportError as e:
     print(f"Warning: Could not import chat_history_routes: {e}")
+
+# 注册 Paddle Billing webhook
+try:
+    from backend.api.paddle_routes import router as paddle_router
+    app.include_router(paddle_router)
+    print("[OK] 注册 Paddle Billing 路由: /api/billing")
+except ImportError as e:
+    print(f"Warning: Could not import paddle_routes: {e}")
 
 @app.get("/")
 async def root():

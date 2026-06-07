@@ -776,6 +776,19 @@ def _normalize_plan(plan: Optional[str]) -> str:
     return 'pro' if plan == 'pro' else 'free'
 
 
+def _require_simulate_billing_allowed():
+    """Paddle 已启用时禁止模拟支付，避免绕过真实计费。"""
+    try:
+        from backend.config import paddle_billing_enabled
+        if paddle_billing_enabled():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="模拟支付已禁用，请使用 Paddle Checkout",
+            )
+    except ImportError:
+        pass
+
+
 @router.post("/billing/simulate-upgrade", response_model=BillingSimulateResponse)
 async def simulate_pro_upgrade(
     current_user: User = Depends(get_current_user),
@@ -783,8 +796,9 @@ async def simulate_pro_upgrade(
 ):
     """
     模拟 Pro 升级（非 Paddle）：plan=pro，并赠送 1000 积分。
-    用于产品内 paywall / billing modal UX 验证。
+    Paddle 启用后此接口返回 403。
     """
+    _require_simulate_billing_allowed()
     from backend.config import POINTS_PER_TOKEN_UNIT
 
     credits_granted = 1000
@@ -812,7 +826,8 @@ async def simulate_credits_purchase(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_db_session),
 ):
-    """模拟购买积分包（非真实支付）。"""
+    """模拟购买积分包（非真实支付）。Paddle 启用后此接口返回 403。"""
+    _require_simulate_billing_allowed()
     from backend.config import POINTS_PER_TOKEN_UNIT
 
     grant_tokens = body.credits * POINTS_PER_TOKEN_UNIT

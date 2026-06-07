@@ -1,7 +1,7 @@
 import { useBilling } from '../../../contexts/BillingContext'
 import { useUIText } from '../../../i18n/useUIText'
 import { formatCredits } from '../../../utils/creditsUtils'
-import { CREDIT_PACKS, PRO_MONTHLY_CREDITS, PRO_PRICE_LABEL, planLabel } from '../../../utils/billingConstants'
+import { PRO_MONTHLY_CREDITS, PRO_PRICE_LABEL, planLabel } from '../../../utils/billingConstants'
 
 export default function BillingModal() {
   const t = useUIText()
@@ -10,11 +10,10 @@ export default function BillingModal() {
     plan,
     tokenBalance,
     isUpgrading,
-    isBuyingCredits,
     billingError,
+    paddleEnabled,
     closeBilling,
-    simulateUpgrade,
-    simulateBuyCredits,
+    upgradeToPro,
   } = useBilling()
 
   if (!modalState.open) return null
@@ -22,6 +21,7 @@ export default function BillingModal() {
   const isPaywall = modalState.variant === 'paywall'
   const creditsDisplay = formatCredits(tokenBalance)
   const isPro = plan === 'pro'
+  const busy = isUpgrading
 
   const paywallMessage = (() => {
     if (modalState.trigger === 'chat') {
@@ -32,6 +32,16 @@ export default function BillingModal() {
     }
     return t('You need credits to use this AI feature.')
   })()
+
+  const proCreditsHint = paddleEnabled
+    ? t('Includes {n} credits per month').replace('{n}', String(PRO_MONTHLY_CREDITS))
+    : t('Includes {n} credits per month (simulated)').replace('{n}', String(PRO_MONTHLY_CREDITS))
+
+  const upgradeLabel = busy
+    ? t('处理中...')
+    : paddleEnabled
+      ? t('Upgrade to Pro')
+      : t('Upgrade to Pro (simulated)')
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4">
@@ -81,41 +91,17 @@ export default function BillingModal() {
               <p className="text-sm font-medium text-gray-900">
                 Pro · {PRO_PRICE_LABEL}{t('/month')}
               </p>
-              <p className="mt-1 text-xs text-gray-600">
-                {t('Includes {n} credits per month (simulated)').replace('{n}', String(PRO_MONTHLY_CREDITS))}
-              </p>
+              <p className="mt-1 text-xs text-gray-600">{proCreditsHint}</p>
               <button
                 type="button"
-                onClick={simulateUpgrade}
-                disabled={isUpgrading || isBuyingCredits}
+                onClick={upgradeToPro}
+                disabled={busy}
                 className="mt-3 w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
               >
-                {isUpgrading ? t('处理中...') : t('Upgrade to Pro (simulated)')}
+                {upgradeLabel}
               </button>
             </div>
           )}
-
-          <div className="rounded-lg border border-dashed border-gray-200 p-3">
-            <p className="text-xs font-medium text-gray-500 mb-2">{t('Buy credits (placeholder)')}</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => simulateBuyCredits(CREDIT_PACKS.small)}
-                disabled={isUpgrading || isBuyingCredits}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                +{CREDIT_PACKS.small}
-              </button>
-              <button
-                type="button"
-                onClick={() => simulateBuyCredits(CREDIT_PACKS.large)}
-                disabled={isUpgrading || isBuyingCredits}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                +{CREDIT_PACKS.large}
-              </button>
-            </div>
-          </div>
 
           {billingError && (
             <p className="text-sm text-red-600">{billingError}</p>

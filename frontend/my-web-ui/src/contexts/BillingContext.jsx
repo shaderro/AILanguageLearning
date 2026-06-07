@@ -1,8 +1,15 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useUser } from './UserContext'
 import authService from '../modules/auth/services/authService'
 import { isCreditsInsufficient } from '../utils/creditsUtils'
 import BillingModal from '../components/features/billing/BillingModal'
+import {
+  getProPriceId,
+  initPaddle,
+  isPaddleEnabled,
+  openPaddleCheckout,
+  setPaddleEventHandler,
+} from '../services/paddleService'
 
 const BillingContext = createContext(null)
 
@@ -14,8 +21,8 @@ export function BillingProvider({ children }) {
     trigger: 'header',
   })
   const [isUpgrading, setIsUpgrading] = useState(false)
-  const [isBuyingCredits, setIsBuyingCredits] = useState(false)
   const [billingError, setBillingError] = useState(null)
+  const paddleEnabled = isPaddleEnabled()
 
   const plan = userInfo?.plan || 'free'
   const tokenBalance = userInfo?.token_balance
@@ -44,6 +51,28 @@ export function BillingProvider({ children }) {
     })
   }, [])
 
+  const refreshAfterPayment = useCallback(async () => {
+    if (!token) return
+    await refreshUserInfo(token, { force: true })
+    setTimeout(() => refreshUserInfo(token, { force: true }), 2500)
+    closeBilling()
+  }, [token, refreshUserInfo, closeBilling])
+
+  useEffect(() => {
+    if (!paddleEnabled) return undefined
+    initPaddle()
+    setPaddleEventHandler((event) => {
+      if (event?.name === 'checkout.completed') {
+        refreshAfterPayment()
+      }
+      if (event?.name === 'checkout.error') {
+        setBillingError(event?.data?.detail || 'Checkout failed')
+        setIsUpgrading(false)
+      }
+    })
+    return () => setPaddleEventHandler(null)
+  }, [paddleEnabled, refreshAfterPayment])
+
   const simulateUpgrade = useCallback(async () => {
     if (!token) return
     setIsUpgrading(true)
@@ -59,20 +88,26 @@ export function BillingProvider({ children }) {
     }
   }, [token, refreshUserInfo, closeBilling])
 
-  const simulateBuyCredits = useCallback(async (credits) => {
-    if (!token || !credits) return
-    setIsBuyingCredits(true)
-    setBillingError(null)
-    try {
-      await authService.simulateCreditsPurchase(token, credits)
-      await refreshUserInfo(token, { force: true })
-      closeBilling()
-    } catch (err) {
-      setBillingError(err?.response?.data?.detail || err?.message || 'Purchase failed')
-    } finally {
-      setIsBuyingCredits(false)
+  const upgradeToPro = useCallback(async () => {
+    if (!userInfo?.user_id) return
+    if (paddleEnabled) {
+      setIsUpgrading(true)
+      setBillingError(null)
+      try {
+        await openPaddleCheckout({
+          priceId: getProPriceId(),
+          userId: userInfo.user_id,
+          email: userInfo.email,
+        })
+      } catch (err) {
+        setBillingError(err?.message || 'Failed to open checkout')
+      } finally {
+        setIsUpgrading(false)
+      }
+      return
     }
-  }, [token, refreshUserInfo, closeBilling])
+    await simulateUpgrade()
+  }, [userInfo, paddleEnabled, simulateUpgrade])
 
   const value = useMemo(
     () => ({
@@ -81,13 +116,13 @@ export function BillingProvider({ children }) {
       creditsInsufficient,
       modalState,
       isUpgrading,
-      isBuyingCredits,
       billingError,
+      paddleEnabled,
       openBilling,
       openPaywall,
       closeBilling,
+      upgradeToPro,
       simulateUpgrade,
-      simulateBuyCredits,
     }),
     [
       plan,
@@ -95,13 +130,13 @@ export function BillingProvider({ children }) {
       creditsInsufficient,
       modalState,
       isUpgrading,
-      isBuyingCredits,
       billingError,
+      paddleEnabled,
       openBilling,
       openPaywall,
       closeBilling,
+      upgradeToPro,
       simulateUpgrade,
-      simulateBuyCredits,
     ],
   )
 

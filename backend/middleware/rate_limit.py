@@ -133,7 +133,14 @@ async def rate_limit_middleware(request: Request, call_next):
             return await call_next(request)
 
         # 跳过健康检查和文档接口
-        if request.url.path in ["/", "/api/health", "/docs", "/openapi.json", "/redoc"]:
+        if request.url.path in [
+            "/",
+            "/api/health",
+            "/docs",
+            "/openapi.json",
+            "/redoc",
+            "/api/billing/webhooks/paddle",
+        ]:
             return await call_next(request)
         
         # 尝试从 Authorization header 获取用户ID

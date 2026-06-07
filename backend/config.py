@@ -161,6 +161,35 @@ def _build_cors_allowed_origins() -> list[str]:
 
 CORS_ALLOWED_ORIGINS = _build_cors_allowed_origins()
 
+# ==================== Paddle Billing（可选） ====================
+
+PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
+
+
+def _normalize_paddle_secret(raw: str | None) -> str | None:
+    """Strip quotes/BOM/whitespace from Paddle webhook secret."""
+    if not raw:
+        return None
+    s = raw.strip().lstrip("\ufeff")
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in "\"'":
+        s = s[1:-1].strip()
+    return s or None
+
+
+PADDLE_WEBHOOK_SECRET = _normalize_paddle_secret(os.getenv("PADDLE_WEBHOOK_SECRET"))
+PADDLE_ENV = os.getenv("PADDLE_ENV", "sandbox").strip().lower()
+if PADDLE_ENV not in ("sandbox", "production"):
+    PADDLE_ENV = "sandbox"
+
+PADDLE_PRICE_PRO = os.getenv("PADDLE_PRICE_PRO")
+
+PRO_MONTHLY_CREDITS = int(os.getenv("PRO_MONTHLY_CREDITS", "1000"))
+
+
+def paddle_billing_enabled() -> bool:
+    """Webhook + Pro 订阅 Price ID 已配置时视为已启用真实支付。"""
+    return bool(PADDLE_WEBHOOK_SECRET and PADDLE_PRICE_PRO)
+
 # ==================== 可选的环境变量 ====================
 
 # 其他配置可以在这里添加

@@ -394,8 +394,11 @@ class User(Base):
     role = Column(String(32), nullable=False, default='user')
     # 当前可用 token 余额（使用 BigInteger 以避免后续累计溢出）
     token_balance = Column(BigInteger, nullable=False, default=0)
-    # 订阅计划：'free' | 'pro'（模拟/未来 Paddle 对接）
+    # 订阅计划：'free' | 'pro'
     plan = Column(String(16), nullable=False, default='free')
+    # Paddle Billing 客户 / 订阅 ID（webhook 写入）
+    paddle_customer_id = Column(String(64), nullable=True, index=True)
+    paddle_subscription_id = Column(String(64), nullable=True, index=True)
     # 最近一次 token 变动时间（用于排查和前端展示，可为空）
     token_updated_at = Column(DateTime, nullable=True)
     # UI 语言偏好（跨设备记忆）：'zh' | 'en' 等
@@ -539,6 +542,28 @@ class TokenLog(Base):
     __table_args__ = (
         # 方便按用户和时间查询
         Index('idx_token_logs_user_time', 'user_id', 'created_at'),
+    )
+
+
+class PaddleWebhookEvent(Base):
+    """
+    Paddle webhook 幂等记录：同一 event_id 只处理一次，防止重复加积分。
+    """
+    __tablename__ = 'paddle_webhook_events'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_id = Column(String(128), unique=True, nullable=False, index=True)
+    event_type = Column(String(64), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True, index=True)
+    transaction_id = Column(String(64), nullable=True, index=True)
+    price_id = Column(String(64), nullable=True)
+    credits_granted = Column(Integer, nullable=False, default=0)
+    processed_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    user = relationship('User', backref='paddle_webhook_events')
+
+    __table_args__ = (
+        Index('idx_paddle_events_user_time', 'user_id', 'processed_at'),
     )
 
 

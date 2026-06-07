@@ -66,17 +66,27 @@
 ## 📁 项目结构
 
 ```
-langApp514/
+AILanguageLearning/
 ├── backend/                      # 后端功能模块
 │   ├── assistants/               # AI助手系统
 │   ├── data_managers/            # 数据管理系统
 │   ├── preprocessing/            # 数据预处理
 │   ├── data/                     # 数据文件
-│   ├── main.py                   # 主程序入口
-│   └── integrated_language_system.py
-├── frontend/                     # 前端开发
-│   └── README.md                 # 前端开发指南
-├── requirements.txt              # 依赖包
+│   └── main.py                   # 主程序入口
+├── frontend/                     # 前端（Web UI）
+│   └── my-web-ui/
+├── database_system/              # 数据库层
+├── scripts/                      # 运维/迁移/检查脚本
+│   ├── admin/                    # 数据管理、种子数据
+│   ├── migrations/               # Python 迁移
+│   ├── sql/                      # SQL 脚本
+│   └── checks/                   # 环境检查与测试
+├── docs/                         # 文档与资源
+│   ├── guides/                   # 使用指南
+│   └── assets/                   # 截图、样例文本
+├── start_backend.ps1             # 启动后端
+├── start_frontend.ps1            # 启动前端
+├── requirements.txt              # Python 依赖
 └── README.md                     # 项目说明
 ```
 
