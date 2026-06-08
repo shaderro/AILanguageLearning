@@ -15,6 +15,11 @@ import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { apiService } from '../../../services/api'
 import SentenceContainer from './SentenceContainer'
 import { useTokenHighlight } from '../hooks/useTokenHighlight'
+import {
+  debounce,
+  getArticleScrollForPage,
+  saveArticleScrollForPage,
+} from '../../../utils/scrollPositionManager'
 
 /**
  * ArticleViewer - Main component for displaying and interacting with article content
@@ -348,30 +353,96 @@ function ArticleViewer({
   const scrollContainerRef = useRef(null)
   const scrollPositionRef = useRef(0)
   const scrollRestoredRef = useRef(false)
-  // 🔧 保持文章滚动位置，避免点击/重渲染时跳到顶部
+
+  const persistScrollPosition = useCallback(() => {
+    const sc = scrollContainerRef.current
+    if (!sc || !articleId || !userId) return
+    const scrollTop = sc.scrollTop
+    scrollPositionRef.current = scrollTop
+    saveArticleScrollForPage(userId, articleId, pageIndex, scrollTop)
+  }, [articleId, pageIndex, userId])
+
+  useEffect(() => {
+    scrollRestoredRef.current = false
+  }, [articleId, pageIndex])
+
+  // 🔧 保持文章滚动位置，避免刷新/重开或翻页后跳到顶部
   useEffect(() => {
     const sc = scrollContainerRef.current
-    if (!sc) return
+    if (!sc || !articleId || !userId) return
+
+    const saveScrollDebounced = debounce(() => {
+      persistScrollPosition()
+    }, 200)
+
     const onScroll = () => {
       scrollPositionRef.current = sc.scrollTop
-      if (articleId) {
-        sessionStorage.setItem(`article_scroll_${articleId}`, String(sc.scrollTop))
-      }
+      saveScrollDebounced()
     }
+
+    const onPageHide = () => {
+      saveScrollDebounced.flush()
+      persistScrollPosition()
+    }
+
     sc.addEventListener('scroll', onScroll, { passive: true })
-    return () => sc.removeEventListener('scroll', onScroll)
-  }, [articleId])
+    window.addEventListener('pagehide', onPageHide)
+    window.addEventListener('beforeunload', onPageHide)
+
+    return () => {
+      sc.removeEventListener('scroll', onScroll)
+      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('beforeunload', onPageHide)
+      saveScrollDebounced.flush()
+      persistScrollPosition()
+    }
+  }, [articleId, pageIndex, userId, persistScrollPosition])
 
   useLayoutEffect(() => {
-    if (scrollRestoredRef.current) return
+    if (targetSentenceId) return
+    if (isLoading || sentences.length === 0) return
+
     const sc = scrollContainerRef.current
-    if (!sc) return
-    const saved = articleId ? sessionStorage.getItem(`article_scroll_${articleId}`) : null
-    const savedPos = saved ? parseInt(saved, 10) : 0
-    sc.scrollTop = isNaN(savedPos) ? 0 : savedPos
-    scrollPositionRef.current = sc.scrollTop
-    scrollRestoredRef.current = true
-  }, [articleId])
+    if (!sc || !articleId || !userId) return
+
+    const savedPos = getArticleScrollForPage(userId, articleId, pageIndex)
+    if (savedPos <= 0) {
+      scrollRestoredRef.current = true
+      return
+    }
+
+    let cancelled = false
+    const applySavedScroll = () => {
+      if (cancelled || scrollRestoredRef.current) return
+      sc.scrollTop = savedPos
+      scrollPositionRef.current = sc.scrollTop
+      const maxScroll = Math.max(0, sc.scrollHeight - sc.clientHeight)
+      const reachedTarget =
+        Math.abs(sc.scrollTop - savedPos) <= 4 ||
+        (maxScroll >= savedPos - 4 && sc.scrollTop >= savedPos - 4)
+      if (reachedTarget) {
+        scrollRestoredRef.current = true
+      }
+    }
+
+    applySavedScroll()
+    const rafId = requestAnimationFrame(applySavedScroll)
+    const retryTimers = [50, 150, 350, 700, 1200].map((ms) =>
+      window.setTimeout(applySavedScroll, ms),
+    )
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(applySavedScroll)
+        : null
+    resizeObserver?.observe(sc)
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+      retryTimers.forEach((timerId) => window.clearTimeout(timerId))
+      resizeObserver?.disconnect()
+    }
+  }, [articleId, pageIndex, userId, isLoading, sentences.length, targetSentenceId])
   
   // 🔧 目标句子闪烁状态
   const [flashingSentenceId, setFlashingSentenceId] = useState(null)

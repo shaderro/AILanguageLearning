@@ -142,6 +142,14 @@ const GrammarReviewSandbox = () => {
     return grammarId ? parseInt(grammarId) : null
   }
 
+  const clearGrammarIdFromURL = () => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('grammarId')) return
+    params.delete('grammarId')
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
+    window.history.replaceState({}, '', newUrl)
+  }
+
   const [selectedGrammar, setSelectedGrammar] = useState(null)
   const [selectedGrammarId, setSelectedGrammarId] = useState(null)
   const [selectedGrammarIndex, setSelectedGrammarIndex] = useState(-1)
@@ -218,10 +226,7 @@ const GrammarReviewSandbox = () => {
       return
     }
 
-    const params = new URLSearchParams(window.location.search)
-    params.delete('grammarId')
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
-    window.history.replaceState({}, '', newUrl)
+    clearGrammarIdFromURL()
 
     setSelectedGrammar(null)
     setSelectedGrammarId(null)
@@ -770,6 +775,7 @@ const GrammarReviewSandbox = () => {
             onPrevious={currentIndex > 0 ? handlePreviousGrammar : null}
             onNext={currentIndex < sortedList.length - 1 ? handleNextGrammar : null}
             onBack={() => {
+              clearGrammarIdFromURL()
               setSelectedGrammar(null)
               setSelectedGrammarId(null)
               setSelectedGrammarIndex(-1)

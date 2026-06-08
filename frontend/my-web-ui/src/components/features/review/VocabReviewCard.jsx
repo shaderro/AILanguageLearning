@@ -118,6 +118,7 @@ const normalizeExplanationLayout = (rawText = '') => {
       .replace(/^grammar note\s*:/i, 'Grammar notes:')
       .replace(/^grammar notes\s*:/i, 'Grammar notes:')
       .replace(/^collocations?\s*:/i, 'Collocations:')
+      .replace(/^common senses?\s*:/i, 'Common senses:')
       .replace(/^rare sense\s*:/i, 'Rare sense:')
       .replace(/^[ \t]+(-\s+)/, '$1')
   })
@@ -144,6 +145,7 @@ const PART_OF_SPEECH_HEADINGS = new Set([
 
 const SECTION_HEADINGS = new Set([
   'definition', 'definitions', '释义', '定义',
+  'common senses', 'common sense', '常见义项', '义项',
   'word features', 'lexical features', 'morphology', 'morphological features', '词汇特征', '词法特征', '词形特征',
   'collocations', 'collocation', '搭配',
   'rare sense', 'rare senses', '少见义',

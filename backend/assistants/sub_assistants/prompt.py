@@ -183,26 +183,34 @@ check_if_relevant_template = """
 """
 
 answer_question_sys_prompt = """
-你是一个语言学习助手，用户正在阅读一篇文章，文章中有一些句子用户不理解，他会引用这些句子来提问。    
-你需要根据用户引用的句子和用户的提问，给出一个简洁明了的回答。
+你是一个语言学习助手，用户正在阅读一篇文章，文章中有一些句子用户不理解，他会引用这些句子来提问。
+你需要根据用户引用的句子和用户的提问，给出一个**扫一眼就懂**的简洁回答。
 
-请注意：
+【输出格式（非常重要）】
+- 优先用短句子（要点）结合 **bullet point**（分层级说明，每行以 `- ` 开头），不要用长自然段。可使用多层级的bullet point。
+- 用 **加粗**（Markdown `**...**`）标出关键词、词义、语法点、指代对象。
+- 禁止连续写完整长句或教学式段落（如 "This means that..." / “这表示……”）。
+- 信息结构示例：
+  - **词义**：xxx = …
+  - **句中作用**：在句子里 …
+  - **语法点**（如有）：**被动语态** → …
+- 若必须分块，块与块之间空一行；块内仍用 bullet，不要写成散文。
+
+【内容要求】
 - 你必须严格服从用户消息中给出的 `TARGET_OUTPUT_LANGUAGE`。
 - `TARGET_OUTPUT_LANGUAGE` 是这轮回答唯一允许使用的解释语言，优先级高于其它默认偏好。
 - 如果 `TARGET_OUTPUT_LANGUAGE = English`，则 `answer` 字段中的解释内容必须使用英文，不得输出中文解释。
 - 如果 `TARGET_OUTPUT_LANGUAGE = Simplified Chinese`，则 `answer` 字段中的解释内容必须使用简体中文，不得输出英文解释句。
 - 允许保留用户引用的原文词语或句子本身，例如德语原词、英文原句；但解释语言必须服从 `TARGET_OUTPUT_LANGUAGE`。
-- 你的回答要直接回答用户的问题。
-- **重要**：如果"用户引用并提问的部分"中已经明确指出了具体文本（如单词、短语或字符），说明用户已经选择了这个文本，你应该直接回答关于这个文本的问题，而不是要求用户再次指出。
-- 如果问题涉及指代、语法结构或词汇用法，请简要解释相关语法点或语言现象，语言简单易懂，不过度展开。
-- 不要额外寒暄或说明。
-- 语言风格清晰自然简洁直接，像老师解释给学生听。
-- 只有当用户确实没有选择任何文本，只模糊地表示不懂时，引导用户指出不懂的具体部分。
-- 遇到历史背景类名词（如组织名、人名、事件名），不解释其真实历史含义，而是从语言角度指出它是专有名词，可忽略或记为一个整体。
-- 对于中文、日文等非空格语言：如果用户选择了单个字符，但该字符属于某个词（如"见"属于"见面"），你可以解释这个字符的含义，同时指出它通常作为词的一部分使用。
+- 直接回答用户的问题，不要寒暄。
+- **重要**：若"用户引用并提问的部分"已明确具体文本（单词、短语或字符），直接解释该文本，不要要求用户再次指出。
+- 涉及指代、语法或词汇时，简要说明即可，不过度展开。
+- 仅当用户未选任何文本、只模糊表示不懂时，引导其指出具体部分。
+- 历史背景类名词（组织名、人名、事件名）：从语言角度说明是专有名词，可忽略或记为整体，不解释真实历史含义。
+- 中文、日文等非空格语言：若用户选了单字但该字属于更大词（如"见"属于"见面"），说明字义并指出通常作词的一部分使用。
 
 请只返回如下 JSON 格式：
-{{"answer": "你的回答内容"}}
+{{"answer": "你的回答内容（可用 Markdown 加粗与 - bullet）"}}
 """
 
 answer_question_template = """
@@ -393,9 +401,13 @@ English:
 - "了 → 完成体标记；'他走了' = 动作已完成；影响后续状态"
 - "被字句 → 被 + 动作执行者；'被打了' = 承受动作；强调受动"
 
-【语言要求】
-- 必须使用{language}输出
-- 不得输出其他语言
+【输出语言（最高优先级，必须严格遵守）】
+- 解释内容必须且只能使用 **{language}**，这是本轮唯一允许的解释语言，优先级高于 prompt 中的示例语言。
+- 若 {language} 为 English / 英文：explanation 字段及其中全部说明文字（含语法标签、括号内释义等）必须全部使用英文，不得出现中文解释句或中文字符。
+- 若 {language} 为中文 / 简体中文：说明文字必须全部使用简体中文，不得出现英文解释句（句中引用的原文词/片段除外）。
+- 仅允许保留句中引用的原文词或片段（如德语词、英文原句）；除此之外的解释语言必须服从 {language}。
+- 不得因 prompt 含中文示例或中文指令而默认用中文输出；**必须以 {language} 为准**。
+- 若输出了与 {language} 不符的解释，视为错误。
 
 请只返回如下 JSON：
 {{"explanation": "..." }}
@@ -413,46 +425,53 @@ vocab_example_explanation_sys_prompt = """
 
 你的任务是：为某个词汇或表达生成简洁的 example notation，帮助用户理解它在句子中的用法。
 
+【输出格式（必须严格遵守）】
+
+格式 A — 单词 / 单个词形（一行）：
+`word_form = meaning (grammar note)`
+或带句中映射：
+`word_form = meaning → "short contextual gloss"`
+
+格式 B — 多词短语 / 分离动词 / 需要较多信息（两行）：
+第 1 行：word form（原样写出句中词形）
+第 2 行：`= "meaning"; past tense of "lemma" (to …); 词性/短语类型; in sentence: '句中片段' → '句中词形' (meaning); 语法细节`
+
+【标准示例（English 输出）】
+
+beschleunigte = accelerated (past tense)
+
+Flugzeug = airplane → "The airplane accelerated."
+
+spring zurück hinein
+= "jumped back in"; past tense of "zurückspringen hinein" (to jump back in); verb phrase; in sentence: 'Das Monster' → 'sprang zurück hinein' (jumped back in); simple past, 3rd person singular
+
+Perücke = "wig"; feminine noun; in sentence: 'greift meine Perücke an' → 'Perücke' (wig)
+
 【核心要求】
-- 必须包含：
-  1）词汇含义（最优先，简短自然）
-  2）词性或语法信息（如副词、动词、名词等）
-  3）词汇在句子中的实际位置，最好用括号或 → 标注
-- 只解释该词在句子中的作用，不扩展其他含义
-- 保持极简、可扫读，类似词典标注
+- 输入会提供 lemma 和 word form；**只解释 word form**，不要解释句中其他词。
+- word form 与 lemma 不同时，必须标注变形关系（如 past tense of "lemma" (to …)）。
+- 含义放在最前，用 `= "..."` 或直接短语。
+- 句中位置用 `in sentence: '…' → '…' (…)` 展示，引用句中**真实片段**，不要用 token 编号。
+- 只解释该词在句中的作用，不扩展其他义项。
+- 保持极简、可扫读，类似词典标注；禁止完整教学段落（如 "This means…" / “这表示…”）。
 
 【表达风格】
-- 使用“标签 + 内容”结构
-- 使用符号提高信息密度：= ; () → 
-- 含义必须自然可读（优先）
-- 显示词汇在句子中的实际位置，原词或括号标注
-- 禁止完整句或教学式解释（如 "This means..." / “这表示…”）
-- 英文长度 ≤ 30 words；其他语言尽量简短
-
-【结构规则】
-- 含义放在最前（格式：= "..." 或直接短语）
-- 变形词必须标注原词（past tense of "xxx" / plural of "xxx"）
-- 句中位置信息必须明确（用 → 或括号）
-- 结构信息放在最后（如 reflexive / phrasal verb / 搭配等）
-
-【示例】
-
-中文（如解释德语词außerdem）
-- "= “此外”; 副词; 表示补充信息; 在句中: 伦敦是欧洲最大城市经济体 → “此外（außerdem）”也是世界主要金融中心之一"
-
-英文：
-- "= \"furthermore\" ; adverb; adds information; in sentence: 'London is Europe's largest economy' → 'furthermore (außerdem) also a major global financial center'"
+- 使用 `= ; () →` 组织信息，分号分隔各字段。
+- 英文尽量 ≤ 40 words；复杂短语可用格式 B 两行，可略长。
+- **禁止**在 explanation 中出现：token、sentence_token_id、token 8、第 N 个词等任何后台定位信息。
 
 【严格限制】
-- 不得输出完整教学段落
-- 不得列举多个意思
+- 不得列举多个义项
 - 不得添加无关说明
+- 不得输出 token 位置或序号
 
-【输出语言】（必须遵守）
-- 你必须使用 **{output_language}** 撰写 JSON 中 `explanation` 字段内的**全部**说明文字（含含义、词性/语法标签、句中位置说明、括号内释义等）。
-- 不得因为示例里有中文就默认用中文输出；**以 {output_language} 为准**。
+【输出语言（最高优先级，必须严格遵守）】
+- 你必须使用 **{output_language}** 撰写 JSON 中 `explanation` 字段内的**全部**说明文字（含含义、词性/语法标签、句中位置说明、括号内释义等）。这是本轮唯一允许的解释语言，优先级高于 prompt 中的示例语言。
+- 不得因为示例里有中文就默认用中文输出；**必须以 {output_language} 为准**。
 - 若 {output_language} 为 English / 英文 / en：**整段 explanation 必须为英文**，标签与批注也须全英文，不得出现中文字符。
-- 若 {output_language} 为中文 / 简体中文 / zh：可用中文撰写说明；仍勿无故混用其他语言。
+- 若 {output_language} 为中文 / 简体中文 / zh：说明文字必须全部使用简体中文，不得出现英文解释句（待解释词/句中原文除外）。
+- 仅允许保留句中引用的原文词（word form / lemma / 句中片段），保留其原语言；除此之外的解释语言必须服从 {output_language}。
+- 若输出了与 {output_language} 不符的解释，视为错误。
 
 请只返回如下 JSON：
 {{"explanation": "你的解释内容"}}
@@ -461,8 +480,12 @@ vocab_example_explanation_sys_prompt = """
 vocab_example_explanation_template = """
 这是用户引用的句子：
 {quoted_sentence}
-这是需要解释的词汇表达：
-{vocab_knowledge_point}
+
+这是需要解释的词汇（**只解释句中词形 word form**，不要解释句中其他词）：
+- 词典原形（lemma）：{lemma}
+- 句中词形（word form）：{word_form}
+
+（内部参考，仅供理解上下文，**禁止**写入 explanation 输出：sentence_token_id = {token_index_label}）
 """
 
 vocab_explanation_sys_prompt = """
@@ -470,90 +493,32 @@ vocab_explanation_sys_prompt = """
 你需要根据用户引用的句子和词汇，给出一个详细而准确的词汇解释。
 
 请注意：
-- **重要**：整个 explanation 必须只使用 {language} 作为说明语言。
-- 标题、标签、注释文字都必须使用 {language}；不要混入其他说明语言。
-- 不要输出任何“可选提示”类前缀，也不要在标题前添加括号说明。
-- 可以保留待解释词本身、词组本身、固定搭配本身的原文形式；但解释文字必须是 {language}。
-- 可以参考句子中的语境来判断词义，但不要提及当前句子，也不要解释句子。
-- 如果一个词有多个常见意思，可以编号列出；如果没有，就只写一个意思。
+- **输出语言（最高优先级）**：除待解释词/词组原文外，JSON 中所有字段（part_of_speech、word_features、definitions、rare_senses、collocations、grammar_notes）的说明文字必须且只能使用 **{language}**，这是本轮唯一允许的解释语言，优先级高于 prompt 中的示例语言。
+- 若 {language} 为 English / 英文：全部说明文字必须使用英文，不得出现中文解释或中文标签。
+- 若 {language} 为中文 / 简体中文：全部说明文字必须使用简体中文，不得出现英文解释句（待解释词/词组原文除外）。
+- 不得因 prompt 含中文指令而默认用中文输出；**必须以 {language} 为准**。若输出了与 {language} 不符的解释，视为错误。
+- 可以参考句子语境判断词义，但不要提及当前句子，也不要解释句子。
+- 如果一个词有多个常见意思，在 definitions 数组中分别列出。
 
----
+请只返回如下 JSON（不要 Markdown 代码块，不要额外字段）：
+{{
+  "part_of_speech": "词性，如 Verb / 动词",
+  "word_features": ["词法特征 1", "词法特征 2"],
+  "definitions": ["义项 1", "义项 2"],
+  "rare_senses": ["少见义（没有则 []）"],
+  "collocations": ["搭配 1", "搭配 2"],
+  "grammar_notes": ["语法提示 1", "语法提示 2"]
+}}
 
-【排版规则】
-- 所有标题必须顶格写，前面不要有空格。
-- 所有 bullet 必须以 `- ` 开头，前面不要有空格。
-- 不要为了排版加入额外缩进。
-- 段落之间最多空一行。
-- 每条 bullet 尽量短（优先短语而不是完整句）。
-
----
-
-【输出结构】
-1. 第一行只写词性（不要加额外说明）。
-
-2. 如果该词存在重要词法特征（如性、复数、可分性、反身性等），写：
-   Word features: / 词汇特征：
-   - 用 1–3 条 bullet 简洁标注（短语形式）
-
-3. 常见义项（必须）：
-1. [常见解释 1]
-2. [常见解释 2]
-
-4. 如果有少见义：
-   Rare sense: / 少见义：
-
-5. 如果有搭配：
-   Collocations: / 搭配：
-   - 只写高频、真实使用的搭配
-
-6. 如果有语法说明：
-   Grammar notes: / 语法说明：
-   - 只写 1–3 条
-
----
-
-【标题规则】
-- 若 {language} 为 English / 英文 / en，则标题只能使用：
-Word features:
-Rare sense:
-Collocations:
-Grammar notes:
-
-- 若 {language} 为 中文 / 简体中文 / zh，则标题只能使用：
-词汇特征：
-少见义：
-搭配：
-语法说明：
-
-- 不要输出其他变体标题
-
----
-
-【内容要求】
-
-- 解释应包括：基本含义 + 常见用法 + 必要词法信息
-- 不要写长段落说明
-- 不要写例句（除非单独要求）
-- 不要写词源、文化背景
-
-【语法说明（重点强化）】
-
-语法说明必须是“使用提示”，不是语法解释：
-
-- 使用短结构或短短语（避免完整句）
-- 优先展示形式变化（如：aufwerfen → wirft ... auf）
-- 可以给极短示例，但不解释规则
-- 每条尽量 ≤ 8 个词
-- 不要写：
-  - "This is a separable verb..."
-  - "In a main clause..."
-  - 任何语法原理解释
-
-目标是：
-👉 用户扫一眼就知道“这个词怎么用”
-
-请只返回如下 JSON 格式，不要有多余内容：
-{{"explanation": "你的解释内容"}}
+字段规则：
+- part_of_speech：只写词性，一行短语。
+- word_features：0–3 条，每条尽量短；没有则 []。
+- definitions：**必须**至少 1 条常见义项。
+- rare_senses：没有则 []。
+- collocations：没有则 []。
+- grammar_notes：0–3 条使用提示（不是语法课），没有则 []。
+- 每个数组元素必须是独立字符串，不要把小标题、编号或 bullet 符号写进字符串。
+- 不要输出 explanation 等旧格式字段。
 """
 
 vocab_explanation_template = """
@@ -633,20 +598,17 @@ grammar_explanation_sys_prompt = """
 ---
 
 【关键思路（非常重要）】
-在生成前，你必须先判断：
-👉 学习者看到这句话时，最可能“不知道该看哪里”
-
-然后：
-👉 第一行必须给出“观察指引”（告诉用户该关注什么结构）
+在生成前，先判断：学习者看到这句话时，最可能“不知道该看哪里”。
+第一行必须给出“观察指引”（告诉用户该关注什么结构）。
 
 ---
 
 【输出结构（必须严格遵守顺序）】
 
 1. 观察指引（最重要）
-- 用“👉”开头
 - 指出句子的结构或关系（如：谁→做什么→作用到谁 / 在强调谁 / 动作回到谁）
 - 必须具体，不能抽象
+- 不要用 emoji；不要写 bullet 符号（UI 会自行显示列表）
 
 2. 例句（+翻译）
 - 只给1句，使用 {learning_language}
@@ -655,12 +617,10 @@ grammar_explanation_sys_prompt = """
 - 下一行提供自然翻译（{output_language}）
 
 3. 句子映射（必须有）
-- 用“👉”开头
 - 把句子拆解成结构（如：A（谁）→ B（动作）→ C（对象））
 - 必须引用句子中的具体词
 
 4. 语法说明（核心）
-- 用“👉”开头
 - 格式：**语法名称** = 在这句话中的作用
 - 必须贴句子，不能写抽象定义
 
@@ -671,6 +631,11 @@ grammar_explanation_sys_prompt = """
 6. 记忆（可选）
 - 一句话
 - 可以简化，但不能误导结构（禁止“人+动作+东西”）
+
+【格式】
+- 每个信息块单独一行
+- 不要使用 👉 或其他 emoji
+- 不要以 - / • 开头（UI 会加 bullet）
 
 ---
 
@@ -695,10 +660,13 @@ grammar_explanation_sys_prompt = """
 
 ---
 
-【语言一致性】
-- 例句必须使用 {learning_language}
-- 翻译使用 {output_language}
-- 不允许混用其他语言示例
+【输出语言（最高优先级，必须严格遵守）】
+- grammar_explanation 字段中的全部说明文字（观察指引、翻译、句子映射、语法说明、结构、记忆等）必须且只能使用 **{output_language}**，这是本轮唯一允许的解释语言，优先级高于 prompt 中的示例语言。
+- 若 {output_language} 为 English / 英文：全部说明文字必须使用英文，不得出现中文解释句或中文字符。
+- 若 {output_language} 为中文 / 简体中文：全部说明文字必须使用简体中文，不得出现英文解释句。
+- 例句必须使用 {learning_language}；例句下方的翻译行使用 {output_language}。
+- 仅允许在例句行保留 {learning_language} 原文；除此之外不得混用其他语言示例或解释。
+- 不得因 prompt 含中文指令而默认用中文输出；**必须以 {output_language} 为准**。若输出了与 {output_language} 不符的解释，视为错误。
 
 ---
 

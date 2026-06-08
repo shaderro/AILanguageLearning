@@ -12,6 +12,94 @@ import { languageCodeToBCP47 } from '../../../contexts/LanguageContext'
 import { useUiLanguage } from '../../../contexts/UiLanguageContext'
 import { useTranslationDebug } from '../../../contexts/TranslationDebugContext'
 import { logVocabNotationDebug } from '../utils/vocabNotationDebug'
+import {
+  isInlineNotationViewed,
+  markInlineNotationViewed,
+  subscribeInlineNotationViewState,
+} from '../utils/inlineNotationViewState'
+
+/** 当前会话内已标记查看的 notation（避免重复写 localStorage） */
+const vocabBadgeEverHoveredKeys = new Set()
+
+function VocabHoverSparkle({ className = '' }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className={className}
+      fill="currentColor"
+    >
+      <path d="M8 0.5 9.2 5.8 14.5 7 9.2 8.2 8 13.5 6.8 8.2 1.5 7 6.8 5.8 8 0.5Z" />
+      <path d="M13.5 1.5 13.9 3.1 15.5 3.5 13.9 3.9 13.5 5.5 13.1 3.9 11.5 3.5 13.1 3.1 13.5 1.5Z" />
+      <path d="M2.5 10.5 2.9 12.1 4.5 12.5 2.9 12.9 2.5 14.5 2.1 12.9 0.5 12.5 2.1 12.1 2.5 10.5Z" />
+    </svg>
+  )
+}
+
+const VOCAB_BADGE_ENTER_MS = 220
+const VOCAB_BADGE_EXIT_MS = 160
+const VOCAB_BADGE_ENTER_EASE = 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+const VOCAB_BADGE_EXIT_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'
+
+function VocabNotationBadge({ visible, variant }) {
+  const isSparkle = variant === 'sparkle'
+  const [rendered, setRendered] = useState(visible)
+  const hasAnimatedRef = useRef(false)
+
+  useEffect(() => {
+    if (visible) {
+      setRendered(true)
+    }
+  }, [visible])
+
+  useEffect(() => {
+    if (rendered) {
+      hasAnimatedRef.current = true
+    }
+  }, [rendered])
+
+  const handleTransitionEnd = (event) => {
+    if (event.propertyName !== 'transform') return
+    if (!visible) {
+      setRendered(false)
+    }
+  }
+
+  if (!rendered) return null
+
+  const shouldAnimate = hasAnimatedRef.current
+
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-0 right-0 z-20 inline-flex -translate-y-1/2 translate-x-1/2 overflow-visible leading-none"
+    >
+      <span
+        className={[
+          'inline-flex items-center justify-center',
+          isSparkle ? 'h-3 w-3' : 'h-2.5 w-2.5',
+        ].join(' ')}
+        style={{
+          transform: visible ? 'scale(1)' : 'scale(0)',
+          opacity: visible ? 1 : 0,
+          transformOrigin: 'center',
+          transition: shouldAnimate
+            ? visible
+              ? `transform ${VOCAB_BADGE_ENTER_MS}ms ${VOCAB_BADGE_ENTER_EASE}, opacity ${VOCAB_BADGE_ENTER_MS}ms ease-out`
+              : `transform ${VOCAB_BADGE_EXIT_MS}ms ${VOCAB_BADGE_EXIT_EASE}, opacity ${VOCAB_BADGE_EXIT_MS}ms ease-in`
+            : 'none',
+        }}
+        onTransitionEnd={handleTransitionEnd}
+      >
+        {isSparkle ? (
+          <VocabHoverSparkle className="h-3 w-3 text-emerald-500 drop-shadow-sm" />
+        ) : (
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 ring-1 ring-white" />
+        )}
+      </span>
+    </span>
+  )
+}
 
 // 🔧 已移除：notationVisibilityStore 不再需要
 // tooltip 状态现在由 NotationContext 中的 activeVocabNotation 全局管理，
@@ -532,26 +620,48 @@ export default function TokenSpan({
   const tokenExplanation = isTextToken ? getExplanation(token) : null
   const isHovered = hoveredTokenId === uid
 
-  // 为当前 token 构造一个稳定的可序列化 key，用于全局可见性缓存
-  // 当前实现中仅用于调试追踪，不再从缓存恢复可见性，避免跨 hover 会话的“幽灵状态”
   const notationKey = useMemo(
-    () => `${articleId}:${tokenSentenceId}:${tokenSentenceTokenId}`,
-    [articleId, tokenSentenceId, tokenSentenceTokenId]
+    () => uid || `${articleId}:${tokenSentenceId}:${tokenSentenceTokenId ?? tokenIdx}`,
+    [uid, articleId, tokenSentenceId, tokenSentenceTokenId, tokenIdx]
   )
   
   // 🔧 从全局状态计算当前 token 是否应该显示 tooltip
   // activeVocabNotation 格式：{ articleId, sentenceId, tokenId } 或 null
   const showNotation = useMemo(() => {
     if (!activeVocabNotation) return false
+    const activeTokenId = activeVocabNotation.tokenId
+    if (activeTokenId == null || tokenSentenceTokenId == null) return false
     return (
-      activeVocabNotation.articleId === articleId &&
-      activeVocabNotation.sentenceId === tokenSentenceId &&
-      activeVocabNotation.tokenId === tokenSentenceTokenId
+      String(activeVocabNotation.articleId) === String(articleId) &&
+      Number(activeVocabNotation.sentenceId) === Number(tokenSentenceId) &&
+      Number(activeTokenId) === Number(tokenSentenceTokenId)
     )
   }, [activeVocabNotation, articleId, tokenSentenceId, tokenSentenceTokenId])
 
   // 🔧 记录鼠标是否正在悬停当前 token（用于“hover 期间数据到达后自动展示”）
   const [isMouseOverToken, setIsMouseOverToken] = useState(false)
+  const [inlineViewStateVersion, setInlineViewStateVersion] = useState(0)
+
+  useEffect(() => subscribeInlineNotationViewState(() => {
+    setInlineViewStateVersion((version) => version + 1)
+  }), [])
+
+  const viewedState = useMemo(() => ({
+    hasEverHoveredBadge: isInlineNotationViewed(articleId, notationKey)
+      || vocabBadgeEverHoveredKeys.has(notationKey),
+  }), [articleId, notationKey, inlineViewStateVersion])
+
+  const { hasEverHoveredBadge } = viewedState
+  const showVocabGreenDot = hasVocabVisual && !hasEverHoveredBadge && !isMouseOverToken
+  const showVocabHoverSparkle = hasVocabVisual && hasEverHoveredBadge && (isMouseOverToken || showNotation)
+  const showVocabBadge = showVocabGreenDot || showVocabHoverSparkle
+
+  const markVocabBadgeFirstHoverComplete = useCallback(() => {
+    if (!hasVocabVisual || hasEverHoveredBadge) return
+    vocabBadgeEverHoveredKeys.add(notationKey)
+    markInlineNotationViewed(articleId, notationKey)
+  }, [hasVocabVisual, hasEverHoveredBadge, articleId, notationKey])
+
   // 🔧 会话级 hover 标记：只要鼠标在 token 或卡片上，就是 true
   const isHoveringRef = useRef(false)
   const hideNotationTimerRef = useRef(null)
@@ -808,6 +918,7 @@ export default function TokenSpan({
         onMouseLeave={() => {
           setIsMouseOverToken(false)
           isHoveringRef.current = false
+          markVocabBadgeFirstHoverComplete()
           // 只有可选择的token才清除hover效果
           if (selectable) {
             selOnLeave()
@@ -887,7 +998,7 @@ export default function TokenSpan({
         ].join(' ')}
         style={{ color: '#111827' }}
       >
-        <span className={`relative inline-block ${hasVocabVisual ? 'pr-3' : ''}`}>
+        <span className="relative inline-block overflow-visible">
           {shouldShowRuby ? (
             <ruby style={{ rubyPosition: 'over' }}>
               {displayText}
@@ -903,16 +1014,10 @@ export default function TokenSpan({
             />
           )}
           {hasVocabVisual && (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute right-0 top-[0.15em] inline-flex h-3.5 w-3.5 items-center justify-center leading-none text-emerald-500"
-            >
-              {isMouseOverToken ? (
-                <span className="text-[10px]">✨</span>
-              ) : (
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              )}
-            </span>
+            <VocabNotationBadge
+              visible={showVocabBadge}
+              variant={showVocabHoverSparkle ? 'sparkle' : 'dot'}
+            />
           )}
         </span>
         {/* 🔧 分词下划线：在 token 下方显示灰色下划线（表示 word token 的分词边界） */}

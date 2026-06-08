@@ -24,6 +24,10 @@ import { useUIText } from '../../i18n/useUIText'
 import { colors } from '../../design-tokens'
 import VocabNotationDebugPanel from './components/VocabNotationDebugPanel'
 import { BackButton } from '../../components/base'
+import {
+  getArticleReadingProgress,
+  saveArticlePageIndex,
+} from '../../utils/scrollPositionManager'
 
 const SEGMENT_MAX_CHARS = 2000
 
@@ -139,12 +143,31 @@ export default function ArticleChatView({
   const [autoTranslationEnabled, setAutoTranslationEnabled] = useState(false)  // 🔧 自动翻译开关状态
 
   const queryClient = useQueryClient()
+  const { userId } = useUser()
   const [currentPageIndex, setCurrentPageIndex] = useState(1)
+  const restoredReadingProgressKeyRef = useRef(null)
 
   useEffect(() => {
-    if (!articleId || articleId === 'upload') return
-    setCurrentPageIndex(1)
+    if (!articleId || articleId === 'upload' || !userId) return
+    const progressKey = `${userId}_${articleId}`
+    if (restoredReadingProgressKeyRef.current === progressKey) return
+
+    const progress = getArticleReadingProgress(userId, articleId)
+    setCurrentPageIndex(progress?.pageIndex || 1)
+    restoredReadingProgressKeyRef.current = progressKey
+  }, [articleId, userId])
+
+  useEffect(() => {
+    restoredReadingProgressKeyRef.current = null
   }, [articleId])
+
+  const handleArticlePageChange = useCallback((nextPage) => {
+    const safePage = Math.max(1, parseInt(nextPage, 10) || 1)
+    setCurrentPageIndex(safePage)
+    if (userId && articleId && articleId !== 'upload') {
+      saveArticlePageIndex(userId, articleId, safePage)
+    }
+  }, [userId, articleId])
 
   // Sandbox：后台继续处理后续 segment（分页任务）
   useEffect(() => {
@@ -1075,7 +1098,7 @@ export default function ArticleChatView({
                     onCreditsBlocked={handleCreditsBlocked}
                     autoTranslationEnabled={autoTranslationEnabled}
                     pageIndex={currentPageIndex}
-                    onPageChange={setCurrentPageIndex}
+                    onPageChange={handleArticlePageChange}
                     autoHintTarget={autoHintTarget}
                     autoHintPreviewing={autoHintPreviewing}
                     autoHintTooltipVisible={autoHintTooltipVisible}

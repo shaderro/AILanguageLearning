@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { splitExplanationLines } from '../../../utils/explanationFormat'
 import { BaseCard, BackButton } from '../../base'
 import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
@@ -284,12 +285,7 @@ const GrammarDetailCard = ({
     )
   }
 
-  // 解析规则说明，提取要点
-  const rulePoints = useMemo(() => {
-    if (!ruleSummary) return []
-    const lines = ruleSummary.split('\n').filter(line => line.trim())
-    return lines.map(line => line.trim())
-  }, [ruleSummary])
+  const rulePoints = useMemo(() => splitExplanationLines(ruleSummary), [ruleSummary])
 
   // 提取例句
   const examples = useMemo(() => {

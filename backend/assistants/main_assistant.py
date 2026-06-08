@@ -4,7 +4,10 @@ import inspect
 print("✅ 当前运行文件：", __file__)
 print("✅ 当前工作目录：", os.getcwd())
 import re
-from backend.assistants.chat_info.dialogue_history import DialogueHistory
+from backend.assistants.vocab_explanation_format import (
+    normalize_vocab_explanation_for_storage,
+    sanitize_vocab_example_explanation,
+)
 from backend.assistants.chat_info.session_state import SessionState, CheckRelevantDecision, GrammarSummary, VocabSummary, GrammarToAdd, VocabToAdd
 from backend.assistants.chat_info.selected_token import SelectedToken, create_selected_token_from_text
 from backend.assistants.sub_assistants.sub_assistant import SubAssistant
@@ -18,7 +21,7 @@ from backend.assistants.sub_assistants.summarize_vocab import SummarizeVocabAssi
 from backend.assistants.sub_assistants.compare_grammar_rule import CompareGrammarRuleAssistant
 from backend.assistants.sub_assistants.grammar_example_explanation import GrammarExampleExplanationAssistant
 from backend.assistants.sub_assistants.grammar_explanation import GrammarExplanationAssistant
-from backend.assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant
+from backend.assistants.sub_assistants.vocab_example_explanation import VocabExampleExplanationAssistant, VocabExampleTarget
 from backend.assistants.sub_assistants.vocab_explanation import VocabExplanationAssistant
 from backend.data_managers.data_classes import Sentence
 # 导入新数据结构类
@@ -221,6 +224,116 @@ class MainAssistant:
         for p in punctuation:
             cleaned = cleaned.replace(p, '')
         return cleaned.strip()
+
+    def _vocab_matches_token_form(self, vocab_lemma: str, token_text: str) -> bool:
+        """判断 token 是否为 vocab lemma 的原形或屈折形式（如 öffnen ↔ öffnete）。"""
+        vocab_clean = self._clean_vocab_for_matching(vocab_lemma)
+        token_clean = self._clean_vocab_for_matching(token_text)
+        if not vocab_clean or not token_clean:
+            return False
+        if vocab_clean == token_clean:
+            return True
+        if vocab_clean in token_clean or token_clean in vocab_clean:
+            return True
+        min_len = min(len(vocab_clean), len(token_clean))
+        if min_len < 3:
+            return False
+        shared = 0
+        for a, b in zip(vocab_clean, token_clean):
+            if a != b:
+                break
+            shared += 1
+        return shared >= max(4, int(min_len * 0.65))
+
+    def _token_belongs_to_vocab(self, vocab_lemma: str, token) -> bool:
+        """判断 token 是否属于该 vocab（优先用 token.lemma，再匹配句中词形）。"""
+        body = getattr(token, "token_body", "") or ""
+        token_lemma = getattr(token, "lemma", None) or ""
+        if token_lemma and self._vocab_matches_token_form(vocab_lemma, token_lemma):
+            return True
+        return self._vocab_matches_token_form(vocab_lemma, body)
+
+    def _resolve_vocab_context_for_example(
+        self, vocab_lemma: str, sentence: SentenceType
+    ) -> VocabExampleTarget:
+        """
+        从 vocab 数据结构（lemma）和句中 token 定位 example explanation 目标。
+        返回 lemma + 句中词形 + token_indices，而非仅依赖用户选区的原始文本。
+        """
+        lemma = (vocab_lemma or "").strip()
+        if not lemma:
+            return VocabExampleTarget(lemma="", word_form="", token_indices=[])
+
+        selected_token = self.session_state.current_selected_token
+        if not selected_token:
+            return VocabExampleTarget(lemma=lemma, word_form=lemma, token_indices=[])
+
+        indices: list[int] = []
+        if hasattr(selected_token, "token_indices") and isinstance(selected_token.token_indices, list):
+            indices = [
+                int(i)
+                for i in selected_token.token_indices
+                if isinstance(i, (int, float, str)) and str(i).lstrip("-").isdigit()
+            ]
+            if len(indices) == 1 and indices[0] == -1:
+                indices = []
+
+        id_to_token = {}
+        if hasattr(sentence, "tokens") and sentence.tokens:
+            id_to_token = {
+                t.sentence_token_id: t
+                for t in sentence.tokens
+                if hasattr(t, "sentence_token_id") and t.sentence_token_id is not None
+            }
+
+        def _target_from_index(idx: int) -> Optional[VocabExampleTarget]:
+            token = id_to_token.get(idx)
+            if not token or getattr(token, "token_type", "text") != "text":
+                return None
+            body = (getattr(token, "token_body", "") or "").strip()
+            if not body:
+                return None
+            return VocabExampleTarget(lemma=lemma, word_form=body, token_indices=[idx])
+
+        if len(indices) == 1:
+            target = _target_from_index(indices[0])
+            if target:
+                return target
+            word_form = (selected_token.token_text or lemma).strip()
+            return VocabExampleTarget(lemma=lemma, word_form=word_form, token_indices=indices)
+
+        if indices and id_to_token:
+            matched: list[tuple[int, str]] = []
+            for idx in indices:
+                token = id_to_token.get(idx)
+                if not token or getattr(token, "token_type", "text") != "text":
+                    continue
+                body = getattr(token, "token_body", "") or ""
+                if self._token_belongs_to_vocab(lemma, token):
+                    matched.append((idx, body))
+            if matched:
+                idx, body = max(matched, key=lambda x: len(x[1]))
+                print(
+                    f"🔍 [DEBUG] 多 token 选中，匹配 lemma '{lemma}' → "
+                    f"句中词形 '{body}' (token_id={idx})"
+                )
+                return VocabExampleTarget(lemma=lemma, word_form=body.strip(), token_indices=[idx])
+
+        if id_to_token:
+            for idx in sorted(id_to_token):
+                token = id_to_token[idx]
+                if getattr(token, "token_type", "text") != "text":
+                    continue
+                body = getattr(token, "token_body", "") or ""
+                if self._token_belongs_to_vocab(lemma, token):
+                    print(
+                        f"🔍 [DEBUG] 在整句中匹配 lemma '{lemma}' → "
+                        f"'{body}' (token_id={idx})"
+                    )
+                    return VocabExampleTarget(lemma=lemma, word_form=body.strip(), token_indices=[idx])
+
+        print(f"⚠️ [DEBUG] 无法匹配 lemma '{lemma}' 的句中词形，回退使用 lemma 作为 word_form")
+        return VocabExampleTarget(lemma=lemma, word_form=lemma, token_indices=indices)
 
     def _load_sentence_from_processed_files(self, text_id: int, sentence_id: int) -> Optional['NewSentence']:
         try:
@@ -1407,16 +1520,20 @@ class MainAssistant:
                         current_sentence = self.session_state.current_sentence if self.session_state.current_sentence else quoted_sentence
                         # 验证句子完整性
                         self._ensure_sentence_integrity(current_sentence, "Vocab Explanation 调用")
-                        # 为上下文解释优先使用“用户实际选择的词形”，避免因词形差异导致的"不在句中"提示
-                        selected_token = self.session_state.current_selected_token
-                        vocab_for_context = getattr(selected_token, 'token_text', None) or vocab
-                        print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab}')")
+                        vocab_target = self._resolve_vocab_context_for_example(vocab, current_sentence)
+                        print(
+                            f"🔍 [DEBUG] 调用vocab_example_explanation_assistant "
+                            f"lemma={vocab_target.lemma!r} word_form={vocab_target.word_form!r} "
+                            f"token_indices={vocab_target.token_indices}"
+                        )
                         # 🔧 使用 UI 语言而不是文章语言
                         output_language = self.ui_language or self.session_state.current_language or "中文"
                         print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                         example_explanation_raw = self.vocab_example_explanation_assistant.run(
                             sentence=current_sentence,
-                            vocab=vocab_for_context,
+                            lemma=vocab_target.lemma,
+                            word_form=vocab_target.word_form,
+                            token_indices=vocab_target.token_indices,
                             language=output_language,
                             user_id=self._user_id, session=self._db_session
                         )
@@ -1439,6 +1556,9 @@ class MainAssistant:
                             example_explanation = example_explanation_raw["explanation"]
                         else:
                             example_explanation = str(example_explanation_raw) if example_explanation_raw else None
+
+                        if example_explanation:
+                            example_explanation = sanitize_vocab_example_explanation(example_explanation)
                         
                         print(f"🔍 [DEBUG] example_explanation解析后: {_preview_for_log(example_explanation, 360)}")
                         
@@ -1450,7 +1570,7 @@ class MainAssistant:
                                 print(f"🔍 [DEBUG] 临时恢复 selected_token（在 handle_grammar_vocab_function 中）")
                                 self.session_state.set_current_selected_token(saved_selected_token)
                             
-                            token_indices = self._get_token_indices_from_selection(current_sentence)
+                            token_indices = vocab_target.token_indices or self._get_token_indices_from_selection(current_sentence)
                             print(f"🔍 [DEBUG] 尝试添加现有词汇的vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={existing_vocab_id}, token_indices={token_indices}")
                             
                             # 🔧 修复：如果使用数据库管理器获取了 vocab_id，也应该使用数据库管理器添加 example
@@ -1933,33 +2053,7 @@ class MainAssistant:
                         user_id=self._user_id, session=self._db_session
                     )
                     print(f"🔍 [DEBUG] vocab_explanation结果: {vocab_explanation}")
-                    # 解析JSON响应
-                    if isinstance(vocab_explanation, dict):
-                        # 如果已经是字典，直接提取 explanation 字段
-                        explanation_text = vocab_explanation.get("explanation", "No explanation provided")
-                    elif isinstance(vocab_explanation, str):
-                        # 如果是字符串，尝试解析 JSON
-                        try:
-                            import json
-                            # 尝试解析可能是字典格式的字符串（如 "{'explanation': '...'}" 或 '{"explanation": "..."}'）
-                            # 先尝试直接解析 JSON
-                            explanation_data = json.loads(vocab_explanation)
-                            explanation_text = explanation_data.get("explanation", "No explanation provided")
-                        except json.JSONDecodeError:
-                            # 如果不是标准 JSON，尝试处理 Python 字典格式的字符串
-                            try:
-                                # 处理单引号格式的字典字符串
-                                import ast
-                                explanation_data = ast.literal_eval(vocab_explanation)
-                                if isinstance(explanation_data, dict):
-                                    explanation_text = explanation_data.get("explanation", "No explanation provided")
-                                else:
-                                    explanation_text = vocab_explanation
-                            except:
-                                explanation_text = vocab_explanation
-                    else:
-                        # 其他类型，转换为字符串
-                        explanation_text = str(vocab_explanation)
+                    explanation_text = normalize_vocab_explanation_for_storage(vocab_explanation)
                 else:
                     explanation_text = "No explanation provided"
                 
@@ -1998,16 +2092,20 @@ class MainAssistant:
                 
                 # 生成词汇例句解释
                 if current_sentence:
-                    # 为上下文解释优先使用“用户实际选择的词形”
-                    selected_token = self.session_state.current_selected_token
-                    vocab_for_context = getattr(selected_token, 'token_text', None) or vocab.vocab
-                    print(f"🔍 [DEBUG] 调用vocab_example_explanation_assistant for '{vocab_for_context}' (base='{vocab.vocab}')")
+                    vocab_target = self._resolve_vocab_context_for_example(vocab.vocab, current_sentence)
+                    print(
+                        f"🔍 [DEBUG] 调用vocab_example_explanation_assistant "
+                        f"lemma={vocab_target.lemma!r} word_form={vocab_target.word_form!r} "
+                        f"token_indices={vocab_target.token_indices}"
+                    )
                     # 🔧 使用 UI 语言而不是文章语言
                     output_language = self.ui_language or self.session_state.current_language or "中文"
                     print(f"🔍 [DEBUG] 输出语言: {output_language} (UI语言: {self.ui_language}, 文章语言: {self.session_state.current_language})")
                     example_explanation_raw = self.vocab_example_explanation_assistant.run(
                         sentence=current_sentence,
-                        vocab=vocab_for_context,
+                        lemma=vocab_target.lemma,
+                        word_form=vocab_target.word_form,
+                        token_indices=vocab_target.token_indices,
                         language=output_language
                     )
                     print(f"🔍 [DEBUG] example_explanation原始结果: {_preview_for_log(example_explanation_raw, 360)}")
@@ -2029,6 +2127,9 @@ class MainAssistant:
                         example_explanation = example_explanation_raw["explanation"]
                     else:
                         example_explanation = str(example_explanation_raw) if example_explanation_raw else None
+
+                    if example_explanation:
+                        example_explanation = sanitize_vocab_example_explanation(example_explanation)
                     
                     print(f"🔍 [DEBUG] example_explanation解析后: {_preview_for_log(example_explanation, 360)}")
                     
@@ -2064,7 +2165,7 @@ class MainAssistant:
                             print(f"🔍 [DEBUG] 临时恢复 selected_token（在 add_new_to_data 中）")
                             self.session_state.set_current_selected_token(saved_selected_token)
                         
-                        token_indices = self._get_token_indices_from_selection(current_sentence)
+                        token_indices = vocab_target.token_indices or self._get_token_indices_from_selection(current_sentence)
                         print(f"🔍 [DEBUG] 尝试添加vocab_example: text_id={current_sentence.text_id}, sentence_id={current_sentence.sentence_id}, vocab_id={vocab_id}, token_indices={token_indices}")
                         print(f"🔍 [DEBUG] token_indices 类型: {type(token_indices)}, 值: {token_indices}")
                         

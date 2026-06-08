@@ -169,29 +169,26 @@ class TokenToVocabConverter:
     
     def _parse_explanation(self, result: Any) -> str:
         """解析词汇解释结果"""
-        if isinstance(result, dict):
-            return result.get('explanation', '')
-        elif isinstance(result, str):
-            # 尝试解析JSON字符串
-            try:
-                data = json.loads(result)
-                return data.get('explanation', '')
-            except:
-                return result
-        return str(result)
+        from backend.assistants.vocab_explanation_format import normalize_vocab_explanation_for_storage
+        return normalize_vocab_explanation_for_storage(result)
     
     def _parse_context_explanation(self, result: Any) -> str:
         """解析上下文解释结果"""
+        from backend.assistants.vocab_explanation_format import sanitize_vocab_example_explanation
+
+        text = ""
         if isinstance(result, dict):
-            return result.get('explanation', '')
+            text = result.get('explanation', '')
         elif isinstance(result, str):
             # 尝试解析JSON字符串
             try:
                 data = json.loads(result)
-                return data.get('explanation', '')
+                text = data.get('explanation', '')
             except:
-                return result
-        return str(result)
+                text = result
+        else:
+            text = str(result)
+        return sanitize_vocab_example_explanation(text)
     
     def convert_tokens_from_text(self, original_text) -> List[VocabExpression]:
         """

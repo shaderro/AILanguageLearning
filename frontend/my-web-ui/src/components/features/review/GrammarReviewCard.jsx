@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { stripExplanationLinePrefix } from '../../../utils/explanationFormat'
 import { BaseButton, BaseCard, BaseBadge } from '../../base'
 import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
@@ -169,7 +170,7 @@ const renderStructuredExplanation = (rawText) => {
   if (!text) return null
 
   return text.split('\n').map((line, index) => {
-    const trimmed = line.trim()
+    const trimmed = stripExplanationLinePrefix(line)
 
     if (!trimmed) {
       return <div key={`space-${index}`} className="h-2" />

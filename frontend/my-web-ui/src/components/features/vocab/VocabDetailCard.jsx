@@ -5,6 +5,7 @@ import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
 import { hasAnyHydratedExampleSentence, pickExampleSentenceText, unwrapVocabDetailResponse } from '../../../utils/vocabExamples'
+import { parseStructuredVocabExplanation, unwrapLegacyExplanation } from '../../../utils/vocabExplanationFormat'
 
 // 解析和格式化解释文本（与 VocabNotationCard 保持一致）
 const parseExplanation = (text) => {
@@ -204,6 +205,7 @@ const normalizeExplanationLayout = (rawText = '') => {
       .replace(/^（如适用）\s*搭配\s*：?/, '搭配：')
       .replace(/^（如适用）\s*语法说明\s*：?/, '语法说明：')
       .replace(/^（如有）\s*少见义\s*：?/, '少见义：')
+      .replace(/^常见义项\s*：?/, 'Common senses:')
       .replace(/^word features\s*:/i, 'Word features:')
       .replace(/^lexical features\s*:/i, 'Word features:')
       .replace(/^morpholog(?:y|ical features?)\s*:/i, 'Word features:')
@@ -212,6 +214,7 @@ const normalizeExplanationLayout = (rawText = '') => {
       .replace(/^grammar note\s*:/i, 'Grammar notes:')
       .replace(/^grammar notes\s*:/i, 'Grammar notes:')
       .replace(/^collocations?\s*:/i, 'Collocations:')
+      .replace(/^common senses?\s*:/i, 'Common senses:')
       .replace(/^rare sense\s*:/i, 'Rare sense:')
       .replace(/^[ \t]+(-\s+)/, '$1')
   })
@@ -221,6 +224,22 @@ const normalizeExplanationLayout = (rawText = '') => {
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
+
+const normalizeHeadingKey = (line) => String(line || '')
+  .trim()
+  .replace(/^\*\*/, '')
+  .replace(/\*\*$/, '')
+  .replace(/[:：]\s*$/, '')
+  .trim()
+  .toLowerCase()
+
+const PART_OF_SPEECH_HEADINGS = new Set([
+  'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction',
+  'interjection', 'article', 'determiner', 'numeral', 'particle',
+  '名词', '动词', '形容词', '副词', '代词', '介词', '连词', '感叹词', '冠词', '限定词', '数词', '助词',
+])
+
+const isPartOfSpeechLine = (line) => PART_OF_SPEECH_HEADINGS.has(normalizeHeadingKey(line))
 
 const isSectionHeading = (line, labels) => {
   const normalized = String(line || '')
@@ -234,18 +253,25 @@ const isSectionHeading = (line, labels) => {
   return labels.some((label) => normalized === String(label).trim().toLowerCase())
 }
 
-// 从 explanation 中尝试分离“释义 / 少见义 / 搭配 / 语法说明”段落
+// 从 explanation 中尝试分离“词性 / 释义 / 词汇特征 / 少见义 / 搭配 / 语法说明”段落
 const extractSections = (rawExplanation = '') => {
   const text = normalizeExplanationLayout(parseExplanation(rawExplanation))
   if (!text) {
-    return { definitionText: '', wordFeaturesText: '', rareSenseText: '', collocationsText: '', grammarText: '' }
+    return {
+      partOfSpeech: '',
+      definitionText: '',
+      wordFeaturesText: '',
+      rareSenseText: '',
+      collocationsText: '',
+      grammarText: '',
+    }
   }
 
-  const defLabels = ['释义', '定义', 'definition', 'definitions']
+  const defLabels = ['释义', '定义', 'definition', 'definitions', 'common senses', 'common sense', '常见义项', '义项']
   const wordFeatureLabels = ['word features', 'lexical features', 'morphology', 'morphological features', '词汇特征', '词法特征', '词形特征']
   const rareSenseLabels = ['rare sense', 'rare senses', '少见义']
   const collocationLabels = ['collocations', 'collocation', '搭配']
-  const grammarLabels = ['grammar explanation', 'grammar notes', 'grammar note', '语法说明', 'definition note', 'grammar']
+  const grammarLabels = ['grammar explanation', 'grammar notes', 'grammar note', '语法说明', 'definition note']
 
   const sections = {
     definition: [],
@@ -256,11 +282,20 @@ const extractSections = (rawExplanation = '') => {
   }
 
   let currentSection = 'definition'
+  let partOfSpeech = ''
+
   text.split('\n').forEach((line) => {
     const trimmed = line.trim()
     if (!trimmed) {
       if (sections[currentSection].length > 0) {
         sections[currentSection].push('')
+      }
+      return
+    }
+
+    if (isPartOfSpeechLine(trimmed)) {
+      if (!partOfSpeech) {
+        partOfSpeech = trimmed
       }
       return
     }
@@ -292,6 +327,7 @@ const extractSections = (rawExplanation = '') => {
   const joinSection = (lines) => lines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
 
   return {
+    partOfSpeech,
     definitionText: joinSection(sections.definition),
     wordFeaturesText: joinSection(sections.wordFeatures),
     rareSenseText: joinSection(sections.rareSense),
@@ -443,10 +479,84 @@ const VocabDetailCard = ({
   }, [vocabWithDetails?.examples, exampleSentenceMap])
 
   const vocabBody = vocabWithDetails?.vocab_body || ''
-  // 提取释义 / 搭配 / 语法说明文本（如果能拆分则拆分，否则释义包含全部）
-  const { definitionText, wordFeaturesText, rareSenseText, collocationsText, grammarText } = extractSections(vocabWithDetails?.explanation || '')
-  const explanation = normalizeExplanationLayout(parseExplanation(vocabWithDetails?.explanation || ''))
-  
+
+  const structuredExplanation = useMemo(
+    () => parseStructuredVocabExplanation(vocabWithDetails?.explanation || ''),
+    [vocabWithDetails?.explanation],
+  )
+
+  const legacySections = useMemo(() => {
+    if (structuredExplanation.isStructured) return null
+    return extractSections(structuredExplanation.legacyText || vocabWithDetails?.explanation || '')
+  }, [structuredExplanation, vocabWithDetails?.explanation])
+
+  const legacyWordFeaturePoints = useMemo(() => {
+    if (!legacySections?.wordFeaturesText) return []
+    return legacySections.wordFeaturesText
+      .split('\n')
+      .map((line) => line.trim().replace(/^[-*•]\s*/, ''))
+      .filter(Boolean)
+  }, [legacySections?.wordFeaturesText])
+
+  const legacyDefinitions = useMemo(() => {
+    const base = legacySections?.definitionText || structuredExplanation.legacyText
+    if (!base) return []
+    const numberedMatch = base.match(/(\d+)[\.、]\s*([^\d]+?)(?=\s*\d+[\.、]|$)/g)
+    if (numberedMatch && numberedMatch.length > 1) {
+      return numberedMatch.map((item) => item.replace(/^\d+[\.、]\s*/, '').trim())
+    }
+    const lines = base.split('\n').filter((line) => line.trim())
+    return lines.length > 1 ? lines.map((line) => line.trim()) : [base]
+  }, [legacySections?.definitionText, structuredExplanation.legacyText])
+
+  const legacyRareSensePoints = useMemo(() => {
+    if (!legacySections?.rareSenseText) return []
+    return legacySections.rareSenseText.split('\n').map((line) => line.trim()).filter(Boolean)
+  }, [legacySections?.rareSenseText])
+
+  const legacyCollocationPoints = useMemo(() => {
+    if (!legacySections?.collocationsText) return []
+    return legacySections.collocationsText
+      .split('\n')
+      .map((line) => line.trim().replace(/^[-*•]\s*/, ''))
+      .filter(Boolean)
+  }, [legacySections?.collocationsText])
+
+  const legacyGrammarPoints = useMemo(() => {
+    const rawGrammar = legacySections?.grammarText || vocabWithDetails?.grammar_notes || ''
+    if (!rawGrammar) return []
+    return unwrapLegacyExplanation(rawGrammar)
+      .split('\n')
+      .map((line) => line.trim().replace(/^[-*•]\s*/, ''))
+      .filter((line) => line && !/^note:\*{0,2}$/i.test(line))
+  }, [legacySections?.grammarText, vocabWithDetails?.grammar_notes])
+
+  const partOfSpeech = vocabWithDetails?.part_of_speech
+    || vocabWithDetails?.pos
+    || structuredExplanation.partOfSpeech
+    || legacySections?.partOfSpeech
+    || ''
+
+  const wordFeaturePoints = structuredExplanation.isStructured
+    ? structuredExplanation.wordFeatures
+    : legacyWordFeaturePoints
+
+  const definitions = structuredExplanation.isStructured
+    ? structuredExplanation.definitions
+    : legacyDefinitions
+
+  const rareSensePoints = structuredExplanation.isStructured
+    ? structuredExplanation.rareSenses
+    : legacyRareSensePoints
+
+  const collocationPoints = structuredExplanation.isStructured
+    ? structuredExplanation.collocations
+    : legacyCollocationPoints
+
+  const grammarPoints = structuredExplanation.isStructured
+    ? structuredExplanation.grammarNotes
+    : legacyGrammarPoints
+
   // 🔧 朗读功能
   const [isSpeakingVocab, setIsSpeakingVocab] = useState(false)
   const [speakingSentenceIndex, setSpeakingSentenceIndex] = useState(null)
@@ -678,71 +788,6 @@ const VocabDetailCard = ({
       () => setSpeakingSentenceIndex(null)
     )
   }
-  
-  // 解析释义，尝试提取多个定义
-  const definitions = useMemo(() => {
-    const base = definitionText || explanation
-    if (!base) return []
-    
-    // 尝试按数字编号分割（如 "1. xxx 2. yyy"）
-    const numberedMatch = base.match(/(\d+)[\.、]\s*([^\d]+?)(?=\s*\d+[\.、]|$)/g)
-    if (numberedMatch && numberedMatch.length > 1) {
-      return numberedMatch.map(item => {
-        const cleaned = item.replace(/^\d+[\.、]\s*/, '').trim()
-        return cleaned
-      })
-    }
-    
-    // 如果没有编号，尝试按换行分割
-    const lines = base.split('\n').filter(line => line.trim())
-    if (lines.length > 1) {
-      return lines.map(line => line.trim())
-    }
-    
-    // 如果只有一行，返回整个解释
-    return [base]
-  }, [definitionText, explanation])
-
-  const wordFeaturePoints = useMemo(() => {
-    if (!wordFeaturesText) return []
-    return normalizeExplanationLayout(wordFeaturesText)
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => line.trim())
-      .map(line => line.replace(/^[-*•]\s*/, ''))
-      .filter(Boolean)
-  }, [wordFeaturesText])
-
-  const collocationPoints = useMemo(() => {
-    if (!collocationsText) return []
-    return normalizeExplanationLayout(collocationsText)
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => line.trim())
-      .map(line => line.replace(/^[-*•]\s*/, ''))
-      .filter(Boolean)
-  }, [collocationsText])
-
-  const rareSensePoints = useMemo(() => {
-    if (!rareSenseText) return []
-    return normalizeExplanationLayout(rareSenseText)
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => line.trim())
-      .filter(Boolean)
-  }, [rareSenseText])
-
-  // 解析语法说明，提取要点
-  const grammarPoints = useMemo(() => {
-    const rawGrammar = normalizeExplanationLayout(grammarText || vocabWithDetails?.grammar_notes || '')
-    if (!rawGrammar) return []
-    const parsed = parseExplanation(rawGrammar)
-    const lines = parsed.split('\n').filter(line => line.trim())
-    return lines
-      .map(line => line.trim())
-      .map(line => line.replace(/^[-*•]\s*/, ''))
-      .filter(line => line && !/^note:\*{0,2}$/i.test(line))
-  }, [grammarText, vocabWithDetails])
 
   // 提取例句
   const examples = useMemo(() => {
@@ -770,9 +815,6 @@ const VocabDetailCard = ({
         }
       })
   }, [vocabWithDetails, articleTitles, exampleSentenceMap])
-
-  // 提取词性
-  const partOfSpeech = vocabWithDetails?.part_of_speech || vocabWithDetails?.pos || ''
 
   if (loading) {
     return (
@@ -932,27 +974,6 @@ const VocabDetailCard = ({
                 borderColor: colors.primary[100],
               }}
             >
-              {wordFeaturePoints.length > 0 && (
-                <div className="space-y-2">
-                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    {t('词汇特征')}
-                  </h2>
-                  <ul className="space-y-2">
-                    {wordFeaturePoints.map((point, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
-                        <span
-                          className="leading-relaxed whitespace-pre-wrap flex-1"
-                          style={{ color: colors.semantic.text.primary }}
-                        >
-                          {renderInlineMarkdown(point)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {definitions.length > 0 && (
                 <div className="space-y-3">
                   <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
@@ -971,6 +992,27 @@ const VocabDetailCard = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {wordFeaturePoints.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
+                    {t('词汇特征')}
+                  </h2>
+                  <ul className="space-y-2">
+                    {wordFeaturePoints.map((point, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
+                        <span
+                          className="leading-relaxed whitespace-pre-wrap flex-1"
+                          style={{ color: colors.semantic.text.primary }}
+                        >
+                          {renderInlineMarkdown(point)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 

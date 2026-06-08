@@ -118,8 +118,6 @@ def _apply_sentence_split_mode(text: str, split_mode: Optional[str]) -> str:
     # 默认 punctuation
     return re.sub(r"\s*\n+\s*", " ", normalized).strip()
 MAX_CHAT_KNOWLEDGE_ITEMS = 3
-# 开放内测保护阈值：1 小时 30k tokens 足够正常试用，同时能拦住异常高频/超长请求。
-MAX_CHAT_TOKENS_PER_HOUR = 30000
 
 _active_chat_users = set()
 _active_chat_users_lock = Lock()
@@ -200,22 +198,6 @@ def _release_chat_slot(user_id: Optional[int]):
         return
     with _active_chat_users_lock:
         _active_chat_users.discard(user_id)
-
-
-def _get_user_hourly_token_usage(session, user_id: int, window_minutes: int = 60) -> int:
-    from sqlalchemy import func
-    from database_system.business_logic.models import TokenLog
-
-    window_start = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
-    total_tokens = (
-        session.query(func.sum(TokenLog.total_tokens))
-        .filter(
-            TokenLog.user_id == user_id,
-            TokenLog.created_at >= window_start,
-        )
-        .scalar()
-    )
-    return int(total_tokens or 0)
 
 
 def _limit_knowledge_lists(grammar_items: list, vocab_items: list, max_items: int = MAX_CHAT_KNOWLEDGE_ITEMS):
@@ -1771,17 +1753,6 @@ async def chat_with_assistant(
                 if user.role != 'admin' and (user.token_balance is None or user.token_balance < 1000):
                     db_session.close()
                     return _chat_error_response(403, "insufficient_tokens", "积分不足")
-                if user.role != 'admin':
-                    hourly_token_usage = _get_user_hourly_token_usage(db_session, user_id)
-                    if hourly_token_usage >= MAX_CHAT_TOKENS_PER_HOUR:
-                        db_session.close()
-                        return _chat_error_response(
-                            429,
-                            "token_budget_exceeded",
-                            "当前 1 小时 AI 使用量已达上限，请稍后再试",
-                            limit=MAX_CHAT_TOKENS_PER_HOUR,
-                            window_minutes=60,
-                        )
         except Exception as e:
             _main_assistant_flow_log(user_id, request_id, f"⚠️ [Chat] 检查token不足时出错: {e}")
             # 如果检查失败，继续执行（避免影响正常流程）
