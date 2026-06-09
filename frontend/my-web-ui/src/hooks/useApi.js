@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiService } from '../services/api.js';
+import { apiService, isMockApi } from '../services/api.js';
 import guestDataManager from '../utils/guestDataManager.js';
 import { enrichArticleListItem } from '../utils/articleMetadata.js';
 
@@ -70,6 +70,195 @@ const filterListByLanguage = (items, selectedLanguage, label) => {
   return filtered;
 };
 
+const filterListByTextId = (items, textId) => {
+  if (!Array.isArray(items) || !textId || textId === 'all') {
+    return items;
+  }
+  const targetId = Number(textId);
+  if (Number.isNaN(targetId)) {
+    return items;
+  }
+  return items.filter((item) => {
+    const examples = item?.examples || [];
+    if (examples.some((ex) => Number(ex?.text_id ?? ex?.article_id) === targetId)) {
+      return true;
+    }
+    const textIds = item?.example_text_ids || item?.source_text_ids || [];
+    return Array.isArray(textIds) && textIds.some((id) => Number(id) === targetId);
+  });
+};
+
+const filterResponseDataByTextId = (response, textId, label) => {
+  if (!textId || textId === 'all') {
+    return response;
+  }
+  if (Array.isArray(response)) {
+    return filterListByTextId(response, textId);
+  }
+  if (response && Array.isArray(response.data)) {
+    const filtered = filterListByTextId(response.data, textId);
+    if (filtered.length !== response.data.length) {
+      console.log(`🔍 [useApi] ${label} 前端文章过滤生效: ${response.data.length} -> ${filtered.length} (text_id=${textId})`);
+    }
+    return {
+      ...response,
+      data: filtered,
+      count: filtered.length,
+    };
+  }
+  return response;
+};
+
+const normalizeKnowledgeListResponse = (response) => {
+  if (!response) {
+    return { data: [], count: 0 };
+  }
+  if (Array.isArray(response)) {
+    return { data: response, count: response.length };
+  }
+  // 兼容 { status: 'success', data: [...] } 未被拦截器归一化的情况
+  if (response.status === 'success' && Array.isArray(response.data)) {
+    return {
+      data: response.data,
+      count: response.count ?? response.data.length,
+    };
+  }
+  if (Array.isArray(response.data)) {
+    return {
+      ...response,
+      data: response.data,
+      count: response.count ?? response.data.length,
+    };
+  }
+  if (Array.isArray(response.data?.vocabs)) {
+    return {
+      data: response.data.vocabs,
+      count: response.data.count ?? response.data.vocabs.length,
+    };
+  }
+  if (Array.isArray(response.data?.rules)) {
+    return {
+      data: response.data.rules,
+      count: response.data.count ?? response.data.rules.length,
+    };
+  }
+  console.warn('⚠️ [useApi] 无法识别的知识点列表响应格式:', response);
+  return { data: [], count: 0 };
+};
+
+const enrichKnowledgeListSourceTextIds = (response) => {
+  if (!response) {
+    return response;
+  }
+  const enrichItem = (item) => {
+    if (!item || typeof item !== 'object') {
+      return item;
+    }
+    if (Array.isArray(item.source_text_ids) && item.source_text_ids.length > 0) {
+      return item;
+    }
+    const ids = new Set();
+    for (const ex of item.examples || []) {
+      const tid = Number(ex?.text_id ?? ex?.article_id);
+      if (!Number.isNaN(tid)) {
+        ids.add(tid);
+      }
+    }
+    return {
+      ...item,
+      source_text_ids: [...ids],
+    };
+  };
+  if (Array.isArray(response)) {
+    return response.map(enrichItem);
+  }
+  if (Array.isArray(response.data)) {
+    return {
+      ...response,
+      data: response.data.map(enrichItem),
+    };
+  }
+  return response;
+};
+
+const collectKnowledgeIdsFromNotations = (notationResponse, idField) => {
+  const ids = new Set();
+  const payload = notationResponse?.data ?? notationResponse;
+  const raw = payload?.notations
+    ?? payload?.data?.notations
+    ?? (Array.isArray(payload) ? payload : null)
+    ?? [];
+  for (const item of raw) {
+    const id = Number(item?.[idField]);
+    if (!Number.isNaN(id)) {
+      ids.add(id);
+    }
+  }
+  return ids;
+};
+
+const filterKnowledgeListByArticle = async ({
+  fullResult,
+  apiTextId,
+  userId,
+  label,
+  idField,
+  fetchNotations,
+  fetchServerFiltered,
+}) => {
+  if (!apiTextId) {
+    return fullResult;
+  }
+
+  const bySourceTextIds = filterResponseDataByTextId(fullResult, apiTextId, label);
+  if (bySourceTextIds.data?.length > 0) {
+    console.log(`🔍 [use${label}List] ${bySourceTextIds.data.length} 条 source_text_ids 过滤 text_id=${apiTextId}`);
+    return bySourceTextIds;
+  }
+
+  try {
+    const notationResp = await fetchNotations(apiTextId, userId);
+    const linkedIds = collectKnowledgeIdsFromNotations(notationResp, idField);
+    if (linkedIds.size > 0) {
+      const data = (fullResult.data || []).filter((item) => linkedIds.has(Number(item[idField])));
+      console.log(`🔍 [use${label}List] ${data.length} 条 标注 fallback text_id=${apiTextId}`);
+      return { ...fullResult, data, count: data.length };
+    }
+  } catch (err) {
+    console.warn(`⚠️ [use${label}List] 标注 fallback 失败:`, err);
+  }
+
+  if (typeof fetchServerFiltered === 'function') {
+    try {
+      const serverResp = await fetchServerFiltered();
+      const serverResult = enrichKnowledgeListSourceTextIds(normalizeKnowledgeListResponse(serverResp));
+      if (serverResult.data?.length > 0) {
+        console.log(`🔍 [use${label}List] ${serverResult.data.length} 条 服务端 text_id=${apiTextId}`);
+        return serverResult;
+      }
+    } catch (err) {
+      console.warn(`⚠️ [use${label}List] 服务端 text_id 过滤失败:`, err);
+    }
+  }
+
+  return { ...fullResult, data: [], count: 0 };
+};
+
+const applyMockKnowledgeListFilters = (response, language, learnStatus, label) => {
+  let result = filterResponseDataByLanguage(response, language, label);
+  if (learnStatus && learnStatus !== 'all' && result?.data) {
+    const statusFiltered = result.data.filter(
+      (item) => (item.learn_status || 'not_mastered') === learnStatus,
+    );
+    result = {
+      ...result,
+      data: statusFiltered,
+      count: statusFiltered.length,
+    };
+  }
+  return enrichKnowledgeListSourceTextIds(result);
+};
+
 const filterResponseDataByLanguage = (response, selectedLanguage, label) => {
   if (!selectedLanguage || selectedLanguage === 'all') {
     return response;
@@ -123,11 +312,11 @@ export const queryKeys = {
   health: ['health'],
   word: (text) => ['word', text],
   vocab: {
-    all: (userId, language, learnStatus, textId) => ['vocab', userId, language, learnStatus, textId],  // 添加 userId、language、learnStatus 和 textId
+    all: (userId, language, learnStatus, textId) => ['vocab', userId, language, learnStatus, textId ?? 'all'],
     detail: (id, userId) => ['vocab', id, userId],  // 添加 userId
   },
   grammar: {
-    all: (userId, language, learnStatus, textId) => ['grammar', userId, language, learnStatus, textId],  // 添加 userId、language、learnStatus 和 textId
+    all: (userId, language, learnStatus, textId) => ['grammar', userId, language, learnStatus, textId ?? 'all'],
     detail: (id, userId) => ['grammar', id, userId],  // 添加 userId
   },
   stats: (userId) => ['stats', userId],  // 添加 userId
@@ -158,33 +347,52 @@ export const useWordInfo = (text) => {
 
 // 获取词汇列表 Hook - 支持游客模式和语言过滤
 export const useVocabList = (userId = null, isGuest = false, language = null, learnStatus = null, textId = null) => {
+  const apiTextId = textId && textId !== 'all' ? textId : null;
+
   return useQuery({
-    queryKey: queryKeys.vocab.all(userId, language, learnStatus, textId),
+    queryKey: queryKeys.vocab.all(userId, language, learnStatus, apiTextId),
     queryFn: async () => {
       if (isGuest) {
-        // 游客模式：从 localStorage 获取数据
         let vocabs = guestDataManager.getVocabs(userId)
         vocabs = filterListByLanguage(vocabs, language, 'vocab')
-        // 在本地过滤学习状态
         if (learnStatus && learnStatus !== 'all') {
           vocabs = vocabs.filter(v => (v.learn_status || 'not_mastered') === learnStatus)
         }
-        // 在本地过滤文章（需要检查 examples 中是否有该 text_id）
-        if (textId && textId !== 'all') {
-          vocabs = vocabs.filter(v => {
-            const examples = v.examples || []
-            return examples.some(ex => ex.text_id === Number(textId))
-          })
+        let result = enrichKnowledgeListSourceTextIds({ data: vocabs, count: vocabs.length })
+        if (apiTextId) {
+          result = filterResponseDataByTextId(result, apiTextId, 'vocab')
         }
-        console.log('👤 [useVocabList] 游客模式，加载本地数据:', vocabs.length, '条', language ? `(语言: ${language})` : '', learnStatus ? `(状态: ${learnStatus})` : '', textId ? `(文章: ${textId})` : '')
-        return { data: vocabs, count: vocabs.length }
+        console.log('👤 [useVocabList] 游客模式:', result.data?.length ?? 0, '条', apiTextId ? `(text_id=${apiTextId})` : '')
+        return normalizeKnowledgeListResponse(result)
       }
 
-      const response = await apiService.getVocabList(language, learnStatus, textId)
-      return filterResponseDataByLanguage(response, language, 'vocab')
+      const response = await apiService.getVocabList(language, learnStatus, null)
+      let result = enrichKnowledgeListSourceTextIds(normalizeKnowledgeListResponse(response))
+
+      if (apiTextId) {
+        result = await filterKnowledgeListByArticle({
+          fullResult: result,
+          apiTextId,
+          userId,
+          label: 'Vocab',
+          idField: 'vocab_id',
+          fetchNotations: apiService.getVocabNotations.bind(apiService),
+          fetchServerFiltered: () => apiService.getVocabList(language, learnStatus, apiTextId),
+        })
+      }
+
+      const sample = result.data?.[0]
+      console.log(
+        '🔍 [useVocabList]',
+        result.data?.length ?? 0,
+        '条',
+        apiTextId ? `文章 text_id=${apiTextId}` : '全部文章',
+        sample ? `示例 source_text_ids=${JSON.stringify(sample.source_text_ids ?? [])}` : '',
+      )
+      return result
     },
-    enabled: userId !== null,  // 游客和登录用户都可以查询
-    staleTime: 5 * 60 * 1000, // 5分钟
+    enabled: userId !== null,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -200,33 +408,42 @@ export const useVocabDetail = (id) => {
 
 // 获取语法规则列表 Hook - 支持游客模式和语言过滤
 export const useGrammarList = (userId = null, isGuest = false, language = null, learnStatus = null, textId = null) => {
+  const apiTextId = textId && textId !== 'all' ? textId : null;
+
   return useQuery({
-    queryKey: queryKeys.grammar.all(userId, language, learnStatus, textId),
+    queryKey: queryKeys.grammar.all(userId, language, learnStatus, apiTextId),
     queryFn: async () => {
       if (isGuest) {
-        // 游客模式：从 localStorage 获取数据
         let grammars = guestDataManager.getGrammars(userId)
         grammars = filterListByLanguage(grammars, language, 'grammar')
-        // 在本地过滤学习状态
         if (learnStatus && learnStatus !== 'all') {
           grammars = grammars.filter(g => (g.learn_status || 'not_mastered') === learnStatus)
         }
-        // 在本地过滤文章（需要检查 examples 中是否有该 text_id）
-        if (textId && textId !== 'all') {
-          grammars = grammars.filter(g => {
-            const examples = g.examples || []
-            return examples.some(ex => ex.text_id === Number(textId))
-          })
+        let result = enrichKnowledgeListSourceTextIds({ data: grammars, count: grammars.length })
+        if (apiTextId) {
+          result = filterResponseDataByTextId(result, apiTextId, 'grammar')
         }
-        console.log('👤 [useGrammarList] 游客模式，加载本地数据:', grammars.length, '条', language ? `(语言: ${language})` : '', learnStatus ? `(状态: ${learnStatus})` : '', textId ? `(文章: ${textId})` : '')
-        return { data: grammars, count: grammars.length }
+        return normalizeKnowledgeListResponse(result)
       }
 
-      const response = await apiService.getGrammarList(language, learnStatus, textId)
-      return filterResponseDataByLanguage(response, language, 'grammar')
+      const response = await apiService.getGrammarList(language, learnStatus, null)
+      let result = enrichKnowledgeListSourceTextIds(normalizeKnowledgeListResponse(response))
+
+      if (apiTextId) {
+        result = await filterKnowledgeListByArticle({
+          fullResult: result,
+          apiTextId,
+          userId,
+          label: 'Grammar',
+          idField: 'rule_id',
+          fetchNotations: apiService.getGrammarNotations.bind(apiService),
+          fetchServerFiltered: () => apiService.getGrammarList(language, learnStatus, apiTextId),
+        })
+      }
+      return result
     },
-    enabled: userId !== null,  // 游客和登录用户都可以查询
-    staleTime: 5 * 60 * 1000, // 5分钟
+    enabled: userId !== null,
+    staleTime: 5 * 60 * 1000,
   });
 };
 

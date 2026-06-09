@@ -221,6 +221,7 @@ const GrammarReviewSandbox = () => {
       return
     }
     prevSelectedLanguageRef.current = selectedLanguage
+    setTextId('all')
 
     if (!selectedGrammarId) {
       return
@@ -832,8 +833,10 @@ const GrammarReviewSandbox = () => {
     },
   ]
 
+  const isInitialGrammarLoad = isLoading && !grammarData
+
   // 加载状态
-  if (isLoading) {
+  if (isInitialGrammarLoad) {
     return (
       <LearnPageLayout
         title=""

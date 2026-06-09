@@ -96,6 +96,7 @@ function WordDemo() {
       return
     }
     prevSelectedLanguageRef.current = selectedLanguage
+    setTextId('all')
 
     if (!selectedWordId) {
       return
@@ -164,6 +165,7 @@ function WordDemo() {
 
   // 使用 React Query 获取词汇数据 - 传入 userId、isGuest、language、learnStatus 和 textId
   const { data: vocabData, isLoading, isError, error } = useVocabList(userId, isGuest, selectedLanguage, learnStatus, textId)
+  const isInitialVocabLoad = isLoading && !vocabData
 
   // 单词查询功能
   const [searchTerm, setSearchTerm] = useState('')
@@ -429,7 +431,7 @@ function WordDemo() {
     refreshVocab()
   }
 
-  if (isLoading) {
+  if (isInitialVocabLoad) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-lg">{t('加载词汇数据中...')}</div>
@@ -594,7 +596,7 @@ function WordDemo() {
   // 主列表页面（使用统一布局）
   // 注意：language和learn_status过滤已经在API层面完成，这里只需要处理搜索过滤
   const allVocabs = vocabData?.data || []
-  console.log(`🔍 [WordDemo] 当前过滤状态: learnStatus=${learnStatus}, language=${selectedLanguage}, 词汇数量=${allVocabs.length}`)
+  console.log(`🔍 [WordDemo] 当前过滤状态: learnStatus=${learnStatus}, language=${selectedLanguage}, textId=${textId}, 词汇数量=${allVocabs.length}`)
   
   // 过滤和排序
   const filteredVocabs = allVocabs

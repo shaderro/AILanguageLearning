@@ -9,6 +9,7 @@ import {
   hasAnyHydratedExampleSentence,
   unwrapVocabDetailResponse,
 } from '../../../utils/vocabExamples'
+import { formatVocabExplanationForDisplay } from '../../../utils/vocabExplanationFormat'
 
 // 解析和格式化解释文本（从 ReviewCard 复制）
 const parseExplanation = (text) => {
@@ -158,7 +159,7 @@ const isDisplayHeading = (line) => {
 }
 
 const renderStructuredExplanation = (rawText) => {
-  const text = normalizeExplanationLayout(parseExplanation(rawText))
+  const text = normalizeExplanationLayout(formatVocabExplanationForDisplay(rawText))
   if (!text) return null
 
   return text.split('\n').map((line, index) => {

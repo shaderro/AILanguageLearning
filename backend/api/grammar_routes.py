@@ -5,8 +5,8 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import cast, String, func
-from typing import List, Optional
+from sqlalchemy import cast, String, func, exists, or_
+from typing import Dict, List, Optional, Set
 from pydantic import BaseModel, Field
 
 from database_system.business_logic.models import User, GrammarRule
@@ -170,6 +170,33 @@ def _language_variants(language: Optional[str]) -> List[str]:
     return [v.lower() for v in variants.get(key, [str(language).strip()])]
 
 
+def _build_grammar_source_text_map(session, rule_ids: List[int], user_id: int) -> Dict[int, Set[int]]:
+    """聚合语法规则关联的文章 ID（例句 + 标注）。"""
+    source_map: Dict[int, Set[int]] = {rid: set() for rid in rule_ids}
+    if not rule_ids:
+        return source_map
+
+    from database_system.business_logic.models import GrammarExample, GrammarNotation
+
+    for rule_id, text_id in session.query(
+        GrammarExample.rule_id,
+        GrammarExample.text_id,
+    ).filter(GrammarExample.rule_id.in_(rule_ids)):
+        source_map.setdefault(rule_id, set()).add(text_id)
+
+    for grammar_id, text_id in session.query(
+        GrammarNotation.grammar_id,
+        GrammarNotation.text_id,
+    ).filter(
+        GrammarNotation.grammar_id.in_(rule_ids),
+        GrammarNotation.user_id == user_id,
+    ):
+        if grammar_id is not None:
+            source_map.setdefault(grammar_id, set()).add(text_id)
+
+    return source_map
+
+
 # ==================== API 端点 ====================
 
 @router.get("/", summary="获取所有语法规则")
@@ -228,21 +255,29 @@ async def get_all_grammar_rules(
         else:
             print(f"🔍 [GrammarAPI] 不应用学习状态过滤 (learn_status={learn_status})")
         
-        # 文章过滤：只返回有该文章example的语法规则
+        # 文章过滤：例句或标注中出现过该文章
         if text_id is not None:
-            from database_system.business_logic.models import GrammarExample
-            # 使用 exists 子查询来过滤
-            from sqlalchemy import exists
+            from database_system.business_logic.models import GrammarExample, GrammarNotation
             query = query.filter(
-                exists().where(
-                    GrammarExample.rule_id == GrammarRule.rule_id,
-                    GrammarExample.text_id == text_id
+                or_(
+                    exists().where(
+                        GrammarExample.rule_id == GrammarRule.rule_id,
+                        GrammarExample.text_id == text_id,
+                    ),
+                    exists().where(
+                        GrammarNotation.grammar_id == GrammarRule.rule_id,
+                        GrammarNotation.text_id == text_id,
+                        GrammarNotation.user_id == current_user.user_id,
+                    ),
                 )
             )
             print(f"🔍 [GrammarAPI] 应用文章过滤: text_id={text_id}")
         
         rules = query.offset(skip).limit(limit).all()
         print(f"🔍 [GrammarAPI] 查询结果: {len(rules)} 个语法规则")
+
+        rule_ids = [r.rule_id for r in rules]
+        source_text_map = _build_grammar_source_text_map(session, rule_ids, current_user.user_id)
         
         # 🔧 调试：打印前几个规则的 learn_status 值（用于排查过滤问题）
         if rules:
@@ -271,7 +306,8 @@ async def get_all_grammar_rules(
                     "is_starred": r.is_starred,
                     "learn_status": r.learn_status.value if hasattr(r.learn_status, 'value') else (str(r.learn_status) if r.learn_status else "not_mastered"),
                     "created_at": r.created_at.isoformat() if r.created_at else None,
-                    "updated_at": r.updated_at.isoformat() if r.updated_at else None
+                    "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+                    "source_text_ids": sorted(source_text_map.get(r.rule_id, [])),
                 }
                 for r in rules
             ],

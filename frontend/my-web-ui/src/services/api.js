@@ -33,7 +33,26 @@ function getApiTarget() {
   return 'db'; // 默认使用数据库模式
 }
 const API_TARGET = getApiTarget();
+export const isMockApi = () => API_TARGET === 'mock';
 const MAX_SEGMENT_CHARS = 2000;
+
+const buildV2KnowledgeListUrl = (resource, language, learnStatus, textId) => {
+  const params = new URLSearchParams();
+  if (language && language !== 'all') {
+    params.append('language', language);
+  }
+  if (learnStatus && learnStatus !== 'all') {
+    params.append('learn_status', learnStatus);
+  }
+  if (textId && textId !== 'all') {
+    const parsedTextId = Number(textId);
+    if (!Number.isNaN(parsedTextId)) {
+      params.append('text_id', String(parsedTextId));
+    }
+  }
+  const queryString = params.toString();
+  return queryString ? `/api/v2/${resource}/?${queryString}` : `/api/v2/${resource}/`;
+};
 
 function normalizeFormText(value) {
   // FormData 在传输文本字段时会把换行统一为 CRLF，先在前端归一化，避免长度判断偏差
@@ -51,6 +70,12 @@ const api = axios.create({
 });
 
 console.log(`[API] Target: ${API_TARGET} → ${BASE_URL}`);
+if (API_TARGET === 'mock') {
+  console.warn(
+    '[API] 当前为 mock 模式（localStorage API_TARGET 或 URL ?api=mock）。'
+    + ' 词汇/语法列表已强制走 /api/v2；建议执行 localStorage.setItem("API_TARGET","db") 后刷新。',
+  );
+}
 
 // 请求拦截器 - 添加 JWT token
 api.interceptors.request.use(
@@ -102,7 +127,47 @@ api.interceptors.response.use(
     // 🔧 特殊处理：成功响应格式 { status: "success", data: {...}, message: "..." }
     if (response.data && response.data.status === 'success') {
       console.log("🔍 [DEBUG] Detected success response format with status field");
-      // 返回整个 response.data，包含 status, data, message
+      const payload = response.data.data;
+
+      // 词汇/语法列表：统一为 { data: [...], count }
+      if (urlPath.includes('/vocab') && Array.isArray(payload)) {
+        return {
+          data: payload,
+          count: response.data.count ?? payload.length,
+        };
+      }
+      if (urlPath.includes('/grammar') && Array.isArray(payload)) {
+        return {
+          data: payload,
+          count: response.data.count ?? payload.length,
+        };
+      }
+      if (urlPath.includes('/texts') && payload && Array.isArray(payload.texts)) {
+        const mappedTexts = payload.texts.map((text) => ({
+          ...text,
+          id: text.text_id,
+          title: text.text_title,
+          difficulty: text.difficulty ?? text.difficulty_level ?? null,
+        }));
+        return {
+          data: mappedTexts,
+          count: payload.count ?? mappedTexts.length,
+        };
+      }
+      if (urlPath.includes('/texts') && Array.isArray(payload)) {
+        const mappedTexts = payload.map((text) => ({
+          ...text,
+          id: text.text_id,
+          title: text.text_title,
+          difficulty: text.difficulty ?? text.difficulty_level ?? null,
+        }));
+        return {
+          data: mappedTexts,
+          count: response.data.count ?? mappedTexts.length,
+        };
+      }
+
+      // 其他 status:success 接口保留原结构
       return response.data;
     }
     
@@ -387,26 +452,10 @@ export const apiService = {
   // Vocab
   getVocabList: async (language = null, learnStatus = null, textId = null) => {
     try {
-      if (API_TARGET === 'mock') {
-        return api.get("/api/vocab");
-      } else {
-        // 数据库模式：只使用 v2 API（有用户隔离），不再回退到旧端点
-        // 旧端点（/api/vocab）没有用户隔离，会导致不同用户看到同一份数据
-          const params = new URLSearchParams();
-          if (language && language !== 'all') {
-            params.append('language', language);
-          }
-          if (learnStatus && learnStatus !== 'all') {
-            params.append('learn_status', learnStatus);
-          }
-          if (textId && textId !== 'all') {
-            params.append('text_id', textId);
-          }
-          const queryString = params.toString();
-          const url = queryString ? `/api/v2/vocab/?${queryString}` : '/api/v2/vocab/';
-          console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
-          return await api.get(url);
-      }
+      // 始终使用 v2（含 source_text_ids、text_id 过滤）；旧 /api/vocab 无文章关联字段
+      const url = buildV2KnowledgeListUrl('vocab', language, learnStatus, textId);
+      console.log(`🔍 [Frontend API] getVocabList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+      return await api.get(url);
     } catch (e) {
       console.error('❌ [API] 获取词汇列表失败:', e);
       throw e;
@@ -414,7 +463,7 @@ export const apiService = {
   },
 
   // 获取单个词汇详情
-  getVocabById: (id) => api.get(API_TARGET === 'mock' ? `/api/vocab/${id}` : `/api/v2/vocab/${id}/`),
+  getVocabById: (id) => api.get(`/api/v2/vocab/${id}/`),
 
   // 搜索词汇
   searchVocab: (keyword) => 
@@ -437,26 +486,9 @@ export const apiService = {
   // Grammar
   getGrammarList: async (language = null, learnStatus = null, textId = null) => {
     try {
-      if (API_TARGET === 'mock') {
-        return api.get("/api/grammar");
-      } else {
-        // 数据库模式：只使用 v2 API（有用户隔离），不再回退到旧端点
-        // 旧端点（/api/grammar）没有用户隔离，会导致不同用户看到同一份数据
-          const params = new URLSearchParams();
-          if (language && language !== 'all') {
-            params.append('language', language);
-          }
-          if (learnStatus && learnStatus !== 'all') {
-            params.append('learn_status', learnStatus);
-          }
-          if (textId && textId !== 'all') {
-            params.append('text_id', textId);
-          }
-          const queryString = params.toString();
-          const url = queryString ? `/api/v2/grammar/?${queryString}` : '/api/v2/grammar/';
-          console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
-          return await api.get(url);
-      }
+      const url = buildV2KnowledgeListUrl('grammar', language, learnStatus, textId);
+      console.log(`🔍 [Frontend API] getGrammarList called: language=${language}, learnStatus=${learnStatus}, textId=${textId}, url=${url}`);
+      return await api.get(url);
     } catch (e) {
       console.error('❌ [API] 获取语法列表失败:', e);
       throw e;
@@ -464,7 +496,7 @@ export const apiService = {
   },
 
   // 获取单个语法规则详情
-  getGrammarById: (id) => api.get(API_TARGET === 'mock' ? `/api/grammar/${id}` : `/api/v2/grammar/${id}`),
+  getGrammarById: (id) => api.get(`/api/v2/grammar/${id}`),
 
   // 搜索语法规则
   searchGrammar: (keyword) => 

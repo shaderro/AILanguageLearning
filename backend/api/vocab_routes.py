@@ -5,8 +5,8 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import cast, String, func
-from typing import List, Optional
+from sqlalchemy import cast, String, func, exists, or_
+from typing import Dict, List, Optional, Set
 from pydantic import BaseModel, Field
 
 from database_system.business_logic.models import User, VocabExpression, Sentence
@@ -154,6 +154,33 @@ def _language_variants(language: Optional[str]) -> List[str]:
     return [v.lower() for v in variants.get(key, [str(language).strip()])]
 
 
+def _build_vocab_source_text_map(session, vocab_ids: List[int], user_id: int) -> Dict[int, Set[int]]:
+    """聚合词汇关联的文章 ID（例句 + 标注）。"""
+    source_map: Dict[int, Set[int]] = {vid: set() for vid in vocab_ids}
+    if not vocab_ids:
+        return source_map
+
+    from database_system.business_logic.models import VocabExpressionExample, VocabNotation
+
+    for vocab_id, text_id in session.query(
+        VocabExpressionExample.vocab_id,
+        VocabExpressionExample.text_id,
+    ).filter(VocabExpressionExample.vocab_id.in_(vocab_ids)):
+        source_map.setdefault(vocab_id, set()).add(text_id)
+
+    for vocab_id, text_id in session.query(
+        VocabNotation.vocab_id,
+        VocabNotation.text_id,
+    ).filter(
+        VocabNotation.vocab_id.in_(vocab_ids),
+        VocabNotation.user_id == user_id,
+    ):
+        if vocab_id is not None:
+            source_map.setdefault(vocab_id, set()).add(text_id)
+
+    return source_map
+
+
 # ==================== API 端点 ====================
 
 @router.get("/", summary="获取所有词汇")
@@ -212,22 +239,29 @@ async def get_all_vocabs(
         else:
             print(f"🔍 [VocabAPI] 不应用学习状态过滤 (learn_status={learn_status})")
         
-        # 文章过滤：只返回有该文章example的词汇
+        # 文章过滤：例句或标注中出现过该文章
         if text_id is not None:
-            from database_system.business_logic.models import VocabExpressionExample
-            # 使用 exists 子查询或 join 来过滤
-            # 方法1：使用 exists 子查询（更高效）
-            from sqlalchemy import exists
+            from database_system.business_logic.models import VocabExpressionExample, VocabNotation
             query = query.filter(
-                exists().where(
-                    VocabExpressionExample.vocab_id == VocabExpression.vocab_id,
-                    VocabExpressionExample.text_id == text_id
+                or_(
+                    exists().where(
+                        VocabExpressionExample.vocab_id == VocabExpression.vocab_id,
+                        VocabExpressionExample.text_id == text_id,
+                    ),
+                    exists().where(
+                        VocabNotation.vocab_id == VocabExpression.vocab_id,
+                        VocabNotation.text_id == text_id,
+                        VocabNotation.user_id == current_user.user_id,
+                    ),
                 )
             )
             print(f"🔍 [VocabAPI] 应用文章过滤: text_id={text_id}")
         
         vocabs = query.offset(skip).limit(limit).all()
         print(f"🔍 [VocabAPI] 查询结果: {len(vocabs)} 个词汇")
+
+        vocab_ids = [v.vocab_id for v in vocabs]
+        source_text_map = _build_vocab_source_text_map(session, vocab_ids, current_user.user_id)
         
         return {
             "success": True,
@@ -241,7 +275,8 @@ async def get_all_vocabs(
                     "is_starred": v.is_starred,
                     "learn_status": v.learn_status.value if hasattr(v.learn_status, 'value') else (str(v.learn_status) if v.learn_status else "not_mastered"),
                     "created_at": v.created_at.isoformat() if v.created_at else None,
-                    "updated_at": v.updated_at.isoformat() if v.updated_at else None
+                    "updated_at": v.updated_at.isoformat() if v.updated_at else None,
+                    "source_text_ids": sorted(source_text_map.get(v.vocab_id, [])),
                 }
                 for v in vocabs
             ],
