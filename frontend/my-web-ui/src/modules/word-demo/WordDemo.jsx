@@ -573,7 +573,7 @@ function WordDemo() {
     
     return (
       <div className="h-full bg-white p-8" style={{ backgroundColor: 'white', minHeight: '100%' }}>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-[650px] mx-auto">
           <VocabDetailCard
             vocab={displayWord}
             loading={shouldShowLoading}

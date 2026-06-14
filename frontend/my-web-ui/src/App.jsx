@@ -45,6 +45,7 @@ import ChineseZhuyinSandbox from './pages/ChineseZhuyinSandbox'
 import { colors } from './design-tokens'
 import { recordRecentArticle } from './utils/pageStateManager'
 import BillingSandboxRoutes, { isBillingSandboxPath } from './sandbox/billing/BillingSandboxRoutes'
+import UISandboxRoutes, { isUISandboxPath } from './sandbox/ui/UISandboxRoutes'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -986,6 +987,10 @@ function AppContent() {
 function App() {
   if (typeof window !== 'undefined' && isBillingSandboxPath(window.location.pathname)) {
     return <BillingSandboxRoutes />
+  }
+
+  if (typeof window !== 'undefined' && isUISandboxPath(window.location.pathname)) {
+    return <UISandboxRoutes />
   }
 
   return (
