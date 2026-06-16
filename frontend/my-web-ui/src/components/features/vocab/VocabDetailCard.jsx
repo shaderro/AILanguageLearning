@@ -557,6 +557,61 @@ const VocabDetailCard = ({
     ? structuredExplanation.grammarNotes
     : legacyGrammarPoints
 
+  const useDefinitionHighlight = structuredExplanation.isStructured
+  const explanationDividerColor = colors.gray[200]
+  const whiteSectionBg = { backgroundColor: colors.semantic.bg.primary }
+  const definitionSectionBg = useDefinitionHighlight
+    ? { backgroundColor: colors.primary[50] }
+    : whiteSectionBg
+  const explanationCardStyle = {
+    backgroundColor: colors.semantic.bg.primary,
+    borderColor: useDefinitionHighlight ? colors.primary[100] : colors.gray[200],
+  }
+  const hasExplanationSection = [
+    definitions.length > 0,
+    wordFeaturePoints.length > 0,
+    rareSensePoints.length > 0,
+    collocationPoints.length > 0,
+    grammarPoints.length > 0,
+  ]
+  const showExplanationDividerBefore = (sectionIndex) => (
+    hasExplanationSection.slice(0, sectionIndex).some(Boolean)
+  )
+  const vocabSectionSpacing = {
+    padding: '14px',
+    contentGap: '6px',
+    definitionGap: '14px',
+    blockGap: '24px',
+    exampleCardGap: '14px',
+    inlineGap: '8px',
+  }
+  const scaleLineHeight = (value) => value * 0.8
+  const vocabLineHeights = {
+    definition: scaleLineHeight(1.7),
+    body: scaleLineHeight(1.625),
+    title: scaleLineHeight(Number(componentTokens.grammarVocabTitle.lineHeight) || 1.25),
+    heading: scaleLineHeight(1.75),
+    caption: scaleLineHeight(1.25),
+  }
+  const definitionHeroStyle = {
+    fontSize: '17px',
+    lineHeight: vocabLineHeights.definition,
+  }
+  const explanationSectionStyle = {
+    padding: vocabSectionSpacing.padding,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: vocabSectionSpacing.contentGap,
+  }
+  const secondaryListStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: vocabSectionSpacing.contentGap,
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+  }
+
   // 🔧 朗读功能
   const [isSpeakingVocab, setIsSpeakingVocab] = useState(false)
   const [speakingSentenceIndex, setSpeakingSentenceIndex] = useState(null)
@@ -818,7 +873,7 @@ const VocabDetailCard = ({
 
   if (loading) {
     return (
-      <div className="w-full max-w-4xl mx-auto" style={{ backgroundColor: 'white' }}>
+      <div className="w-full max-w-[650px] mx-auto" style={{ backgroundColor: 'white' }}>
         <BaseCard padding="lg" className="w-full" style={{ backgroundColor: 'white' }}>
           <div className="text-center py-8" style={{ backgroundColor: 'white' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.primary[500] }}></div>
@@ -831,7 +886,7 @@ const VocabDetailCard = ({
 
   if (!vocabWithDetails) {
     return (
-      <BaseCard padding="lg" className="w-full max-w-4xl mx-auto">
+      <BaseCard padding="lg" className="w-full max-w-[650px] mx-auto">
         <div className="text-center py-8">
           <p className="text-gray-600">{t('未找到词汇数据')}</p>
         </div>
@@ -840,7 +895,7 @@ const VocabDetailCard = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto" style={{ backgroundColor: 'white' }}>
+    <div className="w-full max-w-[650px] mx-auto" style={{ backgroundColor: 'white' }}>
       <BaseCard
         padding="lg"
         className="w-full relative"
@@ -914,7 +969,7 @@ const VocabDetailCard = ({
           </div>
         )}
         
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: vocabSectionSpacing.blockGap }}>
           {/* 词汇标题区域 */}
           <div className="flex flex-col items-center gap-2">
             {/* 预留左右空间，避免与左上返回/右上翻页控件重叠 */}
@@ -927,7 +982,7 @@ const VocabDetailCard = ({
                   fontSize: componentTokens.grammarVocabTitle.fontSize,
                   fontWeight: componentTokens.grammarVocabTitle.fontWeight,
                   color: componentTokens.grammarVocabTitle.color,
-                  lineHeight: componentTokens.grammarVocabTitle.lineHeight,
+                  lineHeight: vocabLineHeights.title,
                   textAlign: componentTokens.grammarVocabTitle.textAlign,
                   maxWidth: '100%',
                 }}
@@ -958,123 +1013,202 @@ const VocabDetailCard = ({
               </div>
             </div>
             {partOfSpeech && (
-              <span className="text-sm" style={{ color: colors.semantic.text.secondary }}>
+              <span
+                className="text-sm"
+                style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.caption }}
+              >
                 {partOfSpeech}
               </span>
             )}
           </div>
 
-        {/* 释义 + 搭配 + 语法说明 合并为单卡片，使用 Primary-50 背景 */}
+        {/* 释义（结构化解析成功时绿色）+ 其余区块（白底），单卡片 + 细分割线 */}
         {(definitions.length > 0 || wordFeaturePoints.length > 0 || rareSensePoints.length > 0 || collocationPoints.length > 0 || grammarPoints.length > 0) && (
           <section>
             <div
-              className="p-4 rounded-lg border space-y-4"
-              style={{
-                backgroundColor: colors.primary[50],
-                borderColor: colors.primary[100],
-              }}
+              className="rounded-lg border overflow-hidden"
+              style={explanationCardStyle}
             >
               {definitions.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
+                <div
+                  style={{
+                    ...definitionSectionBg,
+                    ...explanationSectionStyle,
+                    gap: vocabSectionSpacing.definitionGap,
+                  }}
+                >
+                  <h2
+                    className="font-semibold text-lg"
+                    style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.heading }}
+                  >
                     {t('释义')}
                   </h2>
-                  {definitions.map((def, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <span className="font-medium min-w-[24px]" style={{ color: colors.semantic.text.secondary }}>
-                        {index + 1}.
-                      </span>
-                      <div
-                        className="leading-relaxed whitespace-pre-wrap flex-1"
-                        style={{ color: colors.semantic.text.primary }}
-                      >
-                        {renderInlineMarkdown(def)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {wordFeaturePoints.length > 0 && (
-                <div className="space-y-2">
-                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    {t('词汇特征')}
-                  </h2>
-                  <ul className="space-y-2">
-                    {wordFeaturePoints.map((point, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
-                        <span
-                          className="leading-relaxed whitespace-pre-wrap flex-1"
-                          style={{ color: colors.semantic.text.primary }}
-                        >
-                          {renderInlineMarkdown(point)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {rareSensePoints.length > 0 && (
-                <div className="space-y-2">
-                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    {t('少见义')}
-                  </h2>
-                  <div className="space-y-2">
-                    {rareSensePoints.map((point, index) => (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: vocabSectionSpacing.definitionGap,
+                    }}
+                  >
+                    {definitions.map((def, index) => (
                       <div
                         key={index}
-                        className="leading-relaxed whitespace-pre-wrap"
-                        style={{ color: colors.semantic.text.primary }}
+                        className="flex items-start"
+                        style={{ gap: vocabSectionSpacing.inlineGap }}
                       >
-                        {renderInlineMarkdown(point)}
+                        <span
+                          className="shrink-0"
+                          style={{
+                            color: colors.primary[500],
+                            fontSize: definitionHeroStyle.fontSize,
+                            lineHeight: definitionHeroStyle.lineHeight,
+                          }}
+                        >
+                          •
+                        </span>
+                        <div
+                          className="whitespace-pre-wrap flex-1"
+                          style={{
+                            color: colors.semantic.text.primary,
+                            fontSize: definitionHeroStyle.fontSize,
+                            lineHeight: definitionHeroStyle.lineHeight,
+                          }}
+                        >
+                          {renderInlineMarkdown(def)}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {collocationPoints.length > 0 && (
-                <div className="space-y-2">
-                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    {t('搭配')}
-                  </h2>
-                  <ul className="space-y-2">
-                    {collocationPoints.map((point, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
-                        <span
-                          className="leading-relaxed whitespace-pre-wrap flex-1"
-                          style={{ color: colors.semantic.text.primary }}
+              {wordFeaturePoints.length > 0 && (
+                <>
+                  {showExplanationDividerBefore(1) ? (
+                    <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                  ) : null}
+                  <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                    <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.heading }}>
+                      {t('词汇特征')}
+                    </h2>
+                    <ul style={secondaryListStyle}>
+                      {wordFeaturePoints.map((point, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start"
+                          style={{ gap: vocabSectionSpacing.inlineGap }}
+                        >
+                          <span
+                            className="shrink-0"
+                            style={{ color: colors.primary[500], lineHeight: vocabLineHeights.body }}
+                          >
+                            •
+                          </span>
+                          <span
+                            className="whitespace-pre-wrap flex-1"
+                            style={{ color: colors.semantic.text.primary, lineHeight: vocabLineHeights.body }}
+                          >
+                            {renderInlineMarkdown(point)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
+
+              {rareSensePoints.length > 0 && (
+                <>
+                  {showExplanationDividerBefore(2) ? (
+                    <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                  ) : null}
+                  <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                    <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.heading }}>
+                      {t('少见义')}
+                    </h2>
+                    <div style={secondaryListStyle}>
+                      {rareSensePoints.map((point, index) => (
+                        <div
+                          key={index}
+                          className="whitespace-pre-wrap"
+                          style={{ color: colors.semantic.text.primary, lineHeight: vocabLineHeights.body }}
                         >
                           {renderInlineMarkdown(point)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {collocationPoints.length > 0 && (
+                <>
+                  {showExplanationDividerBefore(3) ? (
+                    <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                  ) : null}
+                  <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                    <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.heading }}>
+                      {t('搭配')}
+                    </h2>
+                    <ul style={secondaryListStyle}>
+                      {collocationPoints.map((point, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start"
+                          style={{ gap: vocabSectionSpacing.inlineGap }}
+                        >
+                          <span
+                            className="shrink-0"
+                            style={{ color: colors.primary[500], lineHeight: vocabLineHeights.body }}
+                          >
+                            •
+                          </span>
+                          <span
+                            className="whitespace-pre-wrap flex-1"
+                            style={{ color: colors.semantic.text.primary, lineHeight: vocabLineHeights.body }}
+                          >
+                            {renderInlineMarkdown(point)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
               )}
 
               {grammarPoints.length > 0 && (
-                <div className="space-y-2">
-                  <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    {t('语法说明')}
-                  </h2>
-                  <ul className="space-y-2">
-                    {grammarPoints.map((point, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="mt-1" style={{ color: colors.primary[500] }}>•</span>
-                        <span
-                          className="leading-relaxed whitespace-pre-wrap flex-1"
-                          style={{ color: colors.semantic.text.primary }}
+                <>
+                  {showExplanationDividerBefore(4) ? (
+                    <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                  ) : null}
+                  <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                    <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.heading }}>
+                      {t('语法说明')}
+                    </h2>
+                    <ul style={secondaryListStyle}>
+                      {grammarPoints.map((point, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start"
+                          style={{ gap: vocabSectionSpacing.inlineGap }}
                         >
-                          {renderInlineMarkdown(point)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                          <span
+                            className="shrink-0"
+                            style={{ color: colors.primary[500], lineHeight: vocabLineHeights.body }}
+                          >
+                            •
+                          </span>
+                          <span
+                            className="whitespace-pre-wrap flex-1"
+                            style={{ color: colors.semantic.text.primary, lineHeight: vocabLineHeights.body }}
+                          >
+                            {renderInlineMarkdown(point)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
               )}
             </div>
           </section>
@@ -1082,23 +1216,30 @@ const VocabDetailCard = ({
 
         {/* 例句部分 - 小标题分离，每个例句独立卡片 */}
         {examples.length > 0 && (
-          <section>
-            <h2 className="text-lg font-semibold mb-3" style={{ color: colors.semantic.text.secondary }}>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: vocabSectionSpacing.contentGap }}>
+            <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: vocabLineHeights.heading }}>
               {t('例句')}
             </h2>
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: vocabSectionSpacing.exampleCardGap }}>
               {examples.map((example, index) => (
-                <div 
+                <div
                   key={index}
-                  className="p-4 rounded-lg border"
-                  style={{ 
+                  className="rounded-lg border"
+                  style={{
                     backgroundColor: colors.semantic.bg.primary,
-                    borderColor: colors.gray[200]
+                    borderColor: colors.gray[200],
+                    padding: vocabSectionSpacing.padding,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: vocabSectionSpacing.contentGap,
                   }}
                 >
                   {/* 句子部分 */}
-                  <div className="flex items-start gap-2 mb-2">
-                    <div className="text-lg font-medium flex-1" style={{ color: colors.semantic.text.primary }}>
+                  <div className="flex items-start" style={{ gap: vocabSectionSpacing.inlineGap }}>
+                    <div
+                      className="text-lg font-medium flex-1"
+                      style={{ color: colors.semantic.text.primary, lineHeight: vocabLineHeights.heading }}
+                    >
                       {example.sentence}
                     </div>
                     {/* 🔧 朗读图标按钮 */}
@@ -1123,7 +1264,7 @@ const VocabDetailCard = ({
                   </div>
                   {/* 来源部分 - 绿色文字和链接图标 */}
                   {(example.text_id || example.source) && (
-                    <div className="flex items-center gap-1 mb-2">
+                    <div className="flex items-center" style={{ gap: '4px' }}>
                       <button
                         type="button"
                         onClick={() => {
@@ -1158,10 +1299,15 @@ const VocabDetailCard = ({
                   )}
                   {/* 解释部分 */}
                   {example.explanation && (
-                    <div className="leading-relaxed whitespace-pre-wrap mt-2 pt-2 border-t" style={{ 
+                    <div
+                      className="whitespace-pre-wrap border-t"
+                      style={{
                         color: colors.semantic.text.secondary,
-                      borderColor: colors.gray[200]
-                    }}>
+                        borderColor: colors.gray[200],
+                        lineHeight: vocabLineHeights.body,
+                        paddingTop: vocabSectionSpacing.contentGap,
+                      }}
+                    >
                       {renderInlineMarkdown(parseExplanation(example.explanation))}
                     </div>
                   )}

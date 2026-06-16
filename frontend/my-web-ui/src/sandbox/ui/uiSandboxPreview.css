@@ -1,0 +1,70 @@
+/**
+ * Sandbox-only CSS overrides for layout experiments.
+ * Default mode leaves production VocabDetailCard styles untouched.
+ */
+
+.ui-sandbox-preview[data-ui-mode='compact'] {
+  font-size: 0.9375rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .text-lg {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.5rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.375rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .p-4 {
+  padding: 0.75rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='compact'] .p-6 {
+  padding: 1rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] {
+  font-size: 1.0625rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] .text-lg {
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 2rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.25rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] .p-4 {
+  padding: 1.5rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] .p-6 {
+  padding: 2rem;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] h1 {
+  letter-spacing: -0.02em;
+}
+
+.ui-sandbox-preview[data-ui-mode='reader'] h2.text-lg {
+  font-weight: 700;
+}
