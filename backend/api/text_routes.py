@@ -94,7 +94,11 @@ def _serialize_sentence_with_tokens(sentence_model, text_language: Optional[str]
     language_code = get_language_code(text_language) if text_language else None
     is_non_whitespace = is_non_whitespace_language(language_code) if language_code else None
     tokens = []
-    for t in (getattr(sentence_model, "tokens", None) or []):
+    # PostgreSQL 不保证 relationship 返回顺序；本地 SQLite 往往“碰巧”按插入顺序，生产环境会出现 token 乱序。
+    for t in sorted(
+        (getattr(sentence_model, "tokens", None) or []),
+        key=lambda x: (x.sentence_token_id is None, x.sentence_token_id or 0),
+    ):
         tokens.append({
             "token_body": t.token_body,
             "sentence_token_id": t.sentence_token_id,
@@ -107,7 +111,10 @@ def _serialize_sentence_with_tokens(sentence_model, text_language: Optional[str]
             "selectable": True,
         })
     word_tokens = []
-    for wt in (getattr(sentence_model, "word_tokens", None) or []):
+    for wt in sorted(
+        (getattr(sentence_model, "word_tokens", None) or []),
+        key=lambda x: (x.word_token_id is None, x.word_token_id or 0),
+    ):
         word_tokens.append({
             "word_token_id": wt.word_token_id,
             "word_body": wt.word_body,

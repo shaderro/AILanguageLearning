@@ -14,7 +14,7 @@ import ProfilePage from './modules/auth/components/ProfilePage'
 import CreditsIndicator from './components/features/credits/CreditsIndicator'
 import WelcomeCreditsBanner from './components/features/credits/WelcomeCreditsBanner'
 import { shouldShowWelcomeCredits, dismissWelcomeCredits } from './utils/creditsUtils'
-import { shouldShowOnboarding, completeOnboarding, userNeedsOnboarding } from './utils/onboardingUtils'
+import { shouldShowOnboarding, completeOnboarding, userNeedsOnboarding, isReturningUser } from './utils/onboardingUtils'
 import {
   CONTENT_LANGUAGE_NAMES,
   LANGUAGE_CODE_TO_NAME,
@@ -182,7 +182,15 @@ function AppContent() {
   // Magic link 等新用户：若尚未设置内容语言，进入 onboarding
   useEffect(() => {
     if (!isAuthenticated || !currentUserId || !userInfo) return
-    if (!shouldShowOnboarding(currentUserId, userInfo)) return
+    if (!shouldShowOnboarding(currentUserId, userInfo)) {
+      if (
+        (currentPage === 'onboardingLanguage' || currentPage === 'onboardingReading') &&
+        isReturningUser(userInfo, currentUserId)
+      ) {
+        setCurrentPage('landing')
+      }
+      return
+    }
     if (currentPage === 'onboardingLanguage' || currentPage === 'onboardingReading') return
     setCurrentPage(
       userNeedsOnboarding(userInfo) ? 'onboardingLanguage' : 'onboardingReading',
@@ -200,6 +208,7 @@ function AppContent() {
   const { selectedLanguage, setSelectedLanguage } = useLanguage()
   const prevSelectedLanguageRef = useRef(selectedLanguage)
   const initializedUserLanguageRef = useRef(null)
+  const legacyLanguageSyncRef = useRef(null)
   const suppressNextArticleResetRef = useRef(false)
   const initialUrlPageRef = useRef(initialState.page)
   const initialUrlArticleIdRef = useRef(initialState.articleId)
@@ -208,6 +217,34 @@ function AppContent() {
     !(initialUrlPageRef.current === 'article' && initialUrlArticleIdRef.current && initialUrlLanguageRef.current)
   )
   const ALL_LANGUAGES = CONTENT_LANGUAGE_NAMES
+
+  // 老用户缺少服务端语言字段：用本地缓存或默认值静默回填，避免误进 onboarding
+  useEffect(() => {
+    if (!isAuthenticated || !currentUserId || !userInfo || !token) return
+    if (!userNeedsOnboarding(userInfo)) return
+    if (shouldShowOnboarding(currentUserId, userInfo)) return
+    if (!isReturningUser(userInfo, currentUserId)) return
+    if (legacyLanguageSyncRef.current === currentUserId) return
+
+    legacyLanguageSyncRef.current = currentUserId
+
+    const stored = readStoredHeaderLanguages(currentUserId)
+    const fallbackName = selectedLanguage || '德文'
+    const names = stored?.length ? stored : [fallbackName]
+    const codes = names.map((name) => languageNameToCode(name)).filter(Boolean)
+    if (!codes.length) return
+
+    completeOnboarding(currentUserId)
+    setHeaderLanguagesList(names)
+    writeStoredHeaderLanguages(currentUserId, names)
+
+    authService.updatePreferences({
+      content_language: codes[0],
+      languages_list: codes,
+    }).then(() => refreshUserInfo(token, { force: true })).catch((e) => {
+      console.warn('⚠️ [App] 老用户语言偏好回填失败:', e)
+    })
+  }, [isAuthenticated, currentUserId, userInfo, token, selectedLanguage, refreshUserInfo])
 
   const getResolvedHeaderLanguages = () =>
     resolveHeaderLanguages({
@@ -456,6 +493,7 @@ function AppContent() {
   useEffect(() => {
     if (isAuthenticated) return
     initializedUserLanguageRef.current = null
+    legacyLanguageSyncRef.current = null
   }, [isAuthenticated])
 
   // 处理登出 - 使用 UserContext

@@ -29,21 +29,41 @@ export const isCreditsInsufficient = (tokenBalance, role = 'user') => {
   return tokenBalance < INSUFFICIENT_CREDITS_THRESHOLD
 }
 
-const WELCOME_PENDING_KEY = 'pending_welcome_credits'
+/** @deprecated Legacy global key — migrated to per-user keys */
+const LEGACY_WELCOME_PENDING_KEY = 'pending_welcome_credits'
 
 export const welcomeCreditsSeenKey = (userId) => `welcome_credits_seen_${userId}`
 
-export const markPendingWelcomeCredits = () => {
+export const pendingWelcomeCreditsKey = (userId) => `pending_welcome_credits_${userId}`
+
+const migrateLegacyPendingWelcomeCredits = (userId) => {
   try {
-    localStorage.setItem(WELCOME_PENDING_KEY, '1')
+    if (localStorage.getItem(LEGACY_WELCOME_PENDING_KEY) !== '1') return false
+    localStorage.setItem(pendingWelcomeCreditsKey(userId), '1')
+    localStorage.removeItem(LEGACY_WELCOME_PENDING_KEY)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export const markPendingWelcomeCredits = (userId) => {
+  try {
+    if (userId != null) {
+      localStorage.setItem(pendingWelcomeCreditsKey(userId), '1')
+    }
+    localStorage.removeItem(LEGACY_WELCOME_PENDING_KEY)
   } catch {
     // ignore
   }
 }
 
-export const clearPendingWelcomeCredits = () => {
+export const clearPendingWelcomeCredits = (userId) => {
   try {
-    localStorage.removeItem(WELCOME_PENDING_KEY)
+    if (userId != null) {
+      localStorage.removeItem(pendingWelcomeCreditsKey(userId))
+    }
+    localStorage.removeItem(LEGACY_WELCOME_PENDING_KEY)
   } catch {
     // ignore
   }
@@ -53,7 +73,8 @@ export const shouldShowWelcomeCredits = (userId) => {
   if (!userId || typeof window === 'undefined') return false
   try {
     if (localStorage.getItem(welcomeCreditsSeenKey(userId))) return false
-    return localStorage.getItem(WELCOME_PENDING_KEY) === '1'
+    migrateLegacyPendingWelcomeCredits(userId)
+    return localStorage.getItem(pendingWelcomeCreditsKey(userId)) === '1'
   } catch {
     return false
   }
@@ -63,7 +84,7 @@ export const dismissWelcomeCredits = (userId) => {
   if (!userId || typeof window === 'undefined') return
   try {
     localStorage.setItem(welcomeCreditsSeenKey(userId), '1')
-    clearPendingWelcomeCredits()
+    clearPendingWelcomeCredits(userId)
   } catch {
     // ignore
   }

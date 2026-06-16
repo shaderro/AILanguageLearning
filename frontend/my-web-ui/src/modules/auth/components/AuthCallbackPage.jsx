@@ -40,8 +40,8 @@ const AuthCallbackPage = () => {
         await establishSession(data.user_id, data.session_token)
         let redirectTo = '/'
         if (data.is_new_user) {
-          markPendingWelcomeCredits()
-          markPendingOnboarding()
+          markPendingWelcomeCredits(data.user_id)
+          markPendingOnboarding(data.user_id)
           redirectTo = '/?page=onboardingLanguage'
         }
         clearMagicLinkSendState()
