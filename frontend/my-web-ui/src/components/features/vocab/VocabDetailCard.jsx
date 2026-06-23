@@ -4,7 +4,8 @@ import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
-import { hasAnyHydratedExampleSentence, pickExampleSentenceText, unwrapVocabDetailResponse } from '../../../utils/vocabExamples'
+import { hasAnyHydratedExampleSentence, pickExampleSentenceText } from '../../../utils/vocabExamples'
+import { fetchVocabDetail, getCachedVocabDetail, setCachedVocabDetail } from '../../../utils/vocabDetailSessionCache'
 import { parseStructuredVocabExplanation, unwrapLegacyExplanation } from '../../../utils/vocabExplanationFormat'
 
 // 解析和格式化解释文本（与 VocabNotationCard 保持一致）
@@ -347,35 +348,52 @@ const VocabDetailCard = ({
 }) => {
   const t = useUIText()
   const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
-  const [vocabWithDetails, setVocabWithDetails] = useState(vocab)
+  const [vocabWithDetails, setVocabWithDetails] = useState(() => {
+    if (!vocab?.vocab_id) return vocab
+    return getCachedVocabDetail(vocab.vocab_id) || vocab
+  })
   const [articleTitles, setArticleTitles] = useState({}) // text_id -> title 映射
   const [exampleSentenceMap, setExampleSentenceMap] = useState({}) // text_id:sentence_id -> sentence
 
-  // 加载完整的 vocab 详情（包含 examples）
+  // 加载完整的 vocab 详情（包含 examples），优先使用 session 缓存
   useEffect(() => {
-    if (vocab && !hasAnyHydratedExampleSentence(vocab)) {
-      const vocabId = vocab.vocab_id
-      if (vocabId) {
-        apiService.getVocabById(vocabId)
-          .then(response => {
-            const detailData = unwrapVocabDetailResponse(response)
-            if (detailData) {
-              setVocabWithDetails({ ...vocab, ...detailData })
-            } else {
-              setVocabWithDetails(vocab)
-            }
-          })
-          .catch(error => {
-            console.warn('⚠️ [VocabDetailCard] Failed to load vocab detail:', error)
-            setVocabWithDetails(vocab)
-          })
-      } else {
-        setVocabWithDetails(vocab)
-      }
-    } else {
-      setVocabWithDetails(vocab)
+    let cancelled = false
+
+    if (!vocab) {
+      setVocabWithDetails(null)
+      return undefined
     }
-  }, [vocab])
+
+    const vocabId = vocab.vocab_id
+    if (!vocabId) {
+      setVocabWithDetails(vocab)
+      return undefined
+    }
+
+    const cached = getCachedVocabDetail(vocabId)
+    if (cached) {
+      setVocabWithDetails({ ...vocab, ...cached })
+      if (hasAnyHydratedExampleSentence(cached)) {
+        return undefined
+      }
+    } else if (hasAnyHydratedExampleSentence(vocab)) {
+      setVocabWithDetails(vocab)
+      setCachedVocabDetail(vocabId, vocab)
+      return undefined
+    } else {
+      setVocabWithDetails(cached ? { ...vocab, ...cached } : vocab)
+    }
+
+    fetchVocabDetail(vocabId, { baseVocab: vocab })
+      .then((merged) => {
+        if (cancelled) return
+        setVocabWithDetails(merged || vocab)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [vocab?.vocab_id, vocab])
 
   // 为每个例句加载文章标题
   useEffect(() => {
@@ -871,13 +889,15 @@ const VocabDetailCard = ({
       })
   }, [vocabWithDetails, articleTitles, exampleSentenceMap])
 
-  if (loading) {
+  const isPending = loading || (vocab?.vocab_id && !vocabWithDetails)
+
+  if (isPending) {
     return (
       <div className="w-full max-w-[650px] mx-auto" style={{ backgroundColor: 'white' }}>
         <BaseCard padding="lg" className="w-full" style={{ backgroundColor: 'white' }}>
           <div className="text-center py-8" style={{ backgroundColor: 'white' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.primary[500] }}></div>
-            <p className="text-gray-600">{t('加载中...')}</p>
+            <p className="text-gray-600">{t('加载中')}</p>
           </div>
         </BaseCard>
       </div>
