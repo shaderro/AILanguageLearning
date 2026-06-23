@@ -12,7 +12,12 @@ import VocabReviewCard from '../../components/features/review/VocabReviewCard'
 import ReviewResults from '../shared/components/ReviewResults'
 import { useUIText } from '../../i18n/useUIText'
 import VocabDetailCard from '../../components/features/vocab/VocabDetailCard'
-import { hasAnyHydratedExampleSentence, unwrapVocabDetailResponse } from '../../utils/vocabExamples'
+import { hasAnyHydratedExampleSentence } from '../../utils/vocabExamples'
+import {
+  fetchVocabDetail,
+  getCachedVocabDetail,
+  setCachedVocabDetail,
+} from '../../utils/vocabDetailSessionCache'
 
 function WordDemo() {
   const getVocabIdFromURL = () => {
@@ -29,8 +34,6 @@ function WordDemo() {
   const [selectedWord, setSelectedWord] = useState(null)
   const [selectedWordId, setSelectedWordId] = useState(() => getVocabIdFromURL())
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
-  // 🔧 缓存详情页面的词汇数据，避免切换时重新加载
-  const [detailPageCache, setDetailPageCache] = useState(new Map())
   // 🔧 延迟显示加载UI的状态（超过0.5s才显示）
   const [showLoadingUI, setShowLoadingUI] = useState(false)
   // 🔧 保存上一个卡片数据，在加载期间保持显示
@@ -39,8 +42,6 @@ function WordDemo() {
   const [reviewWords, setReviewWords] = useState([])
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0)
   const [reviewResults, setReviewResults] = useState([])
-  // 🔧 缓存预加载的词汇详情
-  const [vocabDetailCache, setVocabDetailCache] = useState(new Map())
   const detailFetchInFlightRef = useRef(new Set())
   
   // 从 UserContext 获取当前用户
@@ -180,8 +181,7 @@ function WordDemo() {
   // 🔧 新增：当选中词汇时，获取完整的词汇详情（包含examples）- 优化：延迟加载UI显示
   useEffect(() => {
     if (selectedWordId) {
-      // 🔧 先检查缓存
-      const cached = detailPageCache.get(selectedWordId)
+      const cached = getCachedVocabDetail(selectedWordId)
       if (cached) {
         console.log(`✅ [WordDemo] 使用缓存的词汇详情: ${selectedWordId}`)
         setSelectedWord(cached)
@@ -195,12 +195,12 @@ function WordDemo() {
       const allVocabs = vocabData?.data || []
       const listItem = allVocabs.find(w => w.vocab_id === selectedWordId)
       if (listItem) {
-        // 先用列表项占位展示；若例句未 hydrate，交给 VocabDetailCard 自己补详情，避免这里重复打详情接口。
+        // 先用列表项占位展示；若例句未 hydrate，交给 VocabDetailCard / session 缓存补详情
         setSelectedWord(listItem)
         setIsLoadingDetail(false)
         setShowLoadingUI(false)
         setPreviousWord(listItem)
-        setDetailPageCache(prev => new Map(prev).set(selectedWordId, listItem))
+        setCachedVocabDetail(selectedWordId, listItem)
         return
       }
 
@@ -210,10 +210,8 @@ function WordDemo() {
       
       // 🔧 需要从API加载：保持上一个卡片显示，延迟0.5s后才显示加载UI
       setIsLoadingDetail(true)
-      setShowLoadingUI(false) // 先不显示加载UI
-      // 🔧 previousWord 已在切换时保存，这里不需要再次设置
+      setShowLoadingUI(false)
       
-      // 🔧 延迟0.5s后显示加载UI
       const loadingUITimer = setTimeout(() => {
         setShowLoadingUI(true)
       }, 500)
@@ -221,34 +219,26 @@ function WordDemo() {
       console.log(`🔍 [WordDemo] Fetching vocab detail for ID: ${selectedWordId}`)
       detailFetchInFlightRef.current.add(selectedWordId)
       
-      apiService.getVocabById(selectedWordId)
-        .then(response => {
-          console.log(`✅ [WordDemo] Vocab detail fetched:`, response)
-          const detailData = unwrapVocabDetailResponse(response)
-          setSelectedWord(detailData)
+      fetchVocabDetail(selectedWordId)
+        .then((detailData) => {
+          console.log(`✅ [WordDemo] Vocab detail fetched:`, detailData)
+          if (detailData) {
+            setSelectedWord(detailData)
+            setPreviousWord(detailData)
+          }
           setIsLoadingDetail(false)
           setShowLoadingUI(false)
-          setPreviousWord(detailData)
-          // 🔧 缓存数据
-          setDetailPageCache(prev => new Map(prev).set(selectedWordId, detailData))
           detailFetchInFlightRef.current.delete(selectedWordId)
           clearTimeout(loadingUITimer)
         })
         .catch(error => {
           console.error(`❌ [WordDemo] Error fetching vocab detail:`, error)
-          // 🔧 如果API失败，尝试使用列表数据作为后备
-          if (listItem) {
-            setSelectedWord(listItem)
-            setPreviousWord(listItem)
-            setDetailPageCache(prev => new Map(prev).set(selectedWordId, listItem))
-          }
           detailFetchInFlightRef.current.delete(selectedWordId)
           setIsLoadingDetail(false)
           setShowLoadingUI(false)
           clearTimeout(loadingUITimer)
         })
       
-      // 🔧 清理定时器
       return () => {
         clearTimeout(loadingUITimer)
       }
@@ -256,7 +246,7 @@ function WordDemo() {
       setPreviousWord(null)
       setShowLoadingUI(false)
     }
-  }, [selectedWordId, vocabData, detailPageCache])
+  }, [selectedWordId, vocabData])
 
   useEffect(() => {
     const urlVocabId = getVocabIdFromURL()
@@ -309,27 +299,18 @@ function WordDemo() {
       return
     }
     
-    // 🔧 预加载所有词汇的详情（包含 examples）
-    const newCache = new Map()
+    // 🔧 预加载所有词汇的详情（包含 examples），写入 session 缓存
     const loadPromises = sortedList.map(async (vocab) => {
-      // 列表可能带 examples 元数据但没有 original_sentence，仍需拉详情补齐
       if (hasAnyHydratedExampleSentence(vocab)) {
-        newCache.set(vocab.vocab_id, vocab)
+        setCachedVocabDetail(vocab.vocab_id, vocab)
         return
       }
-      
-      // 否则，异步加载详情
+
       try {
-        const response = await apiService.getVocabById(vocab.vocab_id)
-        const detailData = unwrapVocabDetailResponse(response)
-        if (detailData) {
-          newCache.set(vocab.vocab_id, { ...vocab, ...detailData })
-        } else {
-          newCache.set(vocab.vocab_id, vocab)
-        }
+        await fetchVocabDetail(vocab.vocab_id, { baseVocab: vocab })
       } catch (error) {
         console.warn(`⚠️ [WordDemo] 预加载词汇 ${vocab.vocab_id} 详情失败:`, error)
-        newCache.set(vocab.vocab_id, vocab)
+        setCachedVocabDetail(vocab.vocab_id, vocab)
       }
     })
     
@@ -342,8 +323,7 @@ function WordDemo() {
     
     // 🔧 后台预加载详情（不阻塞界面）
     Promise.all(loadPromises).then(() => {
-      setVocabDetailCache(newCache)
-      console.log(`✅ [WordDemo] 预加载完成，缓存了 ${newCache.size} 个词汇详情`)
+      console.log(`✅ [WordDemo] 预加载完成，session 缓存已更新 ${sortedList.length} 个词汇`)
     })
   }
 
@@ -470,7 +450,7 @@ function WordDemo() {
     if (!isReviewComplete && currentReviewIndex < reviewWords.length) {
       const currentVocab = reviewWords[currentReviewIndex]
       // 🔧 优先使用缓存中的完整数据
-      const cachedVocab = vocabDetailCache.get(currentVocab.vocab_id)
+      const cachedVocab = getCachedVocabDetail(currentVocab.vocab_id)
       const vocabToShow = cachedVocab || currentVocab
       
       return (
@@ -567,9 +547,11 @@ function WordDemo() {
     
     // 🔧 在加载期间，如果数据未缓存且加载时间超过0.5s，显示加载UI；否则显示上一个卡片或当前卡片
     // 🔧 如果 previousWord 存在，在加载期间继续显示；否则显示当前卡片或加载状态
-    const displayWord = selectedWord || previousWord
-    // 🔧 如果 previousWord 不存在（首次加载），立即显示加载状态；否则延迟0.5s
-    const shouldShowLoading = isLoadingDetail && !detailPageCache.has(selectedWordId) && (showLoadingUI || !previousWord)
+    const displayWord = selectedWord || previousWord || getCachedVocabDetail(selectedWordId)
+    const isDetailPending = Boolean(selectedWordId && !displayWord)
+    const shouldShowLoading =
+      isDetailPending ||
+      (isLoadingDetail && !getCachedVocabDetail(selectedWordId) && (showLoadingUI || !previousWord))
     
     return (
       <div className="h-full bg-white p-8" style={{ backgroundColor: 'white', minHeight: '100%' }}>

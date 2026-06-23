@@ -148,11 +148,9 @@ function AppContent() {
   const [showPPTermsPage, setShowPPTermsPage] = useState(false)
   const [showHeaderLanguageMenu, setShowHeaderLanguageMenu] = useState(false)
   const [showHeaderAddLanguages, setShowHeaderAddLanguages] = useState(false)
-  const [showInsightsMenu, setShowInsightsMenu] = useState(false)
   const [showWelcomeCredits, setShowWelcomeCredits] = useState(false)
   const [headerLanguagesList, setHeaderLanguagesList] = useState([])
   const headerLanguageRef = useRef(null)
-  const insightsMenuRef = useRef(null)
   
   // 从 UserContext 获取用户信息和方法
   const { 
@@ -441,22 +439,6 @@ function AppContent() {
     }
   }, [showHeaderLanguageMenu])
 
-  useEffect(() => {
-    if (!showInsightsMenu) return
-    const handleClickOutside = (event) => {
-      if (!insightsMenuRef.current) return
-      if (!insightsMenuRef.current.contains(event.target)) {
-        setShowInsightsMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('touchstart', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('touchstart', handleClickOutside)
-    }
-  }, [showInsightsMenu])
-
   // 登录后从全局 userInfo 初始化 UI 语言和内容语言（跨设备）
   useEffect(() => {
     if (!isAuthenticated || !currentUserId || !userInfo) return
@@ -516,7 +498,6 @@ function AppContent() {
     }
     const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
     window.history.replaceState({}, '', newUrl)
-    setShowInsightsMenu(false)
   }
 
   const navButton = (id, label) => {
@@ -601,10 +582,9 @@ function AppContent() {
               <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
                 {navButton('article', t('阅读'))}
                 <div className="h-5 w-px bg-gray-300" />
-                <div ref={insightsMenuRef} className="relative flex items-center">
+                <div className="group relative flex items-center">
                   <button
                     type="button"
-                    onClick={() => setShowInsightsMenu((prev) => !prev)}
                     className="inline-flex items-center gap-1 px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
                     style={{
                       borderColor:
@@ -624,7 +604,7 @@ function AppContent() {
                       </span>
                     )}
                     <svg
-                      className={`h-4 w-4 transition-transform ${showInsightsMenu ? 'rotate-180' : ''}`}
+                      className="h-4 w-4 transition-transform group-hover:rotate-180"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -632,8 +612,8 @@ function AppContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {showInsightsMenu && (
-                    <div className="absolute left-0 top-full mt-2 min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg z-20">
+                  <div className="absolute left-0 top-full z-20 hidden pt-2 group-hover:block">
+                    <div className="min-w-[160px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                       <button
                         type="button"
                         onClick={() => navigateToPage('wordDemo')}
@@ -657,7 +637,7 @@ function AppContent() {
                         {t('语法')}
                       </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
