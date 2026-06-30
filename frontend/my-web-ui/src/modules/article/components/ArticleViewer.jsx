@@ -854,7 +854,7 @@ function ArticleViewer({
       {/* 🔧 滚动容器 */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 p-4 overflow-auto min-h-0 h-full article-scrollbar"
+        className="flex-1 px-4 py-8 overflow-auto min-h-0 h-full article-scrollbar"
         onClick={handleBackgroundClick}
       >
       <style>{`

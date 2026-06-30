@@ -559,7 +559,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto">
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b z-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             {/* 左侧：Logo 和导航 */}

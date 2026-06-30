@@ -20,7 +20,7 @@
  * - Component lifecycle hooks
  */
 
-import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, memo, useMemo } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import ToastNotice from './ToastNotice'
 import SuggestedQuestions from './SuggestedQuestions'
@@ -154,12 +154,13 @@ function ChatView({
   const [tokenInsufficient, setTokenInsufficient] = useState(false)
   
   // 🔧 可调整宽度功能
-  const CHAT_WIDTH_STORAGE_KEY = 'chat_view_width'
+  const CHAT_WIDTH_STORAGE_KEY = 'chat_view_user_width'
   const MIN_CHAT_WIDTH = 280
   const MAX_CHAT_WIDTH = 600
   const DEFAULT_CHAT_WIDTH = 320 // w-80 = 320px
-  
-  const [chatWidth, setChatWidth] = useState(() => {
+  const FLEX_GAP_PX = 32 // ArticleChatView 使用 gap-8
+
+  const readSavedChatWidth = () => {
     try {
       const saved = localStorage.getItem(CHAT_WIDTH_STORAGE_KEY)
       if (saved) {
@@ -171,20 +172,43 @@ function ChatView({
     } catch (e) {
       console.warn('⚠️ [ChatView] 读取保存的宽度失败', e)
     }
-    return DEFAULT_CHAT_WIDTH
-  })
+    return null
+  }
+
+  const savedWidthOnMount = readSavedChatWidth()
+  const hasUserWidthPreferenceRef = useRef(savedWidthOnMount != null)
+
+  const [chatWidth, setChatWidth] = useState(() => savedWidthOnMount ?? DEFAULT_CHAT_WIDTH)
+  const chatWidthRef = useRef(chatWidth)
+
+  useEffect(() => {
+    chatWidthRef.current = chatWidth
+  }, [chatWidth])
   
   const [isResizing, setIsResizing] = useState(false)
   const chatContainerRef = useRef(null)
-  
-  // 保存宽度到 localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_WIDTH_STORAGE_KEY, String(chatWidth))
-    } catch (e) {
-      console.warn('⚠️ [ChatView] 保存宽度失败', e)
+
+  useLayoutEffect(() => {
+    if (hasUserWidthPreferenceRef.current) return
+
+    const parent = chatContainerRef.current?.parentElement
+    if (!parent) return
+
+    const applyHalfWidth = () => {
+      const parentWidth = parent.getBoundingClientRect().width
+      const half = (parentWidth - FLEX_GAP_PX) / 2
+      const clamped = Math.min(
+        MAX_CHAT_WIDTH,
+        Math.max(MIN_CHAT_WIDTH, Math.round(half))
+      )
+      setChatWidth(clamped)
     }
-  }, [chatWidth])
+
+    applyHalfWidth()
+    const observer = new ResizeObserver(applyHalfWidth)
+    observer.observe(parent)
+    return () => observer.disconnect()
+  }, [])
   
   // 处理拖拽调整宽度
   useEffect(() => {
@@ -203,6 +227,12 @@ function ChatView({
     
     const handleMouseUp = () => {
       setIsResizing(false)
+      hasUserWidthPreferenceRef.current = true
+      try {
+        localStorage.setItem(CHAT_WIDTH_STORAGE_KEY, String(chatWidthRef.current))
+      } catch (e) {
+        console.warn('⚠️ [ChatView] 保存宽度失败', e)
+      }
     }
     
     document.addEventListener('mousemove', handleMouseMove)
@@ -1237,7 +1267,7 @@ function ChatView({
       if (part == null || part === '') return null
       if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
         return (
-          <code key={`md-c-${idx}`} className="rounded bg-gray-200 px-1 py-0.5 text-[0.95em]">
+          <code key={`md-c-${idx}`} className="rounded bg-gray-100 px-1 py-0.5 text-[0.95em]">
             {part.slice(1, -1)}
           </code>
         )
@@ -2343,7 +2373,7 @@ function ChatView({
       `}</style>
       <div 
         ref={chatContainerRef}
-        className={`flex flex-col bg-white rounded-lg shadow-md flex-shrink-0 relative ${disabled ? 'opacity-50' : ''}`}
+        className={`flex flex-col bg-white rounded-lg shadow-md flex-shrink-0 relative overflow-hidden ${disabled ? 'opacity-50' : ''}`}
         style={{ width: `${chatWidth}px` }}
       >
       {/* Resize Handle - 左侧拖拽条 */}
@@ -2361,18 +2391,6 @@ function ChatView({
         title="拖拽调整宽度"
       >
         <div className="absolute inset-0 bg-transparent group-hover:bg-gray-400 active:bg-gray-500 transition-colors" />
-      </div>
-      
-      {/* Chat Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-shrink-0">
-        <h2 className="text-lg font-semibold text-gray-800">
-          {disabled ? t('学习助手 (暂时不可用)') : t('学习助手')}
-        </h2>
-        {disabled && (
-          <p className="text-sm text-gray-600">
-            {t('请先上传文章内容')}
-          </p>
-        )}
       </div>
 
       {/* 正文区：空白处点击可取消引用（capture 在子元素之前） */}
@@ -2401,7 +2419,7 @@ function ChatView({
                   className={`px-3 py-2 rounded-lg ${
                     message.isUser
                       ? 'bg-white text-gray-900 border border-gray-300 rounded-br-none'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                      : 'bg-gray-50 text-gray-800 rounded-bl-none'
                   }`}
                   style={{ 
                     maxWidth: `${chatWidth - 64}px` // chatWidth - 左右padding(32px) - 消息间距(32px)
@@ -2412,7 +2430,7 @@ function ChatView({
                       className={`mb-2 p-2 rounded text-xs ${
                         message.isUser 
                           ? '' 
-                          : 'bg-gray-200 text-gray-600'
+                          : 'bg-gray-100 text-gray-600'
                       }`}
                       style={message.isUser ? {
                         backgroundColor: colors.primary[100],

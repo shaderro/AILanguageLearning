@@ -991,7 +991,7 @@ export default function ArticleChatView({
         <VocabNotationDebugPanel />
         <div className="h-full flex flex-col">
           {/* Main Content - allow overlays to extend beyond article view */}
-          <div className={`flex gap-8 flex-1 p-4 overflow-hidden min-h-0 ${isUploadMode ? 'justify-center' : ''}`}>
+          <div className={`flex gap-8 flex-1 px-4 py-8 overflow-hidden min-h-0 ${isUploadMode ? 'justify-center' : ''}`}>
             {isUploadMode ? (
               <div className="w-1/2 flex justify-center">
                 {showUploadProgress ? (
