@@ -19,7 +19,14 @@ import { SelectionProvider } from '../modules/article/selection/SelectionContext
 import TokenInlineTranslationDemo from '../components/features/translation/TokenInlineTranslation.demo';
 import { TranslationDebugProvider } from '../contexts/TranslationDebugContext';
 import { tokens } from '../design-tokens';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
+
+const mockVocabExampleFetcher = async () => ({
+  vocab_id: 1,
+  vocab_body: 'erstrecken',
+  context_explanation:
+    '在这个句子中，"erstrecken" 表示"延伸、伸展"的意思，通常用于描述空间上的扩展，如森林延伸数公里。',
+});
 
 const demoSections = [
   {
@@ -306,7 +313,11 @@ const functionSections = [
     description: '内联词汇注释卡片，用于在文章中显示词汇的解释和上下文说明，支持悬停显示。',
     component: function VocabNotationCardDemo() {
       const anchorRef = useRef(null)
-      const [isVisible, setIsVisible] = useState(true)
+      const [isVisible, setIsVisible] = useState(false)
+      const getVocabExampleForToken = useCallback(
+        () => mockVocabExampleFetcher(),
+        []
+      )
       
       return (
         <div className="relative p-8 bg-gray-100 rounded-lg">
@@ -329,13 +340,9 @@ const functionSections = [
             sentenceId={1}
             tokenIndex={0}
             anchorRef={anchorRef}
-            getVocabExampleForToken={async (textId, sentenceId, tokenIndex) => {
-              // 模拟 API 调用
-              return {
-                vocab_id: 1,
-                context_explanation: '在这个句子中，"erstrecken" 表示"延伸、伸展"的意思，通常用于描述空间上的扩展，如森林延伸数公里。'
-              }
-            }}
+            getVocabExampleForToken={getVocabExampleForToken}
+            onMouseEnter={() => setIsVisible(true)}
+            onMouseLeave={() => setIsVisible(false)}
           />
         </div>
       );

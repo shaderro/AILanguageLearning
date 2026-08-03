@@ -6,7 +6,7 @@ os.chdir(REPO_ROOT)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-import jieba
+﻿import jieba
 
 
 def segment(text: str):

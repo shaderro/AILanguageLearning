@@ -1,6 +1,7 @@
 ﻿import CardBase from './CardBase'
 import { useUIText } from '../../../i18n/useUIText'
 import { formatVocabExplanationPreview } from '../../../utils/vocabExplanationFormat'
+import { formatGrammarExplanationPreview } from '../../../utils/grammarExplanationFormat'
 
 const LearnCard = ({ 
   data, 
@@ -158,7 +159,7 @@ const LearnCard = ({
             {data?.rule_summary && (
               <div>
                 <div className="text-gray-800 leading-relaxed text-sm line-clamp-4">
-                  {parseExplanation(data.rule_summary)}
+                  {formatGrammarExplanationPreview(data.rule_summary)}
                 </div>
               </div>
             )}

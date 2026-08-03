@@ -304,6 +304,7 @@ export default function VocabNotationCard({
   // 🔧 修复：使用 ref 跟踪是否已加载，避免重复加载
   const hasLoadedRef = useRef(false)
   const loadingKeyRef = useRef(null)
+  const inFlightRef = useRef(false)
 
   const resolveExampleFromMatchedNotation = useCallback(async () => {
     if (!matchedNotation?.vocab_id) {
@@ -388,8 +389,8 @@ export default function VocabNotationCard({
       return
     }
 
-    // 🔧 如果正在加载中，不重复加载
-    if (isLoading && !keyChanged) {
+    // 🔧 如果同一 key 的请求仍在进行，不重复加载
+    if (inFlightRef.current && !keyChanged) {
       logVocabNotationDebug('⏭️ [VocabNotationCard] skip reload (already loading)', {
         textId,
         sentenceId,
@@ -417,6 +418,7 @@ export default function VocabNotationCard({
           tokenIndex,
           vocabId: matchedNotation.vocab_id,
         })
+        inFlightRef.current = true
         setIsLoading(true)
         setError(null)
         resolveExampleFromMatchedNotation()
@@ -425,6 +427,7 @@ export default function VocabNotationCard({
               return
             }
             setVocabExample(example || null)
+            inFlightRef.current = false
             setIsLoading(false)
             hasLoadedRef.current = true
             logVocabNotationDebug('✅ [VocabNotationCard] example resolved (by matchedNotation)', {
@@ -442,6 +445,7 @@ export default function VocabNotationCard({
             console.error('❌ [VocabNotationCard] Error fetching vocab example by matchedNotation:', error)
             setError(error.message || 'Failed to load vocab example')
             setVocabExample(null)
+            inFlightRef.current = false
             setIsLoading(false)
             hasLoadedRef.current = false
           })
@@ -451,6 +455,7 @@ export default function VocabNotationCard({
           sentenceId,
           tokenIndex,
         })
+        inFlightRef.current = true
         setIsLoading(true)
         setError(null)
         getVocabExampleForToken(textId, sentenceId, tokenIndex)
@@ -459,6 +464,7 @@ export default function VocabNotationCard({
               return
             }
             setVocabExample(example || null)
+            inFlightRef.current = false
             setIsLoading(false)
             hasLoadedRef.current = true
             logVocabNotationDebug('✅ [VocabNotationCard] example resolved', {
@@ -475,6 +481,7 @@ export default function VocabNotationCard({
             console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
             setError(error.message || 'Failed to load vocab example')
             setVocabExample(null)
+            inFlightRef.current = false
             setIsLoading(false)
             hasLoadedRef.current = false
             logVocabNotationDebug('❌ [VocabNotationCard] example fetch error', {
@@ -490,6 +497,7 @@ export default function VocabNotationCard({
           sentenceId,
           tokenIndex,
         })
+        inFlightRef.current = true
         setIsLoading(true)
         setError(null)
         apiService.getVocabExampleByLocation(textId, sentenceId, tokenIndex)
@@ -502,6 +510,7 @@ export default function VocabNotationCard({
             } else {
               setVocabExample(null)
             }
+            inFlightRef.current = false
             setIsLoading(false)
             hasLoadedRef.current = true
             logVocabNotationDebug('✅ [VocabNotationCard] example resolved (by location)', {
@@ -517,6 +526,7 @@ export default function VocabNotationCard({
             }
             console.error('❌ [VocabNotationCard] Error fetching vocab example:', error)
             setError(error.message || 'Failed to load vocab example')
+            inFlightRef.current = false
             setIsLoading(false)
             hasLoadedRef.current = false
             logVocabNotationDebug('❌ [VocabNotationCard] example fetch error (by location)', {
@@ -534,6 +544,7 @@ export default function VocabNotationCard({
 
     return () => {
       cancelled = true
+      inFlightRef.current = false
     }
   }, [isVisible, textId, sentenceId, tokenIndex, matchedNotation, getVocabExampleForToken, resolveExampleFromMatchedNotation])
 
@@ -855,20 +866,16 @@ export default function VocabNotationCard({
         </div>
       </div>
     )
-  } else if (vocabExample === null && !isLoading && !error) {
-    // 🔧 如果example为null且不在加载中且没有错误，显示"正在生成解释"（不带动画，避免与 isLoading 状态重复）
-    // 🔧 注意：这个状态应该很少出现，因为如果 isLoading 为 false，通常意味着已经加载完成
-    displayContent = (
-      <div className="flex items-center gap-2">
-        <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-gray-500 text-sm">{t('正在生成解释...')}</span>
-      </div>
-    )
   } else if (!vocabExample && !isLoading && !error && note) {
-    // 🔧 如果有备用 note，显示它
     displayContent = (
       <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
         {note}
+      </div>
+    )
+  } else if (vocabExample === null && !isLoading && !error) {
+    displayContent = (
+      <div className="text-sm text-gray-500 leading-relaxed">
+        {t('暂无词汇解释')}
       </div>
     )
   }

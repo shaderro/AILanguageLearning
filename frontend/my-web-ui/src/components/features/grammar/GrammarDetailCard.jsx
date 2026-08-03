@@ -1,94 +1,22 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { splitExplanationLines } from '../../../utils/explanationFormat'
+import {
+  parseStructuredGrammarExplanation,
+  unwrapGrammarExplanation,
+} from '../../../utils/grammarExplanationFormat'
 import { BaseCard, BackButton } from '../../base'
 import { colors, componentTokens } from '../../../design-tokens'
 import { useUIText } from '../../../i18n/useUIText'
 import { apiService } from '../../../services/api'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../../contexts/LanguageContext'
+import {
+  fetchGrammarDetail,
+  getCachedGrammarDetail,
+  hasGrammarExamples,
+  setCachedGrammarDetail,
+} from '../../../utils/grammarDetailSessionCache'
 
-// 解析和格式化解释文本
-const parseExplanation = (text) => {
-  if (!text) return ''
-  
-  let cleanText = text
-  
-  // 1. 处理字典格式的字符串
-  if (text.includes("'explanation'") || text.includes('"explanation"')) {
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[0]
-        try {
-          const parsed = JSON.parse(jsonStr)
-          cleanText = parsed.explanation || parsed.definition || text
-        } catch (e) {
-          // 🔧 修复：处理被截断的 JSON（缺少结束引号或右大括号）
-          // 先尝试完整匹配（有结束引号）
-          let explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)['"]\s*[,}]/s)
-          if (!explanationMatch) {
-            // 如果完整匹配失败，尝试匹配到字符串末尾（处理被截断的 JSON）
-            explanationMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*?)(?:['"]\s*[,}]|$)/s)
-          }
-          if (explanationMatch) {
-            cleanText = explanationMatch[1]
-              .replace(/\\n/g, '\n')
-              .replace(/\\'/g, "'")
-              .replace(/\\"/g, '"')
-          } else {
-            const normalized = jsonStr.replace(/'/g, '"')
-            try {
-              const parsed = JSON.parse(normalized)
-              cleanText = parsed.explanation || parsed.definition || text
-            } catch (e2) {
-              // 如果还是失败，尝试从截断的 JSON 中提取 explanation 值
-              const truncatedMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*)/)
-              if (truncatedMatch) {
-                cleanText = truncatedMatch[1]
-                  .replace(/\\n/g, '\n')
-                  .replace(/\\'/g, "'")
-                  .replace(/\\"/g, '"')
-              } else {
-                cleanText = text
-              }
-            }
-          }
-        }
-      } else {
-        // 🔧 修复：如果没有找到完整的 JSON 对象（可能被截断），尝试直接提取 explanation 字段
-        const truncatedMatch = text.match(/['"]explanation['"]\s*:\s*['"]([\s\S]*)/)
-        if (truncatedMatch) {
-          cleanText = truncatedMatch[1]
-            .replace(/\\n/g, '\n')
-            .replace(/\\'/g, "'")
-            .replace(/\\"/g, '"')
-        }
-      }
-    } catch (e) {
-      // 解析失败，使用原始文本
-    }
-  }
-  
-  // 2. 处理代码块格式
-  if (cleanText.includes('```json') && cleanText.includes('```')) {
-    try {
-      const jsonMatch = cleanText.match(/```json\n(.*?)\n```/s)
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[1]
-        const parsed = JSON.parse(jsonStr)
-        cleanText = parsed.explanation || parsed.definition || cleanText
-      }
-    } catch (e) {
-      // 解析失败，继续使用 cleanText
-    }
-  }
-  
-  // 3. 清理多余的转义字符和格式化
-  cleanText = cleanText.replace(/\\n/g, '\n')
-  cleanText = cleanText.replace(/\n{3,}/g, '\n\n')
-  cleanText = cleanText.trim()
-  
-  return cleanText
-}
+const parseExplanation = unwrapGrammarExplanation
 
 const renderInlineMarkdown = (text) => {
   const content = String(text || '')
@@ -115,34 +43,51 @@ const GrammarDetailCard = ({
 }) => {
   const t = useUIText()
   const { selectedLanguage } = useLanguage() // 🔧 获取全局语言状态
-  const [grammarWithDetails, setGrammarWithDetails] = useState(grammar)
+  const [grammarWithDetails, setGrammarWithDetails] = useState(() => {
+    if (!grammar?.rule_id) return grammar
+    return getCachedGrammarDetail(grammar.rule_id) || grammar
+  })
   const [articleTitles, setArticleTitles] = useState({})
 
-  // 加载完整的 grammar 详情（包含 examples）
+  // 加载完整的 grammar 详情（包含 examples），优先使用 session 缓存
   useEffect(() => {
-    if (grammar && (!grammar.examples || !Array.isArray(grammar.examples) || grammar.examples.length === 0)) {
-      const grammarId = grammar.rule_id
-      if (grammarId) {
-        apiService.getGrammarById(grammarId)
-          .then(response => {
-            const detailData = response?.data?.data || response?.data || response
-            if (detailData) {
-              setGrammarWithDetails({ ...grammar, ...detailData })
-            } else {
-              setGrammarWithDetails(grammar)
-            }
-          })
-          .catch(error => {
-            console.warn('⚠️ [GrammarDetailCard] Failed to load grammar detail:', error)
-            setGrammarWithDetails(grammar)
-          })
-      } else {
-        setGrammarWithDetails(grammar)
-      }
-    } else {
-      setGrammarWithDetails(grammar)
+    let cancelled = false
+
+    if (!grammar) {
+      setGrammarWithDetails(null)
+      return undefined
     }
-  }, [grammar])
+
+    const grammarId = grammar.rule_id
+    if (!grammarId) {
+      setGrammarWithDetails(grammar)
+      return undefined
+    }
+
+    const cached = getCachedGrammarDetail(grammarId)
+    if (cached) {
+      setGrammarWithDetails({ ...grammar, ...cached })
+      if (hasGrammarExamples(cached)) {
+        return undefined
+      }
+    } else if (hasGrammarExamples(grammar)) {
+      setGrammarWithDetails(grammar)
+      setCachedGrammarDetail(grammarId, grammar)
+      return undefined
+    } else {
+      setGrammarWithDetails(cached ? { ...grammar, ...cached } : grammar)
+    }
+
+    fetchGrammarDetail(grammarId, { baseGrammar: grammar })
+      .then((merged) => {
+        if (cancelled) return
+        setGrammarWithDetails(merged || grammar)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [grammar?.rule_id, grammar])
 
   // 为每个例句加载文章标题
   useEffect(() => {
@@ -181,9 +126,81 @@ const GrammarDetailCard = ({
   }, [grammarWithDetails?.examples, articleTitles])
 
   const ruleName = grammarWithDetails?.rule_name || ''
-  const ruleSummary = parseExplanation(grammarWithDetails?.rule_summary || grammarWithDetails?.explanation || '')
-  
-  // 🔧 朗读功能
+  const rawRuleSummary = grammarWithDetails?.rule_summary || grammarWithDetails?.explanation || ''
+
+  const structuredExplanation = useMemo(
+    () => parseStructuredGrammarExplanation(rawRuleSummary),
+    [rawRuleSummary],
+  )
+
+  const ruleSummary = structuredExplanation.isStructured
+    ? ''
+    : parseExplanation(rawRuleSummary)
+
+  const rulePoints = useMemo(() => splitExplanationLines(ruleSummary), [ruleSummary])
+
+  const hasStructuredSections = structuredExplanation.isStructured && (
+    structuredExplanation.coreMeaning.length > 0
+    || structuredExplanation.structure.length > 0
+    || Boolean(structuredExplanation.sentenceMapping)
+    || structuredExplanation.recognitionTip.length > 0
+  )
+
+  const sectionLabels = structuredExplanation.sectionLabels
+  const useDefinitionHighlight = hasStructuredSections
+  const explanationDividerColor = colors.gray[200]
+  const whiteSectionBg = { backgroundColor: colors.semantic.bg.primary }
+  const definitionSectionBg = useDefinitionHighlight
+    ? { backgroundColor: colors.primary[50] }
+    : whiteSectionBg
+  const explanationCardStyle = {
+    backgroundColor: colors.semantic.bg.primary,
+    borderColor: useDefinitionHighlight ? colors.primary[100] : colors.gray[200],
+  }
+  const grammarSectionSpacing = {
+    padding: '14px',
+    contentGap: '6px',
+    definitionGap: '14px',
+    inlineGap: '8px',
+  }
+  const scaleLineHeight = (value) => value * 0.8
+  const grammarLineHeights = {
+    definition: scaleLineHeight(1.7),
+    body: scaleLineHeight(1.625),
+    heading: scaleLineHeight(1.75),
+  }
+  const definitionHeroStyle = {
+    fontSize: '17px',
+    lineHeight: grammarLineHeights.definition,
+  }
+  const explanationSectionStyle = {
+    padding: grammarSectionSpacing.padding,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: grammarSectionSpacing.contentGap,
+  }
+  const secondaryListStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: grammarSectionSpacing.contentGap,
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+  }
+  const mappingLines = useMemo(() => {
+    if (!structuredExplanation.sentenceMapping) return []
+    return structuredExplanation.sentenceMapping.split('\n').map((line) => line.trim()).filter(Boolean)
+  }, [structuredExplanation.sentenceMapping])
+
+  const structuredSectionFlags = [
+    structuredExplanation.coreMeaning.length > 0,
+    structuredExplanation.structure.length > 0,
+    mappingLines.length > 0,
+    structuredExplanation.recognitionTip.length > 0,
+  ]
+  const showExplanationDividerBefore = (sectionIndex) => (
+    structuredSectionFlags.slice(0, sectionIndex).some(Boolean)
+  )
   const [speakingSentenceIndex, setSpeakingSentenceIndex] = useState(null)
   
   // 组件卸载时清理朗读
@@ -285,9 +302,6 @@ const GrammarDetailCard = ({
     )
   }
 
-  const rulePoints = useMemo(() => splitExplanationLines(ruleSummary), [ruleSummary])
-
-  // 提取例句
   const examples = useMemo(() => {
     if (!grammarWithDetails?.examples || !Array.isArray(grammarWithDetails.examples)) {
       return []
@@ -307,13 +321,15 @@ const GrammarDetailCard = ({
       })
   }, [grammarWithDetails, articleTitles])
 
-  if (loading) {
+  const isPending = loading || (grammar?.rule_id && !grammarWithDetails)
+
+  if (isPending) {
     return (
       <div className="w-full max-w-4xl mx-auto" style={{ backgroundColor: 'white' }}>
         <BaseCard padding="lg" className="w-full" style={{ backgroundColor: 'white' }}>
           <div className="text-center py-8" style={{ backgroundColor: 'white' }}>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: colors.primary[500] }}></div>
-            <p className="text-gray-600">{t('加载中...')}</p>
+            <p className="text-gray-600">{t('加载中')}</p>
           </div>
         </BaseCard>
       </div>
@@ -425,8 +441,175 @@ const GrammarDetailCard = ({
             </h1>
           </div>
 
-          {/* 规则说明 */}
-          {rulePoints.length > 0 && (
+          {/* 规则说明：结构化四区块（对齐 Vocab Detail）或 legacy 回退 */}
+          {hasStructuredSections && (
+            <section>
+              <div
+                className="rounded-lg border overflow-hidden"
+                style={explanationCardStyle}
+              >
+                {structuredExplanation.coreMeaning.length > 0 && (
+                  <div
+                    style={{
+                      ...definitionSectionBg,
+                      ...explanationSectionStyle,
+                      gap: grammarSectionSpacing.definitionGap,
+                    }}
+                  >
+                    <h2
+                      className="font-semibold text-lg"
+                      style={{ color: colors.semantic.text.secondary, lineHeight: grammarLineHeights.heading }}
+                    >
+                      {sectionLabels.coreMeaning}
+                    </h2>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: grammarSectionSpacing.definitionGap,
+                      }}
+                    >
+                      {structuredExplanation.coreMeaning.map((point, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start"
+                          style={{ gap: grammarSectionSpacing.inlineGap }}
+                        >
+                          <span
+                            className="shrink-0"
+                            style={{
+                              color: colors.primary[500],
+                              fontSize: definitionHeroStyle.fontSize,
+                              lineHeight: definitionHeroStyle.lineHeight,
+                            }}
+                          >
+                            •
+                          </span>
+                          <div
+                            className="whitespace-pre-wrap flex-1"
+                            style={{
+                              color: colors.semantic.text.primary,
+                              fontSize: definitionHeroStyle.fontSize,
+                              lineHeight: definitionHeroStyle.lineHeight,
+                            }}
+                          >
+                            {renderInlineMarkdown(point)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {structuredExplanation.structure.length > 0 && (
+                  <>
+                    {showExplanationDividerBefore(1) ? (
+                      <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                    ) : null}
+                    <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                      <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: grammarLineHeights.heading }}>
+                        {sectionLabels.structure}
+                      </h2>
+                      <ul style={secondaryListStyle}>
+                        {structuredExplanation.structure.map((point, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start"
+                            style={{ gap: grammarSectionSpacing.inlineGap }}
+                          >
+                            <span
+                              className="shrink-0"
+                              style={{ color: colors.primary[500], lineHeight: grammarLineHeights.body }}
+                            >
+                              •
+                            </span>
+                            <span
+                              className="whitespace-pre-wrap flex-1"
+                              style={{ color: colors.semantic.text.primary, lineHeight: grammarLineHeights.body }}
+                            >
+                              {renderInlineMarkdown(point)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                {mappingLines.length > 0 && (
+                  <>
+                    {showExplanationDividerBefore(2) ? (
+                      <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                    ) : null}
+                    <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                      <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: grammarLineHeights.heading }}>
+                        {sectionLabels.sentenceMapping}
+                      </h2>
+                      <ul style={secondaryListStyle}>
+                        {mappingLines.map((line, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start"
+                            style={{ gap: grammarSectionSpacing.inlineGap }}
+                          >
+                            <span
+                              className="shrink-0"
+                              style={{ color: colors.primary[500], lineHeight: grammarLineHeights.body }}
+                            >
+                              •
+                            </span>
+                            <span
+                              className="whitespace-pre-wrap flex-1 font-mono text-sm"
+                              style={{ color: colors.semantic.text.primary, lineHeight: grammarLineHeights.body }}
+                            >
+                              {renderInlineMarkdown(line)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                {structuredExplanation.recognitionTip.length > 0 && (
+                  <>
+                    {showExplanationDividerBefore(3) ? (
+                      <div className="border-t" style={{ borderColor: explanationDividerColor }} aria-hidden="true" />
+                    ) : null}
+                    <div style={{ ...explanationSectionStyle, ...whiteSectionBg }}>
+                      <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary, lineHeight: grammarLineHeights.heading }}>
+                        {sectionLabels.recognitionTip}
+                      </h2>
+                      <ul style={secondaryListStyle}>
+                        {structuredExplanation.recognitionTip.map((point, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start"
+                            style={{ gap: grammarSectionSpacing.inlineGap }}
+                          >
+                            <span
+                              className="shrink-0"
+                              style={{ color: colors.primary[500], lineHeight: grammarLineHeights.body }}
+                            >
+                              •
+                            </span>
+                            <span
+                              className="whitespace-pre-wrap flex-1"
+                              style={{ color: colors.semantic.text.primary, lineHeight: grammarLineHeights.body }}
+                            >
+                              {renderInlineMarkdown(point)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+          )}
+
+          {!hasStructuredSections && rulePoints.length > 0 && (
             <section>
               <div
                 className="p-4 rounded-lg border space-y-4"
@@ -437,7 +620,7 @@ const GrammarDetailCard = ({
               >
                 <div className="space-y-2">
                   <h2 className="text-lg font-semibold" style={{ color: colors.semantic.text.secondary }}>
-                    {t('规则说明')}
+                    {sectionLabels.ruleDescription}
                   </h2>
                   <ul className="space-y-2">
                     {rulePoints.map((point, index) => (
@@ -461,7 +644,7 @@ const GrammarDetailCard = ({
           {examples.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold mb-3" style={{ color: colors.semantic.text.secondary }}>
-                {t('例句')}
+                {sectionLabels.examples}
               </h2>
               <div className="space-y-4">
                 {examples.map((example, index) => (

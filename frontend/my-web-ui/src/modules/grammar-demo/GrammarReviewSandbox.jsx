@@ -7,6 +7,11 @@ import GrammarDetailCard from '../../components/features/grammar/GrammarDetailCa
 import { BaseCard } from '../../components/base'
 import { useGrammarList, useToggleGrammarStar, useRefreshData, useArticles } from '../../hooks/useApi'
 import { apiService } from '../../services/api'
+import {
+  fetchGrammarDetail,
+  getCachedGrammarDetail,
+  setCachedGrammarDetail,
+} from '../../utils/grammarDetailSessionCache'
 import { useUser } from '../../contexts/UserContext'
 import { useLanguage, languageNameToCode, languageCodeToBCP47 } from '../../contexts/LanguageContext'
 import { useUIText } from '../../i18n/useUIText'
@@ -154,8 +159,6 @@ const GrammarReviewSandbox = () => {
   const [selectedGrammarId, setSelectedGrammarId] = useState(null)
   const [selectedGrammarIndex, setSelectedGrammarIndex] = useState(-1)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
-  // 🔧 缓存详情页面的语法数据，避免切换时重新加载
-  const [detailPageCache, setDetailPageCache] = useState(new Map())
   // 🔧 延迟显示加载UI的状态（超过0.5s才显示）
   const [showLoadingUI, setShowLoadingUI] = useState(false)
   // 🔧 保存上一个卡片数据，在加载期间保持显示
@@ -165,8 +168,7 @@ const GrammarReviewSandbox = () => {
   const [currentIndex, setCurrentIndex] = useState(0) // index in reviewItems
   const [showExplanations, setShowExplanations] = useState(false)
   const [isSpeakingSentence, setIsSpeakingSentence] = useState(false)
-  // 🔧 缓存预加载的语法详情
-  const [grammarDetailCache, setGrammarDetailCache] = useState(new Map())
+  const detailFetchInFlightRef = useRef(new Set())
   const prevSelectedLanguageRef = useRef(null)
 
   useEffect(() => {
@@ -239,8 +241,7 @@ const GrammarReviewSandbox = () => {
   // 🔧 新增：当选中语法时，获取完整的语法详情（包含examples）- 优化：延迟加载UI显示
   useEffect(() => {
     if (selectedGrammarId) {
-      // 🔧 先检查缓存
-      const cached = detailPageCache.get(selectedGrammarId)
+      const cached = getCachedGrammarDetail(selectedGrammarId)
       if (cached) {
         console.log(`✅ [GrammarReviewSandbox] 使用缓存的语法详情: ${selectedGrammarId}`)
         setSelectedGrammar(cached)
@@ -250,75 +251,53 @@ const GrammarReviewSandbox = () => {
         return
       }
 
-      // 🔧 如果缓存中没有，先尝试从列表数据中获取
       const listItem = allGrammar.find((g) => g.rule_id === selectedGrammarId)
-      if (listItem && listItem.examples && Array.isArray(listItem.examples) && listItem.examples.length > 0) {
-        // 列表数据中已有完整数据，直接使用并缓存
+      if (listItem) {
         setSelectedGrammar(listItem)
         setIsLoadingDetail(false)
         setShowLoadingUI(false)
         setPreviousGrammar(listItem)
-        setDetailPageCache((prev) => new Map(prev).set(selectedGrammarId, listItem))
+        setCachedGrammarDetail(selectedGrammarId, listItem)
         return
       }
 
-      // 🔧 需要从API加载：保持上一个卡片显示，延迟0.5s后才显示加载UI
-      setIsLoadingDetail(true)
-      setShowLoadingUI(false) // 先不显示加载UI
-      // 🔧 previousGrammar 已在切换时保存，这里不需要再次设置
+      if (detailFetchInFlightRef.current.has(selectedGrammarId)) {
+        return
+      }
 
-      // 🔧 延迟0.5s后显示加载UI
+      setIsLoadingDetail(true)
+      setShowLoadingUI(false)
+
       const loadingUITimer = setTimeout(() => {
         setShowLoadingUI(true)
       }, 500)
 
       console.log(`🔍 [GrammarReviewSandbox] Fetching grammar detail for ID: ${selectedGrammarId}`)
+      detailFetchInFlightRef.current.add(selectedGrammarId)
 
-      // 先从列表中找到对应的语法规则作为后备
-      if (listItem) {
-        setPreviousGrammar(listItem)
-      }
-
-      apiService
-        .getGrammarById(selectedGrammarId)
-        .then((response) => {
-          console.log(`✅ [GrammarReviewSandbox] Grammar detail fetched:`, response)
-          // 处理API响应格式：后端返回 { success: true, data: {...} }
-          const grammarData = response?.data?.data || response?.data || response
+      fetchGrammarDetail(selectedGrammarId)
+        .then((grammarData) => {
+          console.log(`✅ [GrammarReviewSandbox] Grammar detail fetched:`, grammarData)
           if (grammarData) {
             setSelectedGrammar(grammarData)
             setPreviousGrammar(grammarData)
-            // 🔧 缓存数据
-            setDetailPageCache((prev) => new Map(prev).set(selectedGrammarId, grammarData))
-          } else if (listItem) {
-            // 如果 API 返回的数据格式不对，使用列表中的数据
-            console.warn(`⚠️ [GrammarReviewSandbox] API response format unexpected, using list data`)
-            setSelectedGrammar(listItem)
-            setPreviousGrammar(listItem)
-            setDetailPageCache((prev) => new Map(prev).set(selectedGrammarId, listItem))
-          }
-          setIsLoadingDetail(false)
-          setShowLoadingUI(false)
-          clearTimeout(loadingUITimer)
-        })
-        .catch((error) => {
-          console.error(`❌ [GrammarReviewSandbox] Error fetching grammar detail:`, error)
-          // 如果 API 失败，使用列表中的数据
-          if (listItem) {
-            console.log(`🔄 [GrammarReviewSandbox] Using list data as fallback`)
-            setSelectedGrammar(listItem)
-            setPreviousGrammar(listItem)
-            setDetailPageCache((prev) => new Map(prev).set(selectedGrammarId, listItem))
           } else {
-            // 如果列表中也找不到，设置为 null 以显示错误
             setSelectedGrammar(null)
           }
           setIsLoadingDetail(false)
           setShowLoadingUI(false)
+          detailFetchInFlightRef.current.delete(selectedGrammarId)
+          clearTimeout(loadingUITimer)
+        })
+        .catch((error) => {
+          console.error(`❌ [GrammarReviewSandbox] Error fetching grammar detail:`, error)
+          setSelectedGrammar(null)
+          setIsLoadingDetail(false)
+          setShowLoadingUI(false)
+          detailFetchInFlightRef.current.delete(selectedGrammarId)
           clearTimeout(loadingUITimer)
         })
 
-      // 🔧 清理定时器
       return () => {
         clearTimeout(loadingUITimer)
       }
@@ -326,7 +305,7 @@ const GrammarReviewSandbox = () => {
       setPreviousGrammar(null)
       setShowLoadingUI(false)
     }
-  }, [selectedGrammarId, allGrammar, detailPageCache, selectedGrammar])
+  }, [selectedGrammarId, allGrammar])
 
   /**
    * ReviewExample 数据（UI 层构建）：
@@ -762,10 +741,11 @@ const GrammarReviewSandbox = () => {
 
     // 🔧 在加载期间，如果数据未缓存且加载时间超过0.5s，显示加载UI；否则显示上一个卡片或当前卡片
     // 🔧 如果 previousGrammar 存在，在加载期间继续显示；否则显示当前卡片或加载状态
-    const displayGrammar = selectedGrammar || previousGrammar
-    // 🔧 如果 previousGrammar 不存在（首次加载），立即显示加载状态；否则延迟0.5s
+    const displayGrammar = selectedGrammar || previousGrammar || getCachedGrammarDetail(selectedGrammarId)
+    const isDetailPending = Boolean(selectedGrammarId && !displayGrammar)
     const shouldShowLoading =
-      isLoadingDetail && !detailPageCache.has(selectedGrammarId) && (showLoadingUI || !previousGrammar)
+      isDetailPending ||
+      (isLoadingDetail && !getCachedGrammarDetail(selectedGrammarId) && (showLoadingUI || !previousGrammar))
 
     return (
       <div className="h-full bg-white p-8" style={{ backgroundColor: 'white', minHeight: '100%' }}>
