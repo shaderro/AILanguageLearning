@@ -770,6 +770,14 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import grammar_routes: {e}")
 
+# 注册内部语法 Canonical Key Dashboard API（只读，当前用户）
+try:
+    from backend.api.internal_grammar_routes import router as internal_grammar_router
+    app.include_router(internal_grammar_router)
+    print("[OK] 注册内部语法Dashboard API: /api/v2/internal/grammar")
+except ImportError as e:
+    print(f"Warning: Could not import internal_grammar_routes: {e}")
+
 # 注册日语注音测试API路由
 try:
     from backend.api.furigana_routes import router as furigana_router

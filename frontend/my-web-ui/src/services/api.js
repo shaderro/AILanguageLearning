@@ -117,6 +117,12 @@ api.interceptors.response.use(
       console.log('🔍 [DEBUG] AskedTokens endpoint detected - returning raw response.data');
       return response.data;
     }
+
+    // Internal grammar dashboard: keep { success, data, total, ... } intact.
+    // Detail payloads include a `rules` array that must not be remapped as a list endpoint.
+    if (urlPath.includes('/api/v2/internal/grammar')) {
+      return response.data;
+    }
     
     // 🔧 特殊处理：错误响应格式 { status: "error", data: {...}, error: "..." }
     if (response.data && response.data.status === 'error') {
@@ -497,6 +503,39 @@ export const apiService = {
 
   // 获取单个语法规则详情
   getGrammarById: (id) => api.get(`/api/v2/grammar/${id}`),
+
+  // Internal grammar canonical-key dashboard (login required, current user)
+  getInternalGrammarKeys: (params = {}) => {
+    const search = new URLSearchParams()
+    const entries = {
+      skip: params.skip,
+      limit: params.limit,
+      q: params.q,
+      canonical_key: params.canonicalKey ?? params.canonical_key,
+      language: params.language,
+      level: params.level,
+      min_examples: params.minExamples ?? params.min_examples,
+      sort: params.sort,
+      include_ungrouped: params.includeUngrouped ?? params.include_ungrouped,
+    }
+    Object.entries(entries).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      search.set(key, String(value))
+    })
+    const qs = search.toString()
+    return api.get(`/api/v2/internal/grammar/keys${qs ? `?${qs}` : ''}`)
+  },
+
+  getInternalGrammarKeyDetail: ({ canonicalKey, ungrouped = false } = {}) => {
+    const search = new URLSearchParams()
+    if (ungrouped) {
+      search.set('ungrouped', 'true')
+    } else if (canonicalKey) {
+      search.set('canonical_key', canonicalKey)
+    }
+    const qs = search.toString()
+    return api.get(`/api/v2/internal/grammar/keys/detail${qs ? `?${qs}` : ''}`)
+  },
 
   // 搜索语法规则
   searchGrammar: (keyword) => 

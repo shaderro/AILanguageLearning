@@ -46,6 +46,9 @@ import { colors } from './design-tokens'
 import { recordRecentArticle } from './utils/pageStateManager'
 import BillingSandboxRoutes, { isBillingSandboxPath } from './sandbox/billing/BillingSandboxRoutes'
 import UISandboxRoutes, { isUISandboxPath } from './sandbox/ui/UISandboxRoutes'
+import GrammarDashboardRoutes, {
+  isInternalGrammarDashboardPath,
+} from './internal/grammar/GrammarDashboardRoutes'
 
 function AppContent() {
   const queryClient = useQueryClient()
@@ -1009,6 +1012,14 @@ function App() {
 
   if (typeof window !== 'undefined' && isUISandboxPath(window.location.pathname)) {
     return <UISandboxRoutes />
+  }
+
+  if (typeof window !== 'undefined' && isInternalGrammarDashboardPath(window.location.pathname)) {
+    return (
+      <UserProvider>
+        <GrammarDashboardRoutes />
+      </UserProvider>
+    )
   }
 
   return (
