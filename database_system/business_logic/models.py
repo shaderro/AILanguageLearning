@@ -578,4 +578,76 @@ def create_session(engine):
 
 def init_database(engine):
     Base.metadata.create_all(engine)
-    print("数据库表创建完成") 
+    print("数据库表创建完成")
+
+# Analyze-text extension tables: additive migration, independent of legacy knowledge ownership.
+class ReadingArticle(Base):
+    __tablename__ = 'reading_articles'
+    text_id = Column(Integer, ForeignKey('original_texts.text_id', ondelete='CASCADE'), primary_key=True)
+    visibility = Column(String(16), nullable=False, default='private', index=True)
+    raw_text = Column(Text, nullable=False)
+    level = Column(String(16), nullable=False)
+
+
+class ReadingAnalysis(Base):
+    __tablename__ = 'reading_analyses'
+    id = Column(Integer, primary_key=True)
+    text_id = Column(Integer, ForeignKey('reading_articles.text_id', ondelete='CASCADE'), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    request_key = Column(String(128), nullable=False)
+    status = Column(String(16), nullable=False, default='processing')
+    result_json = Column(JSON, nullable=True)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    __table_args__ = (UniqueConstraint('user_id', 'request_key', name='uq_reading_request'),)
+
+
+class ArticleKnowledgePoint(Base):
+    __tablename__ = 'article_knowledge_points'
+    id = Column(Integer, primary_key=True)
+    text_id = Column(Integer, ForeignKey('reading_articles.text_id', ondelete='CASCADE'), nullable=False, index=True)
+    kind = Column(String(16), nullable=False)
+    canonical_key = Column(String(500), nullable=False)
+    payload = Column(JSON, nullable=False)
+    position = Column(Integer, nullable=False)
+
+
+class ArticleKnowledgeExample(Base):
+    __tablename__ = 'article_knowledge_examples'
+    id = Column(Integer, primary_key=True)
+    knowledge_point_id = Column(Integer, ForeignKey('article_knowledge_points.id', ondelete='CASCADE'), nullable=False, index=True)
+    sentence_id = Column(Integer, ForeignKey('sentences.id', ondelete='CASCADE'), nullable=False)
+    payload = Column(JSON, nullable=False)
+
+
+class UserKnowledgeProgress(Base):
+    __tablename__ = 'user_knowledge_progress'
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    knowledge_point_id = Column(Integer, ForeignKey('article_knowledge_points.id', ondelete='CASCADE'), primary_key=True)
+    status = Column(String(16), nullable=False, default='not_mastered')
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+    mastered_at = Column(DateTime, nullable=True)
+
+
+class ReadingQuestionSet(Base):
+    __tablename__ = 'reading_question_sets'
+    id = Column(Integer, primary_key=True)
+    analysis_id = Column(Integer, ForeignKey('reading_analyses.id', ondelete='CASCADE'), nullable=False)
+    ui_language = Column(String(64), nullable=False, default='English')
+    generation_version = Column(Integer, nullable=False, default=1)
+    status = Column(String(16), nullable=False, default='pending')
+    lease_token = Column(String(36), nullable=True)
+    error_message = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.now, nullable=False)
+    __table_args__ = (UniqueConstraint('analysis_id', 'ui_language', 'generation_version', name='uq_reading_question_set'),)
+
+
+class ReadingQuestion(Base):
+    __tablename__ = 'reading_questions'
+    id = Column(Integer, primary_key=True)
+    question_set_id = Column(Integer, ForeignKey('reading_question_sets.id', ondelete='CASCADE'), nullable=False)
+    knowledge_point_id = Column(Integer, ForeignKey('article_knowledge_points.id', ondelete='CASCADE'), nullable=False)
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    __table_args__ = (UniqueConstraint('question_set_id', 'knowledge_point_id', name='uq_reading_question_point'),)

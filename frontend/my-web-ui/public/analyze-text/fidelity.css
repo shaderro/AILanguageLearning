@@ -1,0 +1,141 @@
+/* Geometry from Figma 2435:326, 2474:2686, 2496:1381, 2503:3038. */
+/* Preview: Figma 2584:735 and 2579:709. */
+#prepView{background:#fafafa;min-height:calc(100dvh - 52px)}
+#prepView .prep{max-width:1168px;margin:auto;padding:24px 24px 56px}
+#prepView .prep>.stage-label{margin:0 0 8px;font-size:12px;line-height:19px;font-weight:600}
+#prepView .prep>h1{margin:0;font-size:18px;line-height:24px;font-weight:600;letter-spacing:0}
+#prepView .card-wrap{width:100%;max-width:720px;margin:20px auto 0}
+#prepView .flash:not(.ready){display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px;border:1px solid var(--line);border-radius:12px;background:white;box-shadow:0 4px 20px #00000012,0 1px 3px #0000000f}
+#prepView .preview-meter{width:100%;display:flex;flex-direction:row;align-items:center;gap:8px;font-size:12px;line-height:18px;color:var(--green-dark)}
+#prepView .preview-meter>span{flex:none;white-space:nowrap}
+#prepView .preview-meter>.progress{flex:1;min-width:0;height:5px}
+#prepView .preview-heading{width:100%;display:flex;flex-direction:column;gap:4px;text-align:center}
+#prepView .preview-heading h2{margin:0;font-size:32px;line-height:50px;font-weight:600;overflow-wrap:anywhere}
+#prepView .preview-heading .meta{font-size:11px;line-height:16px;color:var(--muted)}
+#prepView .flash .example-box{padding:12px;border-radius:8px;background:var(--soft);font-size:14px;line-height:24px;text-align:center;overflow-wrap:anywhere}
+#prepView .flash .example-box strong{font-weight:600}
+#prepView .flash .explanation{padding:4px;font-size:14px;line-height:24px;color:var(--ink)}
+#prepView .flash .explanation .kind{margin:0;font-size:12px;line-height:18px;font-weight:600;color:var(--green)}
+#prepView .flash .explanation .hint-list{margin:0;padding-left:20px}
+#prepView .flash .hint-list li+li{margin-top:0}
+#prepView .flash .hint-list>li:first-child{font-weight:600}
+#prepView .flash:not(.ready) .actions{display:flex;flex-direction:row;align-items:stretch;gap:48px;flex-wrap:nowrap}
+#prepView .flash:not(.ready) .actions>button{flex:1;min-width:0;min-height:44px;padding:10px 20px;font-size:13px;line-height:20px;font-weight:600}
+@media(max-width:540px){#prepView .prep{padding:24px 20px 40px}#prepView .flash:not(.ready){padding:20px}#prepView .preview-heading h2{font-size:28px;line-height:40px}#prepView .flash:not(.ready) .actions{gap:12px;flex-wrap:wrap}#prepView .flash:not(.ready) .actions>button{flex:1 1 130px;width:auto}}
+/* Review question: Figma 2435:1003. Scoped to leave the reader unchanged. */
+#quizView{background:#fafafa;min-height:calc(100dvh - 52px)}
+#quizView .quiz{max-width:1168px;margin:auto;padding:24px 24px 56px}
+#quizView .quiz>.stage-label{margin:0 0 8px;font-size:12px;line-height:19px;font-weight:600}
+#quizView .quiz>h1{margin:0;font-size:18px;line-height:24px;font-weight:600;letter-spacing:0}
+#quizView .quiz>.lead{display:none}
+#quizView .quiz-list{width:100%;max-width:800px;margin:20px auto 0}
+#quizView .qcard{width:100%;display:flex;flex-direction:column;gap:20px;padding:28px;border:1px solid var(--line);border-radius:12px;background:white;box-shadow:none}
+#quizView .quiz-progress{display:flex;align-items:center;gap:8px;width:100%}
+#quizView .question-meta{flex:none;font-size:11px;line-height:17px;font-weight:600;color:var(--green)}
+#quizView .quiz-progress .progress{flex:1;height:5px;min-width:0}
+#quizView .qcard h2{margin:0;font-size:22px;line-height:28px;font-weight:400;overflow-wrap:anywhere}
+#quizView .qcard h2 strong{font-weight:500}
+#quizView .example-box{padding:8px 12px;font-size:14px;line-height:24px;border-radius:8px;background:var(--soft);color:#4b4b5a}
+#quizView .example-box strong{font-weight:600}
+#quizView .quiz-options{width:100%;display:grid;gap:20px}
+#quizView .answer{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white;font-size:15px;line-height:23px;font-weight:500;text-align:left;overflow-wrap:anywhere}
+#quizView .answer.selected,#quizView .answer.correct{background:var(--mint);border-color:var(--line)}
+#quizView .answer.wrong{background:#fee8e8;border-color:#e49191}
+#quizView .answer:disabled{opacity:1}
+#quizView .quiz-feedback{margin-top:16px;font-size:14px;line-height:24px}
+#quizView .quiz-actions{max-width:800px;margin:16px auto 0;gap:12px}
+@media(max-width:540px){#quizView .quiz{padding:24px 20px 40px}#quizView .qcard{padding:20px}#quizView .quiz-actions{flex-wrap:wrap}}
+@font-face{font-family:Inter;src:url('/assets/analyze-text/InterVariable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+:root{--motion-reading-duration:900ms;--motion-reading-easing:ease-in-out;--motion-reading-distance:52px}
+.entry,.prep,.quiz,.done{max-width:1168px;padding:56px 24px 72px}.entry{max-width:1060px}.import-grid{width:1136px;max-width:calc(100vw - 48px)}
+.prep>h1,.quiz>h1{line-height:47px;margin:0;font-weight:600;letter-spacing:0}.prep>.stage-label,.quiz>.stage-label,.done>.stage-label{font-size:12px;line-height:19px;margin-bottom:22px}.prep>.lead,.quiz>.lead,.prep .card-wrap>.footnote{display:none}.card-wrap,.quiz-list{margin:28px auto 0}.flash{gap:24px}.preview-meter{width:100%;display:flex;flex-direction:column;gap:2px;font-size:12px;line-height:19px;color:#4b4b5a}.flash h2{line-height:50px;font-size:32px;font-weight:600;margin:0}.flash .actions{gap:48px}.flash .example-box{line-height:24px;padding:12px}.flash .actions>*{height:44px}.ready .actions{gap:12px}.ready .actions>.softbtn{display:none}.primary,.softbtn{font-weight:600}.softbtn{color:var(--green)}
+.workspace{max-width:1168px}.reading{padding-top:56px}.reading>.stage-label{font-size:12px;line-height:19px;margin:0 0 22px}.reading>.read-head,.reading>.hint{display:none}.reading>.title{font-size:30px;line-height:47px;letter-spacing:0;font-weight:600;margin:0 0 22px}.progress-row{margin:0 0 22px;height:5px}.progress-row>span{display:none}.progress-row .progress{height:5px;flex:1}.progress-row i{transition:width var(--motion-reading-duration) var(--motion-reading-easing)}
+.sentence-list{display:flex;flex-direction:column;gap:8px}.history-window{max-height:356px;overflow:auto;scrollbar-width:none;overscroll-behavior:contain}.history-window::-webkit-scrollbar{display:none}.history-window:empty{display:none}.history-content{display:flex;flex-direction:column;gap:8px;transform-origin:0 0}.history-content:empty{display:none}.history-window:has(.history-content:empty){display:none}.history-content .sentence.past{display:block;width:100%;text-align:left;border:0;background:none;color:#4b4b5a;padding:8px 12px;min-height:44px;font-size:20px;line-height:28px;flex:none;margin:0}.history-content .sentence.past:hover{background:#fafafa}.current-slot{position:relative;isolation:isolate}.sentence.current{padding:12px;line-height:28px;font-size:20px;min-height:90px;box-shadow:var(--shadow);border-radius:12px;background:white;transform-origin:0 0}.sentence.current.outgoing{position:absolute;top:0;left:0;width:100%;pointer-events:none;z-index:1}.sentence-tools{gap:12px;margin-top:12px;min-height:24px}.iconbtn{display:flex;align-items:center;justify-content:center;width:18px;height:24px}.iconbtn img{width:18px;height:18px;display:block}.sentence-tools .small{font-size:13px;line-height:20px;height:24px;min-height:24px;border-radius:8px;padding:1px 12px}.stage-foot{margin:0;padding:10px;min-height:60px}.stage-foot .primary{min-width:149px}.expression.highlight{background:transparent;box-shadow:none;text-decoration:underline;text-decoration-color:var(--green);text-decoration-thickness:2px;text-underline-offset:4px}.knowledge-pause{margin-top:22px;box-shadow:var(--shadow)}
+.qcard{gap:20px}.quiz-list{max-width:800px}.qcard>.meta{display:none}.qcard .question-meta{line-height:17px}.quiz-actions>.back{font-size:12px}.done>h1{font-size:30px;line-height:47px}.done>.lead{line-height:22px}.completion-summary,.mistake-list,.completion-actions{max-width:none}.done-result{max-width:900px;border:1px solid var(--line);border-radius:12px;background:white;padding:28px;display:flex;flex-direction:column;gap:20px}.done-result .completion-summary{padding:0;border:0;background:none}.done-result .score{margin:0 0 20px}.done-result .mistake-item{margin:0}.done-result .completion-actions{margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:20px}.done-result .mistake-list:empty{display:none}.done-result .mistake-list{display:grid;gap:20px}
+@media(min-width:1000px){.is-reading .topbar{position:sticky;top:0;z-index:10}.reading{max-height:calc(100vh - 52px);overflow:auto;scrollbar-width:thin}.reading>.stage-label,.reading>.title,.reading>.progress-row{position:relative}.reading{padding-bottom:32px}}
+@media(max-width:1200px){.entry{max-width:1168px}.import-grid{width:auto;max-width:100%}}
+@media(max-width:900px){.entry,.prep,.quiz,.done,.reading{padding:36px 20px 48px}.import-grid{width:auto;max-width:100%}.flash .actions{gap:16px}.history-content .sentence.past,.sentence.current{font-size:18px;line-height:26px}.history-window{max-height:300px}.done-result{padding:24px}.reading>.title{font-size:26px;line-height:38px}.topbar .account a{display:inline-flex}}
+@media(max-width:540px){.prep>h1,.quiz>h1{font-size:25px;line-height:36px}.flash .actions{gap:12px}.done-result{padding:20px}.history-content .sentence.past,.sentence.current{font-size:16px;line-height:24px}.history-window{max-height:248px}.stage-foot{padding-right:0}.topbar .account a{font-size:0}.topbar .account a:after{content:'Account';font-size:12px}.account>span:first-child{display:none}}
+.card-wrap,.quiz-list{margin-top:22px}.reading-fixed-header{display:flex;flex-direction:column;gap:22px;background:white;margin-bottom:22px;z-index:3}.reading-fixed-header>.stage-label{font-size:12px;line-height:19px;margin:0}.reading-fixed-header>.title{font-size:30px;line-height:47px;font-weight:600;letter-spacing:0;margin:0}.reading-fixed-header>.progress-row{margin:0}.reading-fixed-header .progress-row>span{display:none}
+@media(min-width:1000px){.reading-fixed-header{position:sticky;top:0;box-shadow:0 -56px 0 white}}
+@media(max-width:540px){.reading-fixed-header>.title{font-size:25px;line-height:36px}}
+@media(prefers-reduced-motion:reduce){.progress-row i{transition:none}.sentence,.history-content{animation:none!important}}
+/* Measured against Figma 2431:2174 and 2435:326. */
+.entry>h1{line-height:44px;letter-spacing:0}
+.source-settings{margin-bottom:16px}
+.source-settings legend{line-height:18px}
+.segmented{height:46px}
+.segmented label{display:flex;align-items:center;justify-content:center;line-height:20px;padding:0 12px}
+.import-card label{font-weight:500;line-height:20px}
+.import-card input{height:40px;padding:9px 12px;font-weight:400}
+.import-card .primary{height:40px;min-height:40px;padding:10px 20px;border:0;flex-shrink:0}
+#flashCard{margin-top:0!important}
+.done>h1{margin-bottom:22px}
+/* Figma 2435:349: latest preview page vertical padding is 24px. */
+.prep{padding-top:24px;padding-bottom:24px}
+/* Latest Figma heading scale and reading geometry. */
+.prep>h1{font-size:18px;line-height:24px}.prep>.stage-label{margin-bottom:8px}.prep .card-wrap{margin-top:20px}
+.reading-fixed-header{gap:8px}.reading-fixed-header>.title{font-size:18px;line-height:24px}
+.history-window{height:auto;max-height:277px}.history-content{gap:0}.history-content .sentence.past{padding:13px 13px 3px;min-height:44px}.sentence-list{gap:0}
+/* Keep the current sentence and navigation reachable in short viewports. */
+.history-window{height:auto;max-height:min(277px,max(0px,calc(100dvh - 330px)));flex:none}
+.sentence.current{box-shadow:0 4px 20px #00000012,0 1px 3px #0000000f}
+.history-window[data-overflow=true]{mask-image:linear-gradient(to bottom,transparent,#000 28px)}
+.reading-fixed-header>.title{font-size:18px;line-height:24px;font-weight:600}
+.history-content .sentence.past,.sentence.current{font-size:20px;line-height:28px}
+.knowledge-pause h3{font-size:18px;line-height:24px}
+@media(max-width:540px){.history-content .sentence.past,.sentence.current{font-size:18px;line-height:26px}}
+.library-shell{max-width:1080px;margin:auto;padding:28px 32px 40px}.library-heading{display:flex;align-items:end;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--soft)}.library-heading h1{font-size:22px;line-height:29px;letter-spacing:-.3px}.library-heading p{font-size:13px;line-height:23px;color:#9898a6}.library-heading .softbtn{min-height:36px;padding:7px 14px}.library-tabs{display:flex;max-width:none;margin:0;height:46px;background:white;border-bottom:1px solid var(--line)}.library-tabs button{flex:1;border:0;background:none;font-size:13px;color:#9898a6;position:relative}.library-tabs button[aria-selected=true]{color:var(--ink)}.library-tabs button[aria-selected=true]:after{content:'';position:absolute;bottom:0;left:calc(50% - 28px);width:56px;height:2px;background:var(--green)}#libraryFilters{padding-top:20px}.library-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}.library-filter>span{width:86px}.library-filter button{padding:7px 12px;border:1px solid #e0e5e8;border-radius:6px;background:white;line-height:16px}.library-filter button[aria-pressed=true]{background:#e8faf5;border-color:var(--green);color:var(--green)}.library-grid{margin-top:20px;gap:17px 19px}.library-card{padding:16px;gap:8px;border-radius:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:start}.library-card h2{font-size:14px;line-height:24px}.library-meta{display:flex;gap:8px;font-size:12px;color:#9898a6;align-items:center}.library-badge{border-radius:999px;padding:3px 10px;background:var(--mint);color:var(--green-dark);font-size:10px;font-weight:700}.library-card p{font-size:13px;line-height:20px;color:#4b4b5a;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.library-read{font-size:12px;line-height:18px;font-weight:600;color:var(--green-dark);margin-top:auto}@media(max-width:540px){.library-shell{padding:24px 20px}}
+.knowledge-filters{display:flex;align-items:end;gap:12px;padding:14px 24px;background:white;border-bottom:1px solid var(--line);flex-wrap:wrap}.knowledge-filters label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#9898a6}.knowledge-filters input,.knowledge-filters select,.knowledge-filters button{height:35px;border:1px solid var(--line);border-radius:6px;background:white;padding:7px 10px;color:var(--ink);font-size:13px}.knowledge-stats{display:flex;align-items:center;gap:16px;padding:12px 24px;background:white;font-size:13px;color:var(--muted)}.knowledge-stats .progress{max-width:200px;height:4px}.knowledge-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:20px 24px 100px}.knowledge-card{text-align:left;display:flex;flex-direction:column;gap:6px;background:white;border:0;border-radius:8px;padding:14px;box-shadow:var(--shadow);min-width:0}.knowledge-card strong{font-size:14px;line-height:24px}.knowledge-card p{font-size:12px;line-height:18px;height:36px;overflow:hidden;color:var(--muted)}.knowledge-card small{font-size:11px;line-height:16px;color:#9898a6}.knowledge-card .mastered{color:#10b981}.knowledge-card .learning{color:var(--green)}#knowledgeDialog{max-width:600px;width:calc(100% - 40px);border:1px solid var(--line);border-radius:12px;padding:24px;color:var(--ink)}#knowledgeDetails{display:grid;gap:16px}#knowledgeDialog::backdrop{background:#0005}@media(max-width:1000px){.knowledge-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:540px){.knowledge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.knowledge-stats{flex-wrap:wrap}}
+
+/* Preview explanation: emphasize its first content line only. */
+#prepView .explanation .hint-list>li:first-child{font-weight:700}
+
+/* Reading explanation: emphasize the first explanation line. */
+#readingView .explanation .hint-list>li:first-child{font-weight:700}
+#readingView .explanation .example-context p::first-line{font-weight:700}
+
+/* Figma 2493:1721 / 2595:907: reading recall and explanation card. */
+#readingView .knowledge-pause{width:100%;max-width:560px;margin:22px 0 0;padding:12px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;box-shadow:0 4px 20px #00000012,0 1px 3px #0000000f;overflow-wrap:anywhere}
+#readingView .knowledge-pause h3{margin:0;padding:0 8px;font-size:24px;line-height:37px;font-weight:600}
+#readingView .knowledge-pause .recall-prompt{margin:0;padding:0 12px;font-size:13px;line-height:20px;color:#4b4b5a}
+#readingView .knowledge-pause .explanation{padding:0 12px;font-size:14px;line-height:24px;color:var(--ink)}
+#readingView .knowledge-pause .hint-list li+li{margin-top:0}
+#readingView .knowledge-pause .hint-list>li:first-child{font-weight:600}
+#readingView .knowledge-pause .actions{margin:0;gap:12px;justify-content:flex-start;flex-wrap:wrap}
+#readingView .knowledge-pause .actions button{height:44px;padding:10px 20px;font-size:13px;line-height:20px}
+#readingView .knowledge-pause .actions .softbtn{width:144.5px;border-color:var(--line);color:#9898a6}
+#readingView .knowledge-pause .actions .softbtn[aria-expanded=true]{padding-inline:12px;white-space:nowrap}
+#readingView .knowledge-pause .actions .primary{min-width:197px}
+@media(max-width:420px){#readingView .knowledge-pause .actions button{width:100%;min-width:0}}
+
+/* Leave breathing room below the complete reading + recall stack. */
+#readingView .reading{--recall-space:300px;padding-top:clamp(20px,4dvh,40px);padding-bottom:40px;max-height:none;overflow:visible}
+.is-reading .topbar{position:sticky;top:0;z-index:10}
+#readingView .reading-fixed-header{position:sticky;top:52px;z-index:3;padding:12px 0;background:white;box-shadow:0 -12px 0 white}
+#readingView .current-slot,#readingView #knowledgeDetail{scroll-margin-top:160px}
+#readingView .history-window{max-height:min(220px,max(0px,calc(100dvh - 560px)))}
+#readingView .knowledge-pause .explanation{max-height:min(180px,20dvh);overflow-y:auto;overscroll-behavior:contain}
+#readingView .sentence.current:not(.outgoing){max-height:min(240px,30dvh);overflow-y:auto}
+#readingView .stage-foot:has(.primary.hidden){display:none}
+/* Contain sentence animations below history, learning controls and navigation. */
+#readingView .reading{isolation:isolate}
+#readingView .sentence-list{position:relative;z-index:0;isolation:isolate}
+#readingView .current-slot{z-index:0}
+#readingView .sentence.current{z-index:0}
+#readingView .sentence.current.outgoing{z-index:-1;pointer-events:none}
+#readingView .history-window{position:relative;z-index:1}
+#readingView #knowledgeDetail,#readingView #readingPause,#readingView .stage-foot,#readingView #readingDone{position:relative;z-index:2}
+#readingView .knowledge-pause{max-height:calc(var(--recall-space) - 22px)}
+#readingView .knowledge-pause>h3,#readingView .knowledge-pause>.actions,#readingView .knowledge-pause>.recall-prompt{flex-shrink:0}
+#readingView .knowledge-pause>.explanation{min-height:0;flex-shrink:1}
+@media(max-width:540px){#readingView .reading{--recall-space:340px}}
+.following-sentences:empty{display:none}
+#readingView .following-sentences{display:flex;flex-direction:column;gap:12px;padding-top:12px}
+#readingView .following-sentences:empty{display:none}
+#readingView .following-sentences .sentence.past{border:0;background:none;width:100%;text-align:left;color:#4b4b5a;font-size:20px;line-height:28px;padding:0 12px}
+#readingView .reading-revisit .sentence-tools{justify-content:flex-start}
+#readingView .reading-browse .history-window{mask-image:none;overflow:visible}
+#readingView .reading-browse .history-content{transform:none!important}
+
+.knowledge-explanation{display:grid;gap:8px}.knowledge-explanation h3{font-size:13px;font-weight:600;color:var(--muted)}.knowledge-explanation p{white-space:pre-wrap;overflow-wrap:anywhere}.knowledge-explanation>div+div{border-top:1px solid var(--line);padding-top:12px}.knowledge-explanation blockquote{margin:0 0 8px;padding:8px 12px;border-left:2px solid var(--green);background:var(--soft)}

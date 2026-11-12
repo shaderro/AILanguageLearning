@@ -1,0 +1,1745 @@
+[
+  {
+    "text_id": 1,
+    "sentence_id": 1,
+    "sentence_body": "Artificial Intelligence (AI) is transforming the world around us.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Artificial",
+        "token_type": "text",
+        "global_token_id": 0,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 1,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "Intelligence",
+        "token_type": "text",
+        "global_token_id": 2,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 3,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "(",
+        "token_type": "punctuation",
+        "global_token_id": 4,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": "AI",
+        "token_type": "text",
+        "global_token_id": 5,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": ")",
+        "token_type": "punctuation",
+        "global_token_id": 6,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 7,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "is",
+        "token_type": "text",
+        "global_token_id": 8,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 9,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "transforming",
+        "token_type": "text",
+        "global_token_id": 10,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 11,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "the",
+        "token_type": "text",
+        "global_token_id": 12,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 13,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "world",
+        "token_type": "text",
+        "global_token_id": 14,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 15,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "around",
+        "token_type": "text",
+        "global_token_id": 16,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 17,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "us",
+        "token_type": "text",
+        "global_token_id": 18,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 19,
+        "sentence_token_id": 20
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 2,
+    "sentence_body": "From virtual assistants to autonomous vehicles, AI technologies are becoming increasingly prevalent in our daily lives.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "From",
+        "token_type": "text",
+        "global_token_id": 20,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 21,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "virtual",
+        "token_type": "text",
+        "global_token_id": 22,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 23,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "assistants",
+        "token_type": "text",
+        "global_token_id": 24,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 25,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "to",
+        "token_type": "text",
+        "global_token_id": 26,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 27,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "autonomous",
+        "token_type": "text",
+        "global_token_id": 28,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 29,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "vehicles",
+        "token_type": "text",
+        "global_token_id": 30,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 31,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 32,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": "AI",
+        "token_type": "text",
+        "global_token_id": 33,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 34,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": "technologies",
+        "token_type": "text",
+        "global_token_id": 35,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 36,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": "are",
+        "token_type": "text",
+        "global_token_id": 37,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 38,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": "becoming",
+        "token_type": "text",
+        "global_token_id": 39,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 40,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": "increasingly",
+        "token_type": "text",
+        "global_token_id": 41,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 42,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": "prevalent",
+        "token_type": "text",
+        "global_token_id": 43,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 44,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": "in",
+        "token_type": "text",
+        "global_token_id": 45,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 46,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": "our",
+        "token_type": "text",
+        "global_token_id": 47,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 48,
+        "sentence_token_id": 29
+      },
+      {
+        "token_body": "daily",
+        "token_type": "text",
+        "global_token_id": 49,
+        "sentence_token_id": 30
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 50,
+        "sentence_token_id": 31
+      },
+      {
+        "token_body": "lives",
+        "token_type": "text",
+        "global_token_id": 51,
+        "sentence_token_id": 32
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 52,
+        "sentence_token_id": 33
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 3,
+    "sentence_body": "Machine learning, a subset of AI, enables computers to learn and improve from experience without being explicitly programmed.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Machine",
+        "token_type": "text",
+        "global_token_id": 53,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 54,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "learning",
+        "token_type": "text",
+        "global_token_id": 55,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 56,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 57,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": "a",
+        "token_type": "text",
+        "global_token_id": 58,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 59,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": "subset",
+        "token_type": "text",
+        "global_token_id": 60,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 61,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": "of",
+        "token_type": "text",
+        "global_token_id": 62,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 63,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": "AI",
+        "token_type": "text",
+        "global_token_id": 64,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 65,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 66,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "enables",
+        "token_type": "text",
+        "global_token_id": 67,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 68,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "computers",
+        "token_type": "text",
+        "global_token_id": 69,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 70,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "to",
+        "token_type": "text",
+        "global_token_id": 71,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 72,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": "learn",
+        "token_type": "text",
+        "global_token_id": 73,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 74,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 75,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 76,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": "improve",
+        "token_type": "text",
+        "global_token_id": 77,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 78,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": "from",
+        "token_type": "text",
+        "global_token_id": 79,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 80,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": "experience",
+        "token_type": "text",
+        "global_token_id": 81,
+        "sentence_token_id": 29
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 82,
+        "sentence_token_id": 30
+      },
+      {
+        "token_body": "without",
+        "token_type": "text",
+        "global_token_id": 83,
+        "sentence_token_id": 31
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 84,
+        "sentence_token_id": 32
+      },
+      {
+        "token_body": "being",
+        "token_type": "text",
+        "global_token_id": 85,
+        "sentence_token_id": 33
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 86,
+        "sentence_token_id": 34
+      },
+      {
+        "token_body": "explicitly",
+        "token_type": "text",
+        "global_token_id": 87,
+        "sentence_token_id": 35
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 88,
+        "sentence_token_id": 36
+      },
+      {
+        "token_body": "programmed",
+        "token_type": "text",
+        "global_token_id": 89,
+        "sentence_token_id": 37
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 90,
+        "sentence_token_id": 38
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 4,
+    "sentence_body": "Deep learning, a more advanced form of machine learning, uses neural networks with multiple layers to process complex patterns in data.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Deep",
+        "token_type": "text",
+        "global_token_id": 91,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 92,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "learning",
+        "token_type": "text",
+        "global_token_id": 93,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 94,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 95,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": "a",
+        "token_type": "text",
+        "global_token_id": 96,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 97,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": "more",
+        "token_type": "text",
+        "global_token_id": 98,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 99,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": "advanced",
+        "token_type": "text",
+        "global_token_id": 100,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 101,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": "form",
+        "token_type": "text",
+        "global_token_id": 102,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 103,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": "of",
+        "token_type": "text",
+        "global_token_id": 104,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 105,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": "machine",
+        "token_type": "text",
+        "global_token_id": 106,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 107,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": "learning",
+        "token_type": "text",
+        "global_token_id": 108,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 109,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 110,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": "uses",
+        "token_type": "text",
+        "global_token_id": 111,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 112,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": "neural",
+        "token_type": "text",
+        "global_token_id": 113,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 114,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": "networks",
+        "token_type": "text",
+        "global_token_id": 115,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 116,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": "with",
+        "token_type": "text",
+        "global_token_id": 117,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 118,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": "multiple",
+        "token_type": "text",
+        "global_token_id": 119,
+        "sentence_token_id": 29
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 120,
+        "sentence_token_id": 30
+      },
+      {
+        "token_body": "layers",
+        "token_type": "text",
+        "global_token_id": 121,
+        "sentence_token_id": 31
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 122,
+        "sentence_token_id": 32
+      },
+      {
+        "token_body": "to",
+        "token_type": "text",
+        "global_token_id": 123,
+        "sentence_token_id": 33
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 124,
+        "sentence_token_id": 34
+      },
+      {
+        "token_body": "process",
+        "token_type": "text",
+        "global_token_id": 125,
+        "sentence_token_id": 35
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 126,
+        "sentence_token_id": 36
+      },
+      {
+        "token_body": "complex",
+        "token_type": "text",
+        "global_token_id": 127,
+        "sentence_token_id": 37
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 128,
+        "sentence_token_id": 38
+      },
+      {
+        "token_body": "patterns",
+        "token_type": "text",
+        "global_token_id": 129,
+        "sentence_token_id": 39
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 130,
+        "sentence_token_id": 40
+      },
+      {
+        "token_body": "in",
+        "token_type": "text",
+        "global_token_id": 131,
+        "sentence_token_id": 41
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 132,
+        "sentence_token_id": 42
+      },
+      {
+        "token_body": "data",
+        "token_type": "text",
+        "global_token_id": 133,
+        "sentence_token_id": 43
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 134,
+        "sentence_token_id": 44
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 5,
+    "sentence_body": "This technology has revolutionized fields such as computer vision, natural language processing, and speech recognition.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "This",
+        "token_type": "text",
+        "global_token_id": 135,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 136,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "technology",
+        "token_type": "text",
+        "global_token_id": 137,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 138,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "has",
+        "token_type": "text",
+        "global_token_id": 139,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 140,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "revolutionized",
+        "token_type": "text",
+        "global_token_id": 141,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 142,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "fields",
+        "token_type": "text",
+        "global_token_id": 143,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 144,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "such",
+        "token_type": "text",
+        "global_token_id": 145,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 146,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "as",
+        "token_type": "text",
+        "global_token_id": 147,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 148,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "computer",
+        "token_type": "text",
+        "global_token_id": 149,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 150,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "vision",
+        "token_type": "text",
+        "global_token_id": 151,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 152,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 153,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": "natural",
+        "token_type": "text",
+        "global_token_id": 154,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 155,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": "language",
+        "token_type": "text",
+        "global_token_id": 156,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 157,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": "processing",
+        "token_type": "text",
+        "global_token_id": 158,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 159,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 160,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 161,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 162,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": "speech",
+        "token_type": "text",
+        "global_token_id": 163,
+        "sentence_token_id": 29
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 164,
+        "sentence_token_id": 30
+      },
+      {
+        "token_body": "recognition",
+        "token_type": "text",
+        "global_token_id": 165,
+        "sentence_token_id": 31
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 166,
+        "sentence_token_id": 32
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 6,
+    "sentence_body": "Companies worldwide are investing heavily in AI research and development.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Companies",
+        "token_type": "text",
+        "global_token_id": 167,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 168,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "worldwide",
+        "token_type": "text",
+        "global_token_id": 169,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 170,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "are",
+        "token_type": "text",
+        "global_token_id": 171,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 172,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "investing",
+        "token_type": "text",
+        "global_token_id": 173,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 174,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "heavily",
+        "token_type": "text",
+        "global_token_id": 175,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 176,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "in",
+        "token_type": "text",
+        "global_token_id": 177,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 178,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "AI",
+        "token_type": "text",
+        "global_token_id": 179,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 180,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "research",
+        "token_type": "text",
+        "global_token_id": 181,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 182,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 183,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 184,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "development",
+        "token_type": "text",
+        "global_token_id": 185,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 186,
+        "sentence_token_id": 20
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 7,
+    "sentence_body": "However, the rapid advancement of AI also raises important ethical considerations.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "However",
+        "token_type": "text",
+        "global_token_id": 187,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 188,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 189,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": "the",
+        "token_type": "text",
+        "global_token_id": 190,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 191,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": "rapid",
+        "token_type": "text",
+        "global_token_id": 192,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 193,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": "advancement",
+        "token_type": "text",
+        "global_token_id": 194,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 195,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": "of",
+        "token_type": "text",
+        "global_token_id": 196,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 197,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": "AI",
+        "token_type": "text",
+        "global_token_id": 198,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 199,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": "also",
+        "token_type": "text",
+        "global_token_id": 200,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 201,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": "raises",
+        "token_type": "text",
+        "global_token_id": 202,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 203,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": "important",
+        "token_type": "text",
+        "global_token_id": 204,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 205,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": "ethical",
+        "token_type": "text",
+        "global_token_id": 206,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 207,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": "considerations",
+        "token_type": "text",
+        "global_token_id": 208,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 209,
+        "sentence_token_id": 23
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 8,
+    "sentence_body": "Issues such as privacy, bias, job displacement, and autonomous decision-making need careful consideration.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "Issues",
+        "token_type": "text",
+        "global_token_id": 210,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 211,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "such",
+        "token_type": "text",
+        "global_token_id": 212,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 213,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "as",
+        "token_type": "text",
+        "global_token_id": 214,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 215,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "privacy",
+        "token_type": "text",
+        "global_token_id": 216,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 217,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 218,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": "bias",
+        "token_type": "text",
+        "global_token_id": 219,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 220,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 221,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "job",
+        "token_type": "text",
+        "global_token_id": 222,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 223,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "displacement",
+        "token_type": "text",
+        "global_token_id": 224,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 225,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 226,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 227,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 228,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": "autonomous",
+        "token_type": "text",
+        "global_token_id": 229,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 230,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": "decision-making",
+        "token_type": "text",
+        "global_token_id": 231,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 232,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": "need",
+        "token_type": "text",
+        "global_token_id": 233,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 234,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": "careful",
+        "token_type": "text",
+        "global_token_id": 235,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 236,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": "consideration",
+        "token_type": "text",
+        "global_token_id": 237,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 238,
+        "sentence_token_id": 29
+      }
+    ]
+  },
+  {
+    "text_id": 1,
+    "sentence_id": 9,
+    "sentence_body": "It is crucial to develop AI systems that are fair, transparent, and beneficial to society as a whole.",
+    "grammar_annotations": [],
+    "vocab_annotations": [],
+    "tokens": [
+      {
+        "token_body": "It",
+        "token_type": "text",
+        "global_token_id": 239,
+        "sentence_token_id": 1
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 240,
+        "sentence_token_id": 2
+      },
+      {
+        "token_body": "is",
+        "token_type": "text",
+        "global_token_id": 241,
+        "sentence_token_id": 3
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 242,
+        "sentence_token_id": 4
+      },
+      {
+        "token_body": "crucial",
+        "token_type": "text",
+        "global_token_id": 243,
+        "sentence_token_id": 5
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 244,
+        "sentence_token_id": 6
+      },
+      {
+        "token_body": "to",
+        "token_type": "text",
+        "global_token_id": 245,
+        "sentence_token_id": 7
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 246,
+        "sentence_token_id": 8
+      },
+      {
+        "token_body": "develop",
+        "token_type": "text",
+        "global_token_id": 247,
+        "sentence_token_id": 9
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 248,
+        "sentence_token_id": 10
+      },
+      {
+        "token_body": "AI",
+        "token_type": "text",
+        "global_token_id": 249,
+        "sentence_token_id": 11
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 250,
+        "sentence_token_id": 12
+      },
+      {
+        "token_body": "systems",
+        "token_type": "text",
+        "global_token_id": 251,
+        "sentence_token_id": 13
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 252,
+        "sentence_token_id": 14
+      },
+      {
+        "token_body": "that",
+        "token_type": "text",
+        "global_token_id": 253,
+        "sentence_token_id": 15
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 254,
+        "sentence_token_id": 16
+      },
+      {
+        "token_body": "are",
+        "token_type": "text",
+        "global_token_id": 255,
+        "sentence_token_id": 17
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 256,
+        "sentence_token_id": 18
+      },
+      {
+        "token_body": "fair",
+        "token_type": "text",
+        "global_token_id": 257,
+        "sentence_token_id": 19
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 258,
+        "sentence_token_id": 20
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 259,
+        "sentence_token_id": 21
+      },
+      {
+        "token_body": "transparent",
+        "token_type": "text",
+        "global_token_id": 260,
+        "sentence_token_id": 22
+      },
+      {
+        "token_body": ",",
+        "token_type": "punctuation",
+        "global_token_id": 261,
+        "sentence_token_id": 23
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 262,
+        "sentence_token_id": 24
+      },
+      {
+        "token_body": "and",
+        "token_type": "text",
+        "global_token_id": 263,
+        "sentence_token_id": 25
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 264,
+        "sentence_token_id": 26
+      },
+      {
+        "token_body": "beneficial",
+        "token_type": "text",
+        "global_token_id": 265,
+        "sentence_token_id": 27
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 266,
+        "sentence_token_id": 28
+      },
+      {
+        "token_body": "to",
+        "token_type": "text",
+        "global_token_id": 267,
+        "sentence_token_id": 29
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 268,
+        "sentence_token_id": 30
+      },
+      {
+        "token_body": "society",
+        "token_type": "text",
+        "global_token_id": 269,
+        "sentence_token_id": 31
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 270,
+        "sentence_token_id": 32
+      },
+      {
+        "token_body": "as",
+        "token_type": "text",
+        "global_token_id": 271,
+        "sentence_token_id": 33
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 272,
+        "sentence_token_id": 34
+      },
+      {
+        "token_body": "a",
+        "token_type": "text",
+        "global_token_id": 273,
+        "sentence_token_id": 35
+      },
+      {
+        "token_body": " ",
+        "token_type": "space",
+        "global_token_id": 274,
+        "sentence_token_id": 36
+      },
+      {
+        "token_body": "whole",
+        "token_type": "text",
+        "global_token_id": 275,
+        "sentence_token_id": 37
+      },
+      {
+        "token_body": ".",
+        "token_type": "punctuation",
+        "global_token_id": 276,
+        "sentence_token_id": 38
+      }
+    ]
+  }
+]

@@ -24,7 +24,8 @@ def process_article(
     raw_text: str, 
     text_id: int = 1, 
     text_title: str = "Article",
-    language: Optional[str] = None
+    language: Optional[str] = None,
+    split_mode: str = "punctuation",
 ) -> Dict[str, Any]:
     """
     处理整个文章，将raw string转换为结构化数据
@@ -55,7 +56,8 @@ def process_article(
     
     # 步骤1: 分割句子
     print("\n步骤1: 分割句子...")
-    sentences_list = split_sentences(raw_text, language_code=language_code)
+    sentences_list = ([line.strip() for line in raw_text.splitlines() if line.strip()]
+                      if split_mode == "line" else split_sentences(raw_text, language_code=language_code))
     print(f"分割得到 {len(sentences_list)} 个句子")
     
     # 步骤2: 为每个句子分割tokens并创建结构化数据
@@ -314,4 +316,4 @@ def process_article_simple(
     print(f"   总句子数: {result['total_sentences']}")
     print(f"   总token数: {result['total_tokens']}")
     
-    return result 
+    return result

@@ -1,0 +1,7176 @@
+{
+  "text_id": 1781598942,
+  "text_title": "Die Wahl der Brüder",
+  "text_by_sentence": [
+    {
+      "text_id": 1781598942,
+      "sentence_id": 1,
+      "sentence_body": "„Das ist eine sehr elegante Uhr“, sagte Lorenz’ Freund, als er im Korridor stehen blieb.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 0,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "Das",
+          "token_type": "text",
+          "global_token_id": 1,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 2,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "ist",
+          "token_type": "text",
+          "global_token_id": 3,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 4,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "eine",
+          "token_type": "text",
+          "global_token_id": 5,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 6,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "sehr",
+          "token_type": "text",
+          "global_token_id": 7,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 8,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "elegante",
+          "token_type": "text",
+          "global_token_id": 9,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 10,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Uhr",
+          "token_type": "text",
+          "global_token_id": 11,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 12,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 13,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 14,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 15,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 16,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 17,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "’",
+          "token_type": "punctuation",
+          "global_token_id": 18,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 19,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "Freund",
+          "token_type": "text",
+          "global_token_id": 20,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 21,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 22,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "als",
+          "token_type": "text",
+          "global_token_id": 23,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 24,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 25,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 26,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "im",
+          "token_type": "text",
+          "global_token_id": 27,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 28,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "Korridor",
+          "token_type": "text",
+          "global_token_id": 29,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 30,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "stehen",
+          "token_type": "text",
+          "global_token_id": 31,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 32,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": "blieb",
+          "token_type": "text",
+          "global_token_id": 33,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 34,
+          "sentence_token_id": 35
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 2,
+      "sentence_body": "+/- „Natürlich, du bist ein Sammler“, antwortete Lorenz.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 35,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 36,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 37,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 38,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 39,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Natürlich",
+          "token_type": "text",
+          "global_token_id": 40,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 41,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 42,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "du",
+          "token_type": "text",
+          "global_token_id": 43,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 44,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "bist",
+          "token_type": "text",
+          "global_token_id": 45,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 46,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "ein",
+          "token_type": "text",
+          "global_token_id": 47,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 48,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "Sammler",
+          "token_type": "text",
+          "global_token_id": 49,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 50,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 51,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 52,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "antwortete",
+          "token_type": "text",
+          "global_token_id": 53,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 54,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 55,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 56,
+          "sentence_token_id": 22
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 3,
+      "sentence_body": "Er gab seinem Freund das Getränk.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Er",
+          "token_type": "text",
+          "global_token_id": 57,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 58,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "gab",
+          "token_type": "text",
+          "global_token_id": 59,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 60,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "seinem",
+          "token_type": "text",
+          "global_token_id": 61,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 62,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Freund",
+          "token_type": "text",
+          "global_token_id": 63,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 64,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "das",
+          "token_type": "text",
+          "global_token_id": 65,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 66,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "Getränk",
+          "token_type": "text",
+          "global_token_id": 67,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 68,
+          "sentence_token_id": 12
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 4,
+      "sentence_body": "+/- „Wo hast du sie gekauft?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 69,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 70,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 71,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 72,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 73,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Wo",
+          "token_type": "text",
+          "global_token_id": 74,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 75,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "hast",
+          "token_type": "text",
+          "global_token_id": 76,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 77,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "du",
+          "token_type": "text",
+          "global_token_id": 78,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 79,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 80,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 81,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "gekauft",
+          "token_type": "text",
+          "global_token_id": 82,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 83,
+          "sentence_token_id": 15
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 5,
+      "sentence_body": "“ +/- „Sie gehörte meinem Vater.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 84,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 85,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 86,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 87,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 88,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 89,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 90,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Sie",
+          "token_type": "text",
+          "global_token_id": 91,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 92,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "gehörte",
+          "token_type": "text",
+          "global_token_id": 93,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 94,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "meinem",
+          "token_type": "text",
+          "global_token_id": 95,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 96,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "Vater",
+          "token_type": "text",
+          "global_token_id": 97,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 98,
+          "sentence_token_id": 15
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 6,
+      "sentence_body": "Er sammelte auch Uhren.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Er",
+          "token_type": "text",
+          "global_token_id": 99,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 100,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "sammelte",
+          "token_type": "text",
+          "global_token_id": 101,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 102,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "auch",
+          "token_type": "text",
+          "global_token_id": 103,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 104,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Uhren",
+          "token_type": "text",
+          "global_token_id": 105,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 106,
+          "sentence_token_id": 8
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 7,
+      "sentence_body": "Er hat sie auf Auktionen gekauft, sogar wenn sie alt, kaputt und dreckig waren.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Er",
+          "token_type": "text",
+          "global_token_id": 107,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 108,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "hat",
+          "token_type": "text",
+          "global_token_id": 109,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 110,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 111,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 112,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "auf",
+          "token_type": "text",
+          "global_token_id": 113,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 114,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Auktionen",
+          "token_type": "text",
+          "global_token_id": 115,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 116,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "gekauft",
+          "token_type": "text",
+          "global_token_id": 117,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 118,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 119,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "sogar",
+          "token_type": "text",
+          "global_token_id": 120,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 121,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "wenn",
+          "token_type": "text",
+          "global_token_id": 122,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 123,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 124,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 125,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "alt",
+          "token_type": "text",
+          "global_token_id": 126,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 127,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 128,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "kaputt",
+          "token_type": "text",
+          "global_token_id": 129,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 130,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 131,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 132,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "dreckig",
+          "token_type": "text",
+          "global_token_id": 133,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 134,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": "waren",
+          "token_type": "text",
+          "global_token_id": 135,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 136,
+          "sentence_token_id": 30
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 8,
+      "sentence_body": "Dann reparierte er sie und machte sie wieder hübsch.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Dann",
+          "token_type": "text",
+          "global_token_id": 137,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 138,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "reparierte",
+          "token_type": "text",
+          "global_token_id": 139,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 140,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 141,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 142,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 143,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 144,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 145,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 146,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "machte",
+          "token_type": "text",
+          "global_token_id": 147,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 148,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 149,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 150,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "wieder",
+          "token_type": "text",
+          "global_token_id": 151,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 152,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "hübsch",
+          "token_type": "text",
+          "global_token_id": 153,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 154,
+          "sentence_token_id": 18
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 9,
+      "sentence_body": "Diese war sein Favorit.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Diese",
+          "token_type": "text",
+          "global_token_id": 155,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 156,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 157,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 158,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "sein",
+          "token_type": "text",
+          "global_token_id": 159,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 160,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Favorit",
+          "token_type": "text",
+          "global_token_id": 161,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 162,
+          "sentence_token_id": 8
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 10,
+      "sentence_body": "“ +/- „Aber ich dachte, dein Vater hat dir nichts in seinem Testament hinterlassen?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 163,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 164,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 165,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 166,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 167,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 168,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 169,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Aber",
+          "token_type": "text",
+          "global_token_id": 170,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 171,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "ich",
+          "token_type": "text",
+          "global_token_id": 172,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 173,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "dachte",
+          "token_type": "text",
+          "global_token_id": 174,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 175,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 176,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "dein",
+          "token_type": "text",
+          "global_token_id": 177,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 178,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "Vater",
+          "token_type": "text",
+          "global_token_id": 179,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 180,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "hat",
+          "token_type": "text",
+          "global_token_id": 181,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 182,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "dir",
+          "token_type": "text",
+          "global_token_id": 183,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 184,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "nichts",
+          "token_type": "text",
+          "global_token_id": 185,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 186,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "in",
+          "token_type": "text",
+          "global_token_id": 187,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 188,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "seinem",
+          "token_type": "text",
+          "global_token_id": 189,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 190,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": "Testament",
+          "token_type": "text",
+          "global_token_id": 191,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 192,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": "hinterlassen",
+          "token_type": "text",
+          "global_token_id": 193,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 194,
+          "sentence_token_id": 32
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 11,
+      "sentence_body": "“ +/- „Das ist nicht ganz richtig.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 195,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 196,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 197,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 198,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 199,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 200,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 201,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Das",
+          "token_type": "text",
+          "global_token_id": 202,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 203,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "ist",
+          "token_type": "text",
+          "global_token_id": 204,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 205,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "nicht",
+          "token_type": "text",
+          "global_token_id": 206,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 207,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "ganz",
+          "token_type": "text",
+          "global_token_id": 208,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 209,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "richtig",
+          "token_type": "text",
+          "global_token_id": 210,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 211,
+          "sentence_token_id": 17
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 12,
+      "sentence_body": "Als er starb, trafen meine Brüder und ich ihre Anwältin…“ +/- Dreißig Jahre zuvor setzten sich die drei Brüder in dem Büro der Anwältin nieder.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Als",
+          "token_type": "text",
+          "global_token_id": 212,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 213,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 214,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 215,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "starb",
+          "token_type": "text",
+          "global_token_id": 216,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 217,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 218,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "trafen",
+          "token_type": "text",
+          "global_token_id": 219,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 220,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "meine",
+          "token_type": "text",
+          "global_token_id": 221,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 222,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Brüder",
+          "token_type": "text",
+          "global_token_id": 223,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 224,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 225,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 226,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "ich",
+          "token_type": "text",
+          "global_token_id": 227,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 228,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "ihre",
+          "token_type": "text",
+          "global_token_id": 229,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 230,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "Anwältin",
+          "token_type": "text",
+          "global_token_id": 231,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "…",
+          "token_type": "punctuation",
+          "global_token_id": 232,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 233,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 234,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 235,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 236,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 237,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 238,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "Dreißig",
+          "token_type": "text",
+          "global_token_id": 239,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 240,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "Jahre",
+          "token_type": "text",
+          "global_token_id": 241,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 242,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "zuvor",
+          "token_type": "text",
+          "global_token_id": 243,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 244,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": "setzten",
+          "token_type": "text",
+          "global_token_id": 245,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 246,
+          "sentence_token_id": 35
+        },
+        {
+          "token_body": "sich",
+          "token_type": "text",
+          "global_token_id": 247,
+          "sentence_token_id": 36
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 248,
+          "sentence_token_id": 37
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 249,
+          "sentence_token_id": 38
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 250,
+          "sentence_token_id": 39
+        },
+        {
+          "token_body": "drei",
+          "token_type": "text",
+          "global_token_id": 251,
+          "sentence_token_id": 40
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 252,
+          "sentence_token_id": 41
+        },
+        {
+          "token_body": "Brüder",
+          "token_type": "text",
+          "global_token_id": 253,
+          "sentence_token_id": 42
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 254,
+          "sentence_token_id": 43
+        },
+        {
+          "token_body": "in",
+          "token_type": "text",
+          "global_token_id": 255,
+          "sentence_token_id": 44
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 256,
+          "sentence_token_id": 45
+        },
+        {
+          "token_body": "dem",
+          "token_type": "text",
+          "global_token_id": 257,
+          "sentence_token_id": 46
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 258,
+          "sentence_token_id": 47
+        },
+        {
+          "token_body": "Büro",
+          "token_type": "text",
+          "global_token_id": 259,
+          "sentence_token_id": 48
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 260,
+          "sentence_token_id": 49
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 261,
+          "sentence_token_id": 50
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 262,
+          "sentence_token_id": 51
+        },
+        {
+          "token_body": "Anwältin",
+          "token_type": "text",
+          "global_token_id": 263,
+          "sentence_token_id": 52
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 264,
+          "sentence_token_id": 53
+        },
+        {
+          "token_body": "nieder",
+          "token_type": "text",
+          "global_token_id": 265,
+          "sentence_token_id": 54
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 266,
+          "sentence_token_id": 55
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 13,
+      "sentence_body": "+/- „Sagen Sie uns einfach, was er uns gibt“, sagte Lorenz’ älterer Bruder.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 267,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 268,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 269,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 270,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 271,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Sagen",
+          "token_type": "text",
+          "global_token_id": 272,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 273,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Sie",
+          "token_type": "text",
+          "global_token_id": 274,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 275,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "uns",
+          "token_type": "text",
+          "global_token_id": 276,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 277,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "einfach",
+          "token_type": "text",
+          "global_token_id": 278,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 279,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 280,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "was",
+          "token_type": "text",
+          "global_token_id": 281,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 282,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 283,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 284,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "uns",
+          "token_type": "text",
+          "global_token_id": 285,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 286,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "gibt",
+          "token_type": "text",
+          "global_token_id": 287,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 288,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 289,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 290,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 291,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 292,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 293,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "’",
+          "token_type": "punctuation",
+          "global_token_id": 294,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 295,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "älterer",
+          "token_type": "text",
+          "global_token_id": 296,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 297,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 298,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 299,
+          "sentence_token_id": 33
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 14,
+      "sentence_body": "+/- Die Anwältin drehte das Blatt um und las laut vor: „Mein Haus und all meine Besitztümer sollen auktioniert werden.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 300,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 301,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 302,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 303,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "Die",
+          "token_type": "text",
+          "global_token_id": 304,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 305,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Anwältin",
+          "token_type": "text",
+          "global_token_id": 306,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 307,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "drehte",
+          "token_type": "text",
+          "global_token_id": 308,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 309,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "das",
+          "token_type": "text",
+          "global_token_id": 310,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 311,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Blatt",
+          "token_type": "text",
+          "global_token_id": 312,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 313,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "um",
+          "token_type": "text",
+          "global_token_id": 314,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 315,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 316,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 317,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "las",
+          "token_type": "text",
+          "global_token_id": 318,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 319,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "laut",
+          "token_type": "text",
+          "global_token_id": 320,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 321,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "vor",
+          "token_type": "text",
+          "global_token_id": 322,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": ":",
+          "token_type": "punctuation",
+          "global_token_id": 323,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 324,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 325,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "Mein",
+          "token_type": "text",
+          "global_token_id": 326,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 327,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": "Haus",
+          "token_type": "text",
+          "global_token_id": 328,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 329,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 330,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 331,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": "all",
+          "token_type": "text",
+          "global_token_id": 332,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 333,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": "meine",
+          "token_type": "text",
+          "global_token_id": 334,
+          "sentence_token_id": 35
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 335,
+          "sentence_token_id": 36
+        },
+        {
+          "token_body": "Besitztümer",
+          "token_type": "text",
+          "global_token_id": 336,
+          "sentence_token_id": 37
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 337,
+          "sentence_token_id": 38
+        },
+        {
+          "token_body": "sollen",
+          "token_type": "text",
+          "global_token_id": 338,
+          "sentence_token_id": 39
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 339,
+          "sentence_token_id": 40
+        },
+        {
+          "token_body": "auktioniert",
+          "token_type": "text",
+          "global_token_id": 340,
+          "sentence_token_id": 41
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 341,
+          "sentence_token_id": 42
+        },
+        {
+          "token_body": "werden",
+          "token_type": "text",
+          "global_token_id": 342,
+          "sentence_token_id": 43
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 343,
+          "sentence_token_id": 44
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 15,
+      "sentence_body": "Das Geld soll meinen Söhnen gegeben werden…“ +/- „Hurra!",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Das",
+          "token_type": "text",
+          "global_token_id": 344,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 345,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "Geld",
+          "token_type": "text",
+          "global_token_id": 346,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 347,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "soll",
+          "token_type": "text",
+          "global_token_id": 348,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 349,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "meinen",
+          "token_type": "text",
+          "global_token_id": 350,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 351,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Söhnen",
+          "token_type": "text",
+          "global_token_id": 352,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 353,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "gegeben",
+          "token_type": "text",
+          "global_token_id": 354,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 355,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "werden",
+          "token_type": "text",
+          "global_token_id": 356,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "…",
+          "token_type": "punctuation",
+          "global_token_id": 357,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 358,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 359,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 360,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 361,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 362,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 363,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 364,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "Hurra",
+          "token_type": "text",
+          "global_token_id": 365,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "!",
+          "token_type": "punctuation",
+          "global_token_id": 366,
+          "sentence_token_id": 23
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 16,
+      "sentence_body": "“, sagte Lorenz’ jüngerer Bruder.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 367,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 368,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 369,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 370,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 371,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 372,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "’",
+          "token_type": "punctuation",
+          "global_token_id": 373,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 374,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "jüngerer",
+          "token_type": "text",
+          "global_token_id": 375,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 376,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 377,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 378,
+          "sentence_token_id": 12
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 17,
+      "sentence_body": "+/- „…die entscheiden müssen, an welche Stiftung sie es spenden.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 379,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 380,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 381,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 382,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 383,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "…",
+          "token_type": "punctuation",
+          "global_token_id": 384,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 385,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 386,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "entscheiden",
+          "token_type": "text",
+          "global_token_id": 387,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 388,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "müssen",
+          "token_type": "text",
+          "global_token_id": 389,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 390,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 391,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "an",
+          "token_type": "text",
+          "global_token_id": 392,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 393,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "welche",
+          "token_type": "text",
+          "global_token_id": 394,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 395,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "Stiftung",
+          "token_type": "text",
+          "global_token_id": 396,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 397,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 398,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 399,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "es",
+          "token_type": "text",
+          "global_token_id": 400,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 401,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "spenden",
+          "token_type": "text",
+          "global_token_id": 402,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 403,
+          "sentence_token_id": 25
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 18,
+      "sentence_body": "“ +/- „Stiftung?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 404,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 405,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 406,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 407,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 408,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 409,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 410,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Stiftung",
+          "token_type": "text",
+          "global_token_id": 411,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 412,
+          "sentence_token_id": 9
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 19,
+      "sentence_body": "“ +/- „Ich schlage vor, wir spenden es an medizinische Forschung“, sagte Lorenz.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 413,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 414,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 415,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 416,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 417,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 418,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 419,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Ich",
+          "token_type": "text",
+          "global_token_id": 420,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 421,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "schlage",
+          "token_type": "text",
+          "global_token_id": 422,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 423,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "vor",
+          "token_type": "text",
+          "global_token_id": 424,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 425,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 426,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "wir",
+          "token_type": "text",
+          "global_token_id": 427,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 428,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "spenden",
+          "token_type": "text",
+          "global_token_id": 429,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 430,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "es",
+          "token_type": "text",
+          "global_token_id": 431,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 432,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "an",
+          "token_type": "text",
+          "global_token_id": 433,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 434,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "medizinische",
+          "token_type": "text",
+          "global_token_id": 435,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 436,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "Forschung",
+          "token_type": "text",
+          "global_token_id": 437,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 438,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 439,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 440,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 441,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 442,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 443,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 444,
+          "sentence_token_id": 32
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 20,
+      "sentence_body": "„Vaters Krankheit war —“ +/- „Wie auch immer“, sagte der ältere Bruder.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 445,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "Vaters",
+          "token_type": "text",
+          "global_token_id": 446,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 447,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "Krankheit",
+          "token_type": "text",
+          "global_token_id": 448,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 449,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 450,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 451,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "—",
+          "token_type": "punctuation",
+          "global_token_id": 452,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 453,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 454,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 455,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 456,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 457,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 458,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 459,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "Wie",
+          "token_type": "text",
+          "global_token_id": 460,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 461,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "auch",
+          "token_type": "text",
+          "global_token_id": 462,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 463,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "immer",
+          "token_type": "text",
+          "global_token_id": 464,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 465,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 466,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 467,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 468,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 469,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 470,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 471,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "ältere",
+          "token_type": "text",
+          "global_token_id": 472,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 473,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 474,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 475,
+          "sentence_token_id": 31
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 21,
+      "sentence_body": "„Ihr entscheidet.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 476,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "Ihr",
+          "token_type": "text",
+          "global_token_id": 477,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 478,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "entscheidet",
+          "token_type": "text",
+          "global_token_id": 479,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 480,
+          "sentence_token_id": 5
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 22,
+      "sentence_body": "“ +/- Die Anwältin hüstelte.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 481,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 482,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 483,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 484,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 485,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 486,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Die",
+          "token_type": "text",
+          "global_token_id": 487,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 488,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Anwältin",
+          "token_type": "text",
+          "global_token_id": 489,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 490,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "hüstelte",
+          "token_type": "text",
+          "global_token_id": 491,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 492,
+          "sentence_token_id": 12
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 23,
+      "sentence_body": "„Da ist noch etwas“, sagte sie.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 493,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "Da",
+          "token_type": "text",
+          "global_token_id": 494,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 495,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "ist",
+          "token_type": "text",
+          "global_token_id": 496,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 497,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "noch",
+          "token_type": "text",
+          "global_token_id": 498,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 499,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "etwas",
+          "token_type": "text",
+          "global_token_id": 500,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 501,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 502,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 503,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 504,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 505,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 506,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 507,
+          "sentence_token_id": 15
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 24,
+      "sentence_body": "Sie las weiter: „Vor der Auktion darf jeder Sohn einen Gegenstand wählen, um ihn aus sentimentalen Gründen zu behalten.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Sie",
+          "token_type": "text",
+          "global_token_id": 508,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 509,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "las",
+          "token_type": "text",
+          "global_token_id": 510,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 511,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "weiter",
+          "token_type": "text",
+          "global_token_id": 512,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": ":",
+          "token_type": "punctuation",
+          "global_token_id": 513,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 514,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 515,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Vor",
+          "token_type": "text",
+          "global_token_id": 516,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 517,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 518,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 519,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Auktion",
+          "token_type": "text",
+          "global_token_id": 520,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 521,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "darf",
+          "token_type": "text",
+          "global_token_id": 522,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 523,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "jeder",
+          "token_type": "text",
+          "global_token_id": 524,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 525,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "Sohn",
+          "token_type": "text",
+          "global_token_id": 526,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 527,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "einen",
+          "token_type": "text",
+          "global_token_id": 528,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 529,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "Gegenstand",
+          "token_type": "text",
+          "global_token_id": 530,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 531,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "wählen",
+          "token_type": "text",
+          "global_token_id": 532,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 533,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 534,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "um",
+          "token_type": "text",
+          "global_token_id": 535,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 536,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "ihn",
+          "token_type": "text",
+          "global_token_id": 537,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 538,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "aus",
+          "token_type": "text",
+          "global_token_id": 539,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 540,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": "sentimentalen",
+          "token_type": "text",
+          "global_token_id": 541,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 542,
+          "sentence_token_id": 35
+        },
+        {
+          "token_body": "Gründen",
+          "token_type": "text",
+          "global_token_id": 543,
+          "sentence_token_id": 36
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 544,
+          "sentence_token_id": 37
+        },
+        {
+          "token_body": "zu",
+          "token_type": "text",
+          "global_token_id": 545,
+          "sentence_token_id": 38
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 546,
+          "sentence_token_id": 39
+        },
+        {
+          "token_body": "behalten",
+          "token_type": "text",
+          "global_token_id": 547,
+          "sentence_token_id": 40
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 548,
+          "sentence_token_id": 41
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 25,
+      "sentence_body": "“ +/- „Ich nehme den Fernseher“, sagte der jüngere Bruder sofort.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 549,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 550,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 551,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 552,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 553,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 554,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 555,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Ich",
+          "token_type": "text",
+          "global_token_id": 556,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 557,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "nehme",
+          "token_type": "text",
+          "global_token_id": 558,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 559,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "den",
+          "token_type": "text",
+          "global_token_id": 560,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 561,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "Fernseher",
+          "token_type": "text",
+          "global_token_id": 562,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 563,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 564,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 565,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "sagte",
+          "token_type": "text",
+          "global_token_id": 566,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 567,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 568,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 569,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "jüngere",
+          "token_type": "text",
+          "global_token_id": 570,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 571,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 572,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 573,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "sofort",
+          "token_type": "text",
+          "global_token_id": 574,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 575,
+          "sentence_token_id": 27
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 26,
+      "sentence_body": "+/- „Ich bin nun tot“, fuhr die Anwältin fort, „aber ich habe einen letzten Rat für meine Söhne.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 576,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 577,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 578,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 579,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 580,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Ich",
+          "token_type": "text",
+          "global_token_id": 581,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 582,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "bin",
+          "token_type": "text",
+          "global_token_id": 583,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 584,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "nun",
+          "token_type": "text",
+          "global_token_id": 585,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 586,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "tot",
+          "token_type": "text",
+          "global_token_id": 587,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 588,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 589,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 590,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "fuhr",
+          "token_type": "text",
+          "global_token_id": 591,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 592,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 593,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 594,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "Anwältin",
+          "token_type": "text",
+          "global_token_id": 595,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 596,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "fort",
+          "token_type": "text",
+          "global_token_id": 597,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 598,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 599,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 600,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "aber",
+          "token_type": "text",
+          "global_token_id": 601,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 602,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "ich",
+          "token_type": "text",
+          "global_token_id": 603,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 604,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "habe",
+          "token_type": "text",
+          "global_token_id": 605,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 606,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "einen",
+          "token_type": "text",
+          "global_token_id": 607,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 608,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": "letzten",
+          "token_type": "text",
+          "global_token_id": 609,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 610,
+          "sentence_token_id": 35
+        },
+        {
+          "token_body": "Rat",
+          "token_type": "text",
+          "global_token_id": 611,
+          "sentence_token_id": 36
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 612,
+          "sentence_token_id": 37
+        },
+        {
+          "token_body": "für",
+          "token_type": "text",
+          "global_token_id": 613,
+          "sentence_token_id": 38
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 614,
+          "sentence_token_id": 39
+        },
+        {
+          "token_body": "meine",
+          "token_type": "text",
+          "global_token_id": 615,
+          "sentence_token_id": 40
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 616,
+          "sentence_token_id": 41
+        },
+        {
+          "token_body": "Söhne",
+          "token_type": "text",
+          "global_token_id": 617,
+          "sentence_token_id": 42
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 618,
+          "sentence_token_id": 43
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 27,
+      "sentence_body": "Es gibt —“ +/- Lorenz’ Brüder rannten aus dem Raum.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Es",
+          "token_type": "text",
+          "global_token_id": 619,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 620,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "gibt",
+          "token_type": "text",
+          "global_token_id": 621,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 622,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "—",
+          "token_type": "punctuation",
+          "global_token_id": 623,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 624,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 625,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 626,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 627,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 628,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 629,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 630,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "’",
+          "token_type": "punctuation",
+          "global_token_id": 631,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 632,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "Brüder",
+          "token_type": "text",
+          "global_token_id": 633,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 634,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "rannten",
+          "token_type": "text",
+          "global_token_id": 635,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 636,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "aus",
+          "token_type": "text",
+          "global_token_id": 637,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 638,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "dem",
+          "token_type": "text",
+          "global_token_id": 639,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 640,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "Raum",
+          "token_type": "text",
+          "global_token_id": 641,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 642,
+          "sentence_token_id": 24
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 28,
+      "sentence_body": "Einige Sekunden später hörte er ihre Autos wegfahren.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Einige",
+          "token_type": "text",
+          "global_token_id": 643,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 644,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "Sekunden",
+          "token_type": "text",
+          "global_token_id": 645,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 646,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "später",
+          "token_type": "text",
+          "global_token_id": 647,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 648,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "hörte",
+          "token_type": "text",
+          "global_token_id": 649,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 650,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 651,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 652,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "ihre",
+          "token_type": "text",
+          "global_token_id": 653,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 654,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Autos",
+          "token_type": "text",
+          "global_token_id": 655,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 656,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "wegfahren",
+          "token_type": "text",
+          "global_token_id": 657,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 658,
+          "sentence_token_id": 16
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 29,
+      "sentence_body": "+/- „Es gibt nichts Wertvolleres als gute Erinnerungen“, schloss die Anwältin und hob die Augenbraue.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 659,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 660,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 661,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 662,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 663,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Es",
+          "token_type": "text",
+          "global_token_id": 664,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 665,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "gibt",
+          "token_type": "text",
+          "global_token_id": 666,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 667,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "nichts",
+          "token_type": "text",
+          "global_token_id": 668,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 669,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Wertvolleres",
+          "token_type": "text",
+          "global_token_id": 670,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 671,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "als",
+          "token_type": "text",
+          "global_token_id": 672,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 673,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "gute",
+          "token_type": "text",
+          "global_token_id": 674,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 675,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "Erinnerungen",
+          "token_type": "text",
+          "global_token_id": 676,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 677,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 678,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 679,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "schloss",
+          "token_type": "text",
+          "global_token_id": 680,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 681,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 682,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 683,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "Anwältin",
+          "token_type": "text",
+          "global_token_id": 684,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 685,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 686,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 687,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": "hob",
+          "token_type": "text",
+          "global_token_id": 688,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 689,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 690,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 691,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": "Augenbraue",
+          "token_type": "text",
+          "global_token_id": 692,
+          "sentence_token_id": 34
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 693,
+          "sentence_token_id": 35
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 30,
+      "sentence_body": "+/- „Was haben deine Brüder genommen?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 694,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 695,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 696,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 697,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 698,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Was",
+          "token_type": "text",
+          "global_token_id": 699,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 700,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "haben",
+          "token_type": "text",
+          "global_token_id": 701,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 702,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "deine",
+          "token_type": "text",
+          "global_token_id": 703,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 704,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Brüder",
+          "token_type": "text",
+          "global_token_id": 705,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 706,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "genommen",
+          "token_type": "text",
+          "global_token_id": 707,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 708,
+          "sentence_token_id": 15
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 31,
+      "sentence_body": "“, fragte Lorenz’ Freund dreißig Jahre später.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 709,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 710,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 711,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "fragte",
+          "token_type": "text",
+          "global_token_id": 712,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 713,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 714,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "’",
+          "token_type": "punctuation",
+          "global_token_id": 715,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 716,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Freund",
+          "token_type": "text",
+          "global_token_id": 717,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 718,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "dreißig",
+          "token_type": "text",
+          "global_token_id": 719,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 720,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Jahre",
+          "token_type": "text",
+          "global_token_id": 721,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 722,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "später",
+          "token_type": "text",
+          "global_token_id": 723,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 724,
+          "sentence_token_id": 16
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 32,
+      "sentence_body": "„Hat sich dein jüngerer Bruder wirklich den Fernseher ausgesucht?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 725,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "Hat",
+          "token_type": "text",
+          "global_token_id": 726,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 727,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "sich",
+          "token_type": "text",
+          "global_token_id": 728,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 729,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "dein",
+          "token_type": "text",
+          "global_token_id": 730,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 731,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "jüngerer",
+          "token_type": "text",
+          "global_token_id": 732,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 733,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 734,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 735,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "wirklich",
+          "token_type": "text",
+          "global_token_id": 736,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 737,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "den",
+          "token_type": "text",
+          "global_token_id": 738,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 739,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "Fernseher",
+          "token_type": "text",
+          "global_token_id": 740,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 741,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "ausgesucht",
+          "token_type": "text",
+          "global_token_id": 742,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 743,
+          "sentence_token_id": 19
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 33,
+      "sentence_body": "“ +/- „Es war ein sehr toller Fernseher.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 744,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 745,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 746,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 747,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 748,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 749,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 750,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Es",
+          "token_type": "text",
+          "global_token_id": 751,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 752,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 753,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 754,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "ein",
+          "token_type": "text",
+          "global_token_id": 755,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 756,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "sehr",
+          "token_type": "text",
+          "global_token_id": 757,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 758,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "toller",
+          "token_type": "text",
+          "global_token_id": 759,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 760,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "Fernseher",
+          "token_type": "text",
+          "global_token_id": 761,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 762,
+          "sentence_token_id": 19
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 34,
+      "sentence_body": "Er war gigantisch und hatte hochqualitative Lautsprecher.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Er",
+          "token_type": "text",
+          "global_token_id": 763,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 764,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 765,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 766,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "gigantisch",
+          "token_type": "text",
+          "global_token_id": 767,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 768,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 769,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 770,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "hatte",
+          "token_type": "text",
+          "global_token_id": 771,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 772,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "hochqualitative",
+          "token_type": "text",
+          "global_token_id": 773,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 774,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Lautsprecher",
+          "token_type": "text",
+          "global_token_id": 775,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 776,
+          "sentence_token_id": 14
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 35,
+      "sentence_body": "Vielleicht war er sentimental für ihn.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Vielleicht",
+          "token_type": "text",
+          "global_token_id": 777,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 778,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 779,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 780,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 781,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 782,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "sentimental",
+          "token_type": "text",
+          "global_token_id": 783,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 784,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "für",
+          "token_type": "text",
+          "global_token_id": 785,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 786,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "ihn",
+          "token_type": "text",
+          "global_token_id": 787,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 788,
+          "sentence_token_id": 12
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 36,
+      "sentence_body": "Vater liebte Science-Fiction Filme.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Vater",
+          "token_type": "text",
+          "global_token_id": 789,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 790,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "liebte",
+          "token_type": "text",
+          "global_token_id": 791,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 792,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "Science-Fiction",
+          "token_type": "text",
+          "global_token_id": 793,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 794,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Filme",
+          "token_type": "text",
+          "global_token_id": 795,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 796,
+          "sentence_token_id": 8
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 37,
+      "sentence_body": "Obwohl… hat mein Bruder jemals welche mit ihm gesehen?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Obwohl",
+          "token_type": "text",
+          "global_token_id": 797,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": "…",
+          "token_type": "punctuation",
+          "global_token_id": 798,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 799,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "hat",
+          "token_type": "text",
+          "global_token_id": 800,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 801,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "mein",
+          "token_type": "text",
+          "global_token_id": 802,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 803,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 804,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 805,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "jemals",
+          "token_type": "text",
+          "global_token_id": 806,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 807,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "welche",
+          "token_type": "text",
+          "global_token_id": 808,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 809,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "mit",
+          "token_type": "text",
+          "global_token_id": 810,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 811,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "ihm",
+          "token_type": "text",
+          "global_token_id": 812,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 813,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "gesehen",
+          "token_type": "text",
+          "global_token_id": 814,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 815,
+          "sentence_token_id": 19
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 38,
+      "sentence_body": "Ich erinnere mich jetzt nicht.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Ich",
+          "token_type": "text",
+          "global_token_id": 816,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 817,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "erinnere",
+          "token_type": "text",
+          "global_token_id": 818,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 819,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "mich",
+          "token_type": "text",
+          "global_token_id": 820,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 821,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "jetzt",
+          "token_type": "text",
+          "global_token_id": 822,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 823,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "nicht",
+          "token_type": "text",
+          "global_token_id": 824,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 825,
+          "sentence_token_id": 10
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 39,
+      "sentence_body": "“ +/- „Und dein älterer Bruder?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 826,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 827,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 828,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 829,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 830,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 831,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 832,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Und",
+          "token_type": "text",
+          "global_token_id": 833,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 834,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "dein",
+          "token_type": "text",
+          "global_token_id": 835,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 836,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "älterer",
+          "token_type": "text",
+          "global_token_id": 837,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 838,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "Bruder",
+          "token_type": "text",
+          "global_token_id": 839,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 840,
+          "sentence_token_id": 15
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 40,
+      "sentence_body": "“ +/- „Vaters Auto.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 841,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 842,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 843,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 844,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 845,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 846,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 847,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Vaters",
+          "token_type": "text",
+          "global_token_id": 848,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 849,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "Auto",
+          "token_type": "text",
+          "global_token_id": 850,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 851,
+          "sentence_token_id": 11
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 41,
+      "sentence_body": "Er hat es zwei Wochen später zu Schrott gefahren.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Er",
+          "token_type": "text",
+          "global_token_id": 852,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 853,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "hat",
+          "token_type": "text",
+          "global_token_id": 854,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 855,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "es",
+          "token_type": "text",
+          "global_token_id": 856,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 857,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "zwei",
+          "token_type": "text",
+          "global_token_id": 858,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 859,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Wochen",
+          "token_type": "text",
+          "global_token_id": 860,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 861,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "später",
+          "token_type": "text",
+          "global_token_id": 862,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 863,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "zu",
+          "token_type": "text",
+          "global_token_id": 864,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 865,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "Schrott",
+          "token_type": "text",
+          "global_token_id": 866,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 867,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": "gefahren",
+          "token_type": "text",
+          "global_token_id": 868,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 869,
+          "sentence_token_id": 18
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 42,
+      "sentence_body": "“ +/- „Und du hast dir diese Uhr ausgesucht?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 870,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 871,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 872,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 873,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 874,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 875,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 876,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Und",
+          "token_type": "text",
+          "global_token_id": 877,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 878,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "du",
+          "token_type": "text",
+          "global_token_id": 879,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 880,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "hast",
+          "token_type": "text",
+          "global_token_id": 881,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 882,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "dir",
+          "token_type": "text",
+          "global_token_id": 883,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 884,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "diese",
+          "token_type": "text",
+          "global_token_id": 885,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 886,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "Uhr",
+          "token_type": "text",
+          "global_token_id": 887,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 888,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "ausgesucht",
+          "token_type": "text",
+          "global_token_id": 889,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 890,
+          "sentence_token_id": 21
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 43,
+      "sentence_body": "“ +/- „Mein Vater baute Uhren auseinander, reparierte jedes Teil und baute sie wieder zusammen.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 891,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 892,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 893,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 894,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 895,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 896,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 897,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Mein",
+          "token_type": "text",
+          "global_token_id": 898,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 899,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "Vater",
+          "token_type": "text",
+          "global_token_id": 900,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 901,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "baute",
+          "token_type": "text",
+          "global_token_id": 902,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 903,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "Uhren",
+          "token_type": "text",
+          "global_token_id": 904,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 905,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "auseinander",
+          "token_type": "text",
+          "global_token_id": 906,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 907,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 908,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": "reparierte",
+          "token_type": "text",
+          "global_token_id": 909,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 910,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": "jedes",
+          "token_type": "text",
+          "global_token_id": 911,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 912,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": "Teil",
+          "token_type": "text",
+          "global_token_id": 913,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 914,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 915,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 916,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "baute",
+          "token_type": "text",
+          "global_token_id": 917,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 918,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 919,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 920,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": "wieder",
+          "token_type": "text",
+          "global_token_id": 921,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 922,
+          "sentence_token_id": 32
+        },
+        {
+          "token_body": "zusammen",
+          "token_type": "text",
+          "global_token_id": 923,
+          "sentence_token_id": 33
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 924,
+          "sentence_token_id": 34
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 44,
+      "sentence_body": "Ich half, indem ich unterschiedliches Werkzeug brachte und er brachte mir bei, wie alles funktionierte.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Ich",
+          "token_type": "text",
+          "global_token_id": 925,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 926,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "half",
+          "token_type": "text",
+          "global_token_id": 927,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 928,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 929,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "indem",
+          "token_type": "text",
+          "global_token_id": 930,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 931,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "ich",
+          "token_type": "text",
+          "global_token_id": 932,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 933,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "unterschiedliches",
+          "token_type": "text",
+          "global_token_id": 934,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 935,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Werkzeug",
+          "token_type": "text",
+          "global_token_id": 936,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 937,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "brachte",
+          "token_type": "text",
+          "global_token_id": 938,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 939,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "und",
+          "token_type": "text",
+          "global_token_id": 940,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 941,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "er",
+          "token_type": "text",
+          "global_token_id": 942,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 943,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "brachte",
+          "token_type": "text",
+          "global_token_id": 944,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 945,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "mir",
+          "token_type": "text",
+          "global_token_id": 946,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 947,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "bei",
+          "token_type": "text",
+          "global_token_id": 948,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 949,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 950,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "wie",
+          "token_type": "text",
+          "global_token_id": 951,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 952,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": "alles",
+          "token_type": "text",
+          "global_token_id": 953,
+          "sentence_token_id": 29
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 954,
+          "sentence_token_id": 30
+        },
+        {
+          "token_body": "funktionierte",
+          "token_type": "text",
+          "global_token_id": 955,
+          "sentence_token_id": 31
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 956,
+          "sentence_token_id": 32
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 45,
+      "sentence_body": "Wir arbeiteten wochenlang an dieser Uhr, als ich vierzehn war.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Wir",
+          "token_type": "text",
+          "global_token_id": 957,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 958,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "arbeiteten",
+          "token_type": "text",
+          "global_token_id": 959,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 960,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "wochenlang",
+          "token_type": "text",
+          "global_token_id": 961,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 962,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "an",
+          "token_type": "text",
+          "global_token_id": 963,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 964,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "dieser",
+          "token_type": "text",
+          "global_token_id": 965,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 966,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "Uhr",
+          "token_type": "text",
+          "global_token_id": 967,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 968,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 969,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "als",
+          "token_type": "text",
+          "global_token_id": 970,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 971,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": "ich",
+          "token_type": "text",
+          "global_token_id": 972,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 973,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "vierzehn",
+          "token_type": "text",
+          "global_token_id": 974,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 975,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 976,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 977,
+          "sentence_token_id": 21
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 46,
+      "sentence_body": "Das sind gute Erinnerungen.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Das",
+          "token_type": "text",
+          "global_token_id": 978,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 979,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "sind",
+          "token_type": "text",
+          "global_token_id": 980,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 981,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "gute",
+          "token_type": "text",
+          "global_token_id": 982,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 983,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Erinnerungen",
+          "token_type": "text",
+          "global_token_id": 984,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 985,
+          "sentence_token_id": 8
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 47,
+      "sentence_body": "“ +/- „Aber Lorenz, merkst du, wie gut deine Wahl war?",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 986,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 987,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 988,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 989,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 990,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 991,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 992,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Aber",
+          "token_type": "text",
+          "global_token_id": 993,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 994,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 995,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 996,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 997,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "merkst",
+          "token_type": "text",
+          "global_token_id": 998,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 999,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "du",
+          "token_type": "text",
+          "global_token_id": 1000,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 1001,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1002,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "wie",
+          "token_type": "text",
+          "global_token_id": 1003,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1004,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "gut",
+          "token_type": "text",
+          "global_token_id": 1005,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1006,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "deine",
+          "token_type": "text",
+          "global_token_id": 1007,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1008,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "Wahl",
+          "token_type": "text",
+          "global_token_id": 1009,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1010,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "war",
+          "token_type": "text",
+          "global_token_id": 1011,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": "?",
+          "token_type": "punctuation",
+          "global_token_id": 1012,
+          "sentence_token_id": 27
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 48,
+      "sentence_body": "Das ist eine Ludovic Évrard Horstenbach Uhr!",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Das",
+          "token_type": "text",
+          "global_token_id": 1013,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1014,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "ist",
+          "token_type": "text",
+          "global_token_id": 1015,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1016,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "eine",
+          "token_type": "text",
+          "global_token_id": 1017,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1018,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Ludovic",
+          "token_type": "text",
+          "global_token_id": 1019,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1020,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Évrard",
+          "token_type": "text",
+          "global_token_id": 1021,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1022,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "Horstenbach",
+          "token_type": "text",
+          "global_token_id": 1023,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1024,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "Uhr",
+          "token_type": "text",
+          "global_token_id": 1025,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "!",
+          "token_type": "punctuation",
+          "global_token_id": 1026,
+          "sentence_token_id": 14
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 49,
+      "sentence_body": "Es muss in der Welt die einzige sein, die in vollständig funktionierendem Zustand ist.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Es",
+          "token_type": "text",
+          "global_token_id": 1027,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1028,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "muss",
+          "token_type": "text",
+          "global_token_id": 1029,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1030,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "in",
+          "token_type": "text",
+          "global_token_id": 1031,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1032,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "der",
+          "token_type": "text",
+          "global_token_id": 1033,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1034,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "Welt",
+          "token_type": "text",
+          "global_token_id": 1035,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1036,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 1037,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1038,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "einzige",
+          "token_type": "text",
+          "global_token_id": 1039,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1040,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "sein",
+          "token_type": "text",
+          "global_token_id": 1041,
+          "sentence_token_id": 15
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 1042,
+          "sentence_token_id": 16
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1043,
+          "sentence_token_id": 17
+        },
+        {
+          "token_body": "die",
+          "token_type": "text",
+          "global_token_id": 1044,
+          "sentence_token_id": 18
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1045,
+          "sentence_token_id": 19
+        },
+        {
+          "token_body": "in",
+          "token_type": "text",
+          "global_token_id": 1046,
+          "sentence_token_id": 20
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1047,
+          "sentence_token_id": 21
+        },
+        {
+          "token_body": "vollständig",
+          "token_type": "text",
+          "global_token_id": 1048,
+          "sentence_token_id": 22
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1049,
+          "sentence_token_id": 23
+        },
+        {
+          "token_body": "funktionierendem",
+          "token_type": "text",
+          "global_token_id": 1050,
+          "sentence_token_id": 24
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1051,
+          "sentence_token_id": 25
+        },
+        {
+          "token_body": "Zustand",
+          "token_type": "text",
+          "global_token_id": 1052,
+          "sentence_token_id": 26
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1053,
+          "sentence_token_id": 27
+        },
+        {
+          "token_body": "ist",
+          "token_type": "text",
+          "global_token_id": 1054,
+          "sentence_token_id": 28
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 1055,
+          "sentence_token_id": 29
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 50,
+      "sentence_body": "Lorenz, du könntest sie für Millionen verkaufen!",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Lorenz",
+          "token_type": "text",
+          "global_token_id": 1056,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": ",",
+          "token_type": "punctuation",
+          "global_token_id": 1057,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1058,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "du",
+          "token_type": "text",
+          "global_token_id": 1059,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1060,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": "könntest",
+          "token_type": "text",
+          "global_token_id": 1061,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1062,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "sie",
+          "token_type": "text",
+          "global_token_id": 1063,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1064,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "für",
+          "token_type": "text",
+          "global_token_id": 1065,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1066,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": "Millionen",
+          "token_type": "text",
+          "global_token_id": 1067,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1068,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": "verkaufen",
+          "token_type": "text",
+          "global_token_id": 1069,
+          "sentence_token_id": 14
+        },
+        {
+          "token_body": "!",
+          "token_type": "punctuation",
+          "global_token_id": 1070,
+          "sentence_token_id": 15
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 51,
+      "sentence_body": "“ +/- „Ich weiß.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 1071,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1072,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "+",
+          "token_type": "punctuation",
+          "global_token_id": 1073,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": "/",
+          "token_type": "punctuation",
+          "global_token_id": 1074,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "-",
+          "token_type": "punctuation",
+          "global_token_id": 1075,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1076,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "„",
+          "token_type": "punctuation",
+          "global_token_id": 1077,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": "Ich",
+          "token_type": "text",
+          "global_token_id": 1078,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1079,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": "weiß",
+          "token_type": "text",
+          "global_token_id": 1080,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 1081,
+          "sentence_token_id": 11
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 52,
+      "sentence_body": "Jemand anderes hat mir das auch gesagt.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Jemand",
+          "token_type": "text",
+          "global_token_id": 1082,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1083,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "anderes",
+          "token_type": "text",
+          "global_token_id": 1084,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1085,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "hat",
+          "token_type": "text",
+          "global_token_id": 1086,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1087,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "mir",
+          "token_type": "text",
+          "global_token_id": 1088,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1089,
+          "sentence_token_id": 8
+        },
+        {
+          "token_body": "das",
+          "token_type": "text",
+          "global_token_id": 1090,
+          "sentence_token_id": 9
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1091,
+          "sentence_token_id": 10
+        },
+        {
+          "token_body": "auch",
+          "token_type": "text",
+          "global_token_id": 1092,
+          "sentence_token_id": 11
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1093,
+          "sentence_token_id": 12
+        },
+        {
+          "token_body": "gesagt",
+          "token_type": "text",
+          "global_token_id": 1094,
+          "sentence_token_id": 13
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 1095,
+          "sentence_token_id": 14
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 53,
+      "sentence_body": "Vor etwa sechsundzwanzig Jahren.",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "Vor",
+          "token_type": "text",
+          "global_token_id": 1096,
+          "sentence_token_id": 1
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1097,
+          "sentence_token_id": 2
+        },
+        {
+          "token_body": "etwa",
+          "token_type": "text",
+          "global_token_id": 1098,
+          "sentence_token_id": 3
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1099,
+          "sentence_token_id": 4
+        },
+        {
+          "token_body": "sechsundzwanzig",
+          "token_type": "text",
+          "global_token_id": 1100,
+          "sentence_token_id": 5
+        },
+        {
+          "token_body": " ",
+          "token_type": "space",
+          "global_token_id": 1101,
+          "sentence_token_id": 6
+        },
+        {
+          "token_body": "Jahren",
+          "token_type": "text",
+          "global_token_id": 1102,
+          "sentence_token_id": 7
+        },
+        {
+          "token_body": ".",
+          "token_type": "punctuation",
+          "global_token_id": 1103,
+          "sentence_token_id": 8
+        }
+      ],
+      "word_tokens": []
+    },
+    {
+      "text_id": 1781598942,
+      "sentence_id": 54,
+      "sentence_body": "“",
+      "grammar_annotations": [],
+      "vocab_annotations": [],
+      "tokens": [
+        {
+          "token_body": "“",
+          "token_type": "punctuation",
+          "global_token_id": 1104,
+          "sentence_token_id": 1
+        }
+      ],
+      "word_tokens": []
+    }
+  ]
+}

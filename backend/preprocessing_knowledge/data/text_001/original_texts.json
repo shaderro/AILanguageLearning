@@ -1,0 +1,12 @@
+{
+  "text_id": 1,
+  "text_title": "test_article_5sentences.txt",
+  "text_body": "Artificial intelligence has revolutionized the way we interact with technology in the modern world.\nMachine learning algorithms can now process vast amounts of data and identify complex patterns that humans might miss.\nNatural language processing enables computers to understand and generate human language with remarkable accuracy.\nDeep learning models have achieved breakthrough performance in computer vision, speech recognition, and autonomous systems.\nThe future of AI promises even more transformative applications across healthcare, education, transportation, and entertainment industries.",
+  "sentence_ids": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ]
+}

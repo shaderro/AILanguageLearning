@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends, Header
+from fastapi import FastAPI, Query, HTTPException, UploadFile, File, Form, BackgroundTasks, Depends, Header, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -543,7 +543,10 @@ async def startup_event():
                 for table in sorted(existing_tables):
                     print(f"   - {table}")
                 # 增量补表：已有库时仍创建 ORM 中新增且尚未存在的表
-                incremental_models = (MagicLinkToken, AuthSession, ArticleSegmentTask, PaddleWebhookEvent)
+                from database_system.business_logic.models import (ReadingArticle, ReadingAnalysis,
+                    ArticleKnowledgePoint, ArticleKnowledgeExample, UserKnowledgeProgress, ReadingQuestionSet, ReadingQuestion)
+                incremental_models = (MagicLinkToken, AuthSession, ArticleSegmentTask, PaddleWebhookEvent,
+                    ReadingArticle, ReadingAnalysis, ArticleKnowledgePoint, ArticleKnowledgeExample, UserKnowledgeProgress, ReadingQuestionSet, ReadingQuestion)
                 missing_tables = [
                     m.__table__
                     for m in incremental_models
@@ -719,7 +722,12 @@ else:
 
 # 注册认证API路由
 try:
-    from backend.api.auth_routes import router as auth_router, get_current_user
+    from backend.api.auth_routes import (
+        router as auth_router,
+        get_current_user,
+        get_bearer_or_cookie_token,
+    )
+    from backend.api.db_deps import get_db_session
     from database_system.business_logic.models import User
     app.include_router(auth_router)
     print("[OK] 注册认证API路由: /api/auth")
@@ -809,6 +817,90 @@ async def root():
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "message": "API is running"}
+
+
+async def _get_german_reading_user(
+    request: Request,
+    raw_token: Optional[str] = Depends(get_bearer_or_cookie_token),
+    db_session=Depends(get_db_session),
+):
+    """Allow anonymous access only to loopback requests in local development."""
+    from backend.config import ENV
+
+    client_host = request.client.host if request.client else ""
+    if ENV == "development" and client_host in {"127.0.0.1", "::1"} and not raw_token:
+        return None
+    return get_current_user(raw_token=raw_token, session=db_session)
+
+
+from backend.api.reading_routes import router as reading_router
+app.include_router(reading_router)
+from backend.api.reading_import_routes import router as reading_import_router
+app.include_router(reading_import_router)
+
+
+@app.post("/api/v2/german-reading/review")
+async def generate_german_reading_review(
+    payload: dict,
+    current_user: Optional[User] = Depends(_get_german_reading_user),
+):
+    """Create transient review questions for the selected points in one reading session."""
+    article = payload.get("article") if isinstance(payload, dict) else None
+    points = payload.get("knowledge_points") if isinstance(payload, dict) else None
+    if not isinstance(article, str) or not article.strip():
+        raise HTTPException(status_code=400, detail="缺少文章原文")
+    if len(article) > 12000:
+        raise HTTPException(status_code=400, detail="文章过长，无法生成复习题")
+    if not isinstance(points, list):
+        raise HTTPException(status_code=400, detail="knowledge_points 必须是列表")
+    if not points:
+        return {"questions": [], "ids_are_persisted": False}
+    if len(points) > 40:
+        raise HTTPException(status_code=400, detail="待复习知识点过多")
+
+    normalized_points = []
+    seen_ids = set()
+    for index, point in enumerate(points):
+        if not isinstance(point, dict):
+            raise HTTPException(status_code=400, detail=f"第 {index + 1} 个知识点格式无效")
+        point_id = point.get("id")
+        point_type = point.get("type")
+        display_name = point.get("display_name")
+        if not isinstance(point_id, str) or not point_id.strip() or point_id in seen_ids:
+            raise HTTPException(status_code=400, detail=f"第 {index + 1} 个知识点 ID 无效或重复")
+        if point_type not in {"vocabulary", "expression", "grammar"}:
+            raise HTTPException(status_code=400, detail=f"知识点 {point_id} 类型无效")
+        if not isinstance(display_name, str) or not display_name.strip():
+            raise HTTPException(status_code=400, detail=f"知识点 {point_id} 缺少 display_name")
+        sentence_contexts = point.get("sentence_contexts", [])
+        if not isinstance(sentence_contexts, list):
+            sentence_contexts = []
+        seen_ids.add(point_id)
+        normalized_points.append({
+            "id": point_id,
+            "type": point_type,
+            "display_name": display_name.strip(),
+            "explanation": str(point.get("explanation") or "").strip(),
+            "sentence_contexts": [
+                str(sentence).strip() for sentence in sentence_contexts
+                if isinstance(sentence, str) and sentence.strip()
+            ][:5],
+        })
+
+    try:
+        from backend.assistants.review_quiz_generator import ReviewQuizGenerator
+
+        generator = ReviewQuizGenerator()
+        questions = await run_in_threadpool(
+            generator.generate,
+            article.strip(),
+            normalized_points,
+            str(payload.get("level") or "B1"),
+        )
+        return {"questions": questions, "ids_are_persisted": False}
+    except Exception as error:
+        print(f"❌ [GermanReadingReview] 题目生成失败: {type(error).__name__}: {error}")
+        raise HTTPException(status_code=502, detail="复习题生成暂时失败，请重试") from error
 
 @app.get("/api/debug/db-info")
 async def debug_db_info():

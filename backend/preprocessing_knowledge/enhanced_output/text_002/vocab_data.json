@@ -1,0 +1,148 @@
+{
+  "vocab_expressions": [
+    {
+      "vocab_id": 1,
+      "vocab_body": "potawatomi",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 1,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 2,
+      "vocab_body": "warrior",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 2,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 3,
+      "vocab_body": "ambushed",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 3,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 4,
+      "vocab_body": "evacuated",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 4,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            23
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 5,
+      "vocab_body": "dearborn",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 5,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            27
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 6,
+      "vocab_body": "pictured",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 6,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 7,
+      "vocab_body": "present-day",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 7,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            38
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 8,
+      "vocab_body": "chicago",
+      "explanation": "",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 8,
+          "text_id": 2,
+          "sentence_id": 1,
+          "context_explanation": "Potawatomi warriors ambushed a United States Army convoy after it had evacuated Fort Dearborn (site pictured), in present-day Chicago, and razed the fort.",
+          "token_indices": [
+            40
+          ]
+        }
+      ]
+    }
+  ]
+}

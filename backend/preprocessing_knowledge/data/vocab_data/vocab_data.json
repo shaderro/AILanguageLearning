@@ -1,0 +1,599 @@
+{
+  "vocab_expressions": [
+    {
+      "vocab_id": 1,
+      "vocab_body": "artificial",
+      "explanation": "Artificial 是一个形容词，意思是“人造的”或“非自然的”。它用来描述那些由人类制造或创造的事物，而非自然产生或存在的。这个词也可以用来形容那些模仿自然但并非真实的事物，如“artificial flowers”（人造花）或“artificial intelligence”（人工智能）。在某些情况下，它还可以带有贬义，表示“虚假的”或“不真诚的”，如“artificial smile”（假笑）。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 1,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"这里的 'Artificial' 指的是由人类创造或制造的，不是自然形成的。在这句话中，'Artificial intelligence' 指的是由人类开发出来的智能系统或技术。\"}\n```",
+          "token_indices": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 2,
+      "vocab_body": "intelligence",
+      "explanation": "Intelligence is a noun that refers to the ability to acquire and apply knowledge and skills. It encompasses the capacity for reasoning, problem-solving, learning, understanding complex ideas, and adapting to new situations. In the context of technology, 'artificial intelligence' refers to the simulation of human intelligence in machines that are programmed to think like humans and mimic their actions.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 2,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'intelligence'指的是人工智能（AI）所具备的智能能力，即机器模拟人类思维和学习的能力，使得我们与技术互动的方式发生了革命性的变化。\"}\n```",
+          "token_indices": [
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 3,
+      "vocab_body": "revolutionized",
+      "explanation": "revolutionized 是动词 revolutionize 的过去分词形式，意思是彻底改变或革新，通常指某种技术、方法或观念带来的巨大变革。这个词强调改变的深度和广度，常常用于描述对某个领域或行业的重大影响。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 3,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'revolutionized' 意思是人工智能彻底改变了我们与技术互动的方式，带来了巨大的进步和变革。\"}\n```",
+          "token_indices": [
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 4,
+      "vocab_body": "interact",
+      "explanation": "interact 是一个动词，意思是“互动”、“交流”或“相互作用”。它指的是两个或更多的人、事物或系统之间的相互影响或沟通。在不同的语境中，interact 可以指人与人之间的交流，也可以指人与机器、系统或环境之间的互动。这个词强调了双向或多向的动态过程，而不是单向的作用。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 4,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'interact' 指的是我们与科技之间的交流和互动方式，比如使用智能手机、语音助手或社交媒体等。AI 改变了这些互动的方式，使其更加智能和便捷。\"}\n```",
+          "token_indices": [
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 5,
+      "vocab_body": "technology",
+      "explanation": "technology是一个名词，指应用科学知识来解决实际问题或实现特定目标的工具、机器、系统或方法的总称。它可以指具体的设备或装置，也可以指更广泛的技术领域或技术手段。在现代社会中，technology通常与电子、计算机、通讯等领域相关。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 5,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'technology'指的是现代世界中我们使用的各种科技产品和系统，比如电脑、智能手机、互联网等。它指的是所有帮助我们与人工智能互动的科技工具和设备。\"}\n```",
+          "token_indices": [
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 6,
+      "vocab_body": "machine",
+      "explanation": "Machine 是一个名词，有以下几种含义：\n1. 机器：一种由零件组成的装置，能够利用能量来完成特定的工作或任务。\n2. 计算机或电子设备：指代电脑或其他电子设备。\n3. 机构或系统：比喻一个复杂的组织或系统，如政治机器。\n4. 交通工具：在某些语境下可以指代车辆，如 sewing machine（缝纫机）。\n\n在技术领域，machine 通常指代能够执行计算或自动化任务的设备或系统。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 6,
+          "text_id": 1,
+          "sentence_id": 2,
+          "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'Machine' 指的是计算机或电子设备，特别是能够执行复杂计算和数据处理任务的系统。'Machine learning' 指的是这些计算机系统通过算法从数据中学习并改进的能力。\"}\n```",
+          "token_indices": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 7,
+      "vocab_body": "algorithm",
+      "explanation": "Algorithms are step-by-step procedures or sets of rules designed to perform a specific task or solve a particular problem. In computer science, algorithms are used to process data, perform calculations, or automate decision-making. They can range from simple instructions to complex mathematical formulas. Algorithms are fundamental to various fields, including machine learning, where they help analyze data and identify patterns.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 7,
+          "text_id": 1,
+          "sentence_id": 2,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'algorithms'指的是机器学习中用于处理大量数据和识别复杂模式的数学步骤或规则集合。\"}\n```",
+          "token_indices": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 8,
+      "vocab_body": "process",
+      "explanation": "The word 'process' can function as both a verb and a noun. As a verb, it means to perform a series of operations on something in order to change or deal with it, especially using a computer. For example, 'The computer processes data.' As a noun, it refers to a series of actions or steps taken to achieve a particular end, such as 'The manufacturing process is complex.' In the context of computing and data handling, 'process' often refers to the manipulation or analysis of data by a computer system.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 8,
+          "text_id": 1,
+          "sentence_id": 2,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'process' 指的是机器学习算法对大量数据进行处理和分析的能力，即算法能够接收、整理和理解这些数据。\"}\n```",
+          "token_indices": [
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 9,
+      "vocab_body": "vast",
+      "explanation": "vast是一个形容词，意思是“巨大的”、“广阔的”、“大量的”。它用来描述在规模、数量或范围上非常大的事物。例如，vast可以用于描述面积广阔的土地（vast land）、大量的数据（vast amounts of data）或广泛的知识（vast knowledge）。这个词强调事物在尺寸或数量上的极端庞大，常常带有超出常规或难以完全理解的意味。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 9,
+          "text_id": 1,
+          "sentence_id": 2,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'vast' 用来形容数据量非常大，超出一般的规模，强调机器学习算法可以处理的数据量是巨大的。\"}\n```",
+          "token_indices": [
+            13
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 10,
+      "vocab_body": "complex",
+      "explanation": "complex 是一个形容词，意思是复杂的、复合的或难以理解的。它可以用来描述由许多相互关联的部分或因素组成的事物，这些部分或因素使得整体难以分析或理解。例如，复杂的问题、复杂的系统或复杂的模式。此外，complex 也可以作为名词使用，表示一个综合体或复合体，如建筑群或心理情结。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 10,
+          "text_id": 1,
+          "sentence_id": 2,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'complex' 指的是数据中的模式或关系非常复杂、难以理解或识别，通常涉及多个变量或层次，人类可能难以发现或理解这些模式。\"}\n```",
+          "token_indices": [
+            25
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 11,
+      "vocab_body": "natural",
+      "explanation": "Natural 是一个形容词，有以下几种含义：\n1. 自然的，与自然界有关的，不是人为制造的。\n2. 天生的，与生俱来的，不是后天习得的。\n3. 正常的，符合常理的，不奇怪的。\n4. 不做作的，表现自然的，不刻意伪装的。\n\n在语言学习方面，'natural'常用于描述语言或行为是自然流畅的，符合母语者习惯的。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 11,
+          "text_id": 1,
+          "sentence_id": 3,
+          "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'Natural' 指的是与人类自然使用的语言相关，而不是计算机编程语言或人工语言。它强调了计算机处理的是人类日常交流中使用的语言。\"}\n```",
+          "token_indices": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 12,
+      "vocab_body": "processing",
+      "explanation": "Processing is a noun that refers to the act of performing a series of operations on something in order to change or analyze it. In computing, it often means the manipulation of data by a computer program. The term can also refer to the preparation or treatment of materials in manufacturing or other industries. It implies a systematic transformation or handling of input to produce a desired output.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 12,
+          "text_id": 1,
+          "sentence_id": 3,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'processing' 指的是计算机对自然语言（人类语言）进行分析、理解和处理的过程，使其能够理解和生成人类语言。\"}\n```",
+          "token_indices": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 13,
+      "vocab_body": "enables",
+      "explanation": "enables是一个动词，意思是使能够、使成为可能。它表示提供必要的条件或手段让某事得以发生或实现。这个词通常用于描述一种能力或机会的赋予。在技术或系统相关的语境中，它常用来指某种技术或功能使得特定操作成为可能。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 13,
+          "text_id": 1,
+          "sentence_id": 3,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'enables' 的意思是让计算机有能力去做某事，即让计算机能够理解和生成人类语言。它表示自然语言处理技术为计算机提供了这种能力。\"}\n```",
+          "token_indices": [
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 14,
+      "vocab_body": "generate",
+      "explanation": "generate 是一个动词，意思是产生、制造或创造出某物。在技术或计算机领域，它常指通过程序或算法自动产生数据、文本、图像等内容。例如，计算机可以生成报告、音乐或图像。generate 也可以用于描述产生电力、热量等物理过程。这个词强调从无到有的创造过程。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 14,
+          "text_id": 1,
+          "sentence_id": 3,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'generate' 的意思是计算机能够根据理解的人类语言创造出新的、有意义的语言内容，比如回答问题、写文章或对话。\"}\n```",
+          "token_indices": [
+            17
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 15,
+      "vocab_body": "remarkable",
+      "explanation": "remarkable是一个形容词，意思是“非凡的，显著的，引人注目的”。它用来描述某事物因其不寻常或出色的特质而值得注意或特别提及。这个词通常带有积极的含义，强调某事物的卓越性或独特性。remarkable可以用于形容人、事物、成就、能力等各种情况。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 15,
+          "text_id": 1,
+          "sentence_id": 3,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'remarkable' 用来形容计算机理解和生成人类语言的准确度非常高，超出寻常，令人印象深刻。\"}\n```",
+          "token_indices": [
+            25
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 16,
+      "vocab_body": "accuracy",
+      "explanation": "accuracy是一个名词，表示精确度或准确性。它指的是某事物与真实或正确状态的接近程度，或者在执行任务时达到正确结果的程度。在科学、工程、统计和日常用语中常用这个词来描述测量、计算或预测的正确性。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 16,
+          "text_id": 1,
+          "sentence_id": 3,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'accuracy'指的是计算机理解和生成人类语言的精确程度，即计算机能够多么准确地完成这些任务。\"}\n```",
+          "token_indices": [
+            27
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 17,
+      "vocab_body": "deep",
+      "explanation": "The word 'deep' is an adjective with multiple meanings. In the context of 'deep learning', it refers to a type of machine learning that involves multiple layers of neural networks, allowing for complex pattern recognition and data processing. More generally, 'deep' can mean: 1) extending far down from the top or surface (e.g., a deep well), 2) intense or extreme (e.g., deep sadness), 3) profound or difficult to understand (e.g., a deep thought), 4) low in pitch (e.g., a deep voice), or 5) fully absorbed or involved (e.g., deep in thought).",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 17,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'Deep' 指的是深度学习（Deep Learning），这是一种机器学习方法，使用多层神经网络来处理复杂的数据和任务。\"}\n```",
+          "token_indices": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 18,
+      "vocab_body": "model",
+      "explanation": "models: (名词) 1. 在机器学习和人工智能领域，指通过算法训练得到的数学表示或框架，能够根据输入数据进行预测或决策。2. 更广泛的含义可以指任何系统或过程的简化表示或抽象描述，用于分析或预测。3. 也可以指物理或概念上的原型、范例或样板。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 18,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'models'指的是深度学习中的数学模型或算法，它们被设计用来处理和分析数据，从而在计算机视觉、语音识别和自主系统等领域取得突破性表现。\"}\n```",
+          "token_indices": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 19,
+      "vocab_body": "achieved",
+      "explanation": "The verb 'achieved' means to successfully reach a desired objective, goal, or result through effort or skill. It implies the completion or attainment of something significant after working towards it. 'Achieved' can be used in various contexts to describe accomplishments in different fields such as academics, sports, career, or personal development. The past tense form 'achieved' indicates that the success or attainment happened in the past. This verb often carries a positive connotation of success and fulfillment.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 19,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'achieved' 表示深度学习模型在计算机视觉、语音识别和自主系统等领域取得了显著的、突破性的性能表现。\"}\n```",
+          "token_indices": [
+            9
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 20,
+      "vocab_body": "breakthrough",
+      "explanation": "breakthrough 是一个名词，意思是“突破”或“重大进展”。它指的是在某个领域或问题上取得了显著的进步或成功，通常解决了之前难以克服的障碍。这个词也可以用作形容词，表示“突破性的”或“开创性的”，用来描述具有重大影响或创新的成果或发现。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 20,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'breakthrough' 指的是深度学习模型在计算机视觉、语音识别和自主系统等领域取得了重大进展或突破性的成果，意味着这些模型在这些领域的表现比以前有了显著的提升。\"}\n```",
+          "token_indices": [
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 21,
+      "vocab_body": "performance",
+      "explanation": "performance 是一个名词，主要有以下含义：\n1. 表现，性能：指某人或某物在特定活动或功能中的表现或能力水平。常用于描述机器、系统、运动员、学生等的表现。\n2. 演出，表演：指在观众面前进行的艺术或娱乐表演，如音乐会、戏剧等。\n3. 执行，履行：指完成某项任务或职责的行为。\n4. (计算机)性能：特指计算机系统或程序的运行效率和能力。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 21,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'performance' 指的是深度学习模型在计算机视觉、语音识别和自主系统等任务中的表现或能力，即它们在这些任务中取得的成果或效果。\"}\n```",
+          "token_indices": [
+            13
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 22,
+      "vocab_body": "vision",
+      "explanation": "vision 是一个名词，有以下几种含义：1. 视力，视觉能力，指用眼睛看东西的能力；2. 视野，视线范围，指能够看到的区域；3. 想象，愿景，指对未来的设想或规划；4. 在技术领域（如计算机视觉），指让机器具备识别和理解图像或视频的能力。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 22,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'vision' 指的是计算机视觉（computer vision），即让计算机能够从图像或视频中获取信息、理解内容的技术领域。\"}\n```",
+          "token_indices": [
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 23,
+      "vocab_body": "recognition",
+      "explanation": "recognition 是一个名词，主要有以下含义：\n1. 识别：指辨认或确认某人、某物的能力或过程。\n2. 承认：指对某事物存在、真实或合法的正式认可。\n3. 表彰：指对某人成就或贡献的公开认可和赞赏。\n4. 认知：在心理学中，指对信息的感知和理解过程。\n在技术领域（如语音识别），它特指系统对特定模式或特征的自动检测和分类能力。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 23,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'recognition' 指的是计算机系统通过深度学习模型来识别和理解语音的能力。\"}\n```",
+          "token_indices": [
+            24
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 24,
+      "vocab_body": "autonomous",
+      "explanation": "autonomous是一个形容词，主要有以下含义和用法：\n1. 指能够独立运作或自我管理的，不需要外部控制或干预的。例如：autonomous robots（自主机器人）\n2. 指政治或行政上自治的，有自我管理权的。例如：an autonomous region（自治区）\n3. 在心理学或哲学中，指个体具有自我决定能力的。\n该词源自希腊语，由auto（自我）和nomos（法则）组成，字面意思是\"自我管理\"。\n常见搭配：autonomous system（自主系统）、autonomous vehicle（自动驾驶车辆）、autonomous decision（自主决定）等。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 24,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'autonomous' 用来描述那些能够独立运行、不需要人类直接控制的系统，比如自动驾驶汽车或机器人。\"}\n```",
+          "token_indices": [
+            29
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 25,
+      "vocab_body": "system",
+      "explanation": "systems是一个名词，复数形式，指代多个系统。它的基本含义包括：1. 一组相互关联或相互作用的事物组成的复杂整体，如计算机系统、生态系统等；2. 一套有组织的方法或程序，如教育系统、操作系统等；3. 人体或生物的器官系统，如消化系统、神经系统等。在技术领域，systems常用来指代复杂的工程或技术装置集合。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 25,
+          "text_id": 1,
+          "sentence_id": 4,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'systems'指的是能够自主运行或执行任务的复杂技术装置或框架，比如自动驾驶汽车、机器人等自主系统。\"}\n```",
+          "token_indices": [
+            31
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 26,
+      "vocab_body": "transformative",
+      "explanation": "transformative是一个形容词，意思是“变革性的”或“有重大改变的”。它描述某事物具有彻底改变或革新现有状态、方式或系统的能力或潜力。这个词通常用于强调某种技术、方法或事件带来的深远影响和积极变化。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 26,
+          "text_id": 1,
+          "sentence_id": 5,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'transformative' 意思是AI的应用将会带来巨大的改变，彻底革新医疗、教育、交通和娱乐行业。它强调AI将不仅仅改进这些领域，而是会从根本上改变它们的工作方式和效果。\"}\n```",
+          "token_indices": [
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 27,
+      "vocab_body": "application",
+      "explanation": "applications 是一个名词，复数形式。它有以下几个主要含义：\n1. 指软件应用程序，即设计用于执行特定任务的计算机程序。\n2. 指某种理论、发现或发明的实际运用或实施。\n3. 可以表示正式申请或请求，如工作申请或学校申请。\n4. 在某些语境下也可以指药物的外用或敷用。\n在这个语境中，它指的是人工智能技术在不同领域中的实际运用和实施。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 27,
+          "text_id": 1,
+          "sentence_id": 5,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'applications'指的是AI技术在医疗、教育、交通和娱乐等行业中的具体使用或实施方式，即AI如何被应用于这些领域以带来变革性的影响。\"}\n```",
+          "token_indices": [
+            17
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 28,
+      "vocab_body": "healthcare",
+      "explanation": "Healthcare refers to the organized provision of medical care to individuals or a community. It encompasses all goods and services designed to promote health, including prevention, diagnosis, treatment, and rehabilitation. The term can refer to both the system that delivers these services and the field of study related to maintaining or restoring health. Healthcare professionals include doctors, nurses, pharmacists, and other medical workers. The industry includes hospitals, clinics, pharmaceutical companies, and health insurance providers.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 28,
+          "text_id": 1,
+          "sentence_id": 5,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'healthcare' 指的是医疗保健行业，包括医院、诊所、医生、护士以及所有与医疗和健康相关的服务和技术。AI 在这个领域的应用可能包括疾病诊断、药物研发、患者护理等。\"}\n```",
+          "token_indices": [
+            21
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 29,
+      "vocab_body": "industry",
+      "explanation": "industries 是名词，指工业、产业或行业。它可以指代特定领域的商业活动或生产部门，如制造业、服务业等。也可以泛指所有经济生产活动的集合。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 29,
+          "text_id": 1,
+          "sentence_id": 5,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'industries' 指的是医疗、教育、交通和娱乐这些不同的行业或产业领域。AI的未来应用将在这些行业中带来变革性的影响。\"}\n```",
+          "token_indices": [
+            34
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 1,
+      "vocab_body": "artificial",
+      "explanation": "Artificial is an adjective that describes something that is made or produced by human beings rather than occurring naturally. It often implies that the object or concept is not genuine or real in the traditional sense, but is created to imitate or replicate natural things. Common uses include 'artificial intelligence' (human-made intelligence), 'artificial light' (light not from the sun), and 'artificial flavors' (chemically created flavors).",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 1,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'Artificial' 指的是由人类创造或制造的，不是自然产生的。'Artificial intelligence' 指的是由人类设计和开发的智能系统或技术。\"}\n```",
+          "token_indices": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 2,
+      "vocab_body": "intelligence",
+      "explanation": "Intelligence is a noun that refers to the ability to acquire and apply knowledge and skills. It encompasses the capacity for reasoning, problem-solving, learning, understanding, and adapting to new situations. In the context of technology, 'artificial intelligence' refers to machines or systems designed to perform tasks that typically require human intelligence, such as visual perception, speech recognition, decision-making, and language translation.",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 2,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这个句子中，'intelligence'指的是人工智能（Artificial Intelligence）中的'智能'，即机器模拟人类思维和学习的能力。\"}\n```",
+          "token_indices": [
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 3,
+      "vocab_body": "revolutionized",
+      "explanation": "revolutionized 是动词 revolutionize 的过去分词形式，意思是彻底改变或革新某事物，使其与之前的状态完全不同。这个词通常用于描述某种技术、方法或思想带来的巨大变革。作为及物动词，它后面通常接一个名词或名词短语作为宾语。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 3,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这里，'revolutionized' 的意思是人工智能彻底改变了技术领域，带来了巨大的进步和革新。\"}\n```",
+          "token_indices": [
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "vocab_id": 4,
+      "vocab_body": "technology",
+      "explanation": "technology是一个名词，指科学知识的实际应用，特别是在工业、商业或日常生活中使用的机器、设备、方法和系统。它涵盖了从简单工具到复杂系统的各种发明和创新。technology也可以指特定领域的技术知识或技术发展水平。",
+      "source": "auto",
+      "is_starred": false,
+      "examples": [
+        {
+          "vocab_id": 4,
+          "text_id": 1,
+          "sentence_id": 1,
+          "context_explanation": "```json\n{\"explanation\": \"在这句话中，'technology'指的是人工智能所影响和改变的各种科技领域和工具，包括计算机、软件、机器等现代科技产品和方法。\"}\n```",
+          "token_indices": [
+            9
+          ]
+        }
+      ]
+    }
+  ],
+  "next_vocab_id": 5
+}
